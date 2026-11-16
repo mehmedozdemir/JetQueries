@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Providers are extensions: they reference JetQueries.Sdk only. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\JetQueries.Sdk\JetQueries.Sdk.csproj" />
+  </ItemGroup>
+</Project>

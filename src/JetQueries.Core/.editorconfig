@@ -1,0 +1,6 @@
+# Core never runs on the UI thread: every await must opt out of context capture (CLAUDE.md hard rule 2).
+[*.cs]
+dotnet_diagnostic.CA2007.severity = warning
+
+# "Job queue" is the project's established term (CLAUDE.md, docs/ANALIZ.md); the type really is a queue.
+dotnet_diagnostic.CA1711.severity = none

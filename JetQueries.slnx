@@ -1,0 +1,27 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path="CHANGELOG.md" />
+    <File Path="CLAUDE.md" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="global.json" />
+    <File Path="nuget.config" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/JetQueries.Core/JetQueries.Core.csproj" />
+    <Project Path="src/JetQueries.DataGrid/JetQueries.DataGrid.csproj" />
+    <Project Path="src/JetQueries.Desktop/JetQueries.Desktop.csproj" />
+    <Project Path="src/JetQueries.Editor/JetQueries.Editor.csproj" />
+    <Project Path="src/JetQueries.Sdk/JetQueries.Sdk.csproj" />
+  </Folder>
+  <Folder Name="/src/Providers/">
+    <Project Path="src/Providers/JetQueries.Provider.Oracle/JetQueries.Provider.Oracle.csproj" />
+    <Project Path="src/Providers/JetQueries.Provider.SqlServer/JetQueries.Provider.SqlServer.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/JetQueries.Core.Tests/JetQueries.Core.Tests.csproj" />
+    <Project Path="tests/JetQueries.Sdk.Tests/JetQueries.Sdk.Tests.csproj" />
+  </Folder>
+</Solution>

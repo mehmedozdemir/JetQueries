@@ -1,0 +1,89 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:JetQueries.Desktop.ViewModels"
+        xmlns:res="using:JetQueries.Desktop.Resources"
+        x:Class="JetQueries.Desktop.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="JetQueries"
+        Width="1360" Height="840" MinWidth="800" MinHeight="500"
+        WindowStartupLocation="CenterScreen">
+
+  <Grid RowDefinitions="Auto,*,Auto">
+
+    <!-- Top bar -->
+    <Border Grid.Row="0" Classes="panel"
+            Height="{DynamicResource JqTopBarHeight}"
+            BorderBrush="{DynamicResource JqBorderBrush}" BorderThickness="0,0,0,1"
+            Padding="{DynamicResource JqPaddingCompact}">
+      <DockPanel>
+        <Button DockPanel.Dock="Right" Classes="toolbar"
+                Content="{x:Static res:Strings.ToggleTheme}"
+                Command="{Binding ToggleThemeCommand}" />
+        <TextBlock Text="JetQueries" FontWeight="SemiBold"
+                   FontSize="{DynamicResource JqFontSizeTitle}"
+                   Foreground="{DynamicResource JqAccentBrush}"
+                   VerticalAlignment="Center" />
+      </DockPanel>
+    </Border>
+
+    <!-- Explorer | (Documents / Results) -->
+    <Grid Grid.Row="1">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="280" MinWidth="160" />
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="*" MinWidth="240" />
+      </Grid.ColumnDefinitions>
+
+      <Border Grid.Column="0" Classes="panel">
+        <DockPanel>
+          <Border DockPanel.Dock="Top" Classes="panel-header">
+            <TextBlock Text="{x:Static res:Strings.ExplorerTitle}" />
+          </Border>
+          <TextBlock Classes="placeholder" Text="{x:Static res:Strings.ExplorerPlaceholder}" />
+        </DockPanel>
+      </Border>
+
+      <GridSplitter Grid.Column="1" Width="1" ResizeDirection="Columns" />
+
+      <Grid Grid.Column="2">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="*" MinHeight="120" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="260" MinHeight="80" />
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Classes="surface">
+          <DockPanel>
+            <Border DockPanel.Dock="Top" Classes="panel-header">
+              <TextBlock Text="{x:Static res:Strings.DocumentsTitle}" />
+            </Border>
+            <TextBlock Classes="placeholder" Text="{x:Static res:Strings.DocumentsPlaceholder}"
+                       FontFamily="{DynamicResource JqFontMono}" />
+          </DockPanel>
+        </Border>
+
+        <GridSplitter Grid.Row="1" Height="1" ResizeDirection="Rows" />
+
+        <Border Grid.Row="2" Classes="surface">
+          <DockPanel>
+            <Border DockPanel.Dock="Top" Classes="panel-header">
+              <TextBlock Text="{x:Static res:Strings.ResultsTitle}" />
+            </Border>
+            <TextBlock Classes="placeholder" Text="{x:Static res:Strings.ResultsPlaceholder}" />
+          </DockPanel>
+        </Border>
+      </Grid>
+    </Grid>
+
+    <!-- Status bar -->
+    <Border Grid.Row="2" Classes="panel"
+            Height="{DynamicResource JqStatusBarHeight}"
+            BorderBrush="{DynamicResource JqBorderBrush}" BorderThickness="0,1,0,0"
+            Padding="{DynamicResource JqPaddingCompact}">
+      <TextBlock Text="{x:Static res:Strings.StatusReady}"
+                 FontSize="{DynamicResource JqFontSizeCaption}"
+                 Foreground="{DynamicResource JqTextSecondaryBrush}"
+                 VerticalAlignment="Center" />
+    </Border>
+  </Grid>
+</Window>

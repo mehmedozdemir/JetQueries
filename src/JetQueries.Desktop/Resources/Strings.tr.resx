@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="ToggleTheme" xml:space="preserve"><value>Temayı değiştir</value></data>
+  <data name="ExplorerTitle" xml:space="preserve"><value>GEZGİN</value></data>
+  <data name="ExplorerPlaceholder" xml:space="preserve"><value>Bağlantılar ve veritabanı nesneleri burada görünecek.</value></data>
+  <data name="DocumentsTitle" xml:space="preserve"><value>BELGELER</value></data>
+  <data name="DocumentsPlaceholder" xml:space="preserve"><value>SQL editör sekmeleri burada açılacak.</value></data>
+  <data name="ResultsTitle" xml:space="preserve"><value>SONUÇLAR</value></data>
+  <data name="ResultsPlaceholder" xml:space="preserve"><value>Sorgu sonuçları ve mesajlar burada görünecek.</value></data>
+  <data name="StatusReady" xml:space="preserve"><value>Hazır</value></data>
+</root>

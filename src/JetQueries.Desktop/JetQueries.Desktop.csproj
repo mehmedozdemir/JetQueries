@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <AssemblyName>JetQueries</AssemblyName>
+    <RootNamespace>JetQueries.Desktop</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <NeutralLanguage>en</NeutralLanguage>
+    <!-- CA1515: XAML-backed types must stay public. -->
+    <NoWarn>$(NoWarn);CA1515</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="Avalonia.Desktop" />
+    <PackageReference Include="Avalonia.Themes.Fluent" />
+    <PackageReference Include="Avalonia.Fonts.Inter" />
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Never reference a concrete provider here: providers are loaded by the extension host. -->
+    <ProjectReference Include="..\JetQueries.Core\JetQueries.Core.csproj" />
+    <ProjectReference Include="..\JetQueries.Sdk\JetQueries.Sdk.csproj" />
+    <ProjectReference Include="..\JetQueries.Editor\JetQueries.Editor.csproj" />
+    <ProjectReference Include="..\JetQueries.DataGrid\JetQueries.DataGrid.csproj" />
+  </ItemGroup>
+</Project>

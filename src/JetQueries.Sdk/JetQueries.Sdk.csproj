@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- Public extension contract. Preview until SDK 1.0: no dependencies beyond the BCL, every public member documented. -->
+    <IsPackable>true</IsPackable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Description>JetQueries extension SDK (preview): contracts for database providers and language services.</Description>
+  </PropertyGroup>
+</Project>

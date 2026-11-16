@@ -1,0 +1,60 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!-- Shell-level styles built only from tokens in Tokens.axaml. -->
+
+  <Style Selector="Window">
+    <Setter Property="Background" Value="{DynamicResource JqAppBackgroundBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource JqTextPrimaryBrush}" />
+    <Setter Property="FontSize" Value="{DynamicResource JqFontSizeBody}" />
+  </Style>
+
+  <Style Selector="Border.panel">
+    <Setter Property="Background" Value="{DynamicResource JqPanelBrush}" />
+  </Style>
+  <Style Selector="Border.surface">
+    <Setter Property="Background" Value="{DynamicResource JqSurfaceBrush}" />
+  </Style>
+
+  <Style Selector="Border.panel-header">
+    <Setter Property="Background" Value="{DynamicResource JqPanelHeaderBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource JqBorderBrush}" />
+    <Setter Property="BorderThickness" Value="0,0,0,1" />
+    <Setter Property="Height" Value="{DynamicResource JqPanelHeaderHeight}" />
+    <Setter Property="Padding" Value="{DynamicResource JqPaddingCompact}" />
+  </Style>
+  <Style Selector="Border.panel-header > TextBlock">
+    <Setter Property="FontSize" Value="{DynamicResource JqFontSizeCaption}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource JqTextSecondaryBrush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
+  <Style Selector="TextBlock.placeholder">
+    <Setter Property="Foreground" Value="{DynamicResource JqTextSecondaryBrush}" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+    <Setter Property="TextAlignment" Value="Center" />
+    <Setter Property="Margin" Value="{DynamicResource JqPaddingPanel}" />
+  </Style>
+
+  <Style Selector="GridSplitter">
+    <Setter Property="Background" Value="{DynamicResource JqBorderBrush}" />
+  </Style>
+  <Style Selector="GridSplitter:pointerover">
+    <Setter Property="Background" Value="{DynamicResource JqAccentBrush}" />
+  </Style>
+
+  <Style Selector="Button.toolbar">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Foreground" Value="{DynamicResource JqTextPrimaryBrush}" />
+    <Setter Property="Padding" Value="{DynamicResource JqPaddingCompact}" />
+    <Setter Property="CornerRadius" Value="{DynamicResource JqRadiusSmall}" />
+    <Setter Property="FontSize" Value="{DynamicResource JqFontSizeBody}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Button.toolbar:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource JqHoverBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource JqTextPrimaryBrush}" />
+  </Style>
+</Styles>
