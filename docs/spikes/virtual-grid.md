@@ -6,11 +6,14 @@
 
 ## Verdict
 
-**Conditional go.** Drawing only the visible cells with `DrawingContext` works: the grid's cost is independent
-of the row count and its share of the UI thread is small and bounded. On the one machine measured, scrolling
-averages 68–85 fps, but 7–31 % of frames skip one display refresh — and a *blank* control repainting the same
-area skips 5–21 %. The remaining gap is in the window's large-area repaint path, not in the grid's drawing, and
-must be closed (or confirmed machine-specific) before the gate is called passed.
+**Go, on the machine measured.** Drawing only the visible cells with `DrawingContext` works: the grid's cost is
+independent of the row count and its share of the UI thread is small and bounded. With the window presented
+through a low-latency DXGI swap chain (ADR 0002), scrolling one million rows holds 88–90 fps on a ~90 Hz panel
+with 0–1.3 % of frames skipping a refresh. With Avalonia's default composition mode the same build skipped
+6–75 %.
+
+Still open before the Phase 0 gate is signed off: the result comes from one laptop. It has to be repeated on a
+60 Hz display, a second machine and the ReadyToRun build, and the row store is untested.
 
 ## What was built
 
@@ -49,7 +52,7 @@ which the desktop app does not use, so compare it with the baseline row rather t
 - Row count does not matter: the streaming scenario ends at 1.3 M rows with the same numbers.
 - The test asserts record p95 < 8.3 ms (half a frame) in Release.
 
-### 2. On screen (Release, real window)
+### 2. On screen, Avalonia's default composition mode (Release, real window)
 
 Machine: Intel Iris Xe, 2880×1800 at 175 % scaling, panel refreshing at ~90 Hz (10.8 ms). Grid area 1074×453
 DIP (≈1880×793 px). `JetQueries.exe --grid-benchmark=<file>` scrolls for 300 frames per phase and records the
@@ -76,6 +79,23 @@ Reading:
   the grid did not remove the skips. The cost follows the *repainted area*, not the grid's content.
 - Not measured: a 60 Hz display, a desktop GPU, 100 % scaling, the ReadyToRun build, memory.
 
+### 3. On screen, by composition mode
+
+The area-dependent skips pointed at how the window is presented, so the same benchmark was run with each of
+Avalonia's Windows composition modes (interleaved rounds, same machine):
+
+| Composition mode | Rounds | Scrolling phases: frames that skipped a refresh | Page jumps | Avg fps while scrolling |
+| --- | ---: | ---: | ---: | ---: |
+| WinUIComposition (default) | 7 | 6–75 % | 15–78 % | 51–85 |
+| DirectComposition | 2 | 8–64 % (frames over 16.7 ms) | 16–19 % | 55–83 |
+| RedirectionSurface | 2 | 28–42 % | 29–31 % | 67–74 |
+| LowLatencyDxgiSwapChain | 7 | 0–1.3 % | 3–5 % | 88–90 |
+
+With the swap chain the 95th-percentile frame while scrolling is 11.5–12.3 ms against a 10.8 ms refresh, and
+no scrolling phase had more than 4 of 300 frames slower than 16.7 ms. The page-jump phase (every visible cell
+new, every frame) still misses 10–15 of 300. The swap chain is now the default; see
+[ADR 0002](../adr/0002-windows-composition-mode.md) for the trade-offs.
+
 ## What made the difference
 
 1. **`FormattedText` is unusable for a grid.** It re-formats its lines on every draw; caching the object caches
@@ -89,12 +109,14 @@ Reading:
 4. **Evict by visibility, not "clear all".** Clearing the whole text cache when full caused a periodic 15 ms
    spike.
 5. Whole-pixel scroll offsets keep text and lines crisp.
+6. **Presenting through a DXGI swap chain** instead of WinUI composition removed the skipped refreshes. This
+   was the largest single effect and is not specific to the grid.
 
 ## Risks and open questions
 
 | # | Item | Why it matters | Proposed next step |
 | --- | --- | --- | --- |
-| 1 | Large-area repaints skip refreshes on the test laptop even for a blank control | This is the 60 fps gate | Try Avalonia's Win32 composition/rendering modes; repeat on a 60 Hz display and on a second machine; measure the ReadyToRun publish |
+| 1 | The 60 fps result rests on one laptop and on a non-default composition mode | This is the 60 fps gate | Repeat on a 60 Hz display, a second machine and the ReadyToRun publish; check resize, multi-monitor, remote desktop and popups under the swap chain |
 | 2 | Lines and text are placed on DIP boundaries, which are fractional device pixels at 125/150/175 % | Slight blur of 1 px lines at fractional scaling | Snap to device pixels using the render scaling |
 | 3 | No real row store | 1M × 30 boxed values in memory is several GB | Design the paged store (first page in memory, rest on disk — ANALIZ.md §7) as its own task |
 | 4 | Page jumps show partially filled cells for a frame | Visible while dragging the thumb fast | Acceptable; alternatively shape text on a worker thread |
@@ -103,6 +125,6 @@ Reading:
 
 ## Recommendation
 
-Keep the custom grid (no need to evaluate TreeDataGrid): the architecture meets the UI-thread target with a
-wide margin. Do not sign off the 60 fps gate yet; spend a short follow-up on risk 1 first, because if the
-repaint cost is inherent to the windowing path it affects the editor and every other large surface too.
+Keep the custom grid (no need to evaluate TreeDataGrid) and keep the DXGI swap chain as the Windows default.
+Treat the 60 fps gate as passed on this machine and pending confirmation elsewhere (risk 1). The next grid work
+is the row store (risk 3), which this spike deliberately left out.

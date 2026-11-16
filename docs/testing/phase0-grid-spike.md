@@ -33,6 +33,11 @@ dotnet run -c Release --project src/JetQueries.Desktop
 - [ ] For each phase note `avg fps`, `missed refreshes` and `slower than 60 fps`. "tiny redraw" is the machine's
       own baseline; the grid phases are what matter.
 - [ ] Repeat with the window maximized, and once on an external 60 Hz monitor if you have one.
+- [ ] Expected with the default settings on the development laptop: 88–90 fps average while scrolling and at
+      most a handful of missed refreshes per 300 frames (page jumps: 10–15).
+- [ ] Comparison run with Avalonia's old default, to see the difference on your machine (PowerShell):
+      `$env:JETQUERIES_COMPOSITION='WinUIComposition'; dotnet run -c Release --project src/JetQueries.Desktop`,
+      then `Remove-Item Env:JETQUERIES_COMPOSITION`.
 - [ ] Unattended variant, writes the same numbers to a file and exits:
       `src\JetQueries.Desktop\bin\Release\net10.0\JetQueries.exe --grid-benchmark=C:\Temp\grid.txt`
 
@@ -59,6 +64,15 @@ dotnet run -c Release --project src/JetQueries.Desktop
 ## 7. Theme
 
 - [ ] **Toggle theme**: the grid's background, header, lines, text and selection switch with the rest of the app.
+
+## 8. Window behaviour under the DXGI swap chain (new default, ADR 0002)
+
+- [ ] Resize the window by dragging an edge, quickly: no black bars, stretched or stale content after release.
+- [ ] Maximize, restore, minimize and bring back: content is intact.
+- [ ] Move the window between monitors with different scaling or refresh rate, if available: it re-renders
+      sharply at the new scale.
+- [ ] Hover the toolbar buttons and drag the splitters: hover states and the resize cursor behave as before.
+- [ ] If you use Remote Desktop to this machine: the window still renders.
 
 ## Known limits of the spike
 
