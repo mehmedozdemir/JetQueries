@@ -22,6 +22,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/JetQueries.Core.Tests/JetQueries.Core.Tests.csproj" />
+    <Project Path="tests/JetQueries.DataGrid.Tests/JetQueries.DataGrid.Tests.csproj" />
     <Project Path="tests/JetQueries.Sdk.Tests/JetQueries.Sdk.Tests.csproj" />
   </Folder>
 </Solution>

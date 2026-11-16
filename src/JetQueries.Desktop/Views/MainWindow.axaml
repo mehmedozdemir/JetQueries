@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:JetQueries.Desktop.ViewModels"
         xmlns:res="using:JetQueries.Desktop.Resources"
+        xmlns:views="using:JetQueries.Desktop.Views"
         x:Class="JetQueries.Desktop.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="JetQueries"
@@ -49,7 +50,7 @@
         <Grid.RowDefinitions>
           <RowDefinition Height="*" MinHeight="120" />
           <RowDefinition Height="Auto" />
-          <RowDefinition Height="260" MinHeight="80" />
+          <RowDefinition Height="2*" MinHeight="80" />
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0" Classes="surface">
@@ -69,7 +70,7 @@
             <Border DockPanel.Dock="Top" Classes="panel-header">
               <TextBlock Text="{x:Static res:Strings.ResultsTitle}" />
             </Border>
-            <TextBlock Classes="placeholder" Text="{x:Static res:Strings.ResultsPlaceholder}" />
+            <views:GridSpikeView />
           </DockPanel>
         </Border>
       </Grid>

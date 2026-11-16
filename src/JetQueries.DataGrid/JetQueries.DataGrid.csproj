@@ -1,4 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="JetQueries.DataGrid.Tests" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia" />
   </ItemGroup>

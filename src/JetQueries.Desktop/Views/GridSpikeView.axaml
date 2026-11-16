@@ -1,0 +1,28 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:grid="clr-namespace:JetQueries.DataGrid;assembly=JetQueries.DataGrid"
+             xmlns:res="using:JetQueries.Desktop.Resources"
+             x:Class="JetQueries.Desktop.Views.GridSpikeView">
+  <!-- Phase 0 spike harness for the virtualized grid. Replaced by the real results panel in Phase 1. -->
+  <DockPanel>
+    <Border DockPanel.Dock="Top" Classes="panel"
+            BorderBrush="{DynamicResource JqBorderBrush}" BorderThickness="0,0,0,1"
+            Padding="{DynamicResource JqPaddingCompact}">
+      <DockPanel>
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="{DynamicResource JqSpace1}">
+          <ToggleButton x:Name="StreamToggle" Classes="toolbar" Content="{x:Static res:Strings.GridSpikeStream}" />
+          <Button x:Name="BenchmarkButton" Classes="toolbar" Content="{x:Static res:Strings.GridSpikeBenchmark}" />
+        </StackPanel>
+        <SelectableTextBlock x:Name="StatsText"
+                             FontFamily="{DynamicResource JqFontMono}"
+                             FontSize="{DynamicResource JqFontSizeCaption}"
+                             Foreground="{DynamicResource JqTextSecondaryBrush}"
+                             TextWrapping="Wrap"
+                             VerticalAlignment="Center" />
+      </DockPanel>
+    </Border>
+    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+      <grid:VirtualGrid x:Name="ResultGrid" />
+    </ScrollViewer>
+  </DockPanel>
+</UserControl>

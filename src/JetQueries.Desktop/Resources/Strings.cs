@@ -19,6 +19,9 @@ public static class Strings
     public static string ResultsTitle => Get(nameof(ResultsTitle));
     public static string ResultsPlaceholder => Get(nameof(ResultsPlaceholder));
     public static string StatusReady => Get(nameof(StatusReady));
+    public static string GridSpikeStream => Get(nameof(GridSpikeStream));
+    public static string GridSpikeBenchmark => Get(nameof(GridSpikeBenchmark));
+    public static string GridSpikeRowCount => Get(nameof(GridSpikeRowCount));
 
     private static string Get(string name) => Manager.GetString(name, CultureInfo.CurrentUICulture) ?? name;
 }
