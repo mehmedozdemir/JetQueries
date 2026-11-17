@@ -15,7 +15,7 @@ public sealed class SqlServerExtension : IExtension
 }
 
 /// <summary>Database provider for Microsoft SQL Server and Azure SQL, on Microsoft.Data.SqlClient.</summary>
-public sealed class SqlServerProvider : IDatabaseProvider
+public sealed class SqlServerProvider : IDatabaseProvider, IConnectionSettingsProvider
 {
     /// <summary>The provider identifier stored in connection profiles.</summary>
     public const string ProviderId = "sqlserver";
@@ -34,6 +34,44 @@ public sealed class SqlServerProvider : IDatabaseProvider
 
     /// <inheritdoc />
     public ISqlLanguageService? LanguageService => null;
+
+    /// <inheritdoc />
+    public IReadOnlyList<ConnectionSettingDescriptor> ConnectionSettings { get; } =
+    [
+        new(SqlServerConnectionSettings.Server, "Server", ConnectionSettingKind.Text) { IsRequired = true, Hint = "host, host,port or host\\instance" },
+        new(SqlServerConnectionSettings.Database, "Database", ConnectionSettingKind.Text) { Hint = "empty: the login's default database" },
+        new(SqlServerConnectionSettings.Authentication, "Authentication", ConnectionSettingKind.Choice)
+        {
+            DefaultValue = "sql",
+            Options = [new("sql", "SQL Server login"), new("windows", "Windows (integrated)")],
+        },
+        new(SqlServerConnectionSettings.Encrypt, "Encrypt", ConnectionSettingKind.Choice)
+        {
+            DefaultValue = "true",
+            Options = [new("true", "Yes"), new("false", "No"), new("strict", "Strict (TDS 8)")],
+        },
+        new(SqlServerConnectionSettings.TrustServerCertificate, "Trust server certificate", ConnectionSettingKind.Boolean)
+        {
+            DefaultValue = "false",
+            Hint = "needed for self-signed certificates",
+        },
+        new(SqlServerConnectionSettings.ReadOnlyIntent, "Read-only routing", ConnectionSettingKind.Boolean) { DefaultValue = "false" },
+        new(SqlServerConnectionSettings.ConnectTimeoutSeconds, "Connect timeout (s)", ConnectionSettingKind.Number) { DefaultValue = "15" },
+    ];
+
+    /// <inheritdoc />
+    public bool RequiresCredential(IReadOnlyDictionary<string, string> settings)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        return !string.Equals(settings.GetValueOrDefault(SqlServerConnectionSettings.Authentication, "sql").Trim(), "windows", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <inheritdoc />
+    public NetworkEndpoint? GetEndpoint(IReadOnlyDictionary<string, string> settings)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        return SqlServerConnectionSettings.ParseEndpoint(settings.GetValueOrDefault(SqlServerConnectionSettings.Server));
+    }
 
     /// <inheritdoc />
     public string QuoteIdentifier(string identifier) => SqlServerNames.Quote(identifier);
