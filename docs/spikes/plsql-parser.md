@@ -19,7 +19,9 @@
 - On broken text the parse tree keeps almost everything *before* the damage, but it knows which clause the
   caret is in only 32–49 % of the time. The token-based fallback gets 93–100 %.
 
-**The gate is not passed**, and could not have been: there is no real-package corpus yet (see Limits).
+**The gate is not passed.** On real open-source code (section 6: 869 files, 251,000 lines) 90 % of package and
+type files parse, large packages take about a second each even warm, and the prediction cache reaches 3.7 GB.
+The grammar cannot be used unmodified. The user's own production packages are still untested.
 
 ## What was built
 
@@ -166,6 +168,73 @@ Two consequences beyond coverage:
   (8 of 470 in the grammar tests). It is still the right mode for a fast structural tree of broken text, but
   error squiggles must come from a full two-stage parse.
 
+### 6. Third corpus: open-source PL/SQL projects
+
+Real code written by other people, cloned (shallow, not added to this repository) into
+`C:\AI\temp\opensource`: utPLSQL `77fc2b4`, OraOpenSource Logger `600f0c4`, oos-utils `b621729`,
+alexandria-plsql-utils `ada4875`, pljson `09a54e4`, Oracle db-sample-schemas `6660bad`.
+869 files, 251,368 lines (one data file over 512 KB skipped).
+
+**Coverage**
+
+| File type | Files without syntax errors | Lines in those files |
+| --- | ---: | ---: |
+| package specs `.pks` | 159 / 164 (97.0 %) | 14,340 / 15,209 |
+| package bodies `.pkb` | 154 / 162 (95.1 %) | 72,837 / 78,822 |
+| type specs `.tps` | 127 / 138 (92.0 %) | 3,669 / 4,125 |
+| type bodies `.tpb` | 58 / 87 (66.7 %) | 5,365 / 9,648 |
+| scripts `.sql` | 143 / 316 (45.3 %) | 21,447 / 143,375 |
+| all | 643 / 869 (74.0 %) | |
+
+Packages and types together: 498 of 551 files (90.4 %) — below the suggested 98 %. By project: oos-utils 22/22,
+alexandria 113/114, Logger 2/4, utPLSQL 361/411.
+
+The 53 failing package and type files come down to these causes (first error of each file inspected):
+
+| Cause | Files | Kind |
+| --- | ---: | --- |
+| `(SELF AS supertype).method()` | 20 | grammar gap (also found in section 5) |
+| `DEFAULT` on an object-type method parameter | 9 | grammar gap; confirms section 5, this code runs on Oracle |
+| `PIPELINED` on a type method | 5 | grammar gap |
+| `FINAL` / `OVERRIDING FINAL` / `NOT INSTANTIABLE` before `MEMBER` | 5 | grammar gap |
+| `SQL_MACRO` on a packaged function | 4 | grammar gap (section 5) |
+| Conditional compilation (`$IF`) between package members or inside a function header | 4 | grammar gap |
+| `&&name` substitution variables in the source | 3 | not PL/SQL: SQL*Plus preprocessing |
+| `annotations` used as an identifier | 2 | grammar gap (keyword not allowed as a name) |
+| `TREAT(x AS t).method();` as a statement | 1 | grammar gap |
+
+Script files fail mostly on SQL*Plus, not on SQL: the most common first offending tokens are `SET …` (34
+files) and `@file` includes (14), followed by substitution variables and `DEFINE`/`ACCEPT`. They were not
+classified further. An editor needs its own layer for SQL*Plus commands regardless of the parser.
+
+**Speed and memory**
+
+| | Result |
+| --- | --- |
+| First pass, cold cache | 86 s for 251,368 lines |
+| Warm | 15.7 s (16,000 lines/s) |
+| Slowest files warm | `oos_util_crypto.pkb` 2,416 lines: 1.2 s; `as_pdf3.pkb` 3,431 lines: 1.1 s; `xlsx_builder_pkg.pkb` 1,987 lines: 0.8 s |
+| Slowest file cold | `as_pdf3.pkb`: 11.1 s |
+| Files that needed the full-LL stage | 271 of 869 |
+| Valid files with false errors under SLL-with-recovery | 45 of 643 |
+| Prediction cache after the corpus | **3.7 GB** (peak working set 5.3 GB) |
+
+Large real packages parse at 2,000–3,000 lines per second warm — an order of magnitude slower than the
+synthetic package, and far from the 200 ms target for 5,000 lines.
+
+**Recovery** (Logger, oos-utils and alexandria only, to bound memory: 174 clean files, 522 samples per damage type)
+
+| | two-stage | SLL with recovery |
+| --- | ---: | ---: |
+| parse time, cut at caret, p50 / p95 / max | 8 / 201 / 990 ms | 3 / 40 / 258 ms |
+| parse time, missing `END` or `;`, p50 / p95 / max | 16 / 296 / 2,896 ms | 3 / 48 / 278 ms |
+| constructs before the damage | 100 % | 97 % |
+| constructs after a missing `END` / `;` | 95 % | 93 % |
+| rule chain at the caret identical | 47 % | 54 % |
+
+For carets inside a query (only 23 samples): clause correct from the broken tree 43 %, from the token fallback
+100 %; tables in scope 87 % versus 96 %.
+
 ## Conclusions
 
 1. **Keep the grammar for structure, in the background.** Outline, folding, Ctrl+Click targets, diagnostics and
@@ -189,7 +258,8 @@ Two consequences beyond coverage:
 
 | # | Step | Why |
 | --- | --- | --- |
-| 1 | Get a real corpus (package specs and bodies from production schemas, kept outside the repo) and rerun with `--corpus` | The gate asks for it; coverage and speed on real code are unknown |
+| 0 | Decide whether to keep ANTLR + this grammar at all. Alternatives worth a short comparison: a hand-written recursive-descent parser for the PL/SQL subset an editor needs, or tree-sitter with a PL/SQL grammar | Memory and speed on real code miss the budgets by a wide margin, not by tuning distance |
+| 1 | Run the harness on the user's own production packages (kept outside the repo) with `--corpus` | Open-source code is real but not theirs; coding style drives both coverage and speed |
 | 2 | Measure cache size and warm speed with a PL/SQL-only subset of the grammar, and with per-routine parsing | Decides whether ANTLR + this grammar fits the memory budget at all |
 | 3 | Extend the token context finder to DML, PL/SQL blocks and aliases, with tests; compare with antlr4-c3 | It is the completion engine's core |
 | 4 | Confirm thresholds: ≥ 98 % valid files, < 200 ms per 5,000 lines warm, and add one for memory and first-parse latency | The two failing dimensions have no agreed target yet |

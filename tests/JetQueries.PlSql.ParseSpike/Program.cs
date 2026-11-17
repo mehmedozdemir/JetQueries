@@ -80,19 +80,21 @@ Line();
 // ---------------------------------------------------------------------------------------------------------
 // 2. Corpus of valid files
 // ---------------------------------------------------------------------------------------------------------
-var files = corpusDirectories
+// Package/type specs and bodies, triggers and plain scripts. Files over 512 KB are data loads, not code.
+string[] extensions = [".sql", ".pks", ".pkb", ".pls", ".plb", ".prc", ".fnc", ".tps", ".tpb", ".trg", ".typ"];
+const long MaxFileBytes = 512 * 1024;
+var candidates = corpusDirectories
     .Where(Directory.Exists)
     .SelectMany(d => Directory.EnumerateFiles(d, "*.*", SearchOption.AllDirectories))
-    .Where(static f => f.EndsWith(".sql", StringComparison.OrdinalIgnoreCase) ||
-                       f.EndsWith(".pks", StringComparison.OrdinalIgnoreCase) ||
-                       f.EndsWith(".pkb", StringComparison.OrdinalIgnoreCase) ||
-                       f.EndsWith(".pls", StringComparison.OrdinalIgnoreCase) ||
-                       f.EndsWith(".plb", StringComparison.OrdinalIgnoreCase) ||
-                       f.EndsWith(".prc", StringComparison.OrdinalIgnoreCase) ||
-                       f.EndsWith(".fnc", StringComparison.OrdinalIgnoreCase))
+    .Where(f => !f.Contains(Path.DirectorySeparatorChar + ".git" + Path.DirectorySeparatorChar, StringComparison.Ordinal))
+    .Where(f => extensions.Contains(Path.GetExtension(f), StringComparer.OrdinalIgnoreCase))
     .Order(StringComparer.Ordinal)
+    .ToList();
+var files = candidates
+    .Where(static f => new FileInfo(f).Length <= MaxFileBytes)
     .Select(f => (Path: f, Text: File.ReadAllText(f)))
     .ToList();
+var skippedLarge = candidates.Count - files.Count;
 
 Line("## 2. Corpus of valid files");
 Line($"corpus: {string.Join(", ", corpusDirectories.Select(Path.GetFullPath))}");
@@ -120,16 +122,23 @@ else
     var largest = files.Zip(warmMs).MaxBy(static p => p.First.Text.Length);
 
     Line($"files: {files.Count}, lines: {totalLines:N0}, largest file: {SyntheticPackage.CountLines(largest.First.Text):N0} lines ({Path.GetFileName(largest.First.Path)}, warm {largest.Second:F1} ms)");
-    Line($"parsed without syntax errors: {clean.Count}/{files.Count} ({100.0 * clean.Count / files.Count:F1} %)");
+    Line($"parsed without syntax errors: {clean.Count}/{files.Count} ({100.0 * clean.Count / files.Count:F1} %){(skippedLarge > 0 ? $"; {skippedLarge} files over 512 KB skipped" : string.Empty)}");
+    foreach (var group in firstPass.GroupBy(static f => Path.GetExtension(f.Path).ToLowerInvariant()).OrderByDescending(static g => g.Count()))
+    {
+        var ok = group.Count(static f => f.Outcome.SyntaxErrors == 0);
+        var okLines = group.Where(static f => f.Outcome.SyntaxErrors == 0).Sum(static f => SyntheticPackage.CountLines(f.Text));
+        var allLines = group.Sum(static f => SyntheticPackage.CountLines(f.Text));
+        Line($"  {group.Key,-5} {ok,4}/{group.Count(),-4} files ({100.0 * ok / group.Count(),5:F1} %), {okLines,8:N0}/{allLines,-8:N0} lines");
+    }
     Line($"needed the full-LL second stage: {firstPass.Count(static f => f.Outcome.UsedFullLl)} files");
     Line($"first pass over the corpus (cold prediction cache): {coldMs:F0} ms");
     Line($"warm: total {warmMs.Sum():F0} ms ({totalLines / warmMs.Sum() * 1000:N0} lines/s), per file p50 {Stats.Percentile(warmMs, 0.50):F2} / p95 {Stats.Percentile(warmMs, 0.95):F2} / max {warmMs.Max():F1} ms; lex only: {lexMs:F0} ms");
     Line("slowest files on the cold first pass: " + string.Join(", ", firstPass.OrderByDescending(static f => f.Outcome.Milliseconds).Take(5).Select(static f => $"{Path.GetFileName(f.Path)} {f.Outcome.Milliseconds:F0} ms")));
     Line("slowest files warm: " + string.Join(", ", files.Zip(warmMs).OrderByDescending(static p => p.Second).Take(5).Select(static p => $"{Path.GetFileName(p.First.Path)} {p.Second:F1} ms")));
-    foreach (var f in failed.Take(40))
+    foreach (var f in failed.Take(listErrors ? int.MaxValue : 40))
     {
         Line($"  FAILED {Path.GetRelativePath(corpusDirectories[0], f.Path)}: {f.Outcome.SyntaxErrors} errors, first at {f.Outcome.FirstError}");
-        foreach (var error in listErrors ? f.Outcome.Errors : [])
+        foreach (var error in listErrors ? f.Outcome.Errors.Take(4) : [])
         {
             Line($"      {error}");
         }
