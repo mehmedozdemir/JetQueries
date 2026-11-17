@@ -6,6 +6,7 @@ using JetQueries.Desktop.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Velopack;
 
 namespace JetQueries.Desktop;
 
@@ -14,6 +15,10 @@ internal static class Program
     [STAThread]
     public static int Main(string[] args)
     {
+        // Must run before anything else: during install, update and uninstall Velopack starts the application
+        // with hook arguments, handles them here and exits. In a normal start it returns immediately.
+        VelopackApp.Build().Run();
+
         using var host = CreateHost(args);
         return BuildAvaloniaApp(host).StartWithClassicDesktopLifetime(args);
     }

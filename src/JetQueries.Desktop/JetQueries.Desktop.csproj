@@ -6,6 +6,11 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <NeutralLanguage>en</NeutralLanguage>
+    <!-- Version from the git tag (v1.2.3); never edited by hand. -->
+    <MinVerTagPrefix>v</MinVerTagPrefix>
+    <MinVerDefaultPreReleaseIdentifiers>alpha.0</MinVerDefaultPreReleaseIdentifiers>
+    <!-- 0.x until the MVP gate; Velopack also rejects versions below 0.0.1. -->
+    <MinVerMinimumMajorMinor>0.1</MinVerMinimumMajorMinor>
     <!-- CA1515: XAML-backed types must stay public. -->
     <NoWarn>$(NoWarn);CA1515</NoWarn>
   </PropertyGroup>
@@ -16,6 +21,8 @@
     <PackageReference Include="Avalonia.Fonts.Inter" />
     <PackageReference Include="CommunityToolkit.Mvvm" />
     <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="MinVer" PrivateAssets="all" />
+    <PackageReference Include="Velopack" />
   </ItemGroup>
   <ItemGroup>
     <!-- Never reference a concrete provider here: providers are loaded by the extension host. -->
