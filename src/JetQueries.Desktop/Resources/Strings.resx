@@ -12,6 +12,8 @@
   <data name="ResultsTitle" xml:space="preserve"><value>RESULTS</value></data>
   <data name="ResultsPlaceholder" xml:space="preserve"><value>Query results and messages will appear here.</value></data>
   <data name="StatusReady" xml:space="preserve"><value>Ready</value></data>
+  <data name="ExtensionsLoaded" xml:space="preserve"><value>Extensions: {0}</value></data>
+  <data name="ExtensionsLoadedWithFailures" xml:space="preserve"><value>Extensions: {0} loaded, {1} failed</value></data>
   <data name="GridSpikeStream" xml:space="preserve"><value>Stream rows</value></data>
   <data name="GridSpikeBenchmark" xml:space="preserve"><value>Scroll benchmark</value></data>
   <data name="GridSpikeRowCount" xml:space="preserve"><value>{0:N0} rows × {1} columns (synthetic)</value></data>

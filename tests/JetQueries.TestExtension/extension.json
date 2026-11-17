@@ -1,0 +1,7 @@
+{
+  "id": "jetqueries.test.sample",
+  "name": "Sample test extension",
+  "version": "1.2.3",
+  "assembly": "JetQueries.TestExtension.dll",
+  "sdk": 0
+}

@@ -19,6 +19,8 @@ public static class Strings
     public static string ResultsTitle => Get(nameof(ResultsTitle));
     public static string ResultsPlaceholder => Get(nameof(ResultsPlaceholder));
     public static string StatusReady => Get(nameof(StatusReady));
+    public static string ExtensionsLoaded => Get(nameof(ExtensionsLoaded));
+    public static string ExtensionsLoadedWithFailures => Get(nameof(ExtensionsLoadedWithFailures));
     public static string GridSpikeStream => Get(nameof(GridSpikeStream));
     public static string GridSpikeBenchmark => Get(nameof(GridSpikeBenchmark));
     public static string GridSpikeRowCount => Get(nameof(GridSpikeRowCount));
