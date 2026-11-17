@@ -70,7 +70,9 @@ public sealed class ConnectionSession : IAsyncDisposable
     /// <summary>
     /// Runs SQL on the session's query connection and streams what happens. Statements are run one at a time:
     /// a second caller waits until the first has finished or was canceled. On a connection marked read-only,
-    /// text that can change data is refused before anything is sent.
+    /// text that can change data is refused before anything is sent. If the provider splits scripts into
+    /// batches (SQL Server's GO), each batch is sent in turn and message line numbers refer to the whole text;
+    /// an error ends the run at the batch that failed.
     /// </summary>
     /// <param name="request">The SQL and how to run it.</param>
     /// <param name="cancellationToken">Cancels waiting for the connection and the statement itself.</param>
@@ -89,9 +91,26 @@ public sealed class ConnectionSession : IAsyncDisposable
         try
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
-            await foreach (var item in Connection.Executor.ExecuteAsync(request, cancellationToken).ConfigureAwait(false))
+            if (Provider is not IScriptSplitter splitter)
             {
-                yield return item;
+                await foreach (var item in Connection.Executor.ExecuteAsync(request, cancellationToken).ConfigureAwait(false))
+                {
+                    yield return item;
+                }
+
+                yield break;
+            }
+
+            foreach (var batch in splitter.SplitBatches(request.Sql))
+            {
+                var batchRequest = request with { Sql = batch.Text };
+                for (var run = 0; run < Math.Max(1, batch.RepeatCount); run++)
+                {
+                    await foreach (var item in Connection.Executor.ExecuteAsync(batchRequest, cancellationToken).ConfigureAwait(false))
+                    {
+                        yield return item is QueryMessage { Line: { } line } message ? message with { Line = line + batch.StartLine } : item;
+                    }
+                }
             }
         }
         finally
