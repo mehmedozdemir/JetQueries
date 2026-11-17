@@ -163,6 +163,75 @@ public partial class QueryDocumentViewModel : ObservableObject
     /// </summary>
     public ISqlLanguageService LanguageService => SelectedSession?.Session.Provider.LanguageService ?? BasicSqlLanguageService.Instance;
 
+    /// <summary>Raised when "go to definition" found source text to show: a title, the text, and the connection it came from.</summary>
+    public event EventHandler<(string Title, string Text, Guid ConnectionId)>? DefinitionOpened;
+
+    /// <summary>The syntax errors of a text, computed as a low-priority background job.</summary>
+    public Task<IReadOnlyList<SqlDiagnostic>> DiagnoseAsync(string text, CancellationToken cancellationToken)
+    {
+        if (SelectedSession?.Session.Provider.LanguageService is not { } service)
+        {
+            return Task.FromResult<IReadOnlyList<SqlDiagnostic>>([]);
+        }
+
+        var document = new SqlDocument(text);
+        return _jobs.Enqueue(
+            "Check syntax",
+            context => service.GetDiagnosticsAsync(document, context.CancellationToken),
+            JobPriority.Low,
+            cancellationToken).Completion;
+    }
+
+    /// <summary>Finds what the name at <paramref name="offset"/> refers to and opens its source in a new tab.</summary>
+    public async Task GoToDefinitionAsync(string text, int offset)
+    {
+        if (SelectedSession?.Session is not { Provider.LanguageService: { } service } session)
+        {
+            return;
+        }
+
+        try
+        {
+            var metadata = new SessionMetadataProvider(session, _metadata);
+            var document = new SqlDocument(text, metadata);
+            var found = await _jobs.Enqueue<(DatabaseObject? Target, string? Source)>(
+                "Go to definition",
+                async context =>
+                {
+                    var definition = await service.GetDefinitionAsync(document, offset, context.CancellationToken).ConfigureAwait(false);
+                    if (definition?.Target is not { } target)
+                    {
+                        return (null, null);
+                    }
+
+                    return (target, await metadata.GetDefinitionAsync(target, context.CancellationToken).ConfigureAwait(false));
+                },
+                JobPriority.High).Completion;
+
+            if (found.Target is null)
+            {
+                Status = Strings.DefinitionNotFound;
+            }
+            else if (found.Source is null)
+            {
+                Status = Format(Strings.DefinitionUnavailable, found.Target.Name);
+            }
+            else
+            {
+                DefinitionOpened?.Invoke(this, (found.Target.Name.Name, found.Source, session.Definition.Id));
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+#pragma warning disable CA1031 // Navigation is a convenience; the server's reason is shown, nothing else is disturbed.
+        catch (Exception ex)
+#pragma warning restore CA1031
+        {
+            Status = ex.Message;
+        }
+    }
+
     /// <summary>Completion items for a caret position, computed as a background job against cached metadata.</summary>
     public Task<IReadOnlyList<CompletionItem>> CompleteAsync(string text, int offset, CancellationToken cancellationToken)
     {
@@ -401,14 +470,23 @@ public partial class DocumentsViewModel : ObservableObject
     private void NewQuery()
     {
         var title = string.Format(CultureInfo.CurrentCulture, CompositeFormat.Parse(Strings.QueryTitle), ++_counter);
-        var document = new QueryDocumentViewModel(title, _manager, _metadata, _jobs, _dialogs, _ui);
-        if (PreferredConnectionId is { } id)
+        Open(title, string.Empty, PreferredConnectionId);
+    }
+
+    /// <summary>Opens a tab with the given text, on the given connection if it is open.</summary>
+    public QueryDocumentViewModel Open(string title, string text, Guid? connectionId)
+    {
+        var document = new QueryDocumentViewModel(title, _manager, _metadata, _jobs, _dialogs, _ui) { Text = text };
+        if (connectionId is { } id)
         {
             document.SelectSession(id);
         }
 
+        // "Go to definition" in any tab opens the source in a new tab next to it.
+        document.DefinitionOpened += (_, definition) => Open(definition.Title, definition.Text, definition.ConnectionId);
         Documents.Add(document);
         Selected = document;
+        return document;
     }
 
     [RelayCommand]

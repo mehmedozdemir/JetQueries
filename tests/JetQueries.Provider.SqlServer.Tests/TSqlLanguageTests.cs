@@ -290,66 +290,66 @@ public sealed class TSqlCompletionTests
         var sql = sqlWithCaret.Remove(offset, 1);
         return [.. await Service.GetCompletionsAsync(new SqlDocument(sql, new FakeCatalog()), offset, TestContext.Current.CancellationToken)];
     }
+}
 
-    /// <summary>dbo: Cards, Müşteri İşlemleri, Transactions, CardSummary (view), PurgeOldLogs; kart: Limits; database Archive.</summary>
-    private sealed class FakeCatalog : IMetadataProvider
+/// <summary>dbo: Cards, Müşteri İşlemleri, Transactions, CardSummary (view), PurgeOldLogs; kart: Limits; database Archive.</summary>
+internal sealed class FakeCatalog : IMetadataProvider
+{
+    public int ExtraTables { get; init; }
+
+    public async IAsyncEnumerable<DatabaseObject> GetObjectsAsync(
+        DatabaseObject? parent, DatabaseObjectKinds kinds, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        public int ExtraTables { get; init; }
-
-        public async IAsyncEnumerable<DatabaseObject> GetObjectsAsync(
-            DatabaseObject? parent, DatabaseObjectKinds kinds, [EnumeratorCancellation] CancellationToken cancellationToken)
+        await Task.CompletedTask;
+        if (parent is { Kind: DatabaseObjectKinds.Database, Name.Name: "Archive" } && kinds.HasFlag(DatabaseObjectKinds.Schema))
         {
-            await Task.CompletedTask;
-            if (parent is { Kind: DatabaseObjectKinds.Database, Name.Name: "Archive" } && kinds.HasFlag(DatabaseObjectKinds.Schema))
-            {
-                yield return new(new("Archive", null, "dbo"), DatabaseObjectKinds.Schema);
-                yield return new(new("Archive", null, "kart"), DatabaseObjectKinds.Schema);
-                yield break;
-            }
+            yield return new(new("Archive", null, "dbo"), DatabaseObjectKinds.Schema);
+            yield return new(new("Archive", null, "kart"), DatabaseObjectKinds.Schema);
+            yield break;
+        }
 
-            if (parent is not { Kind: DatabaseObjectKinds.Schema })
-            {
-                yield break;
-            }
+        if (parent is not { Kind: DatabaseObjectKinds.Schema })
+        {
+            yield break;
+        }
 
-            var (database, schema) = (parent.Name.Database, parent.Name.Name);
-            IEnumerable<(string Name, DatabaseObjectKinds Kind)> objects = (database, schema.ToUpperInvariant()) switch
+        var (database, schema) = (parent.Name.Database, parent.Name.Name);
+        IEnumerable<(string Name, DatabaseObjectKinds Kind)> objects = (database, schema.ToUpperInvariant()) switch
+        {
+            (null, "DBO") =>
+            [
+                ("Cards", DatabaseObjectKinds.Table), ("Müşteri İşlemleri", DatabaseObjectKinds.Table), ("Transactions", DatabaseObjectKinds.Table),
+                ("CardSummary", DatabaseObjectKinds.View), ("PurgeOldLogs", DatabaseObjectKinds.Procedure),
+            ],
+            (null, "KART") => [("Limits", DatabaseObjectKinds.Table)],
+            ("Archive", "DBO") => [("OldCards", DatabaseObjectKinds.Table)],
+            _ => [],
+        };
+        foreach (var (name, kind) in objects)
+        {
+            if (kinds.HasFlag(kind))
             {
-                (null, "DBO") =>
-                [
-                    ("Cards", DatabaseObjectKinds.Table), ("Müşteri İşlemleri", DatabaseObjectKinds.Table), ("Transactions", DatabaseObjectKinds.Table),
-                    ("CardSummary", DatabaseObjectKinds.View), ("PurgeOldLogs", DatabaseObjectKinds.Procedure),
-                ],
-                (null, "KART") => [("Limits", DatabaseObjectKinds.Table)],
-                ("Archive", "DBO") => [("OldCards", DatabaseObjectKinds.Table)],
-                _ => [],
-            };
-            foreach (var (name, kind) in objects)
-            {
-                if (kinds.HasFlag(kind))
-                {
-                    yield return new(new(database, schema, name), kind);
-                }
-            }
-
-            for (var i = 0; i < ExtraTables && kinds.HasFlag(DatabaseObjectKinds.Table) && database is null; i++)
-            {
-                yield return new(new(null, schema, $"Table{i:D5}"), DatabaseObjectKinds.Table);
+                yield return new(new(database, schema, name), kind);
             }
         }
 
-        public Task<IReadOnlyList<ColumnInfo>> GetColumnsAsync(DatabaseObjectName tableOrView, CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<ColumnInfo>>(tableOrView.Name.ToUpperInvariant() switch
-            {
-                "CARDS" when tableOrView.Schema?.ToUpperInvariant() == "DBO" =>
-                [
-                    new("Id", "bigint", false, 1, true), new("Card No", "varchar(19)", false, 2), new("Balance", "decimal(12,2)", true, 3),
-                    new("Status", "char(1)", false, 4),
-                ],
-                "TRANSACTIONS" => [new("TxnId", "bigint", false, 1, true), new("CardId", "bigint", false, 2), new("Amount", "decimal(12,2)", false, 3)],
-                _ => [],
-            });
-
-        public Task<string?> GetDefinitionAsync(DatabaseObject target, CancellationToken cancellationToken) => Task.FromResult<string?>(null);
+        for (var i = 0; i < ExtraTables && kinds.HasFlag(DatabaseObjectKinds.Table) && database is null; i++)
+        {
+            yield return new(new(null, schema, $"Table{i:D5}"), DatabaseObjectKinds.Table);
+        }
     }
+
+    public Task<IReadOnlyList<ColumnInfo>> GetColumnsAsync(DatabaseObjectName tableOrView, CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<ColumnInfo>>(tableOrView.Name.ToUpperInvariant() switch
+        {
+            "CARDS" when tableOrView.Schema?.ToUpperInvariant() == "DBO" =>
+            [
+                new("Id", "bigint", false, 1, true), new("Card No", "varchar(19)", false, 2), new("Balance", "decimal(12,2)", true, 3),
+                new("Status", "char(1)", false, 4),
+            ],
+            "TRANSACTIONS" => [new("TxnId", "bigint", false, 1, true), new("CardId", "bigint", false, 2), new("Amount", "decimal(12,2)", false, 3)],
+            _ => [],
+        });
+
+    public Task<string?> GetDefinitionAsync(DatabaseObject target, CancellationToken cancellationToken) => Task.FromResult<string?>(null);
 }

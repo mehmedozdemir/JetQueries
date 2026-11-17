@@ -202,6 +202,21 @@ public sealed class ConnectionManagerIntegrationTests(SqlServerFixture fixture) 
 
         var schemas = await service.GetCompletionsAsync(new SqlDocument("SELECT * FROM tempdb.", metadata), 21, Token);
         Assert.Contains(schemas, static t => t is { Label: "dbo", Kind: CompletionItemKind.Schema });
+
+        // Go to definition: a procedure's stored source, and a script written from the catalog for a table.
+        var procedure = await service.GetDefinitionAsync(new SqlDocument("EXEC dbo.jq_go_count", metadata), 12, Token);
+        Assert.Equal(DatabaseObjectKinds.Procedure, procedure!.Target!.Kind);
+        Assert.Contains("PROCEDURE dbo.jq_go_count AS SELECT COUNT(*)", await metadata.GetDefinitionAsync(procedure.Target, Token), StringComparison.Ordinal);
+
+        var column = await service.GetDefinitionAsync(new SqlDocument("SELECT g.id FROM jq_go g", metadata), 9, Token);
+        Assert.Equal(DatabaseObjectKinds.Table, column!.Target!.Kind);
+        Assert.Equal("id", column.MemberName);
+        var script = await metadata.GetDefinitionAsync(column.Target, Token);
+        Assert.Contains("CREATE TABLE [dbo].[jq_go]", script, StringComparison.Ordinal);
+        Assert.Contains("[Açıklama Metni] nvarchar(40) NULL", script, StringComparison.Ordinal);
+
+        // The server's own parser and Microsoft's ScriptDom agree that the generated script is valid T-SQL.
+        Assert.Empty(await service.GetDiagnosticsAsync(new SqlDocument(script!), Token));
     }
 
     private static async Task<List<object?[]>> RowsAsync(ConnectionSession session, string sql)

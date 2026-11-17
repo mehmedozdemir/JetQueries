@@ -153,6 +153,103 @@ internal static class TSqlCompletion
         return Sorted(items);
     }
 
+    /// <summary>
+    /// What the name at <paramref name="offset"/> refers to: a table or view (by its name or through an alias,
+    /// optionally with the column that was pointed at), a procedure or a function.
+    /// </summary>
+    public static async Task<SqlDefinition?> FindDefinitionAsync(SqlDocument document, int offset, CancellationToken cancellationToken)
+    {
+        var metadata = document.Metadata;
+        if (metadata is null)
+        {
+            return null;
+        }
+
+        var text = document.Text;
+        var tokens = TSqlLexer.Tokenize(text).Where(static t => t.Kind != SqlTokenKind.Comment).ToList();
+        var index = tokens.FindIndex(t => t.Kind == SqlTokenKind.Identifier && t.Start <= offset && offset <= t.End);
+        if (index < 0)
+        {
+            return null;
+        }
+
+        var context = new Context(text, tokens, document, new TextSpan(offset, 0), string.Empty, cancellationToken);
+
+        // The whole dotted name around the pointed-at part.
+        var first = index;
+        while (first - 2 >= 0 && context.Is(first - 1, ".") && tokens[first - 2].Kind == SqlTokenKind.Identifier)
+        {
+            first -= 2;
+        }
+
+        var last = index;
+        while (last + 2 < tokens.Count && context.Is(last + 1, ".") && tokens[last + 2].Kind == SqlTokenKind.Identifier)
+        {
+            last += 2;
+        }
+
+        var parts = new List<string>();
+        for (var i = first; i <= last; i += 2)
+        {
+            parts.Add(context.Name(i));
+        }
+
+        var pointed = (index - first) / 2;
+        var scope = Scope.Find(context, index);
+
+        // alias, alias.column, table.column
+        var table = scope.Tables.FirstOrDefault(t => string.Equals(t.Alias, parts[0], StringComparison.OrdinalIgnoreCase)) ??
+                    (parts.Count <= 2 ? scope.Tables.FirstOrDefault(t => t.Alias is null && t.Parts.Count == 1 && string.Equals(t.Parts[0], parts[0], StringComparison.OrdinalIgnoreCase)) : null);
+        if (table is not null && parts.Count <= 2 && !(parts.Count == 1 && table.Alias is null))
+        {
+            var target = await ResolveAsync(metadata, table.ToName(context.DefaultSchema), cancellationToken).ConfigureAwait(false);
+            return target is null ? null : new SqlDefinition(target, MemberName: parts.Count == 2 && pointed == 1 ? parts[1] : null);
+        }
+
+        // [database.][schema.]object — only when the object part itself was pointed at.
+        if (pointed == parts.Count - 1 && parts.Count <= 3)
+        {
+            var name = new TableReference(parts, null).ToName(context.DefaultSchema);
+            if (await ResolveAsync(metadata, name, cancellationToken).ConfigureAwait(false) is { } found)
+            {
+                return new SqlDefinition(found);
+            }
+        }
+
+        // A bare column name: the table in scope that has it.
+        if (parts.Count == 1)
+        {
+            foreach (var candidate in scope.Tables)
+            {
+                var name = candidate.ToName(context.DefaultSchema);
+                var columns = await metadata.GetColumnsAsync(name, cancellationToken).ConfigureAwait(false);
+                if (columns.Any(c => string.Equals(c.Name, parts[0], StringComparison.OrdinalIgnoreCase)) &&
+                    await ResolveAsync(metadata, name, cancellationToken).ConfigureAwait(false) is { } owner)
+                {
+                    return new SqlDefinition(owner, MemberName: parts[0]);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>Finds the object with this name in its schema, which also tells what kind of object it is.</summary>
+    private static async Task<DatabaseObject?> ResolveAsync(IMetadataProvider metadata, DatabaseObjectName name, CancellationToken cancellationToken)
+    {
+        var schema = new DatabaseObject(new DatabaseObjectName(name.Database, null, name.Schema ?? "dbo"), DatabaseObjectKinds.Schema);
+        await foreach (var item in metadata.GetObjectsAsync(schema, TableKinds | DatabaseObjectKinds.Procedure | DatabaseObjectKinds.Function, cancellationToken)
+                           .ConfigureAwait(false))
+        {
+            if (string.Equals(item.Name.Name, name.Name, StringComparison.OrdinalIgnoreCase))
+            {
+                return item;
+            }
+        }
+
+        return null;
+    }
+
     private static async Task<IReadOnlyList<CompletionItem>> MembersAsync(Context context, List<string> parts, int dotIndex)
     {
         var metadata = context.Document.Metadata;

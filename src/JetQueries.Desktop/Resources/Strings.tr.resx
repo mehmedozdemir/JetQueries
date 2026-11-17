@@ -100,4 +100,6 @@
   <data name="QueryBlockedReadOnly" xml:space="preserve"><value>Bu bağlantı salt okunur. Metin veri değiştirebilecek bir deyim içerdiği için hiçbir şey gönderilmedi.</value></data>
   <data name="QueryConfirmTitle" xml:space="preserve"><value>Üretim bağlantısı</value></data>
   <data name="QueryConfirmMessage" xml:space="preserve"><value>'{0}' üretim olarak işaretli. Çalıştırılacak: {1}. Devam edilsin mi?</value></data>
+  <data name="DefinitionNotFound" xml:space="preserve"><value>Burada gidilecek bir tanım yok.</value></data>
+  <data name="DefinitionUnavailable" xml:space="preserve"><value>{0} tanımı görüntülenemiyor (şifreli veya görüntüleme yetkisi yok).</value></data>
 </root>

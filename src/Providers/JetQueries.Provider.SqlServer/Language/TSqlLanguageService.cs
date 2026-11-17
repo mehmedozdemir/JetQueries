@@ -21,8 +21,13 @@ internal sealed class TSqlLanguageService : ISqlLanguageService
         return new SqlLineTokens(result, endState);
     }
 
-    public Task<IReadOnlyList<SqlDiagnostic>> GetDiagnosticsAsync(SqlDocument document, CancellationToken cancellationToken) =>
-        Task.FromResult<IReadOnlyList<SqlDiagnostic>>([]);
+    public Task<IReadOnlyList<SqlDiagnostic>> GetDiagnosticsAsync(SqlDocument document, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+
+        // Parsing is CPU work with no awaits in it: keep it off whoever called.
+        return Task.Run(() => TSqlDiagnostics.Check(document.Text), cancellationToken);
+    }
 
     public Task<IReadOnlyList<CompletionItem>> GetCompletionsAsync(SqlDocument document, int offset, CancellationToken cancellationToken)
     {
@@ -30,17 +35,24 @@ internal sealed class TSqlLanguageService : ISqlLanguageService
         return TSqlCompletion.CompleteAsync(document, offset, cancellationToken);
     }
 
-    public Task<SqlDefinition?> GetDefinitionAsync(SqlDocument document, int offset, CancellationToken cancellationToken) =>
-        Task.FromResult<SqlDefinition?>(null);
+    public Task<SqlDefinition?> GetDefinitionAsync(SqlDocument document, int offset, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        return TSqlCompletion.FindDefinitionAsync(document, offset, cancellationToken);
+    }
 }
 
 /// <summary>Splits a script on <c>GO</c> lines the way SQL Server's own tools do.</summary>
 internal static class TSqlBatchSplitter
 {
-    public static IReadOnlyList<ScriptBatch> Split(string script)
+    public static IReadOnlyList<ScriptBatch> Split(string script) =>
+        [.. SplitWithOffsets(script).Select(static b => b.Batch)];
+
+    /// <summary>The batches together with the character offset each starts at in the script.</summary>
+    public static List<(ScriptBatch Batch, int StartOffset)> SplitWithOffsets(string script)
     {
         ArgumentNullException.ThrowIfNull(script);
-        var batches = new List<ScriptBatch>();
+        var batches = new List<(ScriptBatch, int)>();
         var tokens = new List<TSqlToken>();
         var state = 0;
         var lineStart = 0;
@@ -60,7 +72,7 @@ internal static class TSqlBatchSplitter
             state = TSqlLexer.TokenizeLine(line.TrimEnd('\r'), state, 0, tokens);
             if (startsClean && IsSeparator(line, tokens, out var repeat))
             {
-                Add(script[batchStart..lineStart], batchLine, repeat);
+                Add(batchStart, lineStart, batchLine, repeat);
                 batchStart = newLine < 0 ? script.Length : newLine + 1;
                 batchLine = lineNumber + 1;
             }
@@ -74,14 +86,15 @@ internal static class TSqlBatchSplitter
             lineNumber++;
         }
 
-        Add(script[Math.Min(batchStart, script.Length)..], batchLine, 1);
+        Add(Math.Min(batchStart, script.Length), script.Length, batchLine, 1);
         return batches;
 
-        void Add(string text, int startLine, int repeatCount)
+        void Add(int start, int end, int startLine, int repeatCount)
         {
+            var text = script[start..end];
             if (!string.IsNullOrWhiteSpace(text))
             {
-                batches.Add(new ScriptBatch(text, startLine, repeatCount));
+                batches.Add((new ScriptBatch(text, startLine, repeatCount), start));
             }
         }
     }
