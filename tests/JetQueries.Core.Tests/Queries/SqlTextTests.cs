@@ -107,6 +107,9 @@ public sealed class StatementGuardTests
     [InlineData("execute immediate 'x'")]
     [InlineData("SELECT * INTO backup_t FROM t")]
     [InlineData("GRANT SELECT ON t TO app")]
+    [InlineData("BEGIN purge_old_logs(30); END;")]
+    [InlineData("DECLARE n NUMBER; BEGIN n := card_ops.close_all; END;")]
+    [InlineData("BEGIN TRANSACTION")]
     [InlineData("select 1;\ninsert into t values (1)")]
     public void Anything_that_can_change_something_counts_as_writing(string sql) =>
         Assert.True(StatementGuard.Analyze(sql).WritesData);
