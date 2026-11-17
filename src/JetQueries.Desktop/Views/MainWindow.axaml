@@ -36,12 +36,14 @@
       </Grid.ColumnDefinitions>
 
       <Border Grid.Column="0" Classes="panel">
-        <DockPanel>
-          <Border DockPanel.Dock="Top" Classes="panel-header">
-            <TextBlock Text="{x:Static res:Strings.ExplorerTitle}" />
-          </Border>
-          <views:ConnectionsView DataContext="{Binding Connections}" />
-        </DockPanel>
+        <TabControl Classes="side" Padding="0">
+          <TabItem Header="{x:Static res:Strings.ExplorerTab}">
+            <views:ConnectionsView DataContext="{Binding Connections}" />
+          </TabItem>
+          <TabItem Header="{x:Static res:Strings.HistoryTab}">
+            <views:HistoryView DataContext="{Binding History}" />
+          </TabItem>
+        </TabControl>
       </Border>
 
       <GridSplitter Grid.Column="1" Width="1" ResizeDirection="Columns" />

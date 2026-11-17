@@ -3,6 +3,7 @@ using JetQueries.Core.Extensions;
 using System.Runtime.CompilerServices;
 using JetQueries.Core.Jobs;
 using JetQueries.Core.Metadata;
+using JetQueries.Core.Queries;
 using JetQueries.Desktop.Services;
 using JetQueries.Desktop.ViewModels;
 using JetQueries.Sdk;
@@ -42,9 +43,13 @@ internal sealed class TestEnvironment : IAsyncDisposable
 
     public ImmediateDispatcher Ui { get; } = new();
 
-    public DocumentsViewModel Documents() => new(Manager, Metadata, Jobs, Dialogs, Ui);
+    public SqliteQueryHistory History { get; } = new(new QueryHistoryOptions(), NullLogger<SqliteQueryHistory>.Instance);
 
-    public QueryDocumentViewModel Query() => new("Query 1", Manager, Metadata, Jobs, Dialogs, Ui);
+    public DocumentsViewModel Documents() => new(Manager, Metadata, History, Jobs, Dialogs, Ui);
+
+    public HistoryViewModel HistoryPanel(DocumentsViewModel documents) => new(History, Jobs, Dialogs, Ui, documents);
+
+    public QueryDocumentViewModel Query() => new("Query 1", Manager, Metadata, History, Jobs, Dialogs, Ui);
 
     /// <summary>Opens a session for a saved connection, as connecting from the explorer would.</summary>
     public async Task<ConnectionDefinition> OpenAsync(ConnectionDefinition definition)
@@ -82,6 +87,7 @@ internal sealed class TestEnvironment : IAsyncDisposable
         await Manager.DisposeAsync();
         await Jobs.DisposeAsync();
         await MetadataCache.DisposeAsync();
+        await History.DisposeAsync();
         Store.Dispose();
     }
 }

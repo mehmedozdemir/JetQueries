@@ -13,12 +13,13 @@ public partial class MainWindowViewModel : ObservableObject
 {
     private readonly IThemeService _themeService;
 
-    public MainWindowViewModel(IThemeService themeService, ConnectionsViewModel connections, DocumentsViewModel documents)
+    public MainWindowViewModel(IThemeService themeService, ConnectionsViewModel connections, DocumentsViewModel documents, HistoryViewModel history)
     {
         ArgumentNullException.ThrowIfNull(connections);
         _themeService = themeService;
         Connections = connections;
         Documents = documents;
+        History = history;
 
         // A new query starts on the connection that is selected in the explorer.
         connections.PropertyChanged += (_, e) =>
@@ -29,6 +30,9 @@ public partial class MainWindowViewModel : ObservableObject
             }
         };
     }
+
+    /// <summary>The queries that were run.</summary>
+    public HistoryViewModel History { get; }
 
     /// <summary>The open query tabs.</summary>
     public DocumentsViewModel Documents { get; }
