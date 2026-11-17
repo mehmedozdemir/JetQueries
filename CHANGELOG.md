@@ -20,3 +20,4 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 - CI workflow (GitHub Actions): locked restore, Release build, tests, and a Velopack package from `main` and version tags.
 - Metadata cache: in-memory layer over a disposable SQLite file, per connection, with read-through helpers.
 - SQL Server provider (built-in extension): connections, streaming query execution with messages and cancel, catalog metadata.
+- Connection manager: saved connections with folders, environment colour and read-only mark; passwords in Windows Credential Manager; connection test with a reachability check; connect and disconnect from the explorer panel (ADR 0005).

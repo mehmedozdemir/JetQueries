@@ -17,4 +17,56 @@
   <data name="GridSpikeStream" xml:space="preserve"><value>Stream rows</value></data>
   <data name="GridSpikeBenchmark" xml:space="preserve"><value>Scroll benchmark</value></data>
   <data name="GridSpikeRowCount" xml:space="preserve"><value>{0:N0} rows × {1} columns (synthetic)</value></data>
+  <data name="ConnectionNew" xml:space="preserve"><value>New</value></data>
+  <data name="ConnectionEdit" xml:space="preserve"><value>Edit</value></data>
+  <data name="ConnectionDelete" xml:space="preserve"><value>Delete</value></data>
+  <data name="ConnectionConnect" xml:space="preserve"><value>Connect</value></data>
+  <data name="ConnectionDisconnect" xml:space="preserve"><value>Disconnect</value></data>
+  <data name="ConnectionsEmpty" xml:space="preserve"><value>No connections yet. Choose New to add one.</value></data>
+  <data name="ConnectionConnectedBadge" xml:space="preserve"><value>connected</value></data>
+  <data name="ConnectionReadOnlyBadge" xml:space="preserve"><value>read-only</value></data>
+  <data name="ConnectionDialogTitleNew" xml:space="preserve"><value>New connection</value></data>
+  <data name="ConnectionDialogTitleEdit" xml:space="preserve"><value>Edit connection</value></data>
+  <data name="FieldName" xml:space="preserve"><value>Name</value></data>
+  <data name="FieldProvider" xml:space="preserve"><value>Database type</value></data>
+  <data name="FieldFolder" xml:space="preserve"><value>Folder</value></data>
+  <data name="FieldFolderHint" xml:space="preserve"><value>e.g. Customer A/Test</value></data>
+  <data name="FieldEnvironment" xml:space="preserve"><value>Environment</value></data>
+  <data name="FieldReadOnly" xml:space="preserve"><value>Read-only (block statements that change data)</value></data>
+  <data name="FieldUserName" xml:space="preserve"><value>User name</value></data>
+  <data name="FieldPassword" xml:space="preserve"><value>Password</value></data>
+  <data name="FieldSavePassword" xml:space="preserve"><value>Save the password in the system credential store</value></data>
+  <data name="PasswordUnchangedHint" xml:space="preserve"><value>leave empty to keep the saved password</value></data>
+  <data name="PasswordNotPersistentHint" xml:space="preserve"><value>This system has no supported credential store: the password is kept for this session only.</value></data>
+  <data name="EnvironmentUnspecified" xml:space="preserve"><value>Not set</value></data>
+  <data name="EnvironmentDevelopment" xml:space="preserve"><value>Development</value></data>
+  <data name="EnvironmentTest" xml:space="preserve"><value>Test</value></data>
+  <data name="EnvironmentProduction" xml:space="preserve"><value>Production</value></data>
+  <data name="ButtonTest" xml:space="preserve"><value>Test connection</value></data>
+  <data name="ButtonCancelTest" xml:space="preserve"><value>Stop</value></data>
+  <data name="ButtonSave" xml:space="preserve"><value>Save</value></data>
+  <data name="ButtonCancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="ButtonOk" xml:space="preserve"><value>OK</value></data>
+  <data name="ConnectionTesting" xml:space="preserve"><value>Connecting…</value></data>
+  <data name="OutcomeSucceeded" xml:space="preserve"><value>Connected in {0:N0} ms.</value></data>
+  <data name="OutcomeProviderMissing" xml:space="preserve"><value>No installed extension provides the database type '{0}'.</value></data>
+  <data name="OutcomePasswordRequired" xml:space="preserve"><value>A password is required.</value></data>
+  <data name="OutcomeUnreachable" xml:space="preserve"><value>The server cannot be reached. Check the address and that the VPN is connected. ({0})</value></data>
+  <data name="OutcomeFailed" xml:space="preserve"><value>The server refused the connection: {0}</value></data>
+  <data name="OutcomeCanceled" xml:space="preserve"><value>Stopped.</value></data>
+  <data name="ValidationNameRequired" xml:space="preserve"><value>Enter a name.</value></data>
+  <data name="ValidationProviderRequired" xml:space="preserve"><value>Choose a database type.</value></data>
+  <data name="ValidationSettingRequired" xml:space="preserve"><value>{0} is required.</value></data>
+  <data name="ValidationUserRequired" xml:space="preserve"><value>Enter a user name.</value></data>
+  <data name="PasswordPromptTitle" xml:space="preserve"><value>Password</value></data>
+  <data name="PasswordPromptMessage" xml:space="preserve"><value>Password for {0}</value></data>
+  <data name="DeleteConfirmTitle" xml:space="preserve"><value>Delete connection</value></data>
+  <data name="DeleteConfirmMessage" xml:space="preserve"><value>Delete the connection '{0}'? Its saved password is removed too.</value></data>
+  <data name="Setting_server" xml:space="preserve"><value>Server</value></data>
+  <data name="Setting_database" xml:space="preserve"><value>Database</value></data>
+  <data name="Setting_authentication" xml:space="preserve"><value>Authentication</value></data>
+  <data name="Setting_encrypt" xml:space="preserve"><value>Encrypt</value></data>
+  <data name="Setting_trustServerCertificate" xml:space="preserve"><value>Trust server certificate</value></data>
+  <data name="Setting_readOnlyIntent" xml:space="preserve"><value>Read-only routing</value></data>
+  <data name="Setting_connectTimeoutSeconds" xml:space="preserve"><value>Connect timeout (s)</value></data>
 </root>

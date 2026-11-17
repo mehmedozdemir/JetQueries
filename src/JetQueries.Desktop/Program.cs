@@ -101,7 +101,14 @@ internal static class Program
                 extensions.Directories.Add(Path.Combine(AppContext.BaseDirectory, "extensions"));
                 extensions.Directories.Add(Path.Combine(localData, "extensions"));
             },
-            cache => cache.DatabasePath = Path.Combine(localData, "cache", "metadata.db"));
+            cache => cache.DatabasePath = Path.Combine(localData, "cache", "metadata.db"),
+
+            // Roaming profile, not the local one: the installer owns %LocalAppData%\JetQueries and removes it
+            // on uninstall, and the user's connections must survive that.
+            connections => connections.FilePath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "JetQueries", "connections.json"));
+        builder.Services.AddSingleton<IDialogService, DialogService>();
+        builder.Services.AddSingleton<ConnectionsViewModel>();
         builder.Services.AddHostedService<ExtensionStartupService>();
         builder.Services.AddSingleton<IThemeService, ThemeService>();
         builder.Services.AddSingleton<MainWindowViewModel>();

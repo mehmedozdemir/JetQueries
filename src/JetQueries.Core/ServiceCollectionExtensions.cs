@@ -1,3 +1,4 @@
+using JetQueries.Core.Connections;
 using JetQueries.Core.Extensions;
 using JetQueries.Core.Jobs;
 using JetQueries.Core.Metadata;
@@ -13,11 +14,13 @@ public static class ServiceCollectionExtensions
     /// <param name="services">The service collection. Logging must be registered by the caller.</param>
     /// <param name="configureExtensions">Sets the directories the extension host searches; none by default.</param>
     /// <param name="configureMetadataCache">Sets the metadata cache file; memory-only by default.</param>
+    /// <param name="configureConnectionStore">Sets the connection definitions file; memory-only by default.</param>
     /// <returns>The same service collection, for chaining.</returns>
     public static IServiceCollection AddJetQueriesCore(
         this IServiceCollection services,
         Action<ExtensionHostOptions>? configureExtensions = null,
-        Action<MetadataCacheOptions>? configureMetadataCache = null)
+        Action<MetadataCacheOptions>? configureMetadataCache = null,
+        Action<ConnectionStoreOptions>? configureConnectionStore = null)
     {
         ArgumentNullException.ThrowIfNull(services);
         services.TryAddSingleton<IJobQueue>(static _ => new JobQueue());
@@ -32,6 +35,15 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton(cacheOptions);
         services.TryAddSingleton(TimeProvider.System);
         services.TryAddSingleton<IMetadataCache, SqliteMetadataCache>();
+
+        var connectionOptions = new ConnectionStoreOptions();
+        configureConnectionStore?.Invoke(connectionOptions);
+        services.TryAddSingleton(connectionOptions);
+        services.TryAddSingleton<IConnectionStore, JsonConnectionStore>();
+        services.TryAddSingleton<ICredentialStore>(static _ =>
+            OperatingSystem.IsWindows() ? new WindowsCredentialStore() : new SessionCredentialStore());
+        services.TryAddSingleton<IReachabilityProbe, TcpReachabilityProbe>();
+        services.TryAddSingleton<IConnectionManager, ConnectionManager>();
         return services;
     }
 }

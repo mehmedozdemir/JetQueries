@@ -9,8 +9,11 @@ using JetQueries.Desktop.Services;
 namespace JetQueries.Desktop.ViewModels;
 
 /// <summary>View model of the shell window.</summary>
-public partial class MainWindowViewModel(IThemeService themeService) : ObservableObject
+public partial class MainWindowViewModel(IThemeService themeService, ConnectionsViewModel connections) : ObservableObject
 {
+    /// <summary>The connection tree shown in the explorer panel.</summary>
+    public ConnectionsViewModel Connections { get; } = connections;
+
     /// <summary>Status bar text about extensions; empty until they have been loaded.</summary>
     [ObservableProperty]
     public partial string ExtensionStatus { get; set; } = string.Empty;

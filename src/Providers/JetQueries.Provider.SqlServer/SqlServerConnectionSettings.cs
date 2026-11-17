@@ -102,6 +102,55 @@ internal static class SqlServerConnectionSettings
         return builder.ConnectionString;
     }
 
+    /// <summary>
+    /// The TCP endpoint of a server setting, or null when it cannot be known without asking the network: a
+    /// named instance listens on a port only the SQL Browser service knows, and shared memory or named pipes
+    /// have no TCP port at all.
+    /// </summary>
+    public static NetworkEndpoint? ParseEndpoint(string? server)
+    {
+        if (string.IsNullOrWhiteSpace(server))
+        {
+            return null;
+        }
+
+        var value = server.Trim();
+        if (value.StartsWith("tcp:", StringComparison.OrdinalIgnoreCase))
+        {
+            value = value[4..];
+        }
+        else if (value.Contains(':', StringComparison.Ordinal) && !value.StartsWith('['))
+        {
+            // lpc:, np:, admin: or a bare IPv6 address: leave it to the driver.
+            return null;
+        }
+
+        var port = 1433;
+        var comma = value.LastIndexOf(',');
+        if (comma >= 0)
+        {
+            if (!int.TryParse(value.AsSpan(comma + 1).Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out port) || port is < 1 or > 65535)
+            {
+                return null;
+            }
+
+            value = value[..comma];
+        }
+        else if (value.Contains('\\', StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        var backslash = value.IndexOf('\\', StringComparison.Ordinal);
+        var host = (backslash >= 0 ? value[..backslash] : value).Trim().Trim('[', ']');
+        if (host is "." or "(local)" || host.Equals("localhost", StringComparison.OrdinalIgnoreCase))
+        {
+            host = "localhost";
+        }
+
+        return host.Length == 0 ? null : new NetworkEndpoint(host, port);
+    }
+
     private static bool Is(string value, string expected) => string.Equals(value.Trim(), expected, StringComparison.OrdinalIgnoreCase);
 
     private static bool Flag(IReadOnlyDictionary<string, string> settings, string name)

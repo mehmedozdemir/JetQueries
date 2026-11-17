@@ -11,6 +11,10 @@ public partial class MainWindow : Window
     public MainWindow(MainWindowViewModel viewModel)
         : this()
     {
+        ArgumentNullException.ThrowIfNull(viewModel);
         DataContext = viewModel;
+
+        // The window is on screen first; the saved connections arrive through a background job.
+        Opened += (_, _) => viewModel.Connections.RefreshCommand.Execute(null);
     }
 }

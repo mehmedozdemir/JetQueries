@@ -197,3 +197,37 @@ public sealed class SqlServerProviderTests
         new(SqlServerConnectionSettings.BuildConnectionString(
             new ConnectionProfile(Guid.NewGuid(), "test", SqlServerProvider.ProviderId, settings), credential));
 }
+
+public sealed class SqlServerEndpointTests
+{
+    [Theory]
+    [InlineData("sql01", "sql01", 1433)]
+    [InlineData("sql01,14330", "sql01", 14330)]
+    [InlineData("tcp:sql01.corp.local, 1444", "sql01.corp.local", 1444)]
+    [InlineData(@"10.0.0.5\PROD,1500", "10.0.0.5", 1500)]
+    [InlineData(".", "localhost", 1433)]
+    [InlineData("(local)", "localhost", 1433)]
+    public void Tcp_endpoint_is_read_from_the_server_setting(string server, string host, int port) =>
+        Assert.Equal(new JetQueries.Sdk.NetworkEndpoint(host, port), SqlServerConnectionSettings.ParseEndpoint(server));
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData(" ")]
+    [InlineData(@"sql01\PROD")]
+    [InlineData(@"np:\\sql01\pipe\sql\query")]
+    [InlineData("lpc:sql01")]
+    [InlineData("sql01,notaport")]
+    [InlineData("sql01,70000")]
+    public void Endpoints_that_cannot_be_known_are_left_to_the_driver(string? server) =>
+        Assert.Null(SqlServerConnectionSettings.ParseEndpoint(server));
+
+    [Fact]
+    public void Windows_authentication_needs_no_credential()
+    {
+        var provider = new SqlServerProvider();
+
+        Assert.True(provider.RequiresCredential(new Dictionary<string, string>()));
+        Assert.False(provider.RequiresCredential(new Dictionary<string, string> { ["authentication"] = " Windows " }));
+        Assert.Contains(provider.ConnectionSettings, static s => s is { Key: "server", IsRequired: true });
+    }
+}
