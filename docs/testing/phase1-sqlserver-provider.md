@@ -6,7 +6,8 @@ uses it yet (no connection manager, explorer or editor), so the checks are tests
 ## 1. Build and unit tests
 
 - [ ] `dotnet build JetQueries.slnx` succeeds with 0 warnings.
-- [ ] `dotnet test` reports Sdk 7, Core 40, DataGrid 28, Provider.SqlServer 36 passed and **7 skipped**.
+- [ ] `dotnet test` reports Sdk 7, Core 40, DataGrid 28, Provider.SqlServer 36 passed and **7 skipped**
+      (the skipped ones need the opt-in in section 3).
 
 ## 2. The provider ships as a built-in extension
 
@@ -15,22 +16,23 @@ uses it yet (no connection manager, explorer or editor), so the checks are tests
       `JetQueries.Sdk.dll`. The application folder itself contains no SqlClient file.
 - [ ] `dotnet run --project src/JetQueries.Desktop`: the status bar shows `Extensions: 1`.
 
-## 3. Integration tests against a real SQL Server — never run so far
+## 3. Integration tests against a real SQL Server
 
-They start SQL Server 2022 in Docker (image download of roughly 1.5 GB the first time). The container image is
-under Microsoft's licence terms, so the tests only run when you opt in:
+They start a throwaway SQL Server 2022 container from the local image `mcr.microsoft.com/mssql/server:2022-latest`
+and remove it afterwards; no other container is touched. The image is under Microsoft's licence terms, so the
+tests only run when you opt in:
 
 ```
 $env:JETQUERIES_MSSQL_ACCEPT_EULA = 'Y'
 dotnet test tests/JetQueries.Provider.SqlServer.Tests
 ```
 
-- [ ] 43 passed, 0 skipped. They cover: event order of rows, messages and row counts; parameters; `MaxRows`;
-      cancelling a running statement; abandoning a large result; errors; metadata across databases
-      (databases, schemas, tables, views, procedures, triggers, columns with formatted types, definitions),
-      with Turkish characters in names and data.
-- [ ] If any fails, send the test name and message: this code has only been compiled, not executed against a
-      server.
+- [ ] 43 passed, 0 skipped, in about 15 seconds (run on 2026-11-17: all passed on the first run). They cover:
+      event order of rows, messages and row counts; parameters; `MaxRows`; cancelling a running statement;
+      abandoning a large result; errors; metadata across databases (databases, schemas, tables, views,
+      procedures, triggers, columns with formatted types, definitions), with Turkish characters in names and
+      data.
+- [ ] `docker ps` afterwards shows no leftover `mssql` container.
 
 ## 4. Against one of your own servers (optional, later)
 
