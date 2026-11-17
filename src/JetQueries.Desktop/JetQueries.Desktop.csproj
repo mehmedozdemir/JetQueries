@@ -31,4 +31,33 @@
     <ProjectReference Include="..\JetQueries.Editor\JetQueries.Editor.csproj" />
     <ProjectReference Include="..\JetQueries.DataGrid\JetQueries.DataGrid.csproj" />
   </ItemGroup>
+  <!--
+    Built-in extensions. They are built with the application but never referenced by it (hard rule 3): their
+    output is copied to extensions/<folder>/ next to the executable, where the extension host finds them like
+    any other extension.
+  -->
+  <!--
+    UndefineProperties: an extension is framework-dependent and runtime-neutral even when the application is
+    published self-contained for one runtime; it runs on the application's runtime and picks its native
+    libraries from its own runtimes/ folder.
+  -->
+  <PropertyGroup>
+    <SqlServerExtensionOutput>$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.SqlServer\bin\$(Configuration)\$(TargetFramework)\</SqlServerExtensionOutput>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Providers\JetQueries.Provider.SqlServer\JetQueries.Provider.SqlServer.csproj" ReferenceOutputAssembly="false" Private="false"
+                      UndefineProperties="RuntimeIdentifier;SelfContained;PublishReadyToRun" />
+  </ItemGroup>
+  <Target Name="CopyBuiltInExtensions" AfterTargets="Build">
+    <ItemGroup>
+      <_SqlServerExtensionFile Include="$(SqlServerExtensionOutput)**\*" Exclude="$(SqlServerExtensionOutput)**\*.pdb;$(SqlServerExtensionOutput)**\*.xml" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_SqlServerExtensionFile)" DestinationFolder="$(OutDir)extensions\sqlserver\%(RecursiveDir)" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="PublishBuiltInExtensions" AfterTargets="Publish">
+    <ItemGroup>
+      <_SqlServerPublishFile Include="$(SqlServerExtensionOutput)**\*" Exclude="$(SqlServerExtensionOutput)**\*.pdb;$(SqlServerExtensionOutput)**\*.xml" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_SqlServerPublishFile)" DestinationFolder="$(PublishDir)extensions\sqlserver\%(RecursiveDir)" SkipUnchangedFiles="true" />
+  </Target>
 </Project>

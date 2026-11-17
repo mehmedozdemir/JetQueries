@@ -1,0 +1,3 @@
+# Provider code never runs on the UI thread: every await must opt out of context capture (CLAUDE.md hard rule 2).
+[*.cs]
+dotnet_diagnostic.CA2007.severity = warning

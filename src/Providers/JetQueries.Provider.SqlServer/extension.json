@@ -1,0 +1,7 @@
+{
+  "id": "jetqueries.sqlserver",
+  "name": "SQL Server",
+  "version": "0.1.0",
+  "assembly": "JetQueries.Provider.SqlServer.dll",
+  "sdk": 0
+}
