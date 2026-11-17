@@ -1,13 +1,8 @@
 using System.Collections.Frozen;
+using JetQueries.Providers.Language;
 using JetQueries.Sdk;
 
 namespace JetQueries.Provider.SqlServer.Language;
-
-/// <summary>A token of a whole document: kind, position and whether it is a bracketed or quoted name.</summary>
-internal readonly record struct TSqlToken(SqlTokenKind Kind, int Start, int Length)
-{
-    public int End => Start + Length;
-}
 
 /// <summary>
 /// Hand-written T-SQL tokenizer. It works a line at a time with a small carried state, which is what syntax
@@ -72,7 +67,7 @@ internal static class TSqlLexer
 
     /// <summary>Tokenizes one line, appending to <paramref name="tokens"/> with offsets shifted by <paramref name="lineStart"/>.</summary>
     /// <returns>The state to pass to the next line.</returns>
-    public static int TokenizeLine(ReadOnlySpan<char> line, int state, int lineStart, List<TSqlToken> tokens)
+    public static int TokenizeLine(ReadOnlySpan<char> line, int state, int lineStart, List<LanguageToken> tokens)
     {
         var i = 0;
         var depth = state & DepthMask;
@@ -85,14 +80,14 @@ internal static class TSqlLexer
             {
                 i = EndOfQuoted(line, i, '\'', out var closed);
                 inString = !closed;
-                tokens.Add(new TSqlToken(SqlTokenKind.StringLiteral, lineStart + start, i - start));
+                tokens.Add(new LanguageToken(SqlTokenKind.StringLiteral, lineStart + start, i - start));
                 continue;
             }
 
             if (depth > 0)
             {
                 i = EndOfComment(line, i, ref depth);
-                tokens.Add(new TSqlToken(SqlTokenKind.Comment, lineStart + start, i - start));
+                tokens.Add(new LanguageToken(SqlTokenKind.Comment, lineStart + start, i - start));
                 continue;
             }
 
@@ -172,16 +167,16 @@ internal static class TSqlLexer
                 kind = c is '(' or ')' or ',' or ';' or '.' ? SqlTokenKind.Punctuation : SqlTokenKind.Operator;
             }
 
-            tokens.Add(new TSqlToken(kind, lineStart + start, i - start));
+            tokens.Add(new LanguageToken(kind, lineStart + start, i - start));
         }
 
         return depth | (inString ? InString : 0);
     }
 
     /// <summary>Tokenizes a whole document. Comments are included; white space is not.</summary>
-    public static List<TSqlToken> Tokenize(string text)
+    public static List<LanguageToken> Tokenize(string text)
     {
-        var tokens = new List<TSqlToken>(Math.Max(16, text.Length / 5));
+        var tokens = new List<LanguageToken>(Math.Max(16, text.Length / 5));
         var state = 0;
         var lineStart = 0;
         while (lineStart <= text.Length)

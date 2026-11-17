@@ -1,4 +1,5 @@
 using System.Globalization;
+using JetQueries.Provider.Oracle.Language;
 using JetQueries.Sdk;
 using Oracle.ManagedDataAccess.Client;
 
@@ -33,7 +34,7 @@ public sealed class OracleProvider : IDatabaseProvider, IConnectionSettingsProvi
         ProviderCapabilities.Routines | ProviderCapabilities.Packages | ProviderCapabilities.Sequences;
 
     /// <inheritdoc />
-    public ISqlLanguageService? LanguageService => null;
+    public ISqlLanguageService? LanguageService { get; } = new OracleLanguageService();
 
     /// <inheritdoc />
     public IReadOnlyList<ConnectionSettingDescriptor> ConnectionSettings { get; } =

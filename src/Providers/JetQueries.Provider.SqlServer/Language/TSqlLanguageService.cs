@@ -1,3 +1,4 @@
+using JetQueries.Providers.Language;
 using JetQueries.Sdk;
 
 namespace JetQueries.Provider.SqlServer.Language;
@@ -10,7 +11,7 @@ internal sealed class TSqlLanguageService : ISqlLanguageService
 {
     public SqlLineTokens TokenizeLine(ReadOnlySpan<char> line, int startState)
     {
-        var tokens = new List<TSqlToken>();
+        var tokens = new List<LanguageToken>();
         var endState = TSqlLexer.TokenizeLine(line, startState, 0, tokens);
         var result = new SqlToken[tokens.Count];
         for (var i = 0; i < result.Length; i++)
@@ -53,7 +54,7 @@ internal static class TSqlBatchSplitter
     {
         ArgumentNullException.ThrowIfNull(script);
         var batches = new List<(ScriptBatch, int)>();
-        var tokens = new List<TSqlToken>();
+        var tokens = new List<LanguageToken>();
         var state = 0;
         var lineStart = 0;
         var lineNumber = 0;
@@ -100,7 +101,7 @@ internal static class TSqlBatchSplitter
     }
 
     /// <summary>A line that is only <c>GO</c>, optionally with a count and a trailing comment.</summary>
-    private static bool IsSeparator(ReadOnlySpan<char> line, List<TSqlToken> tokens, out int repeat)
+    private static bool IsSeparator(ReadOnlySpan<char> line, List<LanguageToken> tokens, out int repeat)
     {
         repeat = 1;
         var significant = 0;

@@ -10,6 +10,10 @@
     <PackageReference Include="Oracle.ManagedDataAccess.Core" />
   </ItemGroup>
   <ItemGroup>
+    <!-- Completion engine shared between providers as source: a provider may reference nothing but the SDK. -->
+    <Compile Include="..\Shared\Language\*.cs" LinkBase="Language\Shared" />
+  </ItemGroup>
+  <ItemGroup>
     <!-- The SDK is provided by the host at run time; an extension must not ship its own copy. -->
     <ProjectReference Include="..\..\JetQueries.Sdk\JetQueries.Sdk.csproj">
       <Private>false</Private>
