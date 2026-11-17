@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Phase 0 spike, throwaway: can the grammars-v4 PL/SQL grammar (ANTLR4, C# target) carry the Oracle language
+    service? Measures parse success, speed, memory and error recovery. Not referenced by any product project.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>JetQueries.PlSql.ParseSpike</RootNamespace>
+    <ServerGarbageCollection>false</ServerGarbageCollection>
+    <!-- CA1515: types of a console app. CA1303: report text is not localized. -->
+    <NoWarn>$(NoWarn);CA1515;CA1303</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Antlr4.Runtime.Standard" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\JetQueries.PlSql.ParseSpike.Grammar\JetQueries.PlSql.ParseSpike.Grammar.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Corpus\**\*" />
+  </ItemGroup>
+</Project>

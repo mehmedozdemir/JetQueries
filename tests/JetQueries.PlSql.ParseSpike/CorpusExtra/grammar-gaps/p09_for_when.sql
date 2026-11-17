@@ -1,0 +1,6 @@
+BEGIN
+  FOR i IN 1 .. 100 WHEN MOD(i, 7) = 0 LOOP
+    NULL;
+  END LOOP;
+END;
+/

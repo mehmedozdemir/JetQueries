@@ -66,7 +66,7 @@ Dil servisi işlemleri: `Tokenize` (satır bazlı, artımlı), `Parse` (arka pla
 | Lehçe | Parser | Not |
 | --- | --- | --- |
 | T-SQL | Microsoft.SqlServer.TransactSql.ScriptDom | Resmi parser, MIT |
-| PL/SQL | ANTLR4 (grammars-v4 PlSql) | En zor lehçe; paket gövdesi, `BEGIN…END` |
+| PL/SQL | Elle yazılmış yapısal ayrıştırıcı + token tabanlı tamamlama bağlamı (ADR 0003) | Faz 0 ölçümünde ANTLR4 grameri hız ve bellek bütçesini aşmıştır; sözdizimi hataları veritabanı derlemesinden (`USER_ERRORS`) gelir |
 | PostgreSQL | ANTLR4 veya libpg_query bağlayıcısı | libpg_query native bağımlılık getirir |
 | SQLite | ANTLR4 | Basit |
 | Redis | Komut tablosu (`COMMAND DOCS`) | Parser yerine komut + argüman şeması |
