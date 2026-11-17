@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using JetQueries.Core.Extensions;
+using JetQueries.Core.Queries;
 using JetQueries.Sdk;
 
 namespace JetQueries.Core.Connections;
@@ -44,6 +46,7 @@ public sealed class ConnectionSession : IAsyncDisposable
     // Kept in memory for the life of the session only, to open the metadata connection later.
     private readonly ConnectionCredential? _credential;
     private readonly SemaphoreSlim _metadataGate = new(1, 1);
+    private readonly SemaphoreSlim _queryGate = new(1, 1);
     private IDatabaseConnection? _metadataConnection;
     private bool _disposed;
 
@@ -61,8 +64,41 @@ public sealed class ConnectionSession : IAsyncDisposable
     /// <summary>The provider that opened it.</summary>
     public IDatabaseProvider Provider { get; }
 
-    /// <summary>The connection for running the user's SQL.</summary>
+    /// <summary>The connection for running the user's SQL. Prefer <see cref="ExecuteAsync"/>, which applies the session's rules.</summary>
     public IDatabaseConnection Connection { get; }
+
+    /// <summary>
+    /// Runs SQL on the session's query connection and streams what happens. Statements are run one at a time:
+    /// a second caller waits until the first has finished or was canceled. On a connection marked read-only,
+    /// text that can change data is refused before anything is sent.
+    /// </summary>
+    /// <param name="request">The SQL and how to run it.</param>
+    /// <param name="cancellationToken">Cancels waiting for the connection and the statement itself.</param>
+    /// <exception cref="ReadOnlyConnectionException">The connection is read-only and the text can change data.</exception>
+    public async IAsyncEnumerable<QueryEvent> ExecuteAsync(QueryRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        // Checked here, below every user interface, so that no code path can forget it.
+        if (Definition.IsReadOnly && StatementGuard.Analyze(request.Sql).WritesData)
+        {
+            throw new ReadOnlyConnectionException();
+        }
+
+        await _queryGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            await foreach (var item in Connection.Executor.ExecuteAsync(request, cancellationToken).ConfigureAwait(false))
+            {
+                yield return item;
+            }
+        }
+        finally
+        {
+            _queryGate.Release();
+        }
+    }
 
     /// <summary>
     /// Runs one metadata operation on the session's metadata connection. Operations are run one at a time, as

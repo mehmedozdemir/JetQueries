@@ -13,6 +13,7 @@
   <Application.Styles>
     <!-- Fluent supplies control templates for now; all colours and sizes in our views come from Tokens.axaml. -->
     <FluentTheme DensityStyle="Compact" />
+    <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml" />
     <StyleInclude Source="avares://JetQueries/Styles/Shell.axaml" />
   </Application.Styles>
 </Application>

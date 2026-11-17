@@ -1,6 +1,7 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:grid="clr-namespace:JetQueries.DataGrid;assembly=JetQueries.DataGrid">
+        xmlns:grid="clr-namespace:JetQueries.DataGrid;assembly=JetQueries.DataGrid"
+        xmlns:editor="clr-namespace:JetQueries.Editor;assembly=JetQueries.Editor">
   <!-- Shell-level styles built only from tokens in Tokens.axaml. -->
 
   <Style Selector="Window">
@@ -114,6 +115,44 @@
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="Foreground" Value="{DynamicResource JqTextSecondaryBrush}" />
     <Setter Property="Opacity" Value="0.55" />
+  </Style>
+
+  <!-- Query tabs -->
+  <Style Selector="Button.tab-close">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Padding" Value="4,0" />
+    <Setter Property="MinWidth" Value="0" />
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="FontSize" Value="{DynamicResource JqFontSizeBody}" />
+    <Setter Property="Foreground" Value="{DynamicResource JqTextSecondaryBrush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="TabControl.documents TabItem, TabControl.results TabItem">
+    <Setter Property="FontSize" Value="{DynamicResource JqFontSizeBody}" />
+    <Setter Property="MinHeight" Value="30" />
+    <Setter Property="Padding" Value="10,0" />
+  </Style>
+  <Style Selector="Button.toolbar.run">
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource JqSuccessBrush}" />
+  </Style>
+  <Style Selector="SelectableTextBlock.query-message">
+    <Setter Property="Foreground" Value="{DynamicResource JqTextPrimaryBrush}" />
+    <Setter Property="FontSize" Value="{DynamicResource JqFontSizeBody}" />
+  </Style>
+  <Style Selector="SelectableTextBlock.query-message.error">
+    <Setter Property="Foreground" Value="{DynamicResource JqDangerBrush}" />
+  </Style>
+
+  <Style Selector="editor|SqlEditor">
+    <Setter Property="Background" Value="{DynamicResource JqSurfaceBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource JqTextPrimaryBrush}" />
+    <Setter Property="KeywordBrush" Value="{DynamicResource JqSyntaxKeywordBrush}" />
+    <Setter Property="StringBrush" Value="{DynamicResource JqSyntaxStringBrush}" />
+    <Setter Property="CommentBrush" Value="{DynamicResource JqSyntaxCommentBrush}" />
+    <Setter Property="NumberBrush" Value="{DynamicResource JqSyntaxNumberBrush}" />
+    <Setter Property="ParameterBrush" Value="{DynamicResource JqSyntaxParameterBrush}" />
+    <Setter Property="FunctionBrush" Value="{DynamicResource JqSyntaxFunctionBrush}" />
   </Style>
 
   <Style Selector="grid|VirtualGrid">

@@ -83,6 +83,24 @@ public static class Strings
     public static string CategoryTypes => Get(nameof(CategoryTypes));
     public static string ColumnPrimaryKey => Get(nameof(ColumnPrimaryKey));
     public static string ColumnNullable => Get(nameof(ColumnNullable));
+    public static string QueryRun => Get(nameof(QueryRun));
+    public static string QueryCancel => Get(nameof(QueryCancel));
+    public static string QueryNoConnection => Get(nameof(QueryNoConnection));
+    public static string QueryTitle => Get(nameof(QueryTitle));
+    public static string ResultTitle => Get(nameof(ResultTitle));
+    public static string MessagesTitle => Get(nameof(MessagesTitle));
+    public static string QueryRunning => Get(nameof(QueryRunning));
+    public static string QueryDone => Get(nameof(QueryDone));
+    public static string QueryDoneNoRows => Get(nameof(QueryDoneNoRows));
+    public static string QueryCanceled => Get(nameof(QueryCanceled));
+    public static string QueryFailed => Get(nameof(QueryFailed));
+    public static string QueryNotSent => Get(nameof(QueryNotSent));
+    public static string QueryCompleted => Get(nameof(QueryCompleted));
+    public static string QueryRowsAffected => Get(nameof(QueryRowsAffected));
+    public static string QueryTruncated => Get(nameof(QueryTruncated));
+    public static string QueryBlockedReadOnly => Get(nameof(QueryBlockedReadOnly));
+    public static string QueryConfirmTitle => Get(nameof(QueryConfirmTitle));
+    public static string QueryConfirmMessage => Get(nameof(QueryConfirmMessage));
 
     /// <summary>A string looked up by a computed name (for example <c>Setting_server</c>), or null if there is none.</summary>
     public static string? Find(string name) => Manager.GetString(name, CultureInfo.CurrentUICulture);

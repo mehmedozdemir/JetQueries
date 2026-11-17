@@ -40,6 +40,20 @@ internal sealed class TestEnvironment : IAsyncDisposable
     public ConnectionEditorViewModel Editor(ConnectionDefinition? existing = null) =>
         new(existing, [Provider], Store, Credentials, Manager, Jobs);
 
+    public ImmediateDispatcher Ui { get; } = new();
+
+    public DocumentsViewModel Documents() => new(Manager, Jobs, Dialogs, Ui);
+
+    public QueryDocumentViewModel Query() => new("Query 1", Manager, Jobs, Dialogs, Ui);
+
+    /// <summary>Opens a session for a saved connection, as connecting from the explorer would.</summary>
+    public async Task<ConnectionDefinition> OpenAsync(ConnectionDefinition definition)
+    {
+        var attempt = await Manager.OpenAsync(definition, "x", CancellationToken.None);
+        Xunit.Assert.Equal(ConnectionOutcome.Succeeded, attempt.Outcome);
+        return definition;
+    }
+
     public ConnectionsViewModel Connections() => new(Store, Manager, Credentials, Metadata, Jobs, Dialogs);
 
     /// <summary>Waits for a node's background load, which the tree starts by itself when a node is expanded.</summary>
@@ -69,6 +83,21 @@ internal sealed class TestEnvironment : IAsyncDisposable
         await Jobs.DisposeAsync();
         await MetadataCache.DisposeAsync();
         Store.Dispose();
+    }
+}
+
+/// <summary>Runs posted work at once, on the calling thread: there is no UI thread in these tests.</summary>
+internal sealed class ImmediateDispatcher : IUiDispatcher
+{
+    private readonly Lock _gate = new();
+
+    public void Post(Action action)
+    {
+        // The real dispatcher runs one action at a time; keep that guarantee.
+        lock (_gate)
+        {
+            action();
+        }
     }
 }
 
@@ -131,6 +160,12 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
 
     public string? MetadataError { get; set; }
 
+    /// <summary>Every request that reached the "database".</summary>
+    public List<QueryRequest> Executed { get; } = [];
+
+    /// <summary>What running SQL does; by default one result set with three rows and a message.</summary>
+    public Func<QueryRequest, CancellationToken, IAsyncEnumerable<QueryEvent>> Execute { get; set; } = DefaultResult;
+
     public string Id => "fake";
 
     public string DisplayName => "SQL Server";
@@ -169,11 +204,40 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
 
     private sealed class FakeConnection(FakeProvider owner) : IDatabaseConnection
     {
-        public IQueryExecutor Executor => throw new NotSupportedException();
+        public IQueryExecutor Executor { get; } = new FakeExecutor(owner);
 
         public IMetadataProvider Metadata { get; } = new FakeMetadata(owner);
 
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+    }
+
+    private static async IAsyncEnumerable<QueryEvent> DefaultResult(QueryRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        await Task.Yield();
+        yield return new QueryMessage("starting", QueryMessageSeverity.Info);
+        yield return new ResultSetStarted(
+        [
+            new ResultColumn("Id", "bigint", typeof(long)),
+            new ResultColumn("CardNo", "varchar", typeof(string)),
+            new ResultColumn("Balance", "decimal", typeof(decimal)),
+            new ResultColumn("IssuedAt", "datetime2", typeof(DateTime)),
+        ]);
+        yield return new RowBatch(
+        [
+            [1L, "5200 0000 0000 0001", 1250.50m, new DateTime(2026, 1, 15)],
+            [2L, "5200 0000 0000 0002", null, new DateTime(2026, 2, 3, 14, 30, 5, 120)],
+        ]);
+        yield return new RowBatch([[3L, "Müşteri İşlemleri", 0m, null]]);
+        yield return new ResultSetCompleted(3, false);
+    }
+
+    private sealed class FakeExecutor(FakeProvider owner) : IQueryExecutor
+    {
+        public IAsyncEnumerable<QueryEvent> ExecuteAsync(QueryRequest request, CancellationToken cancellationToken)
+        {
+            owner.Executed.Add(request);
+            return owner.Execute(request, cancellationToken);
+        }
     }
 
     /// <summary>A small fixed catalog: databases Cards and master, schemas dbo and kart, a few objects in dbo.</summary>

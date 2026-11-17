@@ -1,8 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia" />
+    <PackageReference Include="Avalonia.AvaloniaEdit" />
   </ItemGroup>
   <ItemGroup>
+    <!-- The editor talks to ISqlLanguageService only; it knows no dialect and no provider. -->
     <ProjectReference Include="..\JetQueries.Sdk\JetQueries.Sdk.csproj" />
   </ItemGroup>
 </Project>

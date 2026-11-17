@@ -82,4 +82,22 @@
   <data name="CategoryTypes" xml:space="preserve"><value>Tipler</value></data>
   <data name="ColumnPrimaryKey" xml:space="preserve"><value>PK</value></data>
   <data name="ColumnNullable" xml:space="preserve"><value>null</value></data>
+  <data name="QueryRun" xml:space="preserve"><value>Çalıştır (F5)</value></data>
+  <data name="QueryCancel" xml:space="preserve"><value>İptal</value></data>
+  <data name="QueryNoConnection" xml:space="preserve"><value>Açık bağlantı yok</value></data>
+  <data name="QueryTitle" xml:space="preserve"><value>Sorgu {0}</value></data>
+  <data name="ResultTitle" xml:space="preserve"><value>Sonuç {0}</value></data>
+  <data name="MessagesTitle" xml:space="preserve"><value>Mesajlar</value></data>
+  <data name="QueryRunning" xml:space="preserve"><value>Çalışıyor… {0:N0} satır</value></data>
+  <data name="QueryDone" xml:space="preserve"><value>{0:N0} satır · {1}</value></data>
+  <data name="QueryDoneNoRows" xml:space="preserve"><value>Tamamlandı · {0}</value></data>
+  <data name="QueryCanceled" xml:space="preserve"><value>İptal edildi · {0}</value></data>
+  <data name="QueryFailed" xml:space="preserve"><value>Başarısız · {0}</value></data>
+  <data name="QueryNotSent" xml:space="preserve"><value>Gönderilmedi</value></data>
+  <data name="QueryCompleted" xml:space="preserve"><value>Komut tamamlandı.</value></data>
+  <data name="QueryRowsAffected" xml:space="preserve"><value>{0:N0} satır etkilendi</value></data>
+  <data name="QueryTruncated" xml:space="preserve"><value>Yalnızca ilk {0:N0} satır gösteriliyor.</value></data>
+  <data name="QueryBlockedReadOnly" xml:space="preserve"><value>Bu bağlantı salt okunur. Metin veri değiştirebilecek bir deyim içerdiği için hiçbir şey gönderilmedi.</value></data>
+  <data name="QueryConfirmTitle" xml:space="preserve"><value>Üretim bağlantısı</value></data>
+  <data name="QueryConfirmMessage" xml:space="preserve"><value>'{0}' üretim olarak işaretli. Çalıştırılacak: {1}. Devam edilsin mi?</value></data>
 </root>

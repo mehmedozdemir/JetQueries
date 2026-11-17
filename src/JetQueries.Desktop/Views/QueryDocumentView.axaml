@@ -1,0 +1,75 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:JetQueries.Desktop.ViewModels"
+             xmlns:res="using:JetQueries.Desktop.Resources"
+             xmlns:editor="clr-namespace:JetQueries.Editor;assembly=JetQueries.Editor"
+             xmlns:grid="clr-namespace:JetQueries.DataGrid;assembly=JetQueries.DataGrid"
+             xmlns:sql="clr-namespace:JetQueries.Core.Sql;assembly=JetQueries.Core"
+             x:Class="JetQueries.Desktop.Views.QueryDocumentView"
+             x:DataType="vm:QueryDocumentViewModel">
+  <DockPanel>
+    <!-- Toolbar -->
+    <Border DockPanel.Dock="Top" Classes="panel"
+            BorderBrush="{DynamicResource JqBorderBrush}" BorderThickness="0,0,0,1"
+            Padding="{DynamicResource JqPaddingCompact}">
+      <DockPanel>
+        <TextBlock DockPanel.Dock="Right" Text="{Binding Status}" VerticalAlignment="Center"
+                   FontSize="{DynamicResource JqFontSizeCaption}" Foreground="{DynamicResource JqTextSecondaryBrush}" />
+        <StackPanel Orientation="Horizontal" Spacing="{DynamicResource JqSpace2}">
+          <Button Classes="toolbar run" Content="{x:Static res:Strings.QueryRun}" Command="{Binding RunCommand}" />
+          <Button Classes="toolbar" Content="{x:Static res:Strings.QueryCancel}" Command="{Binding CancelCommand}" />
+          <ComboBox ItemsSource="{Binding Sessions}" SelectedItem="{Binding SelectedSession}"
+                    PlaceholderText="{x:Static res:Strings.QueryNoConnection}" MinWidth="200" VerticalAlignment="Center">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:SessionOption">
+                <TextBlock Text="{Binding Name}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+          <ProgressBar IsIndeterminate="True" Width="80" MinWidth="80" Height="3" MinHeight="3"
+                       IsVisible="{Binding IsRunning}" VerticalAlignment="Center" />
+        </StackPanel>
+      </DockPanel>
+    </Border>
+
+    <Grid>
+      <Grid.RowDefinitions>
+        <RowDefinition Height="*" MinHeight="80" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="*" MinHeight="60" />
+      </Grid.RowDefinitions>
+
+      <editor:SqlEditor x:Name="Editor" Grid.Row="0" Text="{Binding Text}"
+                        LanguageService="{x:Static sql:BasicSqlLanguageService.Instance}" />
+
+      <GridSplitter Grid.Row="1" Height="1" ResizeDirection="Rows" />
+
+      <TabControl Grid.Row="2" ItemsSource="{Binding Tabs}" SelectedItem="{Binding SelectedTab}" Padding="0" Classes="results">
+        <TabControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:IResultTab">
+            <TextBlock Text="{Binding Title}" />
+          </DataTemplate>
+        </TabControl.ItemTemplate>
+        <TabControl.ContentTemplate>
+          <vm:ResultTabTemplate>
+            <DataTemplate x:Key="grid" x:DataType="vm:QueryResultSet">
+              <grid:VirtualGrid Source="{Binding}" />
+            </DataTemplate>
+            <DataTemplate x:Key="messages" x:DataType="vm:QueryMessagesTab">
+              <ScrollViewer Background="{DynamicResource JqSurfaceBrush}">
+                <ItemsControl ItemsSource="{Binding Lines}" Margin="{DynamicResource JqPaddingCompact}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:QueryMessageLine">
+                      <SelectableTextBlock Classes="query-message" Classes.error="{Binding IsError}" Text="{Binding Text}"
+                                           FontFamily="{DynamicResource JqFontMono}" TextWrapping="Wrap" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </ScrollViewer>
+            </DataTemplate>
+          </vm:ResultTabTemplate>
+        </TabControl.ContentTemplate>
+      </TabControl>
+    </Grid>
+  </DockPanel>
+</UserControl>

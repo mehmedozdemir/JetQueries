@@ -68,6 +68,17 @@ public sealed class ConnectionViewRenderTests
         await ObjectExplorerTests.ExpandAsync((CategoryNodeViewModel)schema.Children[^1]);
         explorer.Selected = tables.Children[1];
 
+        // The whole window: explorer on the left, a query with its results on the right.
+        var documents = explorerEnvironment.Documents();
+        var query = documents.Selected!;
+        query.RefreshSessions();
+        query.Text = "-- Cards issued this year\nSELECT c.Id, c.CardNo, c.Balance, c.IssuedAt\nFROM dbo.Cards c\nWHERE c.IssuedAt >= '2026-01-01' AND c.Status = @status\nORDER BY c.Id; /* first 100 */";
+        await query.RunCommand.ExecuteAsync(null);
+        documents.NewQueryCommand.Execute(null);
+        documents.Selected = query;
+        var shell = new MainWindowViewModel(new FixedTheme(), explorer, documents);
+        shell.ShowExtensions(1, 0);
+
         await using var emptyEnvironment = new TestEnvironment();
         var empty = emptyEnvironment.Connections();
         await empty.LoadAsync();
@@ -83,6 +94,7 @@ public sealed class ConnectionViewRenderTests
                     var suffix = theme == ThemeVariant.Light ? "light" : "dark";
                     results[$"connections-{suffix}"] = Capture(Host(connections, 320), Path.Combine(directory, $"connections-{suffix}.png"));
                     results[$"explorer-{suffix}"] = Capture(Host(explorer, 520), Path.Combine(directory, $"explorer-{suffix}.png"));
+                    results[$"window-{suffix}"] = Capture(new MainWindow(shell) { Width = 1180, Height = 700 }, Path.Combine(directory, $"window-{suffix}.png"));
                     results[$"empty-{suffix}"] = Capture(Host(empty, 160), Path.Combine(directory, $"empty-{suffix}.png"));
                     results[$"dialog-{suffix}"] = Capture(new ConnectionDialog { DataContext = editor }, Path.Combine(directory, $"dialog-{suffix}.png"));
                 }
@@ -95,8 +107,17 @@ public sealed class ConnectionViewRenderTests
         // that thread to end: disposing from here would wait for itself.
         await Task.Run(session.Dispose, token);
 
-        Assert.Equal(8, colours.Count);
+        Assert.Equal(10, colours.Count);
         Assert.All(colours, static pair => Assert.True(pair.Value > 8, $"{pair.Key} rendered only {pair.Value} distinct colours."));
+    }
+
+    private sealed class FixedTheme : Services.IThemeService
+    {
+        public bool IsDark => false;
+
+        public void Toggle()
+        {
+        }
     }
 
     private static Window Host(ConnectionsViewModel viewModel, double height) => new()

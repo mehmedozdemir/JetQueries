@@ -19,6 +19,13 @@
       <SolidColorBrush x:Key="JqTextPrimaryBrush" Color="#1B1F24" />
       <SolidColorBrush x:Key="JqTextSecondaryBrush" Color="#566170" />
       <!-- Accent and status -->
+      <!-- SQL syntax (on JqSurfaceBrush) -->
+      <SolidColorBrush x:Key="JqSyntaxKeywordBrush" Color="#0B4FB3" />
+      <SolidColorBrush x:Key="JqSyntaxStringBrush" Color="#A31515" />
+      <SolidColorBrush x:Key="JqSyntaxCommentBrush" Color="#4B7340" />
+      <SolidColorBrush x:Key="JqSyntaxNumberBrush" Color="#0A6B55" />
+      <SolidColorBrush x:Key="JqSyntaxParameterBrush" Color="#7A3E9D" />
+      <SolidColorBrush x:Key="JqSyntaxFunctionBrush" Color="#8A5A00" />
       <SolidColorBrush x:Key="JqAccentBrush" Color="#1F5FD6" />
       <SolidColorBrush x:Key="JqAccentSoftBrush" Color="#E1EAFC" />
       <SolidColorBrush x:Key="JqSuccessBrush" Color="#1E7F4F" />
@@ -34,6 +41,13 @@
       <SolidColorBrush x:Key="JqBorderBrush" Color="#2E333B" />
       <SolidColorBrush x:Key="JqTextPrimaryBrush" Color="#E4E7EB" />
       <SolidColorBrush x:Key="JqTextSecondaryBrush" Color="#9AA3AF" />
+      <!-- SQL syntax (on JqSurfaceBrush) -->
+      <SolidColorBrush x:Key="JqSyntaxKeywordBrush" Color="#6CB6FF" />
+      <SolidColorBrush x:Key="JqSyntaxStringBrush" Color="#F0A070" />
+      <SolidColorBrush x:Key="JqSyntaxCommentBrush" Color="#7FA06B" />
+      <SolidColorBrush x:Key="JqSyntaxNumberBrush" Color="#8FD6B4" />
+      <SolidColorBrush x:Key="JqSyntaxParameterBrush" Color="#C9A0F0" />
+      <SolidColorBrush x:Key="JqSyntaxFunctionBrush" Color="#E3C07A" />
       <SolidColorBrush x:Key="JqAccentBrush" Color="#6298F5" />
       <SolidColorBrush x:Key="JqAccentSoftBrush" Color="#1C2C4A" />
       <SolidColorBrush x:Key="JqSuccessBrush" Color="#6DD49C" />
