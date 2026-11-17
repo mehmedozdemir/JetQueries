@@ -6,7 +6,9 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using JetQueries.Core.Connections;
 using JetQueries.Core.Jobs;
+using JetQueries.Core.Metadata;
 using JetQueries.Core.Queries;
+using JetQueries.Core.Sql;
 using JetQueries.DataGrid;
 using JetQueries.Desktop.Resources;
 using JetQueries.Desktop.Services;
@@ -112,15 +114,18 @@ public partial class QueryDocumentViewModel : ObservableObject
     public const int MaxRows = 100_000;
 
     private readonly IConnectionManager _manager;
+    private readonly IMetadataService _metadata;
     private readonly IJobQueue _jobs;
     private readonly IDialogService _dialogs;
     private readonly IUiDispatcher _ui;
     private JobHandle? _run;
 
-    public QueryDocumentViewModel(string title, IConnectionManager manager, IJobQueue jobs, IDialogService dialogs, IUiDispatcher ui)
+    public QueryDocumentViewModel(
+        string title, IConnectionManager manager, IMetadataService metadata, IJobQueue jobs, IDialogService dialogs, IUiDispatcher ui)
     {
         Title = title;
         _manager = manager;
+        _metadata = metadata;
         _jobs = jobs;
         _dialogs = dialogs;
         _ui = ui;
@@ -149,7 +154,30 @@ public partial class QueryDocumentViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(RunCommand))]
+    [NotifyPropertyChangedFor(nameof(LanguageService))]
     public partial SessionOption? SelectedSession { get; set; }
+
+    /// <summary>
+    /// The language of the chosen connection: its provider's language service, or plain keyword colouring when
+    /// there is no connection or the provider has none.
+    /// </summary>
+    public ISqlLanguageService LanguageService => SelectedSession?.Session.Provider.LanguageService ?? BasicSqlLanguageService.Instance;
+
+    /// <summary>Completion items for a caret position, computed as a background job against cached metadata.</summary>
+    public Task<IReadOnlyList<CompletionItem>> CompleteAsync(string text, int offset, CancellationToken cancellationToken)
+    {
+        if (SelectedSession?.Session is not { Provider.LanguageService: { } service } session)
+        {
+            return Task.FromResult<IReadOnlyList<CompletionItem>>([]);
+        }
+
+        var document = new SqlDocument(text, new SessionMetadataProvider(session, _metadata));
+        return _jobs.Enqueue(
+            "Completion",
+            context => service.GetCompletionsAsync(document, offset, context.CancellationToken),
+            JobPriority.High,
+            cancellationToken).Completion;
+    }
 
     [ObservableProperty]
     public partial IResultTab? SelectedTab { get; set; }
@@ -342,14 +370,16 @@ public partial class QueryDocumentViewModel : ObservableObject
 public partial class DocumentsViewModel : ObservableObject
 {
     private readonly IConnectionManager _manager;
+    private readonly IMetadataService _metadata;
     private readonly IJobQueue _jobs;
     private readonly IDialogService _dialogs;
     private readonly IUiDispatcher _ui;
     private int _counter;
 
-    public DocumentsViewModel(IConnectionManager manager, IJobQueue jobs, IDialogService dialogs, IUiDispatcher ui)
+    public DocumentsViewModel(IConnectionManager manager, IMetadataService metadata, IJobQueue jobs, IDialogService dialogs, IUiDispatcher ui)
     {
         _manager = manager;
+        _metadata = metadata;
         _jobs = jobs;
         _dialogs = dialogs;
         _ui = ui;
@@ -371,7 +401,7 @@ public partial class DocumentsViewModel : ObservableObject
     private void NewQuery()
     {
         var title = string.Format(CultureInfo.CurrentCulture, CompositeFormat.Parse(Strings.QueryTitle), ++_counter);
-        var document = new QueryDocumentViewModel(title, _manager, _jobs, _dialogs, _ui);
+        var document = new QueryDocumentViewModel(title, _manager, _metadata, _jobs, _dialogs, _ui);
         if (PreferredConnectionId is { } id)
         {
             document.SelectSession(id);

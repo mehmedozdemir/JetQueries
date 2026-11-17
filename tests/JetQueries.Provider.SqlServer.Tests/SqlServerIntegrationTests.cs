@@ -82,7 +82,8 @@ public sealed class SqlServerIntegrationTests(SqlServerFixture fixture) : IClass
         var events = await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest(Sql) { BatchSize = 2 }, Token));
 
         Assert.Equal("starting", Assert.IsType<QueryMessage>(events[0]).Text);
-        Assert.Contains(events, static e => e is StatementCompleted { RowsAffected: 3 });
+        // One notification, for the INSERT; the two SELECTs report their rows through ResultSetCompleted only.
+        Assert.Equal(new StatementCompleted(3), Assert.Single(events.OfType<StatementCompleted>()));
 
         var started = events.OfType<ResultSetStarted>().ToList();
         Assert.Equal(2, started.Count);

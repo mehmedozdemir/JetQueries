@@ -18,6 +18,11 @@ public partial class QueryDocumentView : UserControl
             }
         };
 
+        // The editor asks whichever query it is showing at that moment.
+        Editor.CompletionSource = (text, offset, token) => DataContext is QueryDocumentViewModel viewModel
+            ? viewModel.CompleteAsync(text, offset, token)
+            : Task.FromResult<IReadOnlyList<JetQueries.Sdk.CompletionItem>>([]);
+
         // Tunnel: the text editor would otherwise turn Ctrl+Enter into a new line before the shortcut is seen.
         AddHandler(KeyDownEvent, OnPreviewKeyDown, RoutingStrategies.Tunnel);
     }

@@ -32,7 +32,20 @@ internal sealed class SqlServerQueryExecutor(SqlConnection connection) : IQueryE
             }
         }
 
-        void OnStatementCompleted(object sender, StatementCompletedEventArgs e) => pending.Enqueue(new StatementCompleted(e.RecordCount));
+        // SqlClient also reports a row count when a SELECT ends. The SDK's StatementCompleted is for statements
+        // that return no rows — a result set already carries its own count — so the first notification after
+        // each result set is dropped.
+        var resultSetCountPending = false;
+        void OnStatementCompleted(object sender, StatementCompletedEventArgs e)
+        {
+            if (resultSetCountPending)
+            {
+                resultSetCountPending = false;
+                return;
+            }
+
+            pending.Enqueue(new StatementCompleted(e.RecordCount));
+        }
 
         var command = connection.CreateCommand();
         await using (command.ConfigureAwait(false))
@@ -73,6 +86,7 @@ internal sealed class SqlServerQueryExecutor(SqlConnection connection) : IQueryE
                             columns[i] = new ResultColumn(reader.GetName(i), reader.GetDataTypeName(i), reader.GetFieldType(i));
                         }
 
+                        resultSetCountPending = true;
                         yield return new ResultSetStarted(columns);
 
                         long rowCount = 0;

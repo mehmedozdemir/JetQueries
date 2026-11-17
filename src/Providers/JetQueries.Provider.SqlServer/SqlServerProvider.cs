@@ -1,3 +1,4 @@
+using JetQueries.Provider.SqlServer.Language;
 using JetQueries.Sdk;
 using Microsoft.Data.SqlClient;
 
@@ -15,7 +16,7 @@ public sealed class SqlServerExtension : IExtension
 }
 
 /// <summary>Database provider for Microsoft SQL Server and Azure SQL, on Microsoft.Data.SqlClient.</summary>
-public sealed class SqlServerProvider : IDatabaseProvider, IConnectionSettingsProvider
+public sealed class SqlServerProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter
 {
     /// <summary>The provider identifier stored in connection profiles.</summary>
     public const string ProviderId = "sqlserver";
@@ -33,7 +34,10 @@ public sealed class SqlServerProvider : IDatabaseProvider, IConnectionSettingsPr
         ProviderCapabilities.Sequences;
 
     /// <inheritdoc />
-    public ISqlLanguageService? LanguageService => null;
+    public ISqlLanguageService? LanguageService { get; } = new TSqlLanguageService();
+
+    /// <inheritdoc />
+    public IReadOnlyList<ScriptBatch> SplitBatches(string script) => TSqlBatchSplitter.Split(script);
 
     /// <inheritdoc />
     public IReadOnlyList<ConnectionSettingDescriptor> ConnectionSettings { get; } =

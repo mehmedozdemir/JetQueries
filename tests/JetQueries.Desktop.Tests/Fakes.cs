@@ -42,9 +42,9 @@ internal sealed class TestEnvironment : IAsyncDisposable
 
     public ImmediateDispatcher Ui { get; } = new();
 
-    public DocumentsViewModel Documents() => new(Manager, Jobs, Dialogs, Ui);
+    public DocumentsViewModel Documents() => new(Manager, Metadata, Jobs, Dialogs, Ui);
 
-    public QueryDocumentViewModel Query() => new("Query 1", Manager, Jobs, Dialogs, Ui);
+    public QueryDocumentViewModel Query() => new("Query 1", Manager, Metadata, Jobs, Dialogs, Ui);
 
     /// <summary>Opens a session for a saved connection, as connecting from the explorer would.</summary>
     public async Task<ConnectionDefinition> OpenAsync(ConnectionDefinition definition)
@@ -173,7 +173,7 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
     public ProviderCapabilities Capabilities { get; set; } =
         ProviderCapabilities.MultipleDatabases | ProviderCapabilities.Schemas | ProviderCapabilities.Routines | ProviderCapabilities.Sequences;
 
-    public ISqlLanguageService? LanguageService => null;
+    public ISqlLanguageService? LanguageService { get; set; }
 
     public IReadOnlyList<ConnectionSettingDescriptor> ConnectionSettings { get; } =
     [

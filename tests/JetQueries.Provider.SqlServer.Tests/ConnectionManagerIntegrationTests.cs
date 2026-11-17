@@ -144,6 +144,66 @@ public sealed class ConnectionManagerIntegrationTests(SqlServerFixture fixture) 
         Assert.Equal(0, Assert.Single(await RowsAsync(readOnly, "SELECT COUNT(*) FROM sys.tables WHERE name = N'should_not_exist'"))[0]);
     }
 
+    [Fact]
+    public async Task A_script_with_go_runs_batch_by_batch_and_completion_reads_real_metadata()
+    {
+        Assert.SkipWhen(fixture.SkipReason is not null, fixture.SkipReason ?? string.Empty);
+        await using var manager = new ConnectionManager(new SingleProvider(new SqlServerProvider()), new SessionCredentialStore(), new TcpReachabilityProbe());
+        await using var cache = new SqliteMetadataCache(new MetadataCacheOptions(), TimeProvider.System, NullLogger<SqliteMetadataCache>.Instance);
+        var definition = new ConnectionDefinition
+        {
+            Id = Guid.NewGuid(),
+            Name = "container",
+            ProviderId = SqlServerProvider.ProviderId,
+            Settings = fixture.Profile.Settings,
+            UserName = fixture.Credential.UserName,
+        };
+        var session = (await manager.OpenAsync(definition, fixture.Credential.Password, Token)).Session!;
+
+        // CREATE PROCEDURE must be alone in its batch: without GO splitting this script cannot run at all.
+        const string Script = """
+            IF OBJECT_ID(N'dbo.jq_go') IS NOT NULL DROP TABLE dbo.jq_go;
+            CREATE TABLE dbo.jq_go (id int IDENTITY PRIMARY KEY, [Açıklama Metni] nvarchar(40) NULL);
+            GO
+            CREATE OR ALTER PROCEDURE dbo.jq_go_count AS SELECT COUNT(*) AS n FROM dbo.jq_go;
+            GO
+            INSERT INTO dbo.jq_go DEFAULT VALUES;
+            GO 3
+            PRINT 'after the inserts';
+            EXEC dbo.jq_go_count;
+            """;
+        var events = new List<QueryEvent>();
+        await foreach (var item in session.ExecuteAsync(new QueryRequest(Script), Token))
+        {
+            events.Add(item);
+        }
+
+        Assert.Equal(3, events.OfType<StatementCompleted>().Count(static e => e.RowsAffected == 1));
+        Assert.Equal(3, events.OfType<RowBatch>().Single().Rows.Single()[0]);
+
+        // The PRINT is on line 8 of the whole script, not line 1 of its batch.
+        var print = events.OfType<QueryMessage>().Single(static m => m.Text == "after the inserts");
+        Assert.Equal(8, print.Line);
+
+        // Completion against the real catalog, through the cache.
+        var service = session.Provider.LanguageService!;
+        var metadata = new SessionMetadataProvider(session, new MetadataService(cache, TimeProvider.System));
+        const string Sql = "SELECT g. FROM dbo.jq_go g";
+        var columns = await service.GetCompletionsAsync(new SqlDocument(Sql, metadata), "SELECT g.".Length, Token);
+        Assert.Equal(["id", "Açıklama Metni"], columns.Select(static c => c.Label));
+        Assert.Equal("[Açıklama Metni]", columns[1].InsertText);
+        Assert.Equal("int · PK", columns[0].Detail);
+
+        var tables = await service.GetCompletionsAsync(new SqlDocument("SELECT * FROM jq_", metadata), 17, Token);
+        Assert.Contains(tables, static t => t is { Label: "jq_go", Kind: CompletionItemKind.Table });
+
+        var procedures = await service.GetCompletionsAsync(new SqlDocument("EXEC ", metadata), 5, Token);
+        Assert.Contains(procedures, static t => t is { Label: "jq_go_count", Kind: CompletionItemKind.Procedure });
+
+        var schemas = await service.GetCompletionsAsync(new SqlDocument("SELECT * FROM tempdb.", metadata), 21, Token);
+        Assert.Contains(schemas, static t => t is { Label: "dbo", Kind: CompletionItemKind.Schema });
+    }
+
     private static async Task<List<object?[]>> RowsAsync(ConnectionSession session, string sql)
     {
         var rows = new List<object?[]>();

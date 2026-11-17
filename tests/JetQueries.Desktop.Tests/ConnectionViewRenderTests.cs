@@ -16,6 +16,7 @@ namespace JetQueries.Desktop.Tests;
 /// writes them as PNG files next to the test assembly, under <c>screenshots/</c>. The assertions only guard
 /// against a blank or broken render; the images are for looking at.
 /// </summary>
+[Collection(HeadlessUi.Collection)]
 public sealed class ConnectionViewRenderTests
 {
     [Fact]

@@ -4,7 +4,6 @@
              xmlns:res="using:JetQueries.Desktop.Resources"
              xmlns:editor="clr-namespace:JetQueries.Editor;assembly=JetQueries.Editor"
              xmlns:grid="clr-namespace:JetQueries.DataGrid;assembly=JetQueries.DataGrid"
-             xmlns:sql="clr-namespace:JetQueries.Core.Sql;assembly=JetQueries.Core"
              x:Class="JetQueries.Desktop.Views.QueryDocumentView"
              x:DataType="vm:QueryDocumentViewModel">
   <DockPanel>
@@ -39,8 +38,7 @@
         <RowDefinition Height="*" MinHeight="60" />
       </Grid.RowDefinitions>
 
-      <editor:SqlEditor x:Name="Editor" Grid.Row="0" Text="{Binding Text}"
-                        LanguageService="{x:Static sql:BasicSqlLanguageService.Instance}" />
+      <editor:SqlEditor x:Name="Editor" Grid.Row="0" Text="{Binding Text}" LanguageService="{Binding LanguageService}" />
 
       <GridSplitter Grid.Row="1" Height="1" ResizeDirection="Rows" />
 
