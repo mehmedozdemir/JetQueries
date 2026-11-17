@@ -82,4 +82,22 @@
   <data name="CategoryTypes" xml:space="preserve"><value>Types</value></data>
   <data name="ColumnPrimaryKey" xml:space="preserve"><value>PK</value></data>
   <data name="ColumnNullable" xml:space="preserve"><value>null</value></data>
+  <data name="QueryRun" xml:space="preserve"><value>Run (F5)</value></data>
+  <data name="QueryCancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="QueryNoConnection" xml:space="preserve"><value>No open connection</value></data>
+  <data name="QueryTitle" xml:space="preserve"><value>Query {0}</value></data>
+  <data name="ResultTitle" xml:space="preserve"><value>Result {0}</value></data>
+  <data name="MessagesTitle" xml:space="preserve"><value>Messages</value></data>
+  <data name="QueryRunning" xml:space="preserve"><value>Running… {0:N0} rows</value></data>
+  <data name="QueryDone" xml:space="preserve"><value>{0:N0} rows · {1}</value></data>
+  <data name="QueryDoneNoRows" xml:space="preserve"><value>Done · {0}</value></data>
+  <data name="QueryCanceled" xml:space="preserve"><value>Canceled · {0}</value></data>
+  <data name="QueryFailed" xml:space="preserve"><value>Failed · {0}</value></data>
+  <data name="QueryNotSent" xml:space="preserve"><value>Not sent</value></data>
+  <data name="QueryCompleted" xml:space="preserve"><value>Command completed.</value></data>
+  <data name="QueryRowsAffected" xml:space="preserve"><value>{0:N0} rows affected</value></data>
+  <data name="QueryTruncated" xml:space="preserve"><value>Only the first {0:N0} rows are shown.</value></data>
+  <data name="QueryBlockedReadOnly" xml:space="preserve"><value>This connection is read-only. The text contains a statement that can change data, so nothing was sent.</value></data>
+  <data name="QueryConfirmTitle" xml:space="preserve"><value>Production connection</value></data>
+  <data name="QueryConfirmMessage" xml:space="preserve"><value>'{0}' is marked as production. This will run: {1}. Continue?</value></data>
 </root>

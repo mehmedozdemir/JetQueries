@@ -9,10 +9,32 @@ using JetQueries.Desktop.Services;
 namespace JetQueries.Desktop.ViewModels;
 
 /// <summary>View model of the shell window.</summary>
-public partial class MainWindowViewModel(IThemeService themeService, ConnectionsViewModel connections) : ObservableObject
+public partial class MainWindowViewModel : ObservableObject
 {
+    private readonly IThemeService _themeService;
+
+    public MainWindowViewModel(IThemeService themeService, ConnectionsViewModel connections, DocumentsViewModel documents)
+    {
+        ArgumentNullException.ThrowIfNull(connections);
+        _themeService = themeService;
+        Connections = connections;
+        Documents = documents;
+
+        // A new query starts on the connection that is selected in the explorer.
+        connections.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(ConnectionsViewModel.Selected) && connections.Selected is ConnectionNodeViewModel { IsConnected: true } node)
+            {
+                documents.PreferredConnectionId = node.Definition.Id;
+            }
+        };
+    }
+
+    /// <summary>The open query tabs.</summary>
+    public DocumentsViewModel Documents { get; }
+
     /// <summary>The connection tree shown in the explorer panel.</summary>
-    public ConnectionsViewModel Connections { get; } = connections;
+    public ConnectionsViewModel Connections { get; }
 
     /// <summary>Status bar text about extensions; empty until they have been loaded.</summary>
     [ObservableProperty]
@@ -30,5 +52,5 @@ public partial class MainWindowViewModel(IThemeService themeService, Connections
     }
 
     [RelayCommand]
-    private void ToggleTheme() => themeService.Toggle();
+    private void ToggleTheme() => _themeService.Toggle();
 }

@@ -115,6 +115,49 @@ public sealed class ConnectionManagerIntegrationTests(SqlServerFixture fixture) 
         await slow;
     }
 
+    [Fact]
+    public async Task A_session_runs_statements_one_at_a_time_and_refuses_writes_when_read_only()
+    {
+        Assert.SkipWhen(fixture.SkipReason is not null, fixture.SkipReason ?? string.Empty);
+        await using var manager = new ConnectionManager(new SingleProvider(new SqlServerProvider()), new SessionCredentialStore(), new TcpReachabilityProbe());
+        var definition = new ConnectionDefinition
+        {
+            Id = Guid.NewGuid(),
+            Name = "container",
+            ProviderId = SqlServerProvider.ProviderId,
+            Settings = fixture.Profile.Settings,
+            UserName = fixture.Credential.UserName,
+        };
+        var session = (await manager.OpenAsync(definition, fixture.Credential.Password, Token)).Session!;
+
+        // Two statements started together on the one query connection: the second waits for the first
+        // instead of failing with "there is already an open DataReader".
+        var slow = RowsAsync(session, "WAITFOR DELAY '00:00:01'; SELECT 'first' AS v;");
+        var fast = RowsAsync(session, "SELECT 'second' AS v;");
+        Assert.Equal("first", Assert.Single(await slow)[0]);
+        Assert.Equal("second", Assert.Single(await fast)[0]);
+
+        var readOnly = (await manager.OpenAsync(definition with { Id = Guid.NewGuid(), IsReadOnly = true }, fixture.Credential.Password, Token)).Session!;
+        Assert.Equal("master", Assert.Single(await RowsAsync(readOnly, "SELECT DB_NAME() -- no update here"))[0]);
+        await Assert.ThrowsAsync<JetQueries.Core.Queries.ReadOnlyConnectionException>(
+            () => RowsAsync(readOnly, "CREATE TABLE dbo.should_not_exist (id int);"));
+        Assert.Equal(0, Assert.Single(await RowsAsync(readOnly, "SELECT COUNT(*) FROM sys.tables WHERE name = N'should_not_exist'"))[0]);
+    }
+
+    private static async Task<List<object?[]>> RowsAsync(ConnectionSession session, string sql)
+    {
+        var rows = new List<object?[]>();
+        await foreach (var item in session.ExecuteAsync(new QueryRequest(sql), Token))
+        {
+            if (item is RowBatch batch)
+            {
+                rows.AddRange(batch.Rows);
+            }
+        }
+
+        return rows;
+    }
+
     private sealed class SingleProvider(IDatabaseProvider provider) : IExtensionHost
     {
         public IReadOnlyList<ExtensionLoadResult> Extensions => [];

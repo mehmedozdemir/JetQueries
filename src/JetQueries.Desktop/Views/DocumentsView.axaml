@@ -1,0 +1,29 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:JetQueries.Desktop.ViewModels"
+             xmlns:views="using:JetQueries.Desktop.Views"
+             xmlns:res="using:JetQueries.Desktop.Resources"
+             x:Class="JetQueries.Desktop.Views.DocumentsView"
+             x:DataType="vm:DocumentsViewModel"
+             x:Name="Root">
+  <UserControl.KeyBindings>
+    <KeyBinding Gesture="Ctrl+N" Command="{Binding NewQueryCommand}" />
+  </UserControl.KeyBindings>
+  <TabControl ItemsSource="{Binding Documents}" SelectedItem="{Binding Selected}" Padding="0" Classes="documents">
+    <TabControl.ItemTemplate>
+      <DataTemplate x:DataType="vm:QueryDocumentViewModel">
+        <StackPanel Orientation="Horizontal" Spacing="{DynamicResource JqSpace2}">
+          <TextBlock Text="{Binding Title}" VerticalAlignment="Center" />
+          <Button Classes="tab-close" Content="×"
+                  Command="{Binding #Root.((vm:DocumentsViewModel)DataContext).CloseCommand}"
+                  CommandParameter="{Binding}" />
+        </StackPanel>
+      </DataTemplate>
+    </TabControl.ItemTemplate>
+    <TabControl.ContentTemplate>
+      <DataTemplate x:DataType="vm:QueryDocumentViewModel">
+        <views:QueryDocumentView />
+      </DataTemplate>
+    </TabControl.ContentTemplate>
+  </TabControl>
+</UserControl>

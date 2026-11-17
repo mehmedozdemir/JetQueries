@@ -6,6 +6,7 @@
     <!-- Versions taken from UserSecretManager (known-good). Verify latest before adding new ones. -->
     <PackageVersion Include="Antlr4.Runtime.Standard" Version="4.13.1" />
     <PackageVersion Include="Avalonia" Version="12.1.3" />
+    <PackageVersion Include="Avalonia.AvaloniaEdit" Version="12.0.0" />
     <PackageVersion Include="Avalonia.Desktop" Version="12.1.3" />
     <PackageVersion Include="Avalonia.Headless" Version="12.1.3" />
     <PackageVersion Include="Avalonia.Skia" Version="12.1.3" />

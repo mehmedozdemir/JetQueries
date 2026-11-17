@@ -30,7 +30,7 @@
     <!-- Explorer | (Documents / Results) -->
     <Grid Grid.Row="1">
       <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="280" MinWidth="160" />
+        <ColumnDefinition Width="300" MinWidth="160" />
         <ColumnDefinition Width="Auto" />
         <ColumnDefinition Width="*" MinWidth="240" />
       </Grid.ColumnDefinitions>
@@ -46,34 +46,9 @@
 
       <GridSplitter Grid.Column="1" Width="1" ResizeDirection="Columns" />
 
-      <Grid Grid.Column="2">
-        <Grid.RowDefinitions>
-          <RowDefinition Height="*" MinHeight="120" />
-          <RowDefinition Height="Auto" />
-          <RowDefinition Height="2*" MinHeight="80" />
-        </Grid.RowDefinitions>
-
-        <Border Grid.Row="0" Classes="surface">
-          <DockPanel>
-            <Border DockPanel.Dock="Top" Classes="panel-header">
-              <TextBlock Text="{x:Static res:Strings.DocumentsTitle}" />
-            </Border>
-            <TextBlock Classes="placeholder" Text="{x:Static res:Strings.DocumentsPlaceholder}"
-                       FontFamily="{DynamicResource JqFontMono}" />
-          </DockPanel>
-        </Border>
-
-        <GridSplitter Grid.Row="1" Height="1" ResizeDirection="Rows" />
-
-        <Border Grid.Row="2" Classes="surface">
-          <DockPanel>
-            <Border DockPanel.Dock="Top" Classes="panel-header">
-              <TextBlock Text="{x:Static res:Strings.ResultsTitle}" />
-            </Border>
-            <views:GridSpikeView />
-          </DockPanel>
-        </Border>
-      </Grid>
+      <Border x:Name="Centre" Grid.Column="2" Classes="surface">
+        <views:DocumentsView DataContext="{Binding Documents}" />
+      </Border>
     </Grid>
 
     <!-- Status bar -->

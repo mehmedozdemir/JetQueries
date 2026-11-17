@@ -8,13 +8,13 @@
     <Border DockPanel.Dock="Top"
             BorderBrush="{DynamicResource JqBorderBrush}" BorderThickness="0,0,0,1"
             Padding="{DynamicResource JqPaddingCompact}">
-      <StackPanel Orientation="Horizontal" Spacing="{DynamicResource JqSpace1}">
+      <WrapPanel Orientation="Horizontal">
         <Button Classes="toolbar" Content="{x:Static res:Strings.ConnectionNew}" Command="{Binding NewCommand}" />
         <Button Classes="toolbar" Content="{x:Static res:Strings.ConnectionEdit}" Command="{Binding EditCommand}" />
         <Button Classes="toolbar" Content="{x:Static res:Strings.ConnectionDelete}" Command="{Binding DeleteCommand}" />
         <Button Classes="toolbar" Content="{Binding ToggleConnectionText}" Command="{Binding ToggleConnectionCommand}" />
         <Button Classes="toolbar" Content="{x:Static res:Strings.ExplorerRefresh}" Command="{Binding ReloadSelectedCommand}" />
-      </StackPanel>
+      </WrapPanel>
     </Border>
 
     <Panel>

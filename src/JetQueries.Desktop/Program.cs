@@ -109,6 +109,8 @@ internal static class Program
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "JetQueries", "connections.json"));
         builder.Services.AddSingleton<IDialogService, DialogService>();
         builder.Services.AddSingleton<ConnectionsViewModel>();
+        builder.Services.AddSingleton<IUiDispatcher, AvaloniaUiDispatcher>();
+        builder.Services.AddSingleton<DocumentsViewModel>();
         builder.Services.AddHostedService<ExtensionStartupService>();
         builder.Services.AddSingleton<IThemeService, ThemeService>();
         builder.Services.AddSingleton<MainWindowViewModel>();
