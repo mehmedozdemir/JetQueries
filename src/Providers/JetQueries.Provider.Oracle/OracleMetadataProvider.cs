@@ -50,11 +50,10 @@ internal sealed class OracleMetadataProvider(OracleConnection connection) : IMet
                     yield return new DatabaseObject(new DatabaseObjectName(null, null, row), DatabaseObjectKinds.Schema);
                 }
             }
-
-            yield break;
         }
 
-        if (parent.Kind == DatabaseObjectKinds.Schema)
+        // Objects of a schema; at the root, objects of the session's current schema (what an unqualified name means).
+        if (parent is null || parent.Kind == DatabaseObjectKinds.Schema)
         {
             var types = ObjectTypes.Where(t => kinds.HasFlag(t.Kind)).Select(static t => t.Type).ToArray();
             if (types.Length == 0)
@@ -64,17 +63,51 @@ internal sealed class OracleMetadataProvider(OracleConnection connection) : IMet
 
             // Generated objects (system-named LOB and nested-table segments) and the recycle bin are noise.
             var sql = $"""
-                SELECT o.object_name, o.object_type
+                SELECT o.owner, o.object_name, o.object_type
                 FROM all_objects o
-                WHERE o.owner = :owner AND o.object_type IN ({string.Join(", ", types.Select(static t => $"'{t}'"))})
+                WHERE o.owner = NVL(:owner, SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA'))
+                  AND o.object_type IN ({string.Join(", ", types.Select(static t => $"'{t}'"))})
                   AND o.generated = 'N' AND o.secondary = 'N' AND o.object_name NOT LIKE 'BIN$%'
                 ORDER BY o.object_name, o.object_type
                 """;
-            var schema = parent.Name.Name;
-            await foreach (var row in QueryAsync(sql, [("owner", schema)], static r => (Name: r.GetString(0), Type: r.GetString(1)), cancellationToken)
-                               .ConfigureAwait(false))
+            await foreach (var row in QueryAsync(
+                               sql,
+                               [("owner", parent?.Name.Name)],
+                               static r => (Owner: r.GetString(0), Name: r.GetString(1), Type: r.GetString(2)),
+                               cancellationToken).ConfigureAwait(false))
             {
-                yield return new DatabaseObject(new DatabaseObjectName(null, schema, row.Name), ObjectTypes.First(t => t.Type == row.Type).Kind);
+                yield return new DatabaseObject(new DatabaseObjectName(null, row.Owner, row.Name), ObjectTypes.First(t => t.Type == row.Type).Kind);
+            }
+
+            yield break;
+        }
+
+        // The routines a package declares.
+        if (parent.Kind == DatabaseObjectKinds.Package && (kinds & (DatabaseObjectKinds.Procedure | DatabaseObjectKinds.Function)) != 0)
+        {
+            // A function is a subprogram with a return value, which ALL_ARGUMENTS lists at position 0.
+            const string Sql = """
+                SELECT p.procedure_name,
+                       (SELECT COUNT(*) FROM all_arguments a
+                        WHERE a.owner = p.owner AND a.package_name = p.object_name AND a.object_name = p.procedure_name AND a.position = 0) AS returns
+                FROM all_procedures p
+                WHERE p.owner = NVL(:owner, SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA')) AND p.object_name = :name AND p.procedure_name IS NOT NULL
+                ORDER BY p.subprogram_id
+                """;
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            await foreach (var row in QueryAsync(
+                               Sql,
+                               [("owner", parent.Name.Schema), ("name", parent.Name.Name)],
+                               static r => (Name: r.GetString(0), Returns: (ToInt(r, 1) ?? 0) > 0),
+                               cancellationToken).ConfigureAwait(false))
+            {
+                var kind = row.Returns ? DatabaseObjectKinds.Function : DatabaseObjectKinds.Procedure;
+
+                // Overloads appear once.
+                if (kinds.HasFlag(kind) && seen.Add(row.Name))
+                {
+                    yield return new DatabaseObject(new DatabaseObjectName(null, parent.Name.Schema, row.Name), kind);
+                }
             }
 
             yield break;

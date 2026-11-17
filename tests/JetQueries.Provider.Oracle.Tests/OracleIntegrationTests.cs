@@ -304,6 +304,48 @@ public sealed class OracleIntegrationTests(OracleFixture fixture) : IClassFixtur
         });
     }
 
+    [Fact]
+    public async Task Completion_and_navigation_read_the_real_dictionary()
+    {
+        await using var connection = await OpenAsync();
+        foreach (var sql in new[]
+                 {
+                     "CREATE TABLE jq2_cards (id NUMBER(18) PRIMARY KEY, \"Açıklama\" VARCHAR2(40 CHAR), balance NUMBER(12,2))",
+                     "CREATE OR REPLACE PACKAGE jq2_ops AS PROCEDURE open_card(p_id IN NUMBER); FUNCTION balance_of(p_id IN NUMBER) RETURN NUMBER; " +
+                     "FUNCTION balance_of(p_no IN VARCHAR2) RETURN NUMBER; END jq2_ops;",
+                 })
+        {
+            await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest(sql), Token));
+        }
+
+        var service = new OracleProvider().LanguageService!;
+        var metadata = connection.Metadata;
+
+        var tables = await service.GetCompletionsAsync(new SqlDocument("SELECT * FROM jq2", metadata), 17, Token);
+        Assert.Contains(tables, static t => t is { Label: "JQ2_CARDS", Kind: CompletionItemKind.Table });
+
+        var columns = await service.GetCompletionsAsync(new SqlDocument("SELECT c. FROM jq2_cards c", metadata), 9, Token);
+        Assert.Equal(["ID", "Açıklama", "BALANCE"], columns.Select(static c => c.Label));
+        Assert.Equal("\"Açıklama\"", columns[1].InsertText);
+        Assert.Equal("NUMBER(18) · PK", columns[0].Detail);
+
+        // The overloaded function appears once; the procedure and the function are told apart.
+        var members = await service.GetCompletionsAsync(new SqlDocument("BEGIN jq2_ops.", metadata), 14, Token);
+        Assert.Equal(["BALANCE_OF", "OPEN_CARD"], members.Select(static m => m.Label));
+        Assert.Equal(CompletionItemKind.Function, members[0].Kind);
+        Assert.Equal(CompletionItemKind.Procedure, members[1].Kind);
+
+        var definition = await service.GetDefinitionAsync(new SqlDocument("BEGIN jq2_ops.open_card(1); END;", metadata), 16, Token);
+        Assert.Equal(DatabaseObjectKinds.Package, definition!.Target!.Kind);
+        Assert.Equal("OPEN_CARD", definition.MemberName);
+        Assert.Contains("PROCEDURE open_card(p_id IN NUMBER);", await metadata.GetDefinitionAsync(definition.Target, Token), StringComparison.Ordinal);
+
+        // Unqualified names resolve in the current schema; with the schema written out they resolve the same way.
+        var user = fixture.Credential.UserName!.ToUpperInvariant();
+        var qualified = await service.GetCompletionsAsync(new SqlDocument($"SELECT * FROM {user}.jq2", metadata), 15 + user.Length + 3, Token);
+        Assert.Contains(qualified, static t => t.Label == "JQ2_CARDS");
+    }
+
     private ConnectionDefinition Definition() => new()
     {
         Id = Guid.NewGuid(),
