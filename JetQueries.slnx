@@ -22,6 +22,8 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/JetQueries.Core.Tests/JetQueries.Core.Tests.csproj" />
+    <Project Path="tests/JetQueries.PlSql.ParseSpike.Grammar/JetQueries.PlSql.ParseSpike.Grammar.csproj" />
+    <Project Path="tests/JetQueries.PlSql.ParseSpike/JetQueries.PlSql.ParseSpike.csproj" />
     <Project Path="tests/JetQueries.Sdk.Tests/JetQueries.Sdk.Tests.csproj" />
   </Folder>
 </Solution>

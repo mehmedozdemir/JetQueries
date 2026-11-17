@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Phase 0 spike: the grammars-v4 PL/SQL grammar and the C# parser ANTLR generates from it. Kept in its own
+    project because the 8 MB generated parser takes about two minutes to compile. See README.md.
+  -->
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <Nullable>disable</Nullable>
+    <!-- Third-party and generated code: CS3021 (CLSCompliant) comes from ANTLR's output. -->
+    <NoWarn>$(NoWarn);CS3021</NoWarn>
+    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Antlr4.Runtime.Standard" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="*.g4" />
+  </ItemGroup>
+</Project>
