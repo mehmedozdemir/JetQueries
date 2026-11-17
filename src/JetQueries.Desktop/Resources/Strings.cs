@@ -101,6 +101,8 @@ public static class Strings
     public static string QueryBlockedReadOnly => Get(nameof(QueryBlockedReadOnly));
     public static string QueryConfirmTitle => Get(nameof(QueryConfirmTitle));
     public static string QueryConfirmMessage => Get(nameof(QueryConfirmMessage));
+    public static string DefinitionNotFound => Get(nameof(DefinitionNotFound));
+    public static string DefinitionUnavailable => Get(nameof(DefinitionUnavailable));
 
     /// <summary>A string looked up by a computed name (for example <c>Setting_server</c>), or null if there is none.</summary>
     public static string? Find(string name) => Manager.GetString(name, CultureInfo.CurrentUICulture);

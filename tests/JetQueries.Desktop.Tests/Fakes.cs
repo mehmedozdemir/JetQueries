@@ -290,6 +290,7 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
             ]);
         }
 
-        public Task<string?> GetDefinitionAsync(DatabaseObject target, CancellationToken cancellationToken) => Task.FromResult<string?>(null);
+        public Task<string?> GetDefinitionAsync(DatabaseObject target, CancellationToken cancellationToken) =>
+            Task.FromResult(target.Kind == DatabaseObjectKinds.View ? $"CREATE VIEW {target.Name} AS SELECT 1 AS n;" : null);
     }
 }

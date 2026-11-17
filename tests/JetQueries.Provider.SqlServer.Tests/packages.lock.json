@@ -462,7 +462,8 @@
         "type": "Project",
         "dependencies": {
           "JetQueries.Sdk": "[1.0.0, )",
-          "Microsoft.Data.SqlClient": "[7.1.2, )"
+          "Microsoft.Data.SqlClient": "[7.1.2, )",
+          "Microsoft.SqlServer.TransactSql.ScriptDom": "[180.154.0, )"
         }
       },
       "jetqueries.sdk": {
@@ -503,6 +504,12 @@
         "requested": "[10.0.15, )",
         "resolved": "10.0.15",
         "contentHash": "KczR2nV7ooeimtZxAawPht/FJUHnX+uoWy7y4pba+iaRQBwUM2NwtiqZg+/FpZDHUf2RkkzveGkhMTWDNzmDUA=="
+      },
+      "Microsoft.SqlServer.TransactSql.ScriptDom": {
+        "type": "CentralTransitive",
+        "requested": "[180.154.0, )",
+        "resolved": "180.154.0",
+        "contentHash": "epYZJ+0ZSx/u1KZwF8e8wfqPO3KS67EijVJi+EgveLuQaU3a4GRNP5R6kOUrGBv8K+kDpAtCcGBjn5c9NwWW6A=="
       }
     },
     "net10.0/win-x64": {

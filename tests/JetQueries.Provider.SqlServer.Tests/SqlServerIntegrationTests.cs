@@ -224,7 +224,12 @@ public sealed class SqlServerIntegrationTests(SqlServerFixture fixture) : IClass
         Assert.Equal("Izle", trigger.Name.Name);
 
         Assert.Contains("CREATE VIEW kart.Ozet", await metadata.GetDefinitionAsync(view, Token), StringComparison.Ordinal);
-        Assert.Null(await metadata.GetDefinitionAsync(table, Token));
+        // A table has no stored source: a script is written from the catalog and says what it leaves out.
+        var script = await metadata.GetDefinitionAsync(table, Token);
+        Assert.StartsWith("-- Written by JetQueries from the catalog", script, StringComparison.Ordinal);
+        Assert.Contains("CREATE TABLE [kart].[Müşteri İşlemleri]", script, StringComparison.Ordinal);
+        Assert.Contains("    [Tutar] decimal(18,2) NULL,", script, StringComparison.Ordinal);
+        Assert.Contains("    PRIMARY KEY ([Id])", script, StringComparison.Ordinal);
     }
 
     private async Task<IDatabaseConnection> OpenAsync()

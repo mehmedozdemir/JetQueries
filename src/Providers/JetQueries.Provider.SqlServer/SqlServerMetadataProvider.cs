@@ -158,6 +158,11 @@ internal sealed class SqlServerMetadataProvider(SqlConnection connection) : IMet
     public async Task<string?> GetDefinitionAsync(DatabaseObject target, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(target);
+        if (target.Kind == DatabaseObjectKinds.Table)
+        {
+            return await ScriptTableAsync(target.Name, cancellationToken).ConfigureAwait(false);
+        }
+
         if (target.Kind is not (DatabaseObjectKinds.View or DatabaseObjectKinds.Procedure or DatabaseObjectKinds.Function or DatabaseObjectKinds.Trigger))
         {
             return null;
@@ -173,6 +178,41 @@ internal sealed class SqlServerMetadataProvider(SqlConnection connection) : IMet
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// A table has no stored source text, so one is written from the catalog. It lists columns and the primary
+    /// key only and says so: it is for reading, not for recreating the table.
+    /// </summary>
+    private async Task<string?> ScriptTableAsync(DatabaseObjectName table, CancellationToken cancellationToken)
+    {
+        var columns = await GetColumnsAsync(table, cancellationToken).ConfigureAwait(false);
+        if (columns.Count == 0)
+        {
+            return null;
+        }
+
+        var script = new System.Text.StringBuilder();
+        script.AppendLine("-- Written by JetQueries from the catalog: columns and primary key only.");
+        script.AppendLine("-- Defaults, identity, computed columns, indexes, foreign keys and other constraints are not shown.");
+        script.Append("CREATE TABLE ").AppendLine(SqlServerNames.Quote(table with { Database = null }));
+        script.AppendLine("(");
+        var key = columns.Where(static c => c.IsPrimaryKey).Select(static c => SqlServerNames.Quote(c.Name)).ToList();
+        for (var i = 0; i < columns.Count; i++)
+        {
+            var column = columns[i];
+            script.Append("    ").Append(SqlServerNames.Quote(column.Name)).Append(' ').Append(column.DataType)
+                .Append(column.IsNullable ? " NULL" : " NOT NULL")
+                .AppendLine(i < columns.Count - 1 || key.Count > 0 ? "," : string.Empty);
+        }
+
+        if (key.Count > 0)
+        {
+            script.Append("    PRIMARY KEY (").AppendJoin(", ", key).AppendLine(")");
+        }
+
+        script.AppendLine(");");
+        return script.ToString();
     }
 
     /// <summary>The query listing objects of the requested kinds in one schema, or null when no kind applies.</summary>

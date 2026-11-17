@@ -46,8 +46,14 @@ public class SqlEditor : UserControl
     /// <summary>Colour of function and data type names.</summary>
     public static readonly StyledProperty<IBrush?> FunctionBrushProperty = AvaloniaProperty.Register<SqlEditor, IBrush?>(nameof(FunctionBrush));
 
+    /// <summary>Colour of the wavy underline under syntax errors.</summary>
+    public static readonly StyledProperty<IBrush?> ErrorBrushProperty = AvaloniaProperty.Register<SqlEditor, IBrush?>(nameof(ErrorBrush));
+
     private readonly TextEditor _editor;
     private readonly SqlColorizer _colorizer;
+    private readonly DispatcherTimer _diagnosticTimer;
+    private IReadOnlyList<SqlDiagnostic> _diagnostics = [];
+    private int _diagnosticVersion;
     private bool _updatingText;
     private CompletionWindow? _completionWindow;
     private int _completionVersion;
@@ -76,7 +82,72 @@ public class SqlEditor : UserControl
         _editor.TextArea.SelectionChanged += (_, _) => SelectionChanged?.Invoke(this, EventArgs.Empty);
         _editor.TextArea.TextEntered += OnTextEntered;
         AddHandler(KeyDownEvent, OnPreviewKeyDown, RoutingStrategies.Tunnel);
+
+        var view = _editor.TextArea.TextView;
+        view.BackgroundRenderers.Add(new SquiggleRenderer(this));
+        view.PointerMoved += OnPointerMovedOverText;
+        view.PointerExited += (_, _) => ToolTip.SetIsOpen(view, false);
+        view.AddHandler(PointerPressedEvent, OnPointerPressedOnText, RoutingStrategies.Tunnel);
+
+        // Errors are looked for once typing pauses, not on every key.
+        _diagnosticTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(600) };
+        _diagnosticTimer.Tick += (_, _) =>
+        {
+            _diagnosticTimer.Stop();
+            _ = RefreshDiagnosticsAsync();
+        };
         Content = _editor;
+    }
+
+    /// <summary>
+    /// Supplies the syntax errors of a text. Called on the UI thread when typing pauses; it must not block.
+    /// Without it nothing is underlined.
+    /// </summary>
+    public Func<string, CancellationToken, Task<IReadOnlyList<SqlDiagnostic>>>? DiagnosticSource { get; set; }
+
+    /// <summary>Raised with a text offset when the user asks to go to the definition of what is there (Ctrl+Click, F12).</summary>
+    public event EventHandler<int>? NavigationRequested;
+
+    /// <summary>The errors currently underlined.</summary>
+    public IReadOnlyList<SqlDiagnostic> Diagnostics => _diagnostics;
+
+    /// <summary>Colour of the wavy underline under syntax errors.</summary>
+    public IBrush? ErrorBrush
+    {
+        get => GetValue(ErrorBrushProperty);
+        set => SetValue(ErrorBrushProperty, value);
+    }
+
+    /// <summary>Asks the <see cref="DiagnosticSource"/> now, without waiting for a pause in typing.</summary>
+    public async Task RefreshDiagnosticsAsync()
+    {
+        var source = DiagnosticSource;
+        var version = ++_diagnosticVersion;
+        IReadOnlyList<SqlDiagnostic> diagnostics = [];
+        if (source is not null)
+        {
+            try
+            {
+                diagnostics = await source(_editor.Document.Text, CancellationToken.None);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+#pragma warning disable CA1031 // Error checking is a convenience: a failing language service must never disturb typing.
+            catch (Exception)
+#pragma warning restore CA1031
+            {
+                diagnostics = [];
+            }
+        }
+
+        // The text changed again while this was being computed: the newer request will bring the answer.
+        if (version == _diagnosticVersion)
+        {
+            _diagnostics = diagnostics;
+            _editor.TextArea.TextView.InvalidateLayer(KnownLayer.Selection);
+        }
     }
 
     /// <summary>
@@ -199,6 +270,10 @@ public class SqlEditor : UserControl
         {
             _editor.Foreground = Foreground;
         }
+        else if (change.Property == ErrorBrushProperty)
+        {
+            _editor.TextArea.TextView.InvalidateLayer(KnownLayer.Selection);
+        }
         else if (change.Property == KeywordBrushProperty || change.Property == StringBrushProperty || change.Property == CommentBrushProperty ||
                  change.Property == NumberBrushProperty || change.Property == ParameterBrushProperty || change.Property == FunctionBrushProperty)
         {
@@ -222,6 +297,45 @@ public class SqlEditor : UserControl
         {
             RequestCompletion();
             e.Handled = true;
+        }
+        else if (e.Key == Key.F12 && e.KeyModifiers == KeyModifiers.None)
+        {
+            NavigationRequested?.Invoke(this, _editor.CaretOffset);
+            e.Handled = true;
+        }
+    }
+
+    private int? OffsetAt(PointerEventArgs e, bool nearest)
+    {
+        var view = _editor.TextArea.TextView;
+        var point = e.GetPosition(view) + view.ScrollOffset;
+        var position = nearest ? view.GetPosition(point) : view.GetPositionFloor(point);
+        return position is { } found ? _editor.Document.GetOffset(found.Location) : null;
+    }
+
+    private void OnPointerPressedOnText(object? sender, PointerPressedEventArgs e)
+    {
+        if (e.KeyModifiers == KeyModifiers.Control && e.GetCurrentPoint(_editor).Properties.IsLeftButtonPressed && OffsetAt(e, nearest: false) is { } offset)
+        {
+            NavigationRequested?.Invoke(this, offset);
+            e.Handled = true;
+        }
+    }
+
+    private void OnPointerMovedOverText(object? sender, PointerEventArgs e)
+    {
+        var view = _editor.TextArea.TextView;
+        var message = OffsetAt(e, nearest: false) is { } offset
+            ? _diagnostics.FirstOrDefault(d => d.Span.Start <= offset && offset < Math.Max(d.Span.End, d.Span.Start + 1))?.Message
+            : null;
+        if (message is null)
+        {
+            ToolTip.SetIsOpen(view, false);
+        }
+        else
+        {
+            ToolTip.SetTip(view, message);
+            ToolTip.SetIsOpen(view, true);
         }
     }
 
@@ -282,8 +396,15 @@ public class SqlEditor : UserControl
         window.Show();
     }
 
-    private void OnDocumentChanged(object? sender, DocumentChangeEventArgs e) =>
+    private void OnDocumentChanged(object? sender, DocumentChangeEventArgs e)
+    {
         _colorizer.Invalidate(_editor.Document.GetLineByOffset(Math.Min(e.Offset, _editor.Document.TextLength)).LineNumber);
+        if (DiagnosticSource is not null)
+        {
+            _diagnosticTimer.Stop();
+            _diagnosticTimer.Start();
+        }
+    }
 
     private void OnEditorTextChanged(object? sender, EventArgs e)
     {
@@ -369,6 +490,55 @@ public class SqlEditor : UserControl
             }
 
             _validLines = Math.Max(_validLines, lineNumber);
+        }
+    }
+
+    /// <summary>Draws a wavy line under each diagnostic's span, wherever it is visible.</summary>
+    private sealed class SquiggleRenderer(SqlEditor owner) : IBackgroundRenderer
+    {
+        public KnownLayer Layer => KnownLayer.Selection;
+
+        public void Draw(TextView textView, DrawingContext drawingContext)
+        {
+            if (owner._diagnostics.Count == 0 || owner.ErrorBrush is not { } brush || !textView.VisualLinesValid || textView.Document is not { } document)
+            {
+                return;
+            }
+
+            var pen = new Pen(brush, 1);
+            var length = document.TextLength;
+            foreach (var diagnostic in owner._diagnostics)
+            {
+                if (length == 0)
+                {
+                    break;
+                }
+
+                // The text may have changed since the diagnostics were computed: keep the span inside it,
+                // and at least one character wide so that an error at the very end is still visible.
+                var start = Math.Clamp(diagnostic.Span.Start, 0, length - 1);
+                var end = Math.Clamp(diagnostic.Span.End, start + 1, length);
+                var segment = new TextSegment { StartOffset = start, EndOffset = end };
+                foreach (var rect in BackgroundGeometryBuilder.GetRectsForSegment(textView, segment))
+                {
+                    var geometry = new StreamGeometry();
+                    using (var context = geometry.Open())
+                    {
+                        var y = rect.Bottom - 1;
+                        context.BeginFigure(new Point(rect.Left, y), isFilled: false);
+                        var up = true;
+                        for (var x = rect.Left + 2; x <= Math.Max(rect.Right, rect.Left + 4); x += 2)
+                        {
+                            context.LineTo(new Point(x, up ? y - 2 : y));
+                            up = !up;
+                        }
+
+                        context.EndFigure(isClosed: false);
+                    }
+
+                    drawingContext.DrawGeometry(null, pen, geometry);
+                }
+            }
         }
     }
 

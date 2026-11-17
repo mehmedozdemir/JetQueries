@@ -153,6 +153,7 @@
     <Setter Property="NumberBrush" Value="{DynamicResource JqSyntaxNumberBrush}" />
     <Setter Property="ParameterBrush" Value="{DynamicResource JqSyntaxParameterBrush}" />
     <Setter Property="FunctionBrush" Value="{DynamicResource JqSyntaxFunctionBrush}" />
+    <Setter Property="ErrorBrush" Value="{DynamicResource JqDangerBrush}" />
   </Style>
 
   <Style Selector="grid|VirtualGrid">

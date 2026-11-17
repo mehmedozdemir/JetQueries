@@ -23,6 +23,20 @@ public partial class QueryDocumentView : UserControl
             ? viewModel.CompleteAsync(text, offset, token)
             : Task.FromResult<IReadOnlyList<JetQueries.Sdk.CompletionItem>>([]);
 
+        Editor.DiagnosticSource = (text, token) => DataContext is QueryDocumentViewModel viewModel
+            ? viewModel.DiagnoseAsync(text, token)
+            : Task.FromResult<IReadOnlyList<JetQueries.Sdk.SqlDiagnostic>>([]);
+        Editor.NavigationRequested += (_, offset) =>
+        {
+            if (DataContext is QueryDocumentViewModel viewModel)
+            {
+                _ = viewModel.GoToDefinitionAsync(Editor.Text, offset);
+            }
+        };
+
+        // Another connection may mean another language: check the text again.
+        DataContextChanged += (_, _) => _ = Editor.RefreshDiagnosticsAsync();
+
         // Tunnel: the text editor would otherwise turn Ctrl+Enter into a new line before the shortcut is seen.
         AddHandler(KeyDownEvent, OnPreviewKeyDown, RoutingStrategies.Tunnel);
     }

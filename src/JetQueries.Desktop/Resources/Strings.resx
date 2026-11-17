@@ -100,4 +100,6 @@
   <data name="QueryBlockedReadOnly" xml:space="preserve"><value>This connection is read-only. The text contains a statement that can change data, so nothing was sent.</value></data>
   <data name="QueryConfirmTitle" xml:space="preserve"><value>Production connection</value></data>
   <data name="QueryConfirmMessage" xml:space="preserve"><value>'{0}' is marked as production. This will run: {1}. Continue?</value></data>
+  <data name="DefinitionNotFound" xml:space="preserve"><value>Nothing to go to here.</value></data>
+  <data name="DefinitionUnavailable" xml:space="preserve"><value>The definition of {0} is not available (encrypted, or no permission to view it).</value></data>
 </root>
