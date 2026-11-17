@@ -40,7 +40,7 @@
           <Border DockPanel.Dock="Top" Classes="panel-header">
             <TextBlock Text="{x:Static res:Strings.ExplorerTitle}" />
           </Border>
-          <TextBlock Classes="placeholder" Text="{x:Static res:Strings.ExplorerPlaceholder}" />
+          <views:ConnectionsView DataContext="{Binding Connections}" />
         </DockPanel>
       </Border>
 

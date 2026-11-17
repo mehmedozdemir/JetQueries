@@ -59,7 +59,7 @@ docs/                              ANALIZ.md, adr/, testing/ (manual test checkl
 - Run: `dotnet run --project src/JetQueries.Desktop`
 - Test: `dotnet test` (integration tests need Docker; they skip otherwise)
 - Package locally: `scripts/pack.ps1` (Velopack `vpk pack`) — create in Phase 0.
-- Logs: `%LocalAppData%\JetQueries\logs`. Settings and history: `%LocalAppData%\JetQueries\`.
+- Logs and caches: `%LocalAppData%\JetQueries\`. User data (connections, later settings and history): `%AppData%\JetQueries\` (ADR 0005).
 - You (Claude Code) cannot click through the UI. At the end of each task, write/refresh a short manual test checklist in `docs/testing/`.
 
 ## Git & versioning

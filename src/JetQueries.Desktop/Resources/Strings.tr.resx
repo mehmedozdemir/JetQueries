@@ -17,4 +17,56 @@
   <data name="GridSpikeStream" xml:space="preserve"><value>Satır akıt</value></data>
   <data name="GridSpikeBenchmark" xml:space="preserve"><value>Kaydırma testi</value></data>
   <data name="GridSpikeRowCount" xml:space="preserve"><value>{0:N0} satır × {1} sütun (sentetik)</value></data>
+  <data name="ConnectionNew" xml:space="preserve"><value>Yeni</value></data>
+  <data name="ConnectionEdit" xml:space="preserve"><value>Düzenle</value></data>
+  <data name="ConnectionDelete" xml:space="preserve"><value>Sil</value></data>
+  <data name="ConnectionConnect" xml:space="preserve"><value>Bağlan</value></data>
+  <data name="ConnectionDisconnect" xml:space="preserve"><value>Bağlantıyı kes</value></data>
+  <data name="ConnectionsEmpty" xml:space="preserve"><value>Henüz bağlantı yok. Eklemek için Yeni'yi seçin.</value></data>
+  <data name="ConnectionConnectedBadge" xml:space="preserve"><value>bağlı</value></data>
+  <data name="ConnectionReadOnlyBadge" xml:space="preserve"><value>salt okunur</value></data>
+  <data name="ConnectionDialogTitleNew" xml:space="preserve"><value>Yeni bağlantı</value></data>
+  <data name="ConnectionDialogTitleEdit" xml:space="preserve"><value>Bağlantıyı düzenle</value></data>
+  <data name="FieldName" xml:space="preserve"><value>Ad</value></data>
+  <data name="FieldProvider" xml:space="preserve"><value>Veritabanı türü</value></data>
+  <data name="FieldFolder" xml:space="preserve"><value>Klasör</value></data>
+  <data name="FieldFolderHint" xml:space="preserve"><value>örn. Müşteri A/Test</value></data>
+  <data name="FieldEnvironment" xml:space="preserve"><value>Ortam</value></data>
+  <data name="FieldReadOnly" xml:space="preserve"><value>Salt okunur (veri değiştiren deyimleri engelle)</value></data>
+  <data name="FieldUserName" xml:space="preserve"><value>Kullanıcı adı</value></data>
+  <data name="FieldPassword" xml:space="preserve"><value>Parola</value></data>
+  <data name="FieldSavePassword" xml:space="preserve"><value>Parolayı sistemin kimlik bilgisi deposunda sakla</value></data>
+  <data name="PasswordUnchangedHint" xml:space="preserve"><value>kayıtlı parolayı korumak için boş bırakın</value></data>
+  <data name="PasswordNotPersistentHint" xml:space="preserve"><value>Bu sistemde desteklenen bir kimlik bilgisi deposu yok: parola yalnızca bu oturum boyunca tutulur.</value></data>
+  <data name="EnvironmentUnspecified" xml:space="preserve"><value>Belirtilmemiş</value></data>
+  <data name="EnvironmentDevelopment" xml:space="preserve"><value>Geliştirme</value></data>
+  <data name="EnvironmentTest" xml:space="preserve"><value>Test</value></data>
+  <data name="EnvironmentProduction" xml:space="preserve"><value>Üretim</value></data>
+  <data name="ButtonTest" xml:space="preserve"><value>Bağlantıyı sına</value></data>
+  <data name="ButtonCancelTest" xml:space="preserve"><value>Durdur</value></data>
+  <data name="ButtonSave" xml:space="preserve"><value>Kaydet</value></data>
+  <data name="ButtonCancel" xml:space="preserve"><value>Vazgeç</value></data>
+  <data name="ButtonOk" xml:space="preserve"><value>Tamam</value></data>
+  <data name="ConnectionTesting" xml:space="preserve"><value>Bağlanılıyor…</value></data>
+  <data name="OutcomeSucceeded" xml:space="preserve"><value>{0:N0} ms içinde bağlanıldı.</value></data>
+  <data name="OutcomeProviderMissing" xml:space="preserve"><value>'{0}' veritabanı türünü sağlayan yüklü bir eklenti yok.</value></data>
+  <data name="OutcomePasswordRequired" xml:space="preserve"><value>Parola gerekli.</value></data>
+  <data name="OutcomeUnreachable" xml:space="preserve"><value>Sunucuya ulaşılamıyor. Adresi ve VPN bağlantısını kontrol edin. ({0})</value></data>
+  <data name="OutcomeFailed" xml:space="preserve"><value>Sunucu bağlantıyı reddetti: {0}</value></data>
+  <data name="OutcomeCanceled" xml:space="preserve"><value>Durduruldu.</value></data>
+  <data name="ValidationNameRequired" xml:space="preserve"><value>Bir ad girin.</value></data>
+  <data name="ValidationProviderRequired" xml:space="preserve"><value>Bir veritabanı türü seçin.</value></data>
+  <data name="ValidationSettingRequired" xml:space="preserve"><value>{0} gerekli.</value></data>
+  <data name="ValidationUserRequired" xml:space="preserve"><value>Kullanıcı adı girin.</value></data>
+  <data name="PasswordPromptTitle" xml:space="preserve"><value>Parola</value></data>
+  <data name="PasswordPromptMessage" xml:space="preserve"><value>{0} için parola</value></data>
+  <data name="DeleteConfirmTitle" xml:space="preserve"><value>Bağlantıyı sil</value></data>
+  <data name="DeleteConfirmMessage" xml:space="preserve"><value>'{0}' bağlantısı silinsin mi? Kayıtlı parolası da kaldırılır.</value></data>
+  <data name="Setting_server" xml:space="preserve"><value>Sunucu</value></data>
+  <data name="Setting_database" xml:space="preserve"><value>Veritabanı</value></data>
+  <data name="Setting_authentication" xml:space="preserve"><value>Kimlik doğrulama</value></data>
+  <data name="Setting_encrypt" xml:space="preserve"><value>Şifreleme</value></data>
+  <data name="Setting_trustServerCertificate" xml:space="preserve"><value>Sunucu sertifikasına güven</value></data>
+  <data name="Setting_readOnlyIntent" xml:space="preserve"><value>Salt okunur yönlendirme</value></data>
+  <data name="Setting_connectTimeoutSeconds" xml:space="preserve"><value>Bağlantı zaman aşımı (sn)</value></data>
 </root>

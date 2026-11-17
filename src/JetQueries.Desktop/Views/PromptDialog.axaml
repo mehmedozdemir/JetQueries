@@ -1,0 +1,15 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:res="using:JetQueries.Desktop.Resources"
+        x:Class="JetQueries.Desktop.Views.PromptDialog"
+        Width="420" SizeToContent="Height" CanResize="False"
+        ShowInTaskbar="False" WindowStartupLocation="CenterOwner">
+  <StackPanel Margin="{DynamicResource JqPaddingPanel}" Spacing="12">
+    <TextBlock x:Name="Message" TextWrapping="Wrap" />
+    <TextBox x:Name="Secret" PasswordChar="●" IsVisible="False" />
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="{DynamicResource JqSpace2}">
+      <Button Content="{x:Static res:Strings.ButtonOk}" IsDefault="True" Classes="accent" MinWidth="88" HorizontalContentAlignment="Center" Click="OnOk" />
+      <Button Content="{x:Static res:Strings.ButtonCancel}" IsCancel="True" MinWidth="88" HorizontalContentAlignment="Center" Click="OnCancel" />
+    </StackPanel>
+  </StackPanel>
+</Window>

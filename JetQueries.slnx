@@ -23,6 +23,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/JetQueries.Core.Tests/JetQueries.Core.Tests.csproj" />
     <Project Path="tests/JetQueries.DataGrid.Tests/JetQueries.DataGrid.Tests.csproj" />
+    <Project Path="tests/JetQueries.Desktop.Tests/JetQueries.Desktop.Tests.csproj" />
     <Project Path="tests/JetQueries.PlSql.ParseSpike.Grammar/JetQueries.PlSql.ParseSpike.Grammar.csproj" />
     <Project Path="tests/JetQueries.PlSql.ParseSpike/JetQueries.PlSql.ParseSpike.csproj" />
     <Project Path="tests/JetQueries.Provider.SqlServer.Tests/JetQueries.Provider.SqlServer.Tests.csproj" />

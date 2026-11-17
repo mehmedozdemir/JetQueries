@@ -1,0 +1,56 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:JetQueries.Desktop.ViewModels"
+             xmlns:res="using:JetQueries.Desktop.Resources"
+             x:Class="JetQueries.Desktop.Views.ConnectionsView"
+             x:DataType="vm:ConnectionsViewModel">
+  <DockPanel>
+    <Border DockPanel.Dock="Top"
+            BorderBrush="{DynamicResource JqBorderBrush}" BorderThickness="0,0,0,1"
+            Padding="{DynamicResource JqPaddingCompact}">
+      <StackPanel Orientation="Horizontal" Spacing="{DynamicResource JqSpace1}">
+        <Button Classes="toolbar" Content="{x:Static res:Strings.ConnectionNew}" Command="{Binding NewCommand}" />
+        <Button Classes="toolbar" Content="{x:Static res:Strings.ConnectionEdit}" Command="{Binding EditCommand}" />
+        <Button Classes="toolbar" Content="{x:Static res:Strings.ConnectionDelete}" Command="{Binding DeleteCommand}" />
+        <Button Classes="toolbar" Content="{Binding ToggleConnectionText}" Command="{Binding ToggleConnectionCommand}" />
+      </StackPanel>
+    </Border>
+
+    <Panel>
+      <TextBlock Classes="placeholder" Text="{x:Static res:Strings.ConnectionsEmpty}" IsVisible="{Binding IsEmpty}" />
+
+      <TreeView x:Name="Tree" ItemsSource="{Binding Roots}" SelectedItem="{Binding Selected}"
+                Background="Transparent" IsVisible="{Binding !IsEmpty}"
+                DoubleTapped="OnTreeDoubleTapped">
+        <TreeView.Styles>
+          <Style Selector="TreeViewItem" x:DataType="vm:ExplorerNodeViewModel">
+            <Setter Property="IsExpanded" Value="{Binding IsExpanded}" />
+          </Style>
+        </TreeView.Styles>
+        <TreeView.DataTemplates>
+          <TreeDataTemplate DataType="vm:FolderNodeViewModel" ItemsSource="{Binding Children}">
+            <TextBlock Text="{Binding Name}" Foreground="{DynamicResource JqTextSecondaryBrush}" FontWeight="SemiBold" />
+          </TreeDataTemplate>
+          <TreeDataTemplate DataType="vm:ConnectionNodeViewModel" ItemsSource="{Binding Children}">
+            <StackPanel Orientation="Horizontal" Spacing="{DynamicResource JqSpace2}"
+                        ToolTip.Tip="{Binding Error}" ToolTip.ServiceEnabled="{Binding HasError}">
+              <Ellipse Classes="environment" VerticalAlignment="Center"
+                       Classes.development="{Binding IsDevelopment}"
+                       Classes.test="{Binding IsTest}"
+                       Classes.production="{Binding IsProduction}" />
+              <TextBlock Classes="connection-name" Text="{Binding Name}" VerticalAlignment="Center"
+                         Classes.connected="{Binding IsConnected}"
+                         Classes.failed="{Binding HasError}" />
+              <TextBlock Classes="badge" Text="{x:Static res:Strings.ConnectionConnectedBadge}"
+                         IsVisible="{Binding IsConnected}" VerticalAlignment="Center" />
+              <TextBlock Classes="badge" Text="{x:Static res:Strings.ConnectionReadOnlyBadge}"
+                         IsVisible="{Binding IsReadOnly}" VerticalAlignment="Center" />
+              <ProgressBar IsIndeterminate="True" Width="36" MinWidth="36" Height="3" MinHeight="3"
+                           IsVisible="{Binding IsBusy}" VerticalAlignment="Center" />
+            </StackPanel>
+          </TreeDataTemplate>
+        </TreeView.DataTemplates>
+      </TreeView>
+    </Panel>
+  </DockPanel>
+</UserControl>

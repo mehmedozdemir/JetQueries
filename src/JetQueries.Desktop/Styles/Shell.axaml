@@ -59,6 +59,43 @@
     <Setter Property="Foreground" Value="{DynamicResource JqTextPrimaryBrush}" />
   </Style>
 
+  <!-- Connection tree -->
+  <Style Selector="Ellipse.environment">
+    <Setter Property="Width" Value="8" />
+    <Setter Property="Height" Value="8" />
+    <Setter Property="Fill" Value="Transparent" />
+    <Setter Property="Stroke" Value="{DynamicResource JqTextSecondaryBrush}" />
+    <Setter Property="StrokeThickness" Value="1" />
+  </Style>
+  <Style Selector="Ellipse.environment.development">
+    <Setter Property="Fill" Value="{DynamicResource JqSuccessBrush}" />
+    <Setter Property="Stroke" Value="{DynamicResource JqSuccessBrush}" />
+  </Style>
+  <Style Selector="Ellipse.environment.test">
+    <Setter Property="Fill" Value="{DynamicResource JqWarningBrush}" />
+    <Setter Property="Stroke" Value="{DynamicResource JqWarningBrush}" />
+  </Style>
+  <Style Selector="Ellipse.environment.production">
+    <Setter Property="Fill" Value="{DynamicResource JqDangerBrush}" />
+    <Setter Property="Stroke" Value="{DynamicResource JqDangerBrush}" />
+  </Style>
+  <Style Selector="TextBlock.connection-name.connected">
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+  <Style Selector="TextBlock.connection-name.failed">
+    <Setter Property="Foreground" Value="{DynamicResource JqDangerBrush}" />
+  </Style>
+  <Style Selector="TextBlock.badge">
+    <Setter Property="FontSize" Value="{DynamicResource JqFontSizeCaption}" />
+    <Setter Property="Foreground" Value="{DynamicResource JqTextSecondaryBrush}" />
+  </Style>
+  <Style Selector="TextBlock.test-result">
+    <Setter Property="Foreground" Value="{DynamicResource JqSuccessBrush}" />
+  </Style>
+  <Style Selector="TextBlock.test-result.failed">
+    <Setter Property="Foreground" Value="{DynamicResource JqDangerBrush}" />
+  </Style>
+
   <Style Selector="grid|VirtualGrid">
     <Setter Property="Background" Value="{DynamicResource JqSurfaceBrush}" />
     <Setter Property="Foreground" Value="{DynamicResource JqTextPrimaryBrush}" />

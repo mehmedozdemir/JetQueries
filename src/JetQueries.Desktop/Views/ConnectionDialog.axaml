@@ -1,0 +1,133 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:JetQueries.Desktop.ViewModels"
+        xmlns:res="using:JetQueries.Desktop.Resources"
+        xmlns:sdk="using:JetQueries.Sdk"
+        x:Class="JetQueries.Desktop.Views.ConnectionDialog"
+        x:DataType="vm:ConnectionEditorViewModel"
+        Title="{Binding Title}"
+        Width="560" SizeToContent="Height" CanResize="False"
+        ShowInTaskbar="False" WindowStartupLocation="CenterOwner">
+  <Window.Styles>
+    <Style Selector="Grid.field > TextBlock.label">
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Foreground" Value="{DynamicResource JqTextSecondaryBrush}" />
+    </Style>
+    <Style Selector="Button">
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="TextBlock.hint">
+      <Setter Property="FontSize" Value="{DynamicResource JqFontSizeCaption}" />
+      <Setter Property="Foreground" Value="{DynamicResource JqTextSecondaryBrush}" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+  </Window.Styles>
+
+  <DockPanel Margin="{DynamicResource JqPaddingPanel}">
+    <!-- Buttons -->
+    <DockPanel DockPanel.Dock="Bottom" Margin="0,16,0,0">
+      <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="{DynamicResource JqSpace2}">
+        <Button Content="{x:Static res:Strings.ButtonSave}" Command="{Binding SaveCommand}" IsDefault="True" Classes="accent" MinWidth="88" />
+        <Button Content="{x:Static res:Strings.ButtonCancel}" Command="{Binding CancelCommand}" IsCancel="True" MinWidth="88" />
+      </StackPanel>
+      <StackPanel Orientation="Horizontal" Spacing="{DynamicResource JqSpace2}">
+        <Button Content="{x:Static res:Strings.ButtonTest}" Command="{Binding TestCommand}" />
+        <Button Content="{x:Static res:Strings.ButtonCancelTest}" Command="{Binding StopTestCommand}" IsVisible="{Binding IsTesting}" />
+      </StackPanel>
+    </DockPanel>
+
+    <!-- Messages -->
+    <StackPanel DockPanel.Dock="Bottom" Margin="0,12,0,0" Spacing="{DynamicResource JqSpace1}">
+      <ProgressBar IsIndeterminate="True" Height="3" MinHeight="3" IsVisible="{Binding IsTesting}" />
+      <TextBlock Text="{Binding ValidationMessage}" Foreground="{DynamicResource JqDangerBrush}" TextWrapping="Wrap"
+                 IsVisible="{Binding ValidationMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+      <TextBlock Classes="test-result" Text="{Binding TestMessage}" TextWrapping="Wrap"
+                 Classes.failed="{Binding TestFailed}"
+                 IsVisible="{Binding TestMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+    </StackPanel>
+
+    <StackPanel Spacing="{DynamicResource JqSpace2}">
+      <Grid Classes="field" ColumnDefinitions="170,*">
+        <TextBlock Classes="label" Text="{x:Static res:Strings.FieldName}" />
+        <TextBox Grid.Column="1" Text="{Binding Name}" />
+      </Grid>
+      <Grid Classes="field" ColumnDefinitions="170,*">
+        <TextBlock Classes="label" Text="{x:Static res:Strings.FieldProvider}" />
+        <ComboBox Grid.Column="1" ItemsSource="{Binding Providers}" SelectedItem="{Binding SelectedProvider}"
+                  HorizontalAlignment="Stretch">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="vm:ProviderOption">
+              <TextBlock Text="{Binding DisplayName}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+      </Grid>
+
+      <!-- Settings defined by the chosen provider -->
+      <ItemsControl ItemsSource="{Binding Fields}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <StackPanel Spacing="{DynamicResource JqSpace2}" />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:SettingFieldViewModel">
+            <Grid Classes="field" ColumnDefinitions="170,*">
+              <TextBlock Classes="label" Text="{Binding Label}" />
+              <StackPanel Grid.Column="1" Spacing="2">
+                <TextBox Text="{Binding Value}" IsVisible="{Binding IsText}" />
+                <ComboBox ItemsSource="{Binding Options}" SelectedItem="{Binding SelectedOption}"
+                          HorizontalAlignment="Stretch" IsVisible="{Binding IsChoice}">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="sdk:ConnectionSettingOption">
+                      <TextBlock Text="{Binding DisplayName}" />
+                    </DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+                <CheckBox IsChecked="{Binding BooleanValue}" IsVisible="{Binding IsBoolean}" />
+                <TextBlock Classes="hint" Text="{Binding Hint}"
+                           IsVisible="{Binding Hint, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+              </StackPanel>
+            </Grid>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <!-- Credential -->
+      <StackPanel Spacing="{DynamicResource JqSpace2}" IsVisible="{Binding NeedsCredential}">
+        <Grid Classes="field" ColumnDefinitions="170,*">
+          <TextBlock Classes="label" Text="{x:Static res:Strings.FieldUserName}" />
+          <TextBox Grid.Column="1" Text="{Binding UserName}" />
+        </Grid>
+        <Grid Classes="field" ColumnDefinitions="170,*">
+          <TextBlock Classes="label" Text="{x:Static res:Strings.FieldPassword}" VerticalAlignment="Top" Margin="0,6,0,0" />
+          <StackPanel Grid.Column="1" Spacing="2">
+            <TextBox Text="{Binding Password}" PasswordChar="●" PlaceholderText="{Binding PasswordHint}" />
+            <CheckBox Content="{x:Static res:Strings.FieldSavePassword}" IsChecked="{Binding SavePassword}" />
+            <TextBlock Classes="hint" Text="{x:Static res:Strings.PasswordNotPersistentHint}" IsVisible="{Binding !CanPersistPasswords}" />
+          </StackPanel>
+        </Grid>
+      </StackPanel>
+
+      <!-- Organisation and safety -->
+      <Grid Classes="field" ColumnDefinitions="170,*">
+        <TextBlock Classes="label" Text="{x:Static res:Strings.FieldFolder}" />
+        <TextBox Grid.Column="1" Text="{Binding Folder}" PlaceholderText="{x:Static res:Strings.FieldFolderHint}" />
+      </Grid>
+      <Grid Classes="field" ColumnDefinitions="170,*">
+        <TextBlock Classes="label" Text="{x:Static res:Strings.FieldEnvironment}" />
+        <ComboBox Grid.Column="1" ItemsSource="{Binding Environments}" SelectedItem="{Binding SelectedEnvironment}"
+                  HorizontalAlignment="Stretch">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="vm:EnvironmentOption">
+              <TextBlock Text="{Binding DisplayName}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+      </Grid>
+      <Grid Classes="field" ColumnDefinitions="170,*">
+        <CheckBox Grid.Column="1" Content="{x:Static res:Strings.FieldReadOnly}" IsChecked="{Binding IsReadOnly}" />
+      </Grid>
+    </StackPanel>
+  </DockPanel>
+</Window>
