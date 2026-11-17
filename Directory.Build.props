@@ -8,6 +8,8 @@
     <AnalysisLevel>latest-recommended</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <!-- Runtimes we publish for. Declared here so lock files already contain them and publishing does not rewrite them. -->
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
     <Authors>Mehmet Özdemir</Authors>
     <Product>JetQueries</Product>
     <Copyright>© 2026 Mehmet Özdemir</Copyright>
