@@ -1,6 +1,8 @@
 using JetQueries.Core.Connections;
 using JetQueries.Core.Extensions;
+using System.Runtime.CompilerServices;
 using JetQueries.Core.Jobs;
+using JetQueries.Core.Metadata;
 using JetQueries.Desktop.Services;
 using JetQueries.Desktop.ViewModels;
 using JetQueries.Sdk;
@@ -30,10 +32,24 @@ internal sealed class TestEnvironment : IAsyncDisposable
 
     public JobQueue Jobs { get; } = new();
 
+    public SqliteMetadataCache MetadataCache { get; } =
+        new(new MetadataCacheOptions(), TimeProvider.System, NullLogger<SqliteMetadataCache>.Instance);
+
+    public MetadataService Metadata => new(MetadataCache, TimeProvider.System);
+
     public ConnectionEditorViewModel Editor(ConnectionDefinition? existing = null) =>
         new(existing, [Provider], Store, Credentials, Manager, Jobs);
 
-    public ConnectionsViewModel Connections() => new(Store, Manager, Credentials, Jobs, Dialogs);
+    public ConnectionsViewModel Connections() => new(Store, Manager, Credentials, Metadata, Jobs, Dialogs);
+
+    /// <summary>Waits for a node's background load, which the tree starts by itself when a node is expanded.</summary>
+    public static async Task LoadedAsync(LazyNodeViewModel node)
+    {
+        for (var i = 0; i < 500 && (node.IsLoading || node.Children is [MessageNodeViewModel { IsError: false, Name: "Loading…" or "Yükleniyor…" }]); i++)
+        {
+            await Task.Delay(10);
+        }
+    }
 
     public static ConnectionDefinition Definition(string name, string folder = "", ConnectionEnvironment environment = ConnectionEnvironment.Unspecified) => new()
     {
@@ -51,6 +67,7 @@ internal sealed class TestEnvironment : IAsyncDisposable
     {
         await Manager.DisposeAsync();
         await Jobs.DisposeAsync();
+        await MetadataCache.DisposeAsync();
         Store.Dispose();
     }
 }
@@ -109,11 +126,17 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
 
     public (string? User, string? Password)? LastCredential { get; private set; }
 
+    /// <summary>Every metadata request that reached the "database", for example <c>objects:Cards/dbo:Table</c>.</summary>
+    public List<string> MetadataCalls { get; } = [];
+
+    public string? MetadataError { get; set; }
+
     public string Id => "fake";
 
     public string DisplayName => "SQL Server";
 
-    public ProviderCapabilities Capabilities => ProviderCapabilities.None;
+    public ProviderCapabilities Capabilities { get; set; } =
+        ProviderCapabilities.MultipleDatabases | ProviderCapabilities.Schemas | ProviderCapabilities.Routines | ProviderCapabilities.Sequences;
 
     public ISqlLanguageService? LanguageService => null;
 
@@ -140,16 +163,69 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
     {
         LastCredential = credential is null ? null : (credential.UserName, credential.Password);
         return OpenError is null
-            ? Task.FromResult<IDatabaseConnection>(new FakeConnection())
+            ? Task.FromResult<IDatabaseConnection>(new FakeConnection(this))
             : Task.FromException<IDatabaseConnection>(new InvalidOperationException(OpenError));
     }
 
-    private sealed class FakeConnection : IDatabaseConnection
+    private sealed class FakeConnection(FakeProvider owner) : IDatabaseConnection
     {
         public IQueryExecutor Executor => throw new NotSupportedException();
 
-        public IMetadataProvider Metadata => throw new NotSupportedException();
+        public IMetadataProvider Metadata { get; } = new FakeMetadata(owner);
 
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+    }
+
+    /// <summary>A small fixed catalog: databases Cards and master, schemas dbo and kart, a few objects in dbo.</summary>
+    private sealed class FakeMetadata(FakeProvider owner) : IMetadataProvider
+    {
+        public async IAsyncEnumerable<DatabaseObject> GetObjectsAsync(
+            DatabaseObject? parent, DatabaseObjectKinds kinds, [EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            await Task.Yield();
+            owner.MetadataCalls.Add($"objects:{parent?.Name.ToString().Replace('.', '/') ?? "(root)"}:{kinds}");
+            if (owner.MetadataError is not null)
+            {
+                throw new InvalidOperationException(owner.MetadataError);
+            }
+
+            if (parent is null && kinds == DatabaseObjectKinds.Database)
+            {
+                yield return new(new(null, null, "Cards"), DatabaseObjectKinds.Database);
+                yield return new(new(null, null, "master"), DatabaseObjectKinds.Database);
+            }
+            else if (kinds == DatabaseObjectKinds.Schema)
+            {
+                yield return new(new(parent?.Name.Name, null, "dbo"), DatabaseObjectKinds.Schema);
+                yield return new(new(parent?.Name.Name, null, "kart"), DatabaseObjectKinds.Schema);
+            }
+            else if (parent?.Name.Name is "dbo" or null)
+            {
+                var names = kinds switch
+                {
+                    DatabaseObjectKinds.Table => new[] { "Cards", "Müşteri İşlemleri", "Transactions" },
+                    DatabaseObjectKinds.View => ["CardSummary"],
+                    DatabaseObjectKinds.Procedure => ["PurgeOldLogs"],
+                    _ => [],
+                };
+                foreach (var name in names)
+                {
+                    yield return new(new(parent?.Name.Database, parent?.Name.Name, name), kinds);
+                }
+            }
+        }
+
+        public Task<IReadOnlyList<ColumnInfo>> GetColumnsAsync(DatabaseObjectName tableOrView, CancellationToken cancellationToken)
+        {
+            owner.MetadataCalls.Add($"columns:{tableOrView.Name}");
+            return Task.FromResult<IReadOnlyList<ColumnInfo>>(
+            [
+                new("Id", "bigint", false, 1, true),
+                new("CardNo", "varchar(19)", false, 2),
+                new("Balance", "decimal(12,2)", true, 3),
+            ]);
+        }
+
+        public Task<string?> GetDefinitionAsync(DatabaseObject target, CancellationToken cancellationToken) => Task.FromResult<string?>(null);
     }
 }

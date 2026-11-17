@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using JetQueries.Core.Connections;
 using JetQueries.Core.Jobs;
+using JetQueries.Core.Metadata;
 using JetQueries.Desktop.Resources;
 using JetQueries.Desktop.Services;
 
@@ -19,15 +20,48 @@ public abstract partial class ExplorerNodeViewModel(string name) : ObservableObj
 
     [ObservableProperty]
     public partial bool IsExpanded { get; set; } = true;
+
+    /// <summary>Called when the node is expanded or collapsed, by the user or by code.</summary>
+    protected virtual void OnExpanded(bool expanded)
+    {
+    }
+
+    partial void OnIsExpandedChanged(bool value) => OnExpanded(value);
 }
 
 /// <summary>A folder grouping connections.</summary>
 public sealed class FolderNodeViewModel(string name) : ExplorerNodeViewModel(name);
 
 /// <summary>A saved connection and its live state.</summary>
-public sealed partial class ConnectionNodeViewModel(ConnectionDefinition definition) : ExplorerNodeViewModel(definition.Name)
+public sealed partial class ConnectionNodeViewModel(ConnectionDefinition definition) : LazyNodeViewModel(definition.Name, expandable: false)
 {
+    private ExplorerContext? _context;
+
     public ConnectionDefinition Definition { get; } = definition;
+
+    public override bool CanLoad => _context is not null;
+
+    /// <summary>The connection is open: show its objects underneath.</summary>
+    public void Attach(ExplorerContext context)
+    {
+        _context = context;
+        IsConnected = true;
+        Reset(expandable: true);
+        IsExpanded = false;
+        IsExpanded = true;
+    }
+
+    /// <summary>The connection is closed: nothing underneath any more.</summary>
+    public void Detach()
+    {
+        _context = null;
+        IsConnected = false;
+        IsExpanded = false;
+        Reset(expandable: false);
+    }
+
+    protected override Task<IReadOnlyList<ExplorerNodeViewModel>> LoadChildrenAsync(bool refresh) =>
+        _context is null ? Task.FromResult<IReadOnlyList<ExplorerNodeViewModel>>([]) : ExplorerTree.LoadRootAsync(_context, refresh);
 
     public bool IsReadOnly => Definition.IsReadOnly;
 
@@ -56,13 +90,14 @@ public partial class ConnectionsViewModel(
     IConnectionStore store,
     IConnectionManager manager,
     ICredentialStore credentials,
+    IMetadataService metadata,
     IJobQueue jobs,
     IDialogService dialogs) : ObservableObject
 {
     public ObservableCollection<ExplorerNodeViewModel> Roots { get; } = [];
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(EditCommand), nameof(DeleteCommand), nameof(ToggleConnectionCommand))]
+    [NotifyCanExecuteChangedFor(nameof(EditCommand), nameof(DeleteCommand), nameof(ToggleConnectionCommand), nameof(ReloadSelectedCommand))]
     [NotifyPropertyChangedFor(nameof(ToggleConnectionText))]
     public partial ExplorerNodeViewModel? Selected { get; set; }
 
@@ -77,7 +112,7 @@ public partial class ConnectionsViewModel(
         var job = jobs.Enqueue("Load connections", context => store.GetAllAsync(context.CancellationToken), JobPriority.High);
         var definitions = await job.Completion;
 
-        var open = manager.Sessions.Select(static s => s.Definition.Id).ToHashSet();
+        var open = manager.Sessions.ToDictionary(static s => s.Definition.Id);
         var selectedId = (Selected as ConnectionNodeViewModel)?.Definition.Id;
         Roots.Clear();
         ExplorerNodeViewModel? reselect = null;
@@ -98,8 +133,13 @@ public partial class ConnectionsViewModel(
                 siblings = folder.Children;
             }
 
-            var node = new ConnectionNodeViewModel(definition) { IsConnected = open.Contains(definition.Id) };
+            var node = new ConnectionNodeViewModel(definition);
             siblings.Add(node);
+            if (open.TryGetValue(definition.Id, out var session))
+            {
+                node.Attach(new ExplorerContext(session, metadata, jobs));
+            }
+
             if (definition.Id == selectedId)
             {
                 reselect = node;
@@ -178,7 +218,7 @@ public partial class ConnectionsViewModel(
             if (node.IsConnected)
             {
                 await jobs.Enqueue("Disconnect", _ => manager.CloseAsync(node.Definition.Id), JobPriority.High).Completion;
-                node.IsConnected = false;
+                node.Detach();
                 return;
             }
 
@@ -195,8 +235,14 @@ public partial class ConnectionsViewModel(
                 attempt = await OpenAsync(node.Definition, password);
             }
 
-            node.IsConnected = attempt.Outcome == ConnectionOutcome.Succeeded;
-            node.Error = node.IsConnected ? string.Empty : ConnectionEditorViewModel.Describe(attempt);
+            if (attempt is { Outcome: ConnectionOutcome.Succeeded, Session: { } session })
+            {
+                node.Attach(new ExplorerContext(session, metadata, jobs));
+            }
+            else
+            {
+                node.Error = ConnectionEditorViewModel.Describe(attempt);
+            }
         }
         catch (OperationCanceledException)
         {
@@ -209,6 +255,19 @@ public partial class ConnectionsViewModel(
         }
     }
 
+    private bool CanReloadSelected() => Selected is LazyNodeViewModel { CanLoad: true, IsLoading: false };
+
+    /// <summary>Reloads the selected node's children from the database, bypassing the cache.</summary>
+    [RelayCommand(CanExecute = nameof(CanReloadSelected))]
+    private async Task ReloadSelectedAsync()
+    {
+        if (Selected is LazyNodeViewModel node)
+        {
+            await node.LoadAsync(refresh: true);
+            node.IsExpanded = true;
+        }
+    }
+
     private Task<ConnectionAttempt> OpenAsync(ConnectionDefinition definition, string? password) =>
         jobs.Enqueue("Connect", context => manager.OpenAsync(definition, password, context.CancellationToken), JobPriority.High).Completion;
 
@@ -217,6 +276,7 @@ public partial class ConnectionsViewModel(
         EditCommand.NotifyCanExecuteChanged();
         DeleteCommand.NotifyCanExecuteChanged();
         ToggleConnectionCommand.NotifyCanExecuteChanged();
+        ReloadSelectedCommand.NotifyCanExecuteChanged();
         OnPropertyChanged(nameof(ToggleConnectionText));
     }
 }

@@ -21,3 +21,4 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 - Metadata cache: in-memory layer over a disposable SQLite file, per connection, with read-through helpers.
 - SQL Server provider (built-in extension): connections, streaming query execution with messages and cancel, catalog metadata.
 - Connection manager: saved connections with folders, environment colour and read-only mark; passwords in Windows Credential Manager; connection test with a reachability check; connect and disconnect from the explorer panel (ADR 0005).
+- Object explorer: databases, schemas, object groups, objects and columns load lazily under an open connection, on a separate metadata connection, through the metadata cache; Refresh bypasses the cache.

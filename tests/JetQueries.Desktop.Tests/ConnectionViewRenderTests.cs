@@ -55,6 +55,19 @@ public sealed class ConnectionViewRenderTests
         env.Probe.Answer = "No answer from 10.20.30.40:1433 within 4 s.";
         await editor.TestCommand.ExecuteAsync(null);
 
+        // A second tree with the object explorer opened down to the columns of a table.
+        await using var explorerEnvironment = new TestEnvironment();
+        var (explorer, connected) = await ObjectExplorerTests.ConnectAsync(explorerEnvironment);
+        var database = (DatabaseObjectNodeViewModel)connected.Children[0];
+        await ObjectExplorerTests.ExpandAsync(database);
+        var schema = (DatabaseObjectNodeViewModel)database.Children[0];
+        await ObjectExplorerTests.ExpandAsync(schema);
+        var tables = (CategoryNodeViewModel)schema.Children[0];
+        await ObjectExplorerTests.ExpandAsync(tables);
+        await ObjectExplorerTests.ExpandAsync((DatabaseObjectNodeViewModel)tables.Children[0]);
+        await ObjectExplorerTests.ExpandAsync((CategoryNodeViewModel)schema.Children[^1]);
+        explorer.Selected = tables.Children[1];
+
         await using var emptyEnvironment = new TestEnvironment();
         var empty = emptyEnvironment.Connections();
         await empty.LoadAsync();
@@ -69,6 +82,7 @@ public sealed class ConnectionViewRenderTests
                     Application.Current!.RequestedThemeVariant = theme;
                     var suffix = theme == ThemeVariant.Light ? "light" : "dark";
                     results[$"connections-{suffix}"] = Capture(Host(connections, 320), Path.Combine(directory, $"connections-{suffix}.png"));
+                    results[$"explorer-{suffix}"] = Capture(Host(explorer, 520), Path.Combine(directory, $"explorer-{suffix}.png"));
                     results[$"empty-{suffix}"] = Capture(Host(empty, 160), Path.Combine(directory, $"empty-{suffix}.png"));
                     results[$"dialog-{suffix}"] = Capture(new ConnectionDialog { DataContext = editor }, Path.Combine(directory, $"dialog-{suffix}.png"));
                 }
@@ -81,7 +95,7 @@ public sealed class ConnectionViewRenderTests
         // that thread to end: disposing from here would wait for itself.
         await Task.Run(session.Dispose, token);
 
-        Assert.Equal(6, colours.Count);
+        Assert.Equal(8, colours.Count);
         Assert.All(colours, static pair => Assert.True(pair.Value > 8, $"{pair.Key} rendered only {pair.Value} distinct colours."));
     }
 

@@ -89,11 +89,31 @@
     <Setter Property="FontSize" Value="{DynamicResource JqFontSizeCaption}" />
     <Setter Property="Foreground" Value="{DynamicResource JqTextSecondaryBrush}" />
   </Style>
+  <Style Selector="TextBlock.badge.key">
+    <Setter Property="Foreground" Value="{DynamicResource JqWarningBrush}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+  <Style Selector="TextBlock.object-name.container">
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+  <Style Selector="TextBlock.tree-message">
+    <Setter Property="FontStyle" Value="Italic" />
+    <Setter Property="Foreground" Value="{DynamicResource JqTextSecondaryBrush}" />
+  </Style>
+  <Style Selector="TextBlock.tree-message.error">
+    <Setter Property="Foreground" Value="{DynamicResource JqDangerBrush}" />
+  </Style>
   <Style Selector="TextBlock.test-result">
     <Setter Property="Foreground" Value="{DynamicResource JqSuccessBrush}" />
   </Style>
   <Style Selector="TextBlock.test-result.failed">
     <Setter Property="Foreground" Value="{DynamicResource JqDangerBrush}" />
+  </Style>
+
+  <Style Selector="Button.toolbar:disabled /template/ ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Foreground" Value="{DynamicResource JqTextSecondaryBrush}" />
+    <Setter Property="Opacity" Value="0.55" />
   </Style>
 
   <Style Selector="grid|VirtualGrid">

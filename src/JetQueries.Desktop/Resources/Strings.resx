@@ -69,4 +69,17 @@
   <data name="Setting_trustServerCertificate" xml:space="preserve"><value>Trust server certificate</value></data>
   <data name="Setting_readOnlyIntent" xml:space="preserve"><value>Read-only routing</value></data>
   <data name="Setting_connectTimeoutSeconds" xml:space="preserve"><value>Connect timeout (s)</value></data>
+  <data name="ExplorerRefresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="ExplorerLoading" xml:space="preserve"><value>Loading…</value></data>
+  <data name="ExplorerEmpty" xml:space="preserve"><value>(empty)</value></data>
+  <data name="CategoryTables" xml:space="preserve"><value>Tables</value></data>
+  <data name="CategoryViews" xml:space="preserve"><value>Views</value></data>
+  <data name="CategoryProcedures" xml:space="preserve"><value>Procedures</value></data>
+  <data name="CategoryFunctions" xml:space="preserve"><value>Functions</value></data>
+  <data name="CategoryPackages" xml:space="preserve"><value>Packages</value></data>
+  <data name="CategorySequences" xml:space="preserve"><value>Sequences</value></data>
+  <data name="CategorySynonyms" xml:space="preserve"><value>Synonyms</value></data>
+  <data name="CategoryTypes" xml:space="preserve"><value>Types</value></data>
+  <data name="ColumnPrimaryKey" xml:space="preserve"><value>PK</value></data>
+  <data name="ColumnNullable" xml:space="preserve"><value>null</value></data>
 </root>

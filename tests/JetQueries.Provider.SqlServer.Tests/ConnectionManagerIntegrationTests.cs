@@ -1,5 +1,7 @@
 using JetQueries.Core.Connections;
 using JetQueries.Core.Extensions;
+using JetQueries.Core.Metadata;
+using Microsoft.Extensions.Logging.Abstractions;
 using JetQueries.Sdk;
 
 namespace JetQueries.Provider.SqlServer.Tests;
@@ -56,6 +58,61 @@ public sealed class ConnectionManagerIntegrationTests(SqlServerFixture fixture) 
         }
 
         Assert.Equal("master", Assert.Single(rows)[0]);
+    }
+
+    [Fact]
+    public async Task Metadata_is_read_on_its_own_connection_while_a_query_runs_and_is_cached()
+    {
+        Assert.SkipWhen(fixture.SkipReason is not null, fixture.SkipReason ?? string.Empty);
+        await using var manager = new ConnectionManager(new SingleProvider(new SqlServerProvider()), new SessionCredentialStore(), new TcpReachabilityProbe());
+        await using var cache = new SqliteMetadataCache(new MetadataCacheOptions(), TimeProvider.System, NullLogger<SqliteMetadataCache>.Instance);
+        var metadata = new MetadataService(cache, TimeProvider.System);
+        var definition = new ConnectionDefinition
+        {
+            Id = Guid.NewGuid(),
+            Name = "container",
+            ProviderId = SqlServerProvider.ProviderId,
+            Settings = fixture.Profile.Settings,
+            UserName = fixture.Credential.UserName,
+        };
+        var session = (await manager.OpenAsync(definition, fixture.Credential.Password, Token)).Session!;
+
+        await foreach (var item in session.Connection.Executor.ExecuteAsync(
+                           new QueryRequest("IF OBJECT_ID(N'dbo.jq_probe') IS NULL CREATE TABLE dbo.jq_probe (id int NOT NULL PRIMARY KEY, note nvarchar(20) NULL);"), Token))
+        {
+            _ = item;
+        }
+
+        // A slow statement occupies the query connection...
+        var slow = Task.Run(
+            async () =>
+            {
+                await foreach (var item in session.Connection.Executor.ExecuteAsync(new QueryRequest("WAITFOR DELAY '00:00:04'; SELECT 1;"), Token))
+                {
+                    _ = item;
+                }
+            },
+            Token);
+        await Task.Delay(300, Token);
+
+        // ...and the explorer still gets its answers, from the second connection.
+        var started = DateTime.UtcNow;
+        var databases = await metadata.GetObjectsAsync(session, null, DatabaseObjectKinds.Database, refresh: false, Token);
+        var master = databases.Single(static d => d.Name.Name == "master");
+        var schemas = await metadata.GetObjectsAsync(session, master, DatabaseObjectKinds.Schema, refresh: false, Token);
+        var views = await metadata.GetObjectsAsync(session, schemas.Single(static s => s.Name.Name == "dbo"), DatabaseObjectKinds.Table | DatabaseObjectKinds.View, refresh: false, Token);
+        Assert.True(DateTime.UtcNow - started < TimeSpan.FromSeconds(3), "metadata waited for the running query");
+        Assert.False(slow.IsCompleted);
+        var probe = Assert.Single(views, static v => v.Name.Name == "jq_probe");
+        var columns = await metadata.GetColumnsAsync(session, probe.Name, refresh: false, Token);
+        Assert.Equal(["id", "note"], columns.Select(static c => c.Name));
+
+        // Later requests are answered from the cache (the very same list, no round trip) until a refresh.
+        var cached = await metadata.GetObjectsAsync(session, null, DatabaseObjectKinds.Database, refresh: false, Token);
+        Assert.Equal(databases, cached);
+        Assert.Same(cached, await metadata.GetObjectsAsync(session, null, DatabaseObjectKinds.Database, refresh: false, Token));
+        Assert.NotSame(cached, await metadata.GetObjectsAsync(session, null, DatabaseObjectKinds.Database, refresh: true, Token));
+        await slow;
     }
 
     private sealed class SingleProvider(IDatabaseProvider provider) : IExtensionHost
