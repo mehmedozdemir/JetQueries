@@ -4,7 +4,7 @@ using System.Text;
 using Antlr4.Runtime;
 using JetQueries.PlSql.ParseSpike;
 
-// Usage: JetQueries.PlSql.ParseSpike [--corpus <dir>]... [--report <file>] [--profile <file>]...
+// Usage: JetQueries.PlSql.ParseSpike [--corpus <dir>]... [--report <file>] [--profile <file>]... [--structure [--compare-antlr]]
 // Without --corpus, the bundled grammars-v4 example files are used.
 
 CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
@@ -48,6 +48,29 @@ for (var i = 0; i < args.Length - 1; i++)
     {
         profileFiles.Add(args[++i]);
     }
+}
+
+// --structure: measure the hand-written structural parser instead (add --compare-antlr to check it against ANTLR).
+if (args.Contains("--structure"))
+{
+    string[] structureExtensions = [".sql", ".pks", ".pkb", ".pls", ".plb", ".prc", ".fnc", ".tps", ".tpb", ".trg", ".typ"];
+    var structureFiles = corpusDirectories
+        .Where(Directory.Exists)
+        .SelectMany(d => Directory.EnumerateFiles(d, "*.*", SearchOption.AllDirectories))
+        .Where(f => !f.Contains(Path.DirectorySeparatorChar + ".git" + Path.DirectorySeparatorChar, StringComparison.Ordinal))
+        .Where(f => structureExtensions.Contains(Path.GetExtension(f), StringComparer.OrdinalIgnoreCase))
+        .Where(static f => new FileInfo(f).Length <= 512 * 1024)
+        .Order(StringComparer.Ordinal)
+        .Select(f => (Path: f, Text: File.ReadAllText(f)))
+        .ToList();
+    JetQueries.PlSql.ParseSpike.Structure.StructureExperiment.Run(
+        structureFiles, corpusDirectories[0], args.Contains("--compare-antlr"), args.Contains("--list-errors"), Line);
+    if (reportPath is not null)
+    {
+        File.WriteAllText(reportPath, report.ToString());
+    }
+
+    return 0;
 }
 
 if (profileFiles.Count > 0)

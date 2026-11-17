@@ -1,4 +1,4 @@
-# Spike findings — PL/SQL parsing with ANTLR4 (Phase 0)
+# Spike findings — PL/SQL parsing (Phase 0)
 
 - Branch: `spike/plsql-parser`
 - Date: 2026-11-17
@@ -7,6 +7,27 @@
 - Suggested thresholds (not yet confirmed): ≥ 98 % of valid files parse; < 200 ms for a 5,000-line package
 
 ## Verdict
+
+**Decision (ADR 0003): the Oracle language service is built on a hand-written structural parser, not on ANTLR.**
+The owner asked for the best-performing option. Measured on the same 869 open-source files (section 8):
+
+| | ANTLR + grammars-v4 | Hand-written structural parser |
+| --- | ---: | ---: |
+| Valid files with no reported errors | 643 of 869 (74 %); packages and types 90 % | 869 of 869 |
+| Whole corpus, warm (251,368 lines) | 15.7 s | 0.07–0.12 s |
+| 5,000-line package, warm | 107–250 ms synthetic, 1–2 s real | 4.5–5.4 ms |
+| First parse in the process | 6–23 s for a large package | 30 ms |
+| Memory kept between parses | 3.7 GB | none (12 MB heap growth after all runs) |
+| Routines found, where ANTLR parses the file | 7,121 | 7,121, all identical |
+
+The trade-off is deliberate: the hand-written parser reads structure only. It does not check expressions or the
+inside of SQL statements, so it cannot report every syntax error; those come from the database when the unit is
+compiled. With that parser the measurable parts of the gate are met on public code. The owner's own packages
+are still untested.
+
+What follows is the record of how the ANTLR grammar was measured and why it was dropped.
+
+### ANTLR grammar (superseded)
 
 **Usable for structure, not sufficient for completion, and too expensive as it stands.**
 
@@ -309,31 +330,84 @@ missing constructs from section 6, and re-run the same corpus. Keep ANTLR only i
 If any fails, switch to B for structure (declarations, blocks, statement boundaries, with SQL statements kept
 as token ranges) and keep ANTLR out of the product.
 
+**Outcome.** The owner chose the best-performing option, so the experiment on A was not run and B was built
+directly; section 8 has the measurements.
+
+## 8. Hand-written structural parser
+
+`tests/JetQueries.PlSql.ParseSpike/Structure`: a tokenizer (`PlLexer`, ~420 lines) and a recursive-descent
+parser (`PlStructureParser`, ~1,500 lines), no dependencies. Run with `--structure`; add `--compare-antlr` to
+check it against the ANTLR tree.
+
+**What it reads.** A script the way SQL*Plus cuts it (SQL*Plus commands, SQL statements up to `;`, PL/SQL units
+up to the `/` line); package and type specifications and bodies, stand-alone routines, triggers, anonymous
+blocks; routines with parameters; declarations; blocks, `IF`, `CASE`, loops, exception handlers; every
+statement as a range, with SQL statements marked. **What it skips.** Expressions and the inside of SQL
+statements: it only tracks parentheses and `CASE … END` to find where they stop.
+
+| Corpus | Files without diagnostics | Warm time | Notes |
+| --- | ---: | ---: | --- |
+| Open-source projects (869 files, 251,368 lines) | 869 / 869 | 73–116 ms (2.2–3.5 million lines/s) | slowest file 3–5 ms |
+| grammars-v4 examples (478 files) | 476 / 478 | 2 ms | the two flagged files are invalid: one is named `…_invalid`, the other closes a `CASE` statement with a bare `END` |
+| Hand-written corpus (12 files) | 12 / 12 | 1 ms | includes the 21c and 23ai syntax ANTLR rejected |
+| Grammar-gap probes (14 files) | 14 / 14 | | all 10 that ANTLR rejects |
+
+Synthetic package: 1,006 lines 1.1–1.2 ms; 5,065 lines 4.5–5.4 ms; 20,014 lines 16–17 ms. A parse allocates
+about 0.34 MB per 1,000 lines and keeps nothing afterwards. First parse in the process: 26–30 ms.
+
+**Is the tree right?** "No diagnostics" proves little for a parser that skips most of the text, so the result
+was compared with the ANTLR parse tree on the 642 files ANTLR parses cleanly:
+
+- Routines (keyword offset, name, and whether it has a body): **7,121 of 7,121 identical**; neither parser has
+  one the other lacks.
+- Statements (start offset): 23,964 of ANTLR's 24,025 (99.75 %). All differences are in 13 files and are three
+  conventions, not errors: statements in `$ELSE` branches of conditional compilation (only the `$IF` branch is
+  kept), `EXEC …` lines (treated as SQL*Plus commands), and labels (ANTLR starts the statement at `<<label>>`).
+- For the 226 files ANTLR rejects there is no reference; the parser reports no diagnostics in any of them.
+
+**Damaged text** (757 files, same seed and method as section 4, but compared against its own intact parse):
+
+| | Survival before the damage | After the damage | Diagnostics p50 / max | Parse p95 |
+| --- | ---: | ---: | ---: | ---: |
+| Text ends at the caret (2,271 samples) | 100.0 % of 68,235 | – | 2 / 9 | 0.1–0.4 ms |
+| One `END` or `;` removed (1,878 samples) | 100.0 % of 69,769 | 99.2 % of 60,921 | 1 / 4 | 0.2–0.6 ms |
+
+The routine around the caret is still found in 98.3 % of 846 truncations. 3,476 random cuts and deletions at
+character level all returned, the slowest in 17–52 ms (first-call and GC noise; typical is under 1 ms).
+ANTLR's corresponding figures were 97–100 % before and 93–95 % after the damage, on a different set of
+constructs, so the two are not directly comparable.
+
+**Limits.**
+
+- It is not a syntax checker. A wrong expression or a misspelt SQL clause produces no diagnostic; only missing
+  or unbalanced structure does (`END`, `;`, `THEN`, `LOOP`, `BEGIN`, `IS`). Full error reporting has to come from
+  compiling on the database (`USER_ERRORS`), which the editor needs anyway.
+- Code in `$ELSIF` / `$ELSE` branches is not in the tree.
+- The completion context (clause at the caret, tables in scope) is still the token-based prototype from
+  section 4 and still runs on ANTLR tokens; it has to be ported to the new tokenizer.
+- The damage test measures stability of the parser against itself, not against an independent reference.
+- Spike code: no unit tests yet, and it lives under `tests/`.
+
 ## Conclusions
 
-1. **Keep the grammar for structure, in the background.** Outline, folding, Ctrl+Click targets, diagnostics and
-   "which routine am I in" can come from the tree: everything before the damage survives, and most of what
-   follows a missing `END`.
-2. **Do not build completion on the parse tree.** Use tokens for the caret context (clause, tables and aliases
-   in scope) and the tree only for what lies outside the statement being typed. The fallback in the risk table
-   should be the primary mechanism. antlr4-c3 (candidates computed from the ATN at the caret) is the other
-   known approach and was not evaluated.
-3. **Use one SLL pass plus recovery for the structural tree, never for diagnostics.** It is 5–7× faster on
-   broken text, but it reports false errors in valid code; squiggles need the two-stage parse, debounced.
-4. **Plan for grammar maintenance.** Eight gaps turned up in 1,700 lines of ordinary code. The grammar has to
-   be forked and extended (the 21c loop forms and `ACCESSIBLE BY` first), and unknown syntax must degrade to
-   "no squiggle", not to a wall of errors.
-5. **The cache has to be tamed before this ships.** Options, none measured yet: clear or cap the DFA cache
-   (trading CPU for memory), parse one routine at a time instead of the whole package, warm the cache on a
-   background job at start-up, and cut the grammar down to what an editor needs — most of its 10,000 lines
-   cover administrative DDL.
+1. **Structure comes from the hand-written parser.** Outline, folding, Ctrl+Click targets and "which routine am
+   I in" need exactly what it produces, at a cost that allows re-parsing on every keystroke without a debounce.
+2. **Completion comes from tokens**, as measured in sections 4–6 (100 % against 43 % for the clause at the
+   caret). The structural tree supplies the enclosing routine and its declarations.
+3. **Diagnostics are structural only in the editor; the database is the syntax authority.** Squiggles for
+   unbalanced blocks appear while typing; everything else appears after compile.
+4. **ANTLR is not shipped.** The grammar stays in `tests/` as a reference to compare against and can be deleted
+   once the parser has its own test suite. This drops a 9 MB generated parser and the Apache 2.0 grammar from
+   the product.
+5. **T-SQL is unaffected** (ScriptDom). PostgreSQL and SQLite are still planned on ANTLR grammars; they are
+   "basic in MVP", but the same measurement should be repeated before relying on them.
 
 ## Proposed next steps
 
 | # | Step | Why |
 | --- | --- | --- |
-| 0 | Two-day experiment: repair the seven hot rules in a fork of the grammar and re-measure against the five criteria in "Alternatives compared"; fall back to a hand-written structural parser if any fails | Time and cache are concentrated in a few ambiguous decisions (section 7), so repair is cheap to try and decisive either way |
-| 1 | Run the harness on the user's own production packages (kept outside the repo) with `--corpus` | Open-source code is real but not theirs; coding style drives both coverage and speed |
-| 2 | If step 0 passes: cut the grammar down to what an editor needs and measure per-routine parsing | Smaller generated parser (9 MB of C# today) and a bounded cost per edit |
-| 3 | Extend the token context finder to DML, PL/SQL blocks and aliases, with tests; compare with antlr4-c3 | It is the completion engine's core |
-| 4 | Confirm thresholds: ≥ 98 % valid files, < 200 ms per 5,000 lines warm, and add one for memory and first-parse latency | The two failing dimensions have no agreed target yet |
+| 1 | Owner runs `--structure --corpus <folder>` on production packages kept outside the repository | The remaining part of the gate; coding style decides whether any construct is misread |
+| 2 | Phase 1: move tokenizer and parser into `JetQueries.Provider.Oracle` behind `ISqlLanguageService`, with unit tests built from the corpora and the damage cases | Spike code is not product code |
+| 3 | Port the token context finder to the new tokenizer and extend it to DML, PL/SQL blocks and aliases | It is the completion engine's core |
+| 4 | Decide how inactive conditional-compilation branches should appear in outline and folding | Today they are invisible |
+| 5 | Show database compile errors (`USER_ERRORS`) as editor diagnostics | Replaces the syntax checking the grammar would have given |

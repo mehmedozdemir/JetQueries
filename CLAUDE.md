@@ -24,7 +24,7 @@ Pillars: elegant professional UI · never-blocking async UI · extension-based c
 - Avalonia 12.x + custom theme (design tokens in `Styles/`), light and dark from day one.
 - MVVM: CommunityToolkit.Mvvm (source generators). DI/hosting: Microsoft.Extensions.Hosting.
 - Editor: AvaloniaEdit. Docking: Dock.Avalonia. Results grid: **custom virtualized grid** (`JetQueries.DataGrid`), drawn with `DrawingContext`.
-- Parsers: T-SQL → Microsoft.SqlServer.TransactSql.ScriptDom; PL/SQL, PostgreSQL, SQLite → ANTLR4 (grammars-v4); Redis → command table.
+- Parsers: T-SQL → Microsoft.SqlServer.TransactSql.ScriptDom; PL/SQL → hand-written structural parser + token-based completion context (ADR 0003; no ANTLR); PostgreSQL, SQLite → ANTLR4 (grammars-v4); Redis → command table.
 - Drivers: Microsoft.Data.SqlClient, Oracle.ManagedDataAccess.Core, Npgsql, Microsoft.Data.Sqlite, StackExchange.Redis.
 - Local store: SQLite (settings, query history, metadata cache). Logging: Microsoft.Extensions.Logging + Serilog.
 - Updates: Velopack (channels: stable / beta / nightly). Versioning from git tags (MinVer).

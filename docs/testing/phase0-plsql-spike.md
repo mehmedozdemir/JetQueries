@@ -51,14 +51,32 @@ dotnet run -c Release --project tests/JetQueries.PlSql.ParseSpike -- --profile <
       most. On your own packages, check whether the same rules lead the table as in section 7 of the findings
       (`unary_expression_core`, `general_element_part`, `atom`, `routine_name`, `type_spec`).
 
+## 3c. Hand-written structural parser (the chosen approach, ADR 0003)
+
+```
+dotnet run -c Release --project tests/JetQueries.PlSql.ParseSpike -- --structure
+dotnet run -c Release --project tests/JetQueries.PlSql.ParseSpike -- --structure --list-errors --corpus <folder with your packages>
+```
+
+- [ ] The first command finishes in a few seconds and reports 476/478 files without diagnostics; the two
+      flagged files are `case_when.sql` and `sqlplus_slash_separated_invalid.sql`.
+- [ ] On your own packages (folder **outside the repository**): note "no diagnostics: n/m" and the warm total.
+      Every `DIAGNOSTICS` line is either a real structural error in that file or a parser bug — send the file
+      name, line and message (check they contain nothing confidential).
+- [ ] Optional cross-check, slow and memory-hungry (about 3 minutes, 3–5 GB): add `--compare-antlr`. `DIFFERS`
+      lines show routines or statements the two parsers disagree on.
+- [ ] Open one large package and check a few routine names and line numbers against what you see in your
+      current tool's outline. There is no UI for this yet; it becomes the outline in Phase 1.
+
 ## 4. Decisions needed
 
-- [ ] Approve or reject the two-day grammar-repair experiment and its five pass criteria ("Alternatives
-      compared" in the findings). Rejecting it means going straight to a hand-written structural parser.
+- [ ] Confirm the trade-off in ADR 0003: the editor reports structural errors only; other syntax errors appear
+      after compiling on the database.
+
 
 - [ ] Confirm or change the thresholds: at least 98 % of valid files parse; a 5,000-line package parses in
       under 200 ms warm.
 - [ ] Set a memory target for the language service and a target for first-parse latency; the spike fails any
       reasonable one today.
-- [ ] The grammar and example files are Apache 2.0. Confirm that is acceptable alongside the project licence
-      (MIT is suggested and compatible, with attribution).
+- [ ] The grammar and example files (Apache 2.0) now stay under `tests/` only and are not shipped. Confirm that
+      keeping them in the repository as test material is acceptable, or ask for them to be removed.
