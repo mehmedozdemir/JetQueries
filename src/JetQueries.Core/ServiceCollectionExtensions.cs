@@ -2,6 +2,7 @@ using JetQueries.Core.Connections;
 using JetQueries.Core.Extensions;
 using JetQueries.Core.Jobs;
 using JetQueries.Core.Metadata;
+using JetQueries.Core.Queries;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -15,12 +16,14 @@ public static class ServiceCollectionExtensions
     /// <param name="configureExtensions">Sets the directories the extension host searches; none by default.</param>
     /// <param name="configureMetadataCache">Sets the metadata cache file; memory-only by default.</param>
     /// <param name="configureConnectionStore">Sets the connection definitions file; memory-only by default.</param>
+    /// <param name="configureQueryHistory">Sets the query history file and its limits; memory-only by default.</param>
     /// <returns>The same service collection, for chaining.</returns>
     public static IServiceCollection AddJetQueriesCore(
         this IServiceCollection services,
         Action<ExtensionHostOptions>? configureExtensions = null,
         Action<MetadataCacheOptions>? configureMetadataCache = null,
-        Action<ConnectionStoreOptions>? configureConnectionStore = null)
+        Action<ConnectionStoreOptions>? configureConnectionStore = null,
+        Action<QueryHistoryOptions>? configureQueryHistory = null)
     {
         ArgumentNullException.ThrowIfNull(services);
         services.TryAddSingleton<IJobQueue>(static _ => new JobQueue());
@@ -45,6 +48,11 @@ public static class ServiceCollectionExtensions
             OperatingSystem.IsWindows() ? new WindowsCredentialStore() : new SessionCredentialStore());
         services.TryAddSingleton<IReachabilityProbe, TcpReachabilityProbe>();
         services.TryAddSingleton<IConnectionManager, ConnectionManager>();
+
+        var historyOptions = new QueryHistoryOptions();
+        configureQueryHistory?.Invoke(historyOptions);
+        services.TryAddSingleton(historyOptions);
+        services.TryAddSingleton<IQueryHistory, SqliteQueryHistory>();
         return services;
     }
 }

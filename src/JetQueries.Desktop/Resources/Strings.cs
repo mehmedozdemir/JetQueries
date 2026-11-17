@@ -103,6 +103,17 @@ public static class Strings
     public static string QueryConfirmMessage => Get(nameof(QueryConfirmMessage));
     public static string DefinitionNotFound => Get(nameof(DefinitionNotFound));
     public static string DefinitionUnavailable => Get(nameof(DefinitionUnavailable));
+    public static string ExplorerTab => Get(nameof(ExplorerTab));
+    public static string HistoryTab => Get(nameof(HistoryTab));
+    public static string HistoryOpen => Get(nameof(HistoryOpen));
+    public static string HistoryClear => Get(nameof(HistoryClear));
+    public static string HistorySearch => Get(nameof(HistorySearch));
+    public static string HistoryEmpty => Get(nameof(HistoryEmpty));
+    public static string HistoryRows => Get(nameof(HistoryRows));
+    public static string HistoryFailed => Get(nameof(HistoryFailed));
+    public static string HistoryCanceled => Get(nameof(HistoryCanceled));
+    public static string HistoryClearConfirmTitle => Get(nameof(HistoryClearConfirmTitle));
+    public static string HistoryClearConfirmMessage => Get(nameof(HistoryClearConfirmMessage));
 
     /// <summary>A string looked up by a computed name (for example <c>Setting_server</c>), or null if there is none.</summary>
     public static string? Find(string name) => Manager.GetString(name, CultureInfo.CurrentUICulture);

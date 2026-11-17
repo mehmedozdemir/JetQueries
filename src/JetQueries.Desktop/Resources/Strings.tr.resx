@@ -102,4 +102,15 @@
   <data name="QueryConfirmMessage" xml:space="preserve"><value>'{0}' üretim olarak işaretli. Çalıştırılacak: {1}. Devam edilsin mi?</value></data>
   <data name="DefinitionNotFound" xml:space="preserve"><value>Burada gidilecek bir tanım yok.</value></data>
   <data name="DefinitionUnavailable" xml:space="preserve"><value>{0} tanımı görüntülenemiyor (şifreli veya görüntüleme yetkisi yok).</value></data>
+  <data name="ExplorerTab" xml:space="preserve"><value>Gezgin</value></data>
+  <data name="HistoryTab" xml:space="preserve"><value>Geçmiş</value></data>
+  <data name="HistoryOpen" xml:space="preserve"><value>Aç</value></data>
+  <data name="HistoryClear" xml:space="preserve"><value>Tümünü temizle</value></data>
+  <data name="HistorySearch" xml:space="preserve"><value>Geçmişte ara…</value></data>
+  <data name="HistoryEmpty" xml:space="preserve"><value>Çalıştırdığınız sorgular burada görünür.</value></data>
+  <data name="HistoryRows" xml:space="preserve"><value>{0:N0} satır</value></data>
+  <data name="HistoryFailed" xml:space="preserve"><value>başarısız</value></data>
+  <data name="HistoryCanceled" xml:space="preserve"><value>iptal edildi</value></data>
+  <data name="HistoryClearConfirmTitle" xml:space="preserve"><value>Geçmişi temizle</value></data>
+  <data name="HistoryClearConfirmMessage" xml:space="preserve"><value>Tüm sorgu geçmişi silinsin mi? Bu işlem geri alınamaz.</value></data>
 </root>

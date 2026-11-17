@@ -102,4 +102,15 @@
   <data name="QueryConfirmMessage" xml:space="preserve"><value>'{0}' is marked as production. This will run: {1}. Continue?</value></data>
   <data name="DefinitionNotFound" xml:space="preserve"><value>Nothing to go to here.</value></data>
   <data name="DefinitionUnavailable" xml:space="preserve"><value>The definition of {0} is not available (encrypted, or no permission to view it).</value></data>
+  <data name="ExplorerTab" xml:space="preserve"><value>Explorer</value></data>
+  <data name="HistoryTab" xml:space="preserve"><value>History</value></data>
+  <data name="HistoryOpen" xml:space="preserve"><value>Open</value></data>
+  <data name="HistoryClear" xml:space="preserve"><value>Clear all</value></data>
+  <data name="HistorySearch" xml:space="preserve"><value>Search the history…</value></data>
+  <data name="HistoryEmpty" xml:space="preserve"><value>The queries you run appear here.</value></data>
+  <data name="HistoryRows" xml:space="preserve"><value>{0:N0} rows</value></data>
+  <data name="HistoryFailed" xml:space="preserve"><value>failed</value></data>
+  <data name="HistoryCanceled" xml:space="preserve"><value>canceled</value></data>
+  <data name="HistoryClearConfirmTitle" xml:space="preserve"><value>Clear history</value></data>
+  <data name="HistoryClearConfirmMessage" xml:space="preserve"><value>Delete the whole query history? This cannot be undone.</value></data>
 </root>

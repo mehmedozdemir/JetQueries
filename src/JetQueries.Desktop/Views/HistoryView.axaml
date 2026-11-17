@@ -1,0 +1,41 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:JetQueries.Desktop.ViewModels"
+             xmlns:res="using:JetQueries.Desktop.Resources"
+             x:Class="JetQueries.Desktop.Views.HistoryView"
+             x:DataType="vm:HistoryViewModel">
+  <DockPanel>
+    <Border DockPanel.Dock="Top"
+            BorderBrush="{DynamicResource JqBorderBrush}" BorderThickness="0,0,0,1"
+            Padding="{DynamicResource JqPaddingCompact}">
+      <StackPanel Spacing="{DynamicResource JqSpace1}">
+        <WrapPanel Orientation="Horizontal">
+          <Button Classes="toolbar" Content="{x:Static res:Strings.HistoryOpen}" Command="{Binding OpenSelectedCommand}" />
+          <Button Classes="toolbar" Content="{x:Static res:Strings.ConnectionDelete}" Command="{Binding DeleteSelectedCommand}" />
+          <Button Classes="toolbar" Content="{x:Static res:Strings.HistoryClear}" Command="{Binding ClearCommand}" />
+        </WrapPanel>
+        <TextBox Text="{Binding SearchText}" PlaceholderText="{x:Static res:Strings.HistorySearch}" />
+      </StackPanel>
+    </Border>
+
+    <Panel>
+      <TextBlock Classes="placeholder" Text="{x:Static res:Strings.HistoryEmpty}" IsVisible="{Binding IsEmpty}" />
+
+      <ListBox x:Name="List" ItemsSource="{Binding Entries}" SelectedItem="{Binding Selected}"
+               Background="Transparent" IsVisible="{Binding !IsEmpty}" DoubleTapped="OnListDoubleTapped">
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="vm:HistoryEntryViewModel">
+            <StackPanel Spacing="1" ToolTip.Tip="{Binding ToolTip}">
+              <TextBlock Classes="history-sql" Classes.failed="{Binding IsFailed}" Text="{Binding Summary}"
+                         FontFamily="{DynamicResource JqFontMono}" TextTrimming="CharacterEllipsis" />
+              <DockPanel>
+                <TextBlock DockPanel.Dock="Right" Classes="badge" Text="{Binding When}" Margin="8,0,0,0" />
+                <TextBlock Classes="badge" Text="{Binding Detail}" TextTrimming="CharacterEllipsis" />
+              </DockPanel>
+            </StackPanel>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </Panel>
+  </DockPanel>
+</UserControl>

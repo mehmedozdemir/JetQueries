@@ -127,7 +127,10 @@
     <Setter Property="Foreground" Value="{DynamicResource JqTextSecondaryBrush}" />
     <Setter Property="VerticalAlignment" Value="Center" />
   </Style>
-  <Style Selector="TabControl.documents TabItem, TabControl.results TabItem">
+  <Style Selector="TextBlock.history-sql.failed">
+    <Setter Property="Foreground" Value="{DynamicResource JqDangerBrush}" />
+  </Style>
+  <Style Selector="TabControl.documents TabItem, TabControl.results TabItem, TabControl.side TabItem">
     <Setter Property="FontSize" Value="{DynamicResource JqFontSizeBody}" />
     <Setter Property="MinHeight" Value="30" />
     <Setter Property="Padding" Value="10,0" />

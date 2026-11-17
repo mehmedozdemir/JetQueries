@@ -77,7 +77,27 @@ public sealed class ConnectionViewRenderTests
         await query.RunCommand.ExecuteAsync(null);
         documents.NewQueryCommand.Execute(null);
         documents.Selected = query;
-        var shell = new MainWindowViewModel(new FixedTheme(), explorer, documents);
+
+        // The history panel: the run above plus a failed one, a canceled one and a long script.
+        await explorerEnvironment.History.AddAsync(HistoryTests.Entry("UPDATE dbo.Cards SET Balance = 0 WHERE Id = 42") with { RowCount = null, ConnectionName = "Cards — test" }, token);
+        await explorerEnvironment.History.AddAsync(
+            HistoryTests.Entry("SELECT * FROM dbo.Cardz") with { Outcome = Core.Queries.QueryOutcome.Failed, Error = "Invalid object name 'dbo.Cardz'.", RowCount = null },
+            token);
+        await explorerEnvironment.History.AddAsync(
+            HistoryTests.Entry("EXEC dbo.PurgeOldLogs @olderThanDays = 90") with { Outcome = Core.Queries.QueryOutcome.Canceled, RowCount = null },
+            token);
+        await explorerEnvironment.History.AddAsync(
+            HistoryTests.Entry("-- monthly totals\nSELECT c.CardNo, SUM(t.Amount) AS Total FROM dbo.Cards c JOIN dbo.Transactions t ON t.CardId = c.Id GROUP BY c.CardNo") with
+            {
+                RowCount = 18_240,
+                Duration = TimeSpan.FromSeconds(2.37),
+                ConnectionName = "Müşteri İşlemleri",
+            },
+            token);
+        var history = explorerEnvironment.HistoryPanel(documents);
+        await history.LoadAsync();
+        history.Selected = history.Entries[2];
+        var shell = new MainWindowViewModel(new FixedTheme(), explorer, documents, history);
         shell.ShowExtensions(1, 0);
 
         await using var emptyEnvironment = new TestEnvironment();
@@ -96,6 +116,9 @@ public sealed class ConnectionViewRenderTests
                     results[$"connections-{suffix}"] = Capture(Host(connections, 320), Path.Combine(directory, $"connections-{suffix}.png"));
                     results[$"explorer-{suffix}"] = Capture(Host(explorer, 520), Path.Combine(directory, $"explorer-{suffix}.png"));
                     results[$"window-{suffix}"] = Capture(new MainWindow(shell) { Width = 1180, Height = 700 }, Path.Combine(directory, $"window-{suffix}.png"));
+                    results[$"history-{suffix}"] = Capture(
+                        new Window { Width = 300, Height = 330, Content = new Border { Classes = { "panel" }, Child = new HistoryView { DataContext = history } } },
+                        Path.Combine(directory, $"history-{suffix}.png"));
                     results[$"empty-{suffix}"] = Capture(Host(empty, 160), Path.Combine(directory, $"empty-{suffix}.png"));
                     results[$"dialog-{suffix}"] = Capture(new ConnectionDialog { DataContext = editor }, Path.Combine(directory, $"dialog-{suffix}.png"));
                 }
@@ -108,7 +131,7 @@ public sealed class ConnectionViewRenderTests
         // that thread to end: disposing from here would wait for itself.
         await Task.Run(session.Dispose, token);
 
-        Assert.Equal(10, colours.Count);
+        Assert.Equal(12, colours.Count);
         Assert.All(colours, static pair => Assert.True(pair.Value > 8, $"{pair.Key} rendered only {pair.Value} distinct colours."));
     }
 

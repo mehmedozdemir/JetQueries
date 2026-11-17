@@ -115,17 +115,19 @@ public partial class QueryDocumentViewModel : ObservableObject
 
     private readonly IConnectionManager _manager;
     private readonly IMetadataService _metadata;
+    private readonly IQueryHistory _history;
     private readonly IJobQueue _jobs;
     private readonly IDialogService _dialogs;
     private readonly IUiDispatcher _ui;
     private JobHandle? _run;
 
     public QueryDocumentViewModel(
-        string title, IConnectionManager manager, IMetadataService metadata, IJobQueue jobs, IDialogService dialogs, IUiDispatcher ui)
+        string title, IConnectionManager manager, IMetadataService metadata, IQueryHistory history, IJobQueue jobs, IDialogService dialogs, IUiDispatcher ui)
     {
         Title = title;
         _manager = manager;
         _metadata = metadata;
+        _history = history;
         _jobs = jobs;
         _dialogs = dialogs;
         _ui = ui;
@@ -305,8 +307,11 @@ public partial class QueryDocumentViewModel : ObservableObject
 
         IsRunning = true;
         Status = Format(Strings.QueryRunning, 0);
+        var startedAt = DateTimeOffset.UtcNow;
         var watch = Stopwatch.StartNew();
         long totalRows = 0;
+        QueryHistoryEntry Recorded(QueryOutcome outcome, long? rows, string? error) => new(
+            0, startedAt, session.Definition.Id, session.Definition.Name, session.Definition.ProviderId, sql, watch.Elapsed, outcome, rows, error);
         try
         {
             var request = new QueryRequest(sql) { MaxRows = MaxRows };
@@ -385,11 +390,13 @@ public partial class QueryDocumentViewModel : ObservableObject
             }
 
             Status = hasResults ? Format(Strings.QueryDone, rows, Elapsed(watch)) : Format(Strings.QueryDoneNoRows, Elapsed(watch));
+            await RecordAsync(Recorded(QueryOutcome.Succeeded, hasResults ? rows : null, null));
         }
         catch (OperationCanceledException)
         {
             Status = Format(Strings.QueryCanceled, Elapsed(watch));
             AddMessage(Status, isError: false);
+            await RecordAsync(Recorded(QueryOutcome.Canceled, null, null));
         }
         catch (ReadOnlyConnectionException)
         {
@@ -403,6 +410,7 @@ public partial class QueryDocumentViewModel : ObservableObject
             AddMessage(ex.Message, isError: true);
             SelectedTab = Messages;
             Status = Format(Strings.QueryFailed, Elapsed(watch));
+            await RecordAsync(Recorded(QueryOutcome.Failed, null, ex.Message));
         }
         finally
         {
@@ -413,6 +421,20 @@ public partial class QueryDocumentViewModel : ObservableObject
 
     [RelayCommand(CanExecute = nameof(IsRunning))]
     private void Cancel() => _run?.Cancel();
+
+    /// <summary>Adds the run to the history. A history that cannot be written must never disturb the query itself.</summary>
+    private async Task RecordAsync(QueryHistoryEntry entry)
+    {
+        try
+        {
+            await _jobs.Enqueue("Save history", context => _history.AddAsync(entry, context.CancellationToken), JobPriority.Low).Completion;
+        }
+#pragma warning disable CA1031 // See the summary: the history is a convenience.
+        catch (Exception)
+#pragma warning restore CA1031
+        {
+        }
+    }
 
     private void ClearResults()
     {
@@ -440,15 +462,18 @@ public partial class DocumentsViewModel : ObservableObject
 {
     private readonly IConnectionManager _manager;
     private readonly IMetadataService _metadata;
+    private readonly IQueryHistory _history;
     private readonly IJobQueue _jobs;
     private readonly IDialogService _dialogs;
     private readonly IUiDispatcher _ui;
     private int _counter;
 
-    public DocumentsViewModel(IConnectionManager manager, IMetadataService metadata, IJobQueue jobs, IDialogService dialogs, IUiDispatcher ui)
+    public DocumentsViewModel(
+        IConnectionManager manager, IMetadataService metadata, IQueryHistory history, IJobQueue jobs, IDialogService dialogs, IUiDispatcher ui)
     {
         _manager = manager;
         _metadata = metadata;
+        _history = history;
         _jobs = jobs;
         _dialogs = dialogs;
         _ui = ui;
@@ -476,7 +501,7 @@ public partial class DocumentsViewModel : ObservableObject
     /// <summary>Opens a tab with the given text, on the given connection if it is open.</summary>
     public QueryDocumentViewModel Open(string title, string text, Guid? connectionId)
     {
-        var document = new QueryDocumentViewModel(title, _manager, _metadata, _jobs, _dialogs, _ui) { Text = text };
+        var document = new QueryDocumentViewModel(title, _manager, _metadata, _history, _jobs, _dialogs, _ui) { Text = text };
         if (connectionId is { } id)
         {
             document.SelectSession(id);
