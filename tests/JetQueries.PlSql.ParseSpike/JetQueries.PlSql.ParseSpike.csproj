@@ -16,6 +16,8 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\JetQueries.PlSql.ParseSpike.Grammar\JetQueries.PlSql.ParseSpike.Grammar.csproj" />
+    <!-- The hand-written structural parser now lives in the Oracle provider; the harness measures that code. -->
+    <ProjectReference Include="../../src/Providers/JetQueries.Provider.Oracle/JetQueries.Provider.Oracle.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Corpus\**\*" />

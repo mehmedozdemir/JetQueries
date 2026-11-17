@@ -1,0 +1,7 @@
+{
+  "id": "jetqueries.oracle",
+  "name": "Oracle",
+  "version": "0.1.0",
+  "assembly": "JetQueries.Provider.Oracle.dll",
+  "sdk": 0
+}

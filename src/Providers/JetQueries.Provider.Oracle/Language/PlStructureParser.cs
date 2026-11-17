@@ -1,6 +1,6 @@
 using System.Collections.Frozen;
 
-namespace JetQueries.PlSql.ParseSpike.Structure;
+namespace JetQueries.Provider.Oracle.Language;
 
 internal enum PlNodeKind
 {

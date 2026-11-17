@@ -25,6 +25,9 @@ public static class StatementGuard
 
         // SELECT … INTO creates a table.
         "INTO",
+
+        // A block (BEGIN … END, BEGIN TRANSACTION) can call or contain anything; there is no telling from outside.
+        "BEGIN",
     };
 
     // Keywords that begin a new statement when they appear outside parentheses.
