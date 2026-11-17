@@ -93,13 +93,15 @@ internal static class Program
         var builder = Host.CreateEmptyApplicationBuilder(new HostApplicationBuilderSettings { Args = args });
         builder.Logging.AddDebug();
 
-        builder.Services.AddJetQueriesCore(static extensions =>
-        {
-            // Built-in extensions ship next to the executable; the user's own live in the profile.
-            extensions.Directories.Add(Path.Combine(AppContext.BaseDirectory, "extensions"));
-            extensions.Directories.Add(Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "JetQueries", "extensions"));
-        });
+        var localData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "JetQueries");
+        builder.Services.AddJetQueriesCore(
+            extensions =>
+            {
+                // Built-in extensions ship next to the executable; the user's own live in the profile.
+                extensions.Directories.Add(Path.Combine(AppContext.BaseDirectory, "extensions"));
+                extensions.Directories.Add(Path.Combine(localData, "extensions"));
+            },
+            cache => cache.DatabasePath = Path.Combine(localData, "cache", "metadata.db"));
         builder.Services.AddHostedService<ExtensionStartupService>();
         builder.Services.AddSingleton<IThemeService, ThemeService>();
         builder.Services.AddSingleton<MainWindowViewModel>();
