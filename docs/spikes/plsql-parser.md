@@ -10,7 +10,8 @@
 
 **Usable for structure, not sufficient for completion, and too expensive as it stands.**
 
-- Coverage is good: every valid file in the public corpus and the synthetic package parse without errors.
+- Coverage is good on the grammar's own tests (every valid file parses) but has gaps on realistic code: of 12
+  hand-written files, 4 fail, on 8 distinct constructs — mostly Oracle 12c–21c syntax (section 5).
 - Warm speed is borderline: a 5,000-line package takes 107–250 ms depending on the run.
 - Two things fail outright: the prediction cache grows to **~880 MB** after the corpus (budget: 200 MB idle for
   the whole app), and a cold cache makes the first parse of each new construct take hundreds of milliseconds to
@@ -37,8 +38,9 @@ dotnet run -c Release --project tests/JetQueries.PlSql.ParseSpike -- --corpus D:
 
 ## Limits of this spike
 
-- **No real packages.** The corpus is the grammar's own regression suite: 478 short files, 7,391 lines, the
-  largest 487 lines. It exercises breadth of syntax, not production PL/SQL. A hand-written, realistic package
+- **No real packages.** The main corpus is the grammar's own regression suite: 478 short files, 7,391 lines,
+  the largest 487 lines. It exercises breadth of syntax, not production PL/SQL. The second corpus (section 5)
+  is realistic in style but was written by the same author who ran the test, and was not compiled. A hand-written, realistic package
   body repeated to 1,000 / 5,000 / 20,000 lines stands in for a large package; it parses, but it is one coding
   style.
 - Timings are from one laptop that was in use; repeated runs differ by up to 2× (ranges are given).
@@ -122,6 +124,48 @@ The tree loses the caret because an unfinished statement usually fails inside pr
 alternative") before any rule is entered, so its tokens end up as error nodes high in the tree — exactly the
 statement the user is typing.
 
+### 5. Second corpus: hand-written, realistic PL/SQL
+
+No production packages were available, so a second corpus was written for the spike
+(`tests/JetQueries.PlSql.ParseSpike/CorpusExtra/handwritten`, 12 files, 1,742 lines): package specs and bodies,
+triggers, object types, reporting SQL, dynamic SQL, bulk ETL, DDL, a SQL*Plus deployment script, and one file
+of 12c–23ai syntax. It was written by Claude and never compiled against a database, so each failure was
+re-tested in isolation (`CorpusExtra/grammar-gaps`) to separate grammar gaps from authoring mistakes.
+
+| | Result |
+| --- | --- |
+| Files without syntax errors | 8 of 12 |
+| First pass, cold cache | 7.3–7.5 s for 1,742 lines |
+| Warm | 134–141 ms (about 12,500 lines/s — slower than the grammar's own tests) |
+| Valid files that needed the slow full-LL stage | 4 of 8 (grammar tests: 8 of 470) |
+| Heap growth after this corpus plus the synthetic package | ~500 MB |
+| Caret cut: rule chain identical | 38–42 % |
+| Constructs surviving after a missing `END` / `;` | 75 % |
+
+Constructs the grammar rejects (each confirmed with a minimal file):
+
+| # | Construct | Since | Note |
+| --- | --- | --- | --- |
+| 1 | `DEFAULT` on a parameter of an object-type method | – | Believed valid Oracle; not verified against a database |
+| 2 | `(SELF AS supertype).method()` | 11g | |
+| 3 | `<<label>>` before a top-level anonymous block | – | |
+| 4 | `ACCESSIBLE BY (...)` | 12c | |
+| 5 | `SQL_MACRO` on a function inside a package (standalone works) | 19c | |
+| 6 | Iteration controls: `BY` step, several ranges, `PAIRS OF` / `VALUES OF`, `WHEN` | 21c | Four separate failures |
+| 7 | Qualified expression for an associative array (`t('k' => v)`) | 18c | The record form works |
+| 8 | `SET SERVEROUTPUT ON SIZE UNLIMITED` | – | SQL*Plus, not PL/SQL; the plain form works |
+
+Everything else in those files parsed, including compound triggers, `MATCH_RECOGNIZE`, `JSON_TABLE`, PIVOT,
+hierarchical queries, `FORALL … SAVE EXCEPTIONS`, conditional compilation, q-quoted strings, partitioned DDL
+and the 23ai statements tried (`IF NOT EXISTS`, multi-row `VALUES`, `SELECT` without `FROM`).
+
+Two consequences beyond coverage:
+
+- **Realistic code hits the slow path.** Half of the valid files could not be parsed with SLL prediction alone.
+- **SLL with recovery is not safe for diagnostics.** On its own it reports errors in 4 of the 8 valid files
+  (8 of 470 in the grammar tests). It is still the right mode for a fast structural tree of broken text, but
+  error squiggles must come from a full two-stage parse.
+
 ## Conclusions
 
 1. **Keep the grammar for structure, in the background.** Outline, folding, Ctrl+Click targets, diagnostics and
@@ -131,9 +175,12 @@ statement the user is typing.
    in scope) and the tree only for what lies outside the statement being typed. The fallback in the risk table
    should be the primary mechanism. antlr4-c3 (candidates computed from the ATN at the caret) is the other
    known approach and was not evaluated.
-3. **Parse broken text with one SLL pass plus recovery**; keep two-stage only for a final, precise diagnostics
-   pass on text that SLL accepts.
-4. **The cache has to be tamed before this ships.** Options, none measured yet: clear or cap the DFA cache
+3. **Use one SLL pass plus recovery for the structural tree, never for diagnostics.** It is 5–7× faster on
+   broken text, but it reports false errors in valid code; squiggles need the two-stage parse, debounced.
+4. **Plan for grammar maintenance.** Eight gaps turned up in 1,700 lines of ordinary code. The grammar has to
+   be forked and extended (the 21c loop forms and `ACCESSIBLE BY` first), and unknown syntax must degrade to
+   "no squiggle", not to a wall of errors.
+5. **The cache has to be tamed before this ships.** Options, none measured yet: clear or cap the DFA cache
    (trading CPU for memory), parse one routine at a time instead of the whole package, warm the cache on a
    background job at start-up, and cut the grammar down to what an editor needs — most of its 10,000 lines
    cover administrative DDL.

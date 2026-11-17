@@ -21,6 +21,16 @@ dotnet run -c Release --project tests/JetQueries.PlSql.ParseSpike -- --report re
 - [ ] Section 1: note the "warm parse" time of the 5,065-line package on your machine (target: under 200 ms).
 - [ ] Sections 2 and 4: note "managed heap growth" (about 880 MB on the development laptop).
 
+## 2b. Check the hand-written corpus against a real database
+
+The 12 files in `tests/JetQueries.PlSql.ParseSpike/CorpusExtra/handwritten` (also in `C:\AI\temp`) were never
+compiled. Their value as evidence depends on them being valid Oracle.
+
+- [ ] In a scratch schema, compile the constructs listed as grammar gaps in the findings (the minimal files in
+      `CorpusExtra/grammar-gaps`). Any that Oracle itself rejects is my mistake, not a grammar gap — in
+      particular gap 1 (`DEFAULT` on an object-type method parameter).
+- [ ] Note your database version: gaps 4–7 need 12c, 18c, 19c and 21c respectively.
+
 ## 3. Run it on real packages — the part only you can do
 
 - [ ] Export package specs and bodies from one or two real schemas into a folder **outside the repository**

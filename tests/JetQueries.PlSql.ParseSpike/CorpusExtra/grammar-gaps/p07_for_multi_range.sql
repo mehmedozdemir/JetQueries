@@ -1,0 +1,6 @@
+BEGIN
+  FOR i IN 1 .. 3, REVERSE 7 .. 9 LOOP
+    NULL;
+  END LOOP;
+END;
+/

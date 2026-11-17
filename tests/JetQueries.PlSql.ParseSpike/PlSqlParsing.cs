@@ -12,6 +12,7 @@ internal sealed record ParseOutcome(
     CommonTokenStream Tokens,
     int SyntaxErrors,
     string? FirstError,
+    IReadOnlyList<string> Errors,
     bool UsedFullLl,
     double Milliseconds);
 
@@ -52,7 +53,7 @@ internal static class PlSqlParsing
         {
             parser.AddErrorListener(errors);
             tree = parser.sql_script();
-            return new ParseOutcome(tree, tokens, errors.Count, errors.First, false, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
+            return new ParseOutcome(tree, tokens, errors.Count, errors.First, errors.All, false, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
         }
 
         parser.ErrorHandler = new BailErrorStrategy();
@@ -76,6 +77,7 @@ internal static class PlSqlParsing
             tokens,
             errors.Count,
             errors.First,
+            errors.All,
             usedFullLl,
             Stopwatch.GetElapsedTime(started).TotalMilliseconds);
     }
@@ -210,6 +212,8 @@ internal static class PlSqlParsing
 
         public string? First { get; private set; }
 
+        public List<string> All { get; } = [];
+
         public void SyntaxError(TextWriter output, IRecognizer recognizer, int offendingSymbol, int line, int charPositionInLine, string msg, RecognitionException e) =>
             Add(line, charPositionInLine, msg);
 
@@ -220,6 +224,10 @@ internal static class PlSqlParsing
         {
             Count++;
             First ??= $"{line}:{column} {message}";
+            if (All.Count < 200)
+            {
+                All.Add($"{line}:{column} {message}");
+            }
         }
     }
 }

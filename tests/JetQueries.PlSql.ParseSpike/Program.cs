@@ -25,6 +25,7 @@ for (var i = 0; i < args.Length - 1; i++)
 }
 
 var skipRecovery = args.Contains("--skip-recovery");
+var listErrors = args.Contains("--list-errors");
 
 if (corpusDirectories.Count == 0)
 {
@@ -113,6 +114,8 @@ else
 
     var failed = firstPass.Where(static f => f.Outcome.SyntaxErrors > 0).ToList();
     clean = firstPass.Where(static f => f.Outcome.SyntaxErrors == 0).Select(static f => (f.Path, f.Text)).ToList();
+    var sllFalseErrors = clean.Where(static f => PlSqlParsing.Parse(f.Text, ParseMode.SllWithRecovery).SyntaxErrors > 0).Select(static f => Path.GetFileName(f.Path)).ToList();
+    Line($"valid files that SLL-with-recovery alone reports errors in (false positives): {sllFalseErrors.Count}/{clean.Count}{(sllFalseErrors.Count is > 0 and <= 12 ? " (" + string.Join(", ", sllFalseErrors) + ")" : string.Empty)}");
     var totalLines = files.Sum(static f => SyntheticPackage.CountLines(f.Text));
     var largest = files.Zip(warmMs).MaxBy(static p => p.First.Text.Length);
 
@@ -126,6 +129,10 @@ else
     foreach (var f in failed.Take(40))
     {
         Line($"  FAILED {Path.GetRelativePath(corpusDirectories[0], f.Path)}: {f.Outcome.SyntaxErrors} errors, first at {f.Outcome.FirstError}");
+        foreach (var error in listErrors ? f.Outcome.Errors : [])
+        {
+            Line($"      {error}");
+        }
     }
 }
 
