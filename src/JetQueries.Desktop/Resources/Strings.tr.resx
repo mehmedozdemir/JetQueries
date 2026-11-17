@@ -12,6 +12,8 @@
   <data name="ResultsTitle" xml:space="preserve"><value>SONUÇLAR</value></data>
   <data name="ResultsPlaceholder" xml:space="preserve"><value>Sorgu sonuçları ve mesajlar burada görünecek.</value></data>
   <data name="StatusReady" xml:space="preserve"><value>Hazır</value></data>
+  <data name="ExtensionsLoaded" xml:space="preserve"><value>Eklentiler: {0}</value></data>
+  <data name="ExtensionsLoadedWithFailures" xml:space="preserve"><value>Eklentiler: {0} yüklendi, {1} başarısız</value></data>
   <data name="GridSpikeStream" xml:space="preserve"><value>Satır akıt</value></data>
   <data name="GridSpikeBenchmark" xml:space="preserve"><value>Kaydırma testi</value></data>
   <data name="GridSpikeRowCount" xml:space="preserve"><value>{0:N0} satır × {1} sütun (sentetik)</value></data>

@@ -81,10 +81,17 @@
             Height="{DynamicResource JqStatusBarHeight}"
             BorderBrush="{DynamicResource JqBorderBrush}" BorderThickness="0,1,0,0"
             Padding="{DynamicResource JqPaddingCompact}">
-      <TextBlock Text="{x:Static res:Strings.StatusReady}"
-                 FontSize="{DynamicResource JqFontSizeCaption}"
-                 Foreground="{DynamicResource JqTextSecondaryBrush}"
-                 VerticalAlignment="Center" />
+      <DockPanel>
+        <TextBlock DockPanel.Dock="Right"
+                   Text="{Binding ExtensionStatus}"
+                   FontSize="{DynamicResource JqFontSizeCaption}"
+                   Foreground="{DynamicResource JqTextSecondaryBrush}"
+                   VerticalAlignment="Center" />
+        <TextBlock Text="{x:Static res:Strings.StatusReady}"
+                   FontSize="{DynamicResource JqFontSizeCaption}"
+                   Foreground="{DynamicResource JqTextSecondaryBrush}"
+                   VerticalAlignment="Center" />
+      </DockPanel>
     </Border>
   </Grid>
 </Window>

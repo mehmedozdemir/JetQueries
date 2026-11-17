@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- A minimal extension, built only so that the extension host tests have a real assembly to load. -->
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <!-- CA1515: the host only instantiates public IExtension types. -->
+    <NoWarn>$(NoWarn);CA1515</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- The SDK is provided by the host at run time; an extension must not ship its own copy. -->
+    <ProjectReference Include="..\..\src\JetQueries.Sdk\JetQueries.Sdk.csproj">
+      <Private>false</Private>
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="extension.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

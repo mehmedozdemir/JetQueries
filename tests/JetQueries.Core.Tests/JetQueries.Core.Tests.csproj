@@ -17,4 +17,10 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\JetQueries.Core\JetQueries.Core.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- Built before the tests but not referenced: the extension host loads it from disk, as it would a real one. -->
+    <ProjectReference Include="..\JetQueries.TestExtension\JetQueries.TestExtension.csproj" ReferenceOutputAssembly="false" />
+    <AssemblyMetadata Include="TestExtensionDirectory" Value="$(MSBuildThisFileDirectory)../JetQueries.TestExtension/bin/$(Configuration)/$(TargetFramework)/" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
 </Project>
