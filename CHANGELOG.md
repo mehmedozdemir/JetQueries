@@ -18,3 +18,4 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 - Extension host: extensions are discovered from `extension.json` manifests and loaded into their own `AssemblyLoadContext` as a start-up job (ADR 0004); SDK gains `IExtension`, `IExtensionContext`, `ExtensionManifest` and `SdkContract`.
 - Packaging: `scripts/pack.ps1` publishes win-x64 (self-contained, ReadyToRun) and builds a Velopack installer; versions come from git tags through MinVer.
 - CI workflow (GitHub Actions): locked restore, Release build, tests, and a Velopack package from `main` and version tags.
+- Metadata cache: in-memory layer over a disposable SQLite file, per connection, with read-through helpers.
