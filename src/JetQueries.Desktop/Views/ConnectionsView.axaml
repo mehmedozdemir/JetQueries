@@ -13,6 +13,7 @@
         <Button Classes="toolbar" Content="{x:Static res:Strings.ConnectionEdit}" Command="{Binding EditCommand}" />
         <Button Classes="toolbar" Content="{x:Static res:Strings.ConnectionDelete}" Command="{Binding DeleteCommand}" />
         <Button Classes="toolbar" Content="{Binding ToggleConnectionText}" Command="{Binding ToggleConnectionCommand}" />
+        <Button Classes="toolbar" Content="{x:Static res:Strings.ExplorerRefresh}" Command="{Binding ReloadSelectedCommand}" />
       </StackPanel>
     </Border>
 
@@ -49,6 +50,31 @@
                            IsVisible="{Binding IsBusy}" VerticalAlignment="Center" />
             </StackPanel>
           </TreeDataTemplate>
+          <TreeDataTemplate DataType="vm:DatabaseObjectNodeViewModel" ItemsSource="{Binding Children}">
+            <StackPanel Orientation="Horizontal" Spacing="{DynamicResource JqSpace2}">
+              <TextBlock Text="{Binding Name}" VerticalAlignment="Center" Classes.container="{Binding IsContainer}" Classes="object-name" />
+              <ProgressBar IsIndeterminate="True" Width="36" MinWidth="36" Height="3" MinHeight="3"
+                           IsVisible="{Binding IsLoading}" VerticalAlignment="Center" />
+            </StackPanel>
+          </TreeDataTemplate>
+          <TreeDataTemplate DataType="vm:CategoryNodeViewModel" ItemsSource="{Binding Children}">
+            <StackPanel Orientation="Horizontal" Spacing="{DynamicResource JqSpace2}">
+              <TextBlock Text="{Binding Name}" Foreground="{DynamicResource JqTextSecondaryBrush}" VerticalAlignment="Center" />
+              <ProgressBar IsIndeterminate="True" Width="36" MinWidth="36" Height="3" MinHeight="3"
+                           IsVisible="{Binding IsLoading}" VerticalAlignment="Center" />
+            </StackPanel>
+          </TreeDataTemplate>
+          <DataTemplate DataType="vm:ColumnNodeViewModel">
+            <StackPanel Orientation="Horizontal" Spacing="{DynamicResource JqSpace2}">
+              <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+              <TextBlock Classes="badge" Text="{Binding DataType}" VerticalAlignment="Center" />
+              <TextBlock Classes="badge key" Text="{x:Static res:Strings.ColumnPrimaryKey}" IsVisible="{Binding IsPrimaryKey}" VerticalAlignment="Center" />
+              <TextBlock Classes="badge" Text="{x:Static res:Strings.ColumnNullable}" IsVisible="{Binding IsNullable}" VerticalAlignment="Center" />
+            </StackPanel>
+          </DataTemplate>
+          <DataTemplate DataType="vm:MessageNodeViewModel">
+            <TextBlock Classes="tree-message" Classes.error="{Binding IsError}" Text="{Binding Name}" TextWrapping="Wrap" MaxWidth="420" />
+          </DataTemplate>
         </TreeView.DataTemplates>
       </TreeView>
     </Panel>

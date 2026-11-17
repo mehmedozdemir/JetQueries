@@ -35,6 +35,7 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton(cacheOptions);
         services.TryAddSingleton(TimeProvider.System);
         services.TryAddSingleton<IMetadataCache, SqliteMetadataCache>();
+        services.TryAddSingleton<IMetadataService, MetadataService>();
 
         var connectionOptions = new ConnectionStoreOptions();
         configureConnectionStore?.Invoke(connectionOptions);

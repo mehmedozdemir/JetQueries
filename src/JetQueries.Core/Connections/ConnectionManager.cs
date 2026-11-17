@@ -34,11 +34,95 @@ public sealed record ConnectionAttempt(ConnectionOutcome Outcome, string? Detail
     public ConnectionSession? Session { get; init; }
 }
 
-/// <summary>An open connection to a saved database.</summary>
-/// <param name="Definition">The saved connection it was opened from.</param>
-/// <param name="Provider">The provider that opened it.</param>
-/// <param name="Connection">The live connection, owned by the <see cref="IConnectionManager"/>.</param>
-public sealed record ConnectionSession(ConnectionDefinition Definition, IDatabaseProvider Provider, IDatabaseConnection Connection);
+/// <summary>
+/// An open connection to a saved database. It owns two driver connections: one for running the user's SQL and,
+/// opened on first use, one for reading metadata, so a long query never blocks the object explorer or
+/// IntelliSense.
+/// </summary>
+public sealed class ConnectionSession : IAsyncDisposable
+{
+    // Kept in memory for the life of the session only, to open the metadata connection later.
+    private readonly ConnectionCredential? _credential;
+    private readonly SemaphoreSlim _metadataGate = new(1, 1);
+    private IDatabaseConnection? _metadataConnection;
+    private bool _disposed;
+
+    internal ConnectionSession(ConnectionDefinition definition, IDatabaseProvider provider, IDatabaseConnection connection, ConnectionCredential? credential)
+    {
+        Definition = definition;
+        Provider = provider;
+        Connection = connection;
+        _credential = credential;
+    }
+
+    /// <summary>The saved connection the session was opened from.</summary>
+    public ConnectionDefinition Definition { get; }
+
+    /// <summary>The provider that opened it.</summary>
+    public IDatabaseProvider Provider { get; }
+
+    /// <summary>The connection for running the user's SQL.</summary>
+    public IDatabaseConnection Connection { get; }
+
+    /// <summary>
+    /// Runs one metadata operation on the session's metadata connection. Operations are run one at a time, as
+    /// a driver connection requires. If the operation fails the connection is dropped and reopened next time.
+    /// </summary>
+    /// <typeparam name="T">The result of the operation.</typeparam>
+    /// <param name="work">The operation.</param>
+    /// <param name="cancellationToken">Cancels waiting for the connection and the operation itself.</param>
+    public async Task<T> UseMetadataAsync<T>(Func<IMetadataProvider, CancellationToken, Task<T>> work, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(work);
+        await _metadataGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            _metadataConnection ??= await Provider.OpenConnectionAsync(Definition.ToProfile(), _credential, cancellationToken).ConfigureAwait(false);
+            try
+            {
+                return await work(_metadataConnection.Metadata, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                // The connection may be broken (network, VPN): do not keep failing on it.
+                var broken = _metadataConnection;
+                _metadataConnection = null;
+                await broken.DisposeAsync().ConfigureAwait(false);
+                throw;
+            }
+        }
+        finally
+        {
+            _metadataGate.Release();
+        }
+    }
+
+    /// <summary>Closes both driver connections.</summary>
+    public async ValueTask DisposeAsync()
+    {
+        await _metadataGate.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            _disposed = true;
+            if (_metadataConnection is not null)
+            {
+                await _metadataConnection.DisposeAsync().ConfigureAwait(false);
+            }
+        }
+        finally
+        {
+            _metadataGate.Release();
+        }
+
+        await Connection.DisposeAsync().ConfigureAwait(false);
+    }
+}
 
 /// <summary>Checks whether a TCP endpoint answers.</summary>
 public interface IReachabilityProbe
@@ -149,7 +233,7 @@ public sealed class ConnectionManager : IConnectionManager, IAsyncDisposable
     /// <inheritdoc />
     public async Task<ConnectionAttempt> TestAsync(ConnectionDefinition definition, string? password, CancellationToken cancellationToken)
     {
-        var (attempt, connection, _) = await ConnectAsync(definition, password, cancellationToken).ConfigureAwait(false);
+        var (attempt, connection, _, _) = await ConnectAsync(definition, password, cancellationToken).ConfigureAwait(false);
         if (connection is not null)
         {
             await connection.DisposeAsync().ConfigureAwait(false);
@@ -170,13 +254,13 @@ public sealed class ConnectionManager : IConnectionManager, IAsyncDisposable
             }
         }
 
-        var (attempt, connection, provider) = await ConnectAsync(definition, password, cancellationToken).ConfigureAwait(false);
+        var (attempt, connection, provider, credential) = await ConnectAsync(definition, password, cancellationToken).ConfigureAwait(false);
         if (connection is null)
         {
             return attempt;
         }
 
-        var session = new ConnectionSession(definition, provider!, connection);
+        var session = new ConnectionSession(definition, provider!, connection, credential);
         ConnectionSession? winner = null;
         lock (_gate)
         {
@@ -208,7 +292,7 @@ public sealed class ConnectionManager : IConnectionManager, IAsyncDisposable
 
         if (session is not null)
         {
-            await session.Connection.DisposeAsync().ConfigureAwait(false);
+            await session.DisposeAsync().ConfigureAwait(false);
             SessionsChanged?.Invoke(this, EventArgs.Empty);
         }
     }
@@ -225,11 +309,11 @@ public sealed class ConnectionManager : IConnectionManager, IAsyncDisposable
 
         foreach (var session in sessions)
         {
-            await session.Connection.DisposeAsync().ConfigureAwait(false);
+            await session.DisposeAsync().ConfigureAwait(false);
         }
     }
 
-    private async Task<(ConnectionAttempt Attempt, IDatabaseConnection? Connection, IDatabaseProvider? Provider)> ConnectAsync(
+    private async Task<(ConnectionAttempt Attempt, IDatabaseConnection? Connection, IDatabaseProvider? Provider, ConnectionCredential? Credential)> ConnectAsync(
         ConnectionDefinition definition, string? password, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(definition);
@@ -241,7 +325,7 @@ public sealed class ConnectionManager : IConnectionManager, IAsyncDisposable
         var provider = _extensions.FindDatabaseProvider(definition.ProviderId);
         if (provider is null)
         {
-            return (Done(ConnectionOutcome.ProviderMissing, definition.ProviderId), null, null);
+            return (Done(ConnectionOutcome.ProviderMissing, definition.ProviderId), null, null, null);
         }
 
         var settings = provider as IConnectionSettingsProvider;
@@ -251,7 +335,7 @@ public sealed class ConnectionManager : IConnectionManager, IAsyncDisposable
             password ??= await _credentials.GetPasswordAsync(definition.Id, cancellationToken).ConfigureAwait(false);
             if (password is null)
             {
-                return (Done(ConnectionOutcome.PasswordRequired), null, provider);
+                return (Done(ConnectionOutcome.PasswordRequired), null, provider, null);
             }
 
             credential = new ConnectionCredential(definition.UserName, password);
@@ -260,13 +344,13 @@ public sealed class ConnectionManager : IConnectionManager, IAsyncDisposable
         if (settings?.GetEndpoint(definition.Settings) is { } endpoint &&
             await _probe.ProbeAsync(endpoint, ProbeTimeout, cancellationToken).ConfigureAwait(false) is { } unreachable)
         {
-            return (Done(ConnectionOutcome.Unreachable, unreachable), null, provider);
+            return (Done(ConnectionOutcome.Unreachable, unreachable), null, provider, null);
         }
 
         try
         {
             var connection = await provider.OpenConnectionAsync(definition.ToProfile(), credential, cancellationToken).ConfigureAwait(false);
-            return (Done(ConnectionOutcome.Succeeded), connection, provider);
+            return (Done(ConnectionOutcome.Succeeded), connection, provider, credential);
         }
         catch (OperationCanceledException)
         {
@@ -277,7 +361,7 @@ public sealed class ConnectionManager : IConnectionManager, IAsyncDisposable
 #pragma warning restore CA1031
         {
             // The driver's message only: exception details may echo settings, and never the connection string.
-            return (Done(ConnectionOutcome.Failed, ex.Message), null, provider);
+            return (Done(ConnectionOutcome.Failed, ex.Message), null, provider, null);
         }
     }
 }

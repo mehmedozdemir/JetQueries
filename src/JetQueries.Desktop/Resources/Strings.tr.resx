@@ -69,4 +69,17 @@
   <data name="Setting_trustServerCertificate" xml:space="preserve"><value>Sunucu sertifikasına güven</value></data>
   <data name="Setting_readOnlyIntent" xml:space="preserve"><value>Salt okunur yönlendirme</value></data>
   <data name="Setting_connectTimeoutSeconds" xml:space="preserve"><value>Bağlantı zaman aşımı (sn)</value></data>
+  <data name="ExplorerRefresh" xml:space="preserve"><value>Yenile</value></data>
+  <data name="ExplorerLoading" xml:space="preserve"><value>Yükleniyor…</value></data>
+  <data name="ExplorerEmpty" xml:space="preserve"><value>(boş)</value></data>
+  <data name="CategoryTables" xml:space="preserve"><value>Tablolar</value></data>
+  <data name="CategoryViews" xml:space="preserve"><value>Görünümler</value></data>
+  <data name="CategoryProcedures" xml:space="preserve"><value>Prosedürler</value></data>
+  <data name="CategoryFunctions" xml:space="preserve"><value>Fonksiyonlar</value></data>
+  <data name="CategoryPackages" xml:space="preserve"><value>Paketler</value></data>
+  <data name="CategorySequences" xml:space="preserve"><value>Sıralar</value></data>
+  <data name="CategorySynonyms" xml:space="preserve"><value>Eş anlamlılar</value></data>
+  <data name="CategoryTypes" xml:space="preserve"><value>Tipler</value></data>
+  <data name="ColumnPrimaryKey" xml:space="preserve"><value>PK</value></data>
+  <data name="ColumnNullable" xml:space="preserve"><value>null</value></data>
 </root>

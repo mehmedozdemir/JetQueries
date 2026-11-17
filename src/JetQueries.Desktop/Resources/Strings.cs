@@ -70,6 +70,19 @@ public static class Strings
     public static string PasswordPromptMessage => Get(nameof(PasswordPromptMessage));
     public static string DeleteConfirmTitle => Get(nameof(DeleteConfirmTitle));
     public static string DeleteConfirmMessage => Get(nameof(DeleteConfirmMessage));
+    public static string ExplorerRefresh => Get(nameof(ExplorerRefresh));
+    public static string ExplorerLoading => Get(nameof(ExplorerLoading));
+    public static string ExplorerEmpty => Get(nameof(ExplorerEmpty));
+    public static string CategoryTables => Get(nameof(CategoryTables));
+    public static string CategoryViews => Get(nameof(CategoryViews));
+    public static string CategoryProcedures => Get(nameof(CategoryProcedures));
+    public static string CategoryFunctions => Get(nameof(CategoryFunctions));
+    public static string CategoryPackages => Get(nameof(CategoryPackages));
+    public static string CategorySequences => Get(nameof(CategorySequences));
+    public static string CategorySynonyms => Get(nameof(CategorySynonyms));
+    public static string CategoryTypes => Get(nameof(CategoryTypes));
+    public static string ColumnPrimaryKey => Get(nameof(ColumnPrimaryKey));
+    public static string ColumnNullable => Get(nameof(ColumnNullable));
 
     /// <summary>A string looked up by a computed name (for example <c>Setting_server</c>), or null if there is none.</summary>
     public static string? Find(string name) => Manager.GetString(name, CultureInfo.CurrentUICulture);
