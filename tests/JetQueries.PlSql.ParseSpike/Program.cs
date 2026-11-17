@@ -4,7 +4,7 @@ using System.Text;
 using Antlr4.Runtime;
 using JetQueries.PlSql.ParseSpike;
 
-// Usage: JetQueries.PlSql.ParseSpike [--corpus <dir>]... [--report <file>]
+// Usage: JetQueries.PlSql.ParseSpike [--corpus <dir>]... [--report <file>] [--profile <file>]...
 // Without --corpus, the bundled grammars-v4 example files are used.
 
 CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
@@ -38,6 +38,31 @@ void Line(string text = "")
 {
     Console.WriteLine(text);
     report.AppendLine(text);
+}
+
+// --profile <file> (repeatable): per-decision profile of a warm parse, then exit.
+var profileFiles = new List<string>();
+for (var i = 0; i < args.Length - 1; i++)
+{
+    if (args[i] == "--profile")
+    {
+        profileFiles.Add(args[++i]);
+    }
+}
+
+if (profileFiles.Count > 0)
+{
+    foreach (var file in profileFiles)
+    {
+        ProfileExperiment.Run(file, Line);
+    }
+
+    if (reportPath is not null)
+    {
+        File.WriteAllText(reportPath, report.ToString());
+    }
+
+    return 0;
 }
 
 double HeapGrowthMb() => (GC.GetTotalMemory(forceFullCollection: true) - memoryAtStart) / 1024.0 / 1024.0;

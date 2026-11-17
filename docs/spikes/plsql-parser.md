@@ -23,6 +23,10 @@
 type files parse, large packages take about a second each even warm, and the prediction cache reaches 3.7 GB.
 The grammar cannot be used unmodified. The user's own production packages are still untested.
 
+Profiling (section 7) shows why: valid packages fall through to ANTLR's slow full-LL stage, and 91–97 % of the
+prediction time and most of the cache sit in about seven ambiguous expression rules. That makes a repaired
+fork worth a two-day experiment before ANTLR is dropped; see "Alternatives compared".
+
 ## What was built
 
 - `tests/JetQueries.PlSql.ParseSpike.Grammar` — the grammars-v4 PL/SQL grammar (Apache 2.0, unmodified, pinned
@@ -49,6 +53,8 @@ dotnet run -c Release --project tests/JetQueries.PlSql.ParseSpike -- --corpus D:
 - The token fallback was corrected once after looking at its failures on this same corpus, so its numbers are
   optimistic for unseen code. It was evaluated only for carets inside a `SELECT`.
 - Not measured: the lexer as an incremental line tokenizer, PL/SQL-only subsetting of the grammar, antlr4-c3.
+- The alternatives comparison is a desk study: the hand-written parser and tree-sitter columns are estimates,
+  not measurements, and no grammar repair has been attempted yet.
 
 ## Measurements
 
@@ -235,6 +241,74 @@ synthetic package, and far from the 200 ms target for 5,000 lines.
 For carets inside a query (only 23 samples): clause correct from the broken tree 43 %, from the token fallback
 100 %; tables in scope 87 % versus 96 %.
 
+### 7. Where the time and the cache go
+
+`--profile <file>` runs ANTLR's own profiler over one warm parse. Three large packages from section 6, two runs
+(the laptop was in use; timings moved by up to 1.7× between runs, the shape did not):
+
+| | oos_util_crypto.pkb | as_pdf3.pkb | ut_utils.pkb |
+| --- | ---: | ---: | ---: |
+| Lines / tokens | 2,417 / 20,999 | 3,432 / 18,809 | 1,171 / 6,014 |
+| First parse in the process | 10–14 s | 17–23 s | 6–7 s |
+| Warm two-stage parse | 1.5–2.4 s | 1.3–1.4 s | 0.2–0.4 s |
+| One SLL pass with recovery, warm | 281 ms (13 false errors) | 170 ms (19 false errors) | 37 ms (11 false errors) |
+| Lexer only | 2–6 ms | 6–9 ms | 1–2 ms |
+| Full-LL fallbacks / true ambiguities | 3,202 / 1,119 | 2,506 / 872 | 800 / 341 |
+| Decisions used, of 3,054 | 102 | 141 | 164 |
+| Prediction time in the top 8 decisions | 97 % | 96 % | 91–94 % |
+
+- **The slow part is the full-LL stage, not parsing as such.** All three files are valid, yet SLL fails on
+  them, so every parse pays for a failed SLL pass plus a full-LL pass. Full-LL predictions are recomputed on
+  every parse (they are not cached the way SLL predictions are), which is why a warm cache does not help. The
+  single SLL pass is 5–8× faster.
+- **The cost is concentrated.** The same handful of expression rules lead every table:
+  `unary_expression_core`, `general_element_part`, `atom`, `routine_name`, `type_spec`, `statement`,
+  `concatenation`. They are where the grammar is genuinely ambiguous (ANTLR reports 341–1,119 ambiguities per
+  file).
+- **So is the cache.** One decision in `general_element_part` (is `a.b(c)` a call, an indexed element, a
+  cursor expression …) looks ahead up to **31,211 tokens** and owns 47–72 % of all cached states (20,155 of
+  28,121 after three files).
+- The lexer is not a problem: it can serve syntax colouring as it is.
+
+This is the same pattern others report for community ANTLR SQL grammars: Bytebase cut a T-SQL parse from 143 s
+to 2.3 s by removing one ambiguity, and a grammars-v4 maintainer notes that this PL/SQL grammar's "chain of
+rules" expressions are a known cause of long lookahead (grammars-v4 issue 4014). It suggests, but does not
+prove, that a small number of grammar repairs would remove most of the cost.
+
+## Alternatives compared
+
+Desk comparison plus the profile above; only option A has measurements behind it.
+
+| | A. ANTLR, forked and repaired grammar | B. Hand-written recursive-descent parser | C. tree-sitter + tree-sitter-plsql |
+| --- | --- | --- | --- |
+| Coverage today | 90 % of real package/type files; 9 known causes | None; has to be built | Unmeasured. One maintainer, 13 stars, "in development"; built for packages, limited for stand-alone routines and triggers |
+| Speed | 1–2 s per large package now; a single SLL pass already does 170–281 ms. Unknown after repairs | Linear, typically well under 50 ms for such files; no warm-up | Incremental re-parse in milliseconds by design |
+| Memory | 3.7 GB now, about half to three quarters of it in one decision. Unknown after repairs | Tree only | Tree only, native heap |
+| First parse | 6–23 s per new kind of file now | None | None |
+| Broken code | Recovery keeps what precedes the damage; clause at the caret 43 % | We design it: recover at `;`, `END`, `/` and statement keywords | Built for it, but quality depends on the grammar |
+| Effort | Days for a first verdict; then permanent grammar ownership | Weeks for PL/SQL structure, statements and expressions; Oracle SQL in full is far larger | Days to integrate; then the same grammar gaps, in a JavaScript grammar DSL and a C toolchain |
+| Dependencies | Managed runtime already in the tree (Apache 2.0); Java only to regenerate | None | Native library per OS and CPU, third-party .NET bindings, C build in CI |
+| Main risk | Repairs do not get close enough; cold start stays slow | Scope creep: SQL inside PL/SQL is most of the language | Smallest community, weakest grammar, most build machinery |
+
+Independent of the choice: completion context comes from tokens (100 % against 43 % from the tree in every
+corpus), colouring comes from the lexer, and T-SQL uses ScriptDom and is not affected.
+
+**Recommendation.** Rule out C: it adds native binaries on three platforms and a weaker grammar than the one
+already measured, to solve a problem (incrementality) we do not yet have. Do not commit to B yet either: it is
+the safest end state for speed and memory but the most expensive to reach. First run one **time-boxed
+experiment on A (two days)**: fork the grammar, remove the ambiguities in the seven rules above, add the
+missing constructs from section 6, and re-run the same corpus. Keep ANTLR only if all of these hold on the
+869-file corpus:
+
+1. no valid file needs the full-LL stage (today 271 do), so one SLL pass is also correct for diagnostics;
+2. a 5,000-line package parses in under 200 ms warm;
+3. the prediction cache stays under 100 MB after the whole corpus;
+4. the first parse of a large package takes under 2 s, or can be hidden by a background warm-up at start-up;
+5. at least 98 % of package and type files parse.
+
+If any fails, switch to B for structure (declarations, blocks, statement boundaries, with SQL statements kept
+as token ranges) and keep ANTLR out of the product.
+
 ## Conclusions
 
 1. **Keep the grammar for structure, in the background.** Outline, folding, Ctrl+Click targets, diagnostics and
@@ -258,8 +332,8 @@ For carets inside a query (only 23 samples): clause correct from the broken tree
 
 | # | Step | Why |
 | --- | --- | --- |
-| 0 | Decide whether to keep ANTLR + this grammar at all. Alternatives worth a short comparison: a hand-written recursive-descent parser for the PL/SQL subset an editor needs, or tree-sitter with a PL/SQL grammar | Memory and speed on real code miss the budgets by a wide margin, not by tuning distance |
+| 0 | Two-day experiment: repair the seven hot rules in a fork of the grammar and re-measure against the five criteria in "Alternatives compared"; fall back to a hand-written structural parser if any fails | Time and cache are concentrated in a few ambiguous decisions (section 7), so repair is cheap to try and decisive either way |
 | 1 | Run the harness on the user's own production packages (kept outside the repo) with `--corpus` | Open-source code is real but not theirs; coding style drives both coverage and speed |
-| 2 | Measure cache size and warm speed with a PL/SQL-only subset of the grammar, and with per-routine parsing | Decides whether ANTLR + this grammar fits the memory budget at all |
+| 2 | If step 0 passes: cut the grammar down to what an editor needs and measure per-routine parsing | Smaller generated parser (9 MB of C# today) and a bounded cost per edit |
 | 3 | Extend the token context finder to DML, PL/SQL blocks and aliases, with tests; compare with antlr4-c3 | It is the completion engine's core |
 | 4 | Confirm thresholds: ≥ 98 % valid files, < 200 ms per 5,000 lines warm, and add one for memory and first-parse latency | The two failing dimensions have no agreed target yet |

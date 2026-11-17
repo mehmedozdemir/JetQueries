@@ -41,7 +41,20 @@ compiled. Their value as evidence depends on them being valid Oracle.
       recovery block for "corpus files that parse cleanly".
 - [ ] For any FAILED file, check whether the code is valid Oracle PL/SQL; if so, it is a grammar gap.
 
+## 3b. Profile one slow package (optional)
+
+```
+dotnet run -c Release --project tests/JetQueries.PlSql.ParseSpike -- --profile <path to a large .pkb>
+```
+
+- [ ] It prints warm parse time, the time of a single SLL pass, and the 15 grammar decisions that cost the
+      most. On your own packages, check whether the same rules lead the table as in section 7 of the findings
+      (`unary_expression_core`, `general_element_part`, `atom`, `routine_name`, `type_spec`).
+
 ## 4. Decisions needed
+
+- [ ] Approve or reject the two-day grammar-repair experiment and its five pass criteria ("Alternatives
+      compared" in the findings). Rejecting it means going straight to a hand-written structural parser.
 
 - [ ] Confirm or change the thresholds: at least 98 % of valid files parse; a 5,000-line package parses in
       under 200 ms warm.
