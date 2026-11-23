@@ -144,6 +144,15 @@ public static class Strings
     public static string GridSelectAll => Get(nameof(GridSelectAll));
     public static string GridNoRows => Get(nameof(GridNoRows));
     public static string ConnectionNewLong => Get(nameof(ConnectionNewLong));
+    public static string FilterCondition => Get(nameof(FilterCondition));
+    public static string FilterValue => Get(nameof(FilterValue));
+    public static string FilterApply => Get(nameof(FilterApply));
+    public static string FilterClear => Get(nameof(FilterClear));
+    public static string FilterValueRequired => Get(nameof(FilterValueRequired));
+    public static string FilterClearAll => Get(nameof(FilterClearAll));
+    public static string FilterRemove => Get(nameof(FilterRemove));
+    public static string ResultRowsShown => Get(nameof(ResultRowsShown));
+    public static string HiddenColumns => Get(nameof(HiddenColumns));
 
     /// <summary>A string looked up by a computed name (for example <c>Setting_server</c>), or null if there is none.</summary>
     public static string? Find(string name) => Manager.GetString(name, CultureInfo.CurrentUICulture);

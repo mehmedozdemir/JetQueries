@@ -1,0 +1,81 @@
+<UserControl x:Class="JetQueries.Wpf.Views.ResultGridView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:UiKit.Controls;assembly=UiKit.Wpf"
+             xmlns:res="clr-namespace:JetQueries.Presentation.Resources;assembly=JetQueries.Presentation"
+             Focusable="False">
+    <UserControl.InputBindings>
+        <KeyBinding Gesture="Ctrl+Shift+L" Command="{x:Static ApplicationCommands.Stop}" />
+    </UserControl.InputBindings>
+    <UserControl.CommandBindings>
+        <CommandBinding Command="{x:Static ApplicationCommands.Stop}" Executed="OnClearFiltersShortcut" />
+    </UserControl.CommandBindings>
+
+    <DockPanel>
+        <!-- Active filters, hidden columns and how many rows are shown (DESIGN.md: filter chips) -->
+        <DockPanel x:Name="ChipBar" DockPanel.Dock="Top" Margin="10,8,10,4" Visibility="Collapsed">
+            <TextBlock DockPanel.Dock="Left" Text="{x:Static c:Icons.Filter}" Style="{StaticResource Text.Icon}" FontSize="13"
+                       Foreground="{DynamicResource Brush.Accent}" Margin="2,0,10,0" />
+            <TextBlock x:Name="RowsText" DockPanel.Dock="Right" Style="{StaticResource Text.Status}" Margin="12,0,0,0" />
+            <Button x:Name="ClearAll" DockPanel.Dock="Right" Style="{StaticResource Btn.Link}" Content="{x:Static res:Strings.FilterClearAll}"
+                    Click="OnClearAll" />
+            <WrapPanel>
+                <ItemsControl x:Name="Chips" Focusable="False">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource Chip}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock VerticalAlignment="Center" FontSize="12">
+                                        <Run Text="{Binding Column, Mode=OneWay}" FontWeight="SemiBold" />
+                                        <Run Text="{Binding Condition, Mode=OneWay}" Foreground="{DynamicResource Brush.TextSecondary}" />
+                                    </TextBlock>
+                                    <Button Style="{StaticResource Btn.Icon}" Width="20" Height="20" Margin="6,0,0,0" c:Ui.Icon="&#xE711;"
+                                            c:Ui.CornerRadius="10" FontSize="9" ToolTip="{x:Static res:Strings.FilterRemove}"
+                                            Click="OnRemoveChip" />
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <Button x:Name="ShowColumns" Style="{StaticResource Btn.Link}" VerticalAlignment="Center" Margin="4,0,0,0"
+                        Visibility="Collapsed" Click="OnShowColumns" />
+            </WrapPanel>
+        </DockPanel>
+
+        <Grid>
+            <c:VirtualGrid x:Name="Grid" NullText="NULL" ShowFilterButtons="True" />
+
+            <!-- Filter panel of a column (DESIGN.md: filter popup) -->
+            <Popup x:Name="FilterPopup" PlacementTarget="{Binding ElementName=Grid}" Placement="Relative" StaysOpen="False"
+                   AllowsTransparency="True" PopupAnimation="Fade">
+                <Border Style="{StaticResource Card.Popup}" Width="330" Padding="16,14">
+                    <StackPanel KeyDown="OnFilterKeyDown">
+                        <DockPanel Margin="0,0,0,12">
+                            <Border DockPanel.Dock="Right" Style="{StaticResource Badge}">
+                                <TextBlock x:Name="FilterType" FontSize="11" Foreground="{DynamicResource Brush.TextSecondary}" />
+                            </Border>
+                            <TextBlock x:Name="FilterTitle" FontSize="13.5" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                        </DockPanel>
+                        <TextBlock Text="{x:Static res:Strings.FilterCondition}" Style="{StaticResource Text.Section}" />
+                        <ComboBox x:Name="FilterOperator" DisplayMemberPath="Text" SelectionChanged="OnOperatorChanged" />
+                        <TextBox x:Name="FilterValue" Margin="0,8,0,0" c:Ui.Placeholder="{x:Static res:Strings.FilterValue}" />
+                        <TextBlock x:Name="FilterError" Foreground="{DynamicResource Brush.Danger}" Margin="0,6,0,0" Visibility="Collapsed"
+                                   Text="{x:Static res:Strings.FilterValueRequired}" />
+                        <DockPanel Margin="0,16,0,0">
+                            <Button DockPanel.Dock="Left" Style="{StaticResource Btn.Link}" Content="{x:Static res:Strings.FilterClear}" Click="OnFilterClear" />
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Button Content="{x:Static res:Strings.ButtonCancel}" Margin="0,0,8,0" Click="OnFilterCancel" />
+                                <Button Style="{StaticResource Btn.Primary}" Content="{x:Static res:Strings.FilterApply}" Click="OnFilterApply" />
+                            </StackPanel>
+                        </DockPanel>
+                    </StackPanel>
+                </Border>
+            </Popup>
+        </Grid>
+    </DockPanel>
+</UserControl>

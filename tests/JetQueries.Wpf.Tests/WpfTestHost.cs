@@ -32,8 +32,12 @@ internal static class WpfTestHost
             try
             {
                 // The real resources (UiKit tokens and styles, JetQueries additions); no host, no saved theme.
-                var app = new App { ShutdownMode = ShutdownMode.OnExplicitShutdown };
+                var app = new App();
                 app.InitializeComponent();
+
+                // After InitializeComponent: App.xaml sets OnMainWindowClose, and the first test window to close
+                // would end the application for every later test.
+                app.ShutdownMode = ShutdownMode.OnExplicitShutdown;
                 App.LocalizeGrid();
                 ready.SetResult(Dispatcher.CurrentDispatcher);
             }

@@ -33,6 +33,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 - PostgreSQL and SQLite language support on a shared token-based engine: colouring, completion, go to definition and unclosed string or comment errors (ADR 0006).
 - The object explorer shows Synonyms and Types groups only for providers that have them.
 - WPF user interface on UiKit (ADR 0007): shell, connection dialog, explorer, history, query tabs with an AvalonEdit SQL editor and UiKit's virtual results grid, light and dark themes following Windows. It is now the packaged application; the Avalonia interface is paused.
+- Result grid sorting and filtering (WPF): header click and Shift+click sort, a filter panel per column, filter and
+  exclude by a cell's value, active filter chips, hidden columns; computed on the client in the background, by
+  value and by Turkish text rules.
 
 ### Changed
 - View models, their service contracts and strings moved to `JetQueries.Presentation`, shared by both interfaces.

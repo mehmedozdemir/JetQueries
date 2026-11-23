@@ -34,14 +34,33 @@ dotnet run --project src/JetQueries.Wpf
 - [ ] A syntax error is underlined; hovering shows the message. Ctrl+Click / F12 opens a definition tab.
 - [ ] F5 / Ctrl+Enter runs (the selection if there is one); Esc or the toolbar's Cancel stops a long query.
 - [ ] Results stream into the grid while the query runs; numbers right-aligned, NULL muted, booleans
-      coloured; click a header to see the sort indicator (sorting itself is not implemented yet); Ctrl+C copies.
+      coloured; Ctrl+C copies.
 - [ ] The Messages tab shows server messages; error lines in red; text can be selected and copied.
+
+## Sorting and filtering results
+Sorting and filtering work on the rows already received (at most 100,000), on the client, in the background.
+- [ ] Click a header: ascending; click again: descending (arrow in the header). Shift+click adds the column
+      as a further key (numbered arrows). Header right-click: sort ascending / descending / clear sort.
+- [ ] NULL sorts first ascending, last descending; numbers sort by value; text by Turkish rules
+      (ç after c, ı before i, İstanbul = istanbul ignoring case).
+- [ ] The funnel in a header opens the filter panel under it: column name and database type, a condition
+      (text: contains, not contains, equals, not equal, starts with, ends with, NULL, not NULL; numbers and
+      dates: equals, not equal, greater/less (or equal), contains, NULL, not NULL) and a value. Enter applies,
+      Esc closes, Clear removes the column's filter; an empty value shows "Enter a value.".
+- [ ] Numbers can be typed as `1250,5` or `1250.5`; dates as `15.01.2026` or `2026-01-15`.
+- [ ] A filtered column's funnel is highlighted; a chip per filter appears above the grid with an ×; "Clear all"
+      and Ctrl+Shift+L remove every filter (the sort stays); the bar shows "36 / 60 rows".
+- [ ] Cell right-click: "Filter by this value" / "Exclude this value" (on a NULL cell: NULL / not NULL).
+- [ ] Header right-click "Hide column": the column disappears; "1 hidden column · show" brings it back.
+- [ ] Sort or filter while a long query is still returning rows: the new rows follow the order and the filters.
+- [ ] On 100,000 rows a sort or filter takes well under a second and the window never freezes.
 
 ## History
 - [ ] The History tab lists runs; search filters after a short pause; double-click or Open reopens a run;
       Clear all asks first.
 
 ## Known limits
-- Grid header sort and filter only show their indicators; results are not re-sorted or filtered yet.
+- Sorting and filtering apply to the rows received, not to the database query (no ORDER BY / WHERE is added).
+- Filters on several columns are combined with AND; there is no OR.
 - Idle memory of the WPF application is about 370 MB (budget: 200 MB); not investigated yet.
 - The Avalonia application still builds (`JetQueries.Avalonia.exe`) but is no longer packaged or developed.
