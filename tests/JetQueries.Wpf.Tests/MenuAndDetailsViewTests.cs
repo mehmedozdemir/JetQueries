@@ -135,11 +135,23 @@ public sealed class MenuAndDetailsViewTests
             var definition = await env.OpenAsync(TestEnvironment.Definition("Kartlar"));
             var session = env.Manager.Sessions.Single(s => s.Definition.Id == definition.Id);
             var details = new ObjectDetailsViewModel(session, new DatabaseObject(new DatabaseObjectName("Cards", "dbo", "Cards"), DatabaseObjectKinds.Table), env.Metadata, env.Jobs);
-            var window = new ObjectDetailsWindow(details) { Left = -20000, Top = 0, ShowActivated = false, Width = 900, Height = 520 };
+            // A tab beside the queries; asking again for the same object selects it.
+            var documents = env.Documents();
+            documents.OpenDetails(details);
+            var again = new ObjectDetailsViewModel(session, details.Target, env.Metadata, env.Jobs);
+            Assert.Same(details, documents.OpenDetails(again));
+            Assert.Equal(2, documents.Tabs.Count);
+            Assert.Same(details, documents.SelectedTab);
+            Assert.Null(documents.Selected);
+            var window = new Window
+            {
+                Content = new DocumentsView { DataContext = documents }, Left = -20000, Top = 0, ShowActivated = false, ShowInTaskbar = false, Width = 980, Height = 560,
+            };
             window.Show();
             await details.LoadAsync();
             await EditorActionsTests.Idle();
-            Assert.Equal(["Kolonlar (3)", "Referanslar (1)", "Tetikleyiciler (1)"], window.SectionTitles);
+            var view = ShellRenderTests.Find<ObjectDetailsView>(window);
+            Assert.Equal(["Kolonlar (3)", "Referanslar (1)", "Tetikleyiciler (1)"], view.SectionTitles);
 
             foreach (var theme in new[] { AppTheme.Dark, AppTheme.Light })
             {

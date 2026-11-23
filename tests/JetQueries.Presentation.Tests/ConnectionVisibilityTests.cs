@@ -23,20 +23,25 @@ public sealed class ConnectionVisibilityTests
     public async Task A_tab_knows_the_environment_of_its_connection(ConnectionEnvironment environment, bool marked, string? name)
     {
         await using var env = new TestEnvironment();
-        var query = env.Query();
-        Assert.Null(query.Environment);
-        Assert.False(query.IsMarkedEnvironment);
+        Assert.Null(env.Query().Environment);
 
-        var changed = new List<string?>();
-        query.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+        // The session is open before the tab exists: no list refresh from the manager's thread races the choice.
         var definition = await env.OpenAsync(TestEnvironment.Definition("Kartlar", environment: environment));
-        query.RefreshSessions();
+        var query = env.Query();
         query.SelectSession(definition.Id);
 
         Assert.Equal(environment, query.Environment);
         Assert.Equal(marked, query.IsMarkedEnvironment);
         Assert.Equal(name, query.EnvironmentName);
+
+        // Switching the tab's connection tells the view (strip, dot and name follow).
+        var session = query.SelectedSession;
+        var changed = new System.Collections.Concurrent.ConcurrentQueue<string?>(); // A late list refresh may raise it from the manager's thread.
+        query.PropertyChanged += (_, e) => changed.Enqueue(e.PropertyName);
+        query.SelectedSession = null;
+        query.SelectedSession = session;
         Assert.Contains(nameof(QueryDocumentViewModel.IsMarkedEnvironment), changed);
+        Assert.Contains(nameof(QueryDocumentViewModel.Environment), changed);
     }
 
     [Fact]

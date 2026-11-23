@@ -33,8 +33,8 @@
     <SolidColorBrush x:Key="Brush.Text" Color="#FFE7E9EE" />
     <Color x:Key="Color.TextSecondary">#FFAEB5C2</Color>
     <SolidColorBrush x:Key="Brush.TextSecondary" Color="#FFAEB5C2" />
-    <Color x:Key="Color.TextMuted">#FF747C8B</Color>
-    <SolidColorBrush x:Key="Brush.TextMuted" Color="#FF747C8B" />
+    <Color x:Key="Color.TextMuted">#FF8C94A3</Color>
+    <SolidColorBrush x:Key="Brush.TextMuted" Color="#FF8C94A3" />
 
     <!-- Accent and states -->
     <Color x:Key="Color.Accent">#FF5B8CFF</Color>

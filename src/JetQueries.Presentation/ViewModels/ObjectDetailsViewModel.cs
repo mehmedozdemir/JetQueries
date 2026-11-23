@@ -71,7 +71,7 @@ public partial class ObjectDetailsViewModel : ObservableObject
 
     /// <summary>The object (its name as the catalog has it once loaded).</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(Title), nameof(Subtitle), nameof(HasData))]
+    [NotifyPropertyChangedFor(nameof(Title), nameof(Subtitle), nameof(HasData), nameof(HeaderText), nameof(ToolTip))]
     public partial DatabaseObject Target { get; set; }
 
     /// <summary>The connection's id, to find the window of the same object again.</summary>
@@ -87,6 +87,15 @@ public partial class ObjectDetailsViewModel : ObservableObject
 
     /// <summary>Kind · connection · database.</summary>
     public string Subtitle => string.Join(" · ", new[] { KindName(Target.Kind), _session.Definition.Name, Target.Name.Database }.Where(static p => !string.IsNullOrEmpty(p)));
+
+    /// <summary>The tab title.</summary>
+    public string HeaderText => Target.Name.Name;
+
+    /// <summary>The tab's tooltip: schema.name, kind, connection and database.</summary>
+    public string ToolTip => Title + "\n" + Subtitle;
+
+    /// <summary>The environment of the object's connection, for the tab's colour dot.</summary>
+    public ConnectionEnvironment Environment => _session.Definition.Environment;
 
     /// <summary>Tables and views have rows to show.</summary>
     public bool HasData => ObjectScripts.HasData(Target.Kind);

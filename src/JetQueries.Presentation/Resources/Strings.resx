@@ -231,7 +231,7 @@
   <data name="RecordColumn" xml:space="preserve"><value>Column</value></data>
   <data name="RecordValue" xml:space="preserve"><value>Value</value></data>
   <data name="RecordType" xml:space="preserve"><value>Type</value></data>
-  <data name="FilterPlaceholder" xml:space="preserve"><value>Enter a SQL expression to filter results (e.g. balance &gt; 100 AND city LIKE 'A%')</value></data>
+  <data name="FilterPlaceholder" xml:space="preserve"><value>WHERE condition, e.g. balance &gt; 100 AND city LIKE 'A%'</value></data>
   <data name="SqlFilterApply" xml:space="preserve"><value>Apply filter (Enter)</value></data>
   <data name="SqlFilterClear" xml:space="preserve"><value>Remove filter</value></data>
   <data name="FilterInvalid" xml:space="preserve"><value>The filter must be one SQL condition over the result's columns (no ';', no comments, closed parentheses).</value></data>
@@ -473,4 +473,34 @@
   <data name="SettingOption_mode_readOnly" xml:space="preserve"><value>Read only</value></data>
   <data name="SettingOption_mode_create" xml:space="preserve"><value>Create the file if it does not exist</value></data>
   <data name="QueryConnectionTip" xml:space="preserve"><value>The connection this tab runs on</value></data>
+  <data name="ShortcutsGeneral" xml:space="preserve"><value>General</value></data>
+  <data name="ShortcutsEditor" xml:space="preserve"><value>Editor</value></data>
+  <data name="ShortcutsResults" xml:space="preserve"><value>Results</value></data>
+  <data name="ShortcutsExplorer" xml:space="preserve"><value>Explorer</value></data>
+  <data name="MenuShortcuts" xml:space="preserve"><value>Keyboard shortcuts</value></data>
+  <data name="ShortcutsSearch" xml:space="preserve"><value>Search keys or actions…</value></data>
+  <data name="ShortcutSnippet" xml:space="preserve"><value>Expand the snippet before the caret</value></data>
+  <data name="ShortcutBoxSelection" xml:space="preserve"><value>Box selection (edit several lines)</value></data>
+  <data name="ShortcutZoom" xml:space="preserve"><value>Zoom in or out, back to 100 %</value></data>
+  <data name="ShortcutCopyCells" xml:space="preserve"><value>Copy the selected cells</value></data>
+  <data name="ShortcutCopyWithHeaders" xml:space="preserve"><value>Copy with column names</value></data>
+  <data name="ShortcutDoubleClick" xml:space="preserve"><value>Double-click</value></data>
+  <data name="ShortcutConnect" xml:space="preserve"><value>Connect a connection</value></data>
+  <data name="ShortcutsKeys" xml:space="preserve"><value>Keys</value></data>
+  <data name="ShortcutsAction" xml:space="preserve"><value>Action</value></data>
+  <data name="ShortcutClearFilters" xml:space="preserve"><value>Clear the column filters</value></data>
+  <data name="Dismiss" xml:space="preserve"><value>Dismiss</value></data>
+  <data name="ResultPageSize" xml:space="preserve"><value>Page</value></data>
+  <data name="FetchNextShort" xml:space="preserve"><value>Next</value></data>
+  <data name="FetchAllShort" xml:space="preserve"><value>All</value></data>
+  <data name="CountShort" xml:space="preserve"><value>Count</value></data>
+  <data name="ValueShort" xml:space="preserve"><value>Value</value></data>
+  <data name="ViewGridShort" xml:space="preserve"><value>Grid</value></data>
+  <data name="ViewTextShort" xml:space="preserve"><value>Text</value></data>
+  <data name="ViewRecordShort" xml:space="preserve"><value>Record</value></data>
+  <data name="SqlFilterToggle" xml:space="preserve"><value>SQL filter</value></data>
+  <data name="SqlFilterToggleTip" xml:space="preserve"><value>Filter on the server with a WHERE condition (the query runs again)</value></data>
+  <data name="HistoryAllConnections" xml:space="preserve"><value>All connections</value></data>
+  <data name="HistoryFailedOnly" xml:space="preserve"><value>Failed only</value></data>
+  <data name="HistoryNoMatch" xml:space="preserve"><value>No run matches the filters.</value></data>
 </root>

@@ -1,24 +1,17 @@
-<Window x:Class="JetQueries.Wpf.Views.ObjectDetailsWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:c="clr-namespace:UiKit.Controls;assembly=UiKit.Wpf"
-        xmlns:res="clr-namespace:JetQueries.Presentation.Resources;assembly=JetQueries.Presentation"
-        xmlns:e="clr-namespace:JetQueries.Wpf.Editor"
-        xmlns:v="clr-namespace:JetQueries.Wpf.Views"
-        Title="{Binding Title}" Width="1040" Height="660" MinWidth="640" MinHeight="420"
-        WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
-        Style="{StaticResource Window.App}">
-    <Window.InputBindings>
+<UserControl x:Class="JetQueries.Wpf.Views.ObjectDetailsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:UiKit.Controls;assembly=UiKit.Wpf"
+             xmlns:res="clr-namespace:JetQueries.Presentation.Resources;assembly=JetQueries.Presentation"
+             xmlns:e="clr-namespace:JetQueries.Wpf.Editor"
+             xmlns:v="clr-namespace:JetQueries.Wpf.Views">
+    <UserControl.InputBindings>
         <KeyBinding Key="F5" Command="{Binding LoadCommand}" />
-        <KeyBinding Key="Escape" Command="{x:Static ApplicationCommands.Close}" />
-    </Window.InputBindings>
-    <Window.CommandBindings>
-        <CommandBinding Command="{x:Static ApplicationCommands.Close}" Executed="OnClose" />
-    </Window.CommandBindings>
+    </UserControl.InputBindings>
 
     <DockPanel>
         <!-- Header: mark, name, kind · connection · database, actions -->
-        <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,0,1" Padding="16,12,12,12">
+        <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,0,1" Padding="10,8,4,10">
             <DockPanel>
                 <v:ProviderMarkView Mark="{Binding Mark}" Size="30" Margin="0,0,12,0" VerticalAlignment="Center" />
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
@@ -44,7 +37,7 @@
             <TextBlock Text="{Binding Error}" Foreground="{DynamicResource Brush.Danger}" TextWrapping="Wrap" />
         </Border>
 
-        <TabControl x:Name="Tabs" Margin="12,8,12,12">
+        <TabControl x:Name="Tabs" Margin="0,6,0,0">
             <TabItem x:Name="PropertiesTab" Header="{x:Static res:Strings.DetailsProperties}" c:Ui.Icon="{x:Static c:Icons.Info}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,8,0,0">
                     <ItemsControl ItemsSource="{Binding Properties}" Grid.IsSharedSizeScope="True" Margin="4,0" MaxWidth="760" HorizontalAlignment="Left">
@@ -77,4 +70,4 @@
             </TabItem>
         </TabControl>
     </DockPanel>
-</Window>
+</UserControl>

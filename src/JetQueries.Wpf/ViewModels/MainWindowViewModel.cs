@@ -93,9 +93,6 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private void GoToObject() => GoToObjectRequested?.Invoke(this, new GoToObjectViewModel(Connections, _ui));
 
-    /// <summary>Raised with the view model of an object's details window (the view reuses an open one for the same object).</summary>
-    public event EventHandler<ObjectDetailsViewModel>? DetailsRequested;
-
     /// <summary>Raised to show the query history window.</summary>
     public event EventHandler? HistoryRequested;
 
@@ -111,8 +108,20 @@ public partial class MainWindowViewModel : ObservableObject
         var details = new ObjectDetailsViewModel(session, request.Target, _metadata, _jobs);
         details.NewQueryRequested += (_, query) => _ = Documents.OpenAsync(query);
         details.DetailsRequested += (_, next) => ShowDetails(next);
-        DetailsRequested?.Invoke(this, details);
+
+        // A tab next to the queries (as DBeaver's object editor); an open one for the object is selected instead.
+        if (ReferenceEquals(Documents.OpenDetails(details), details))
+        {
+            _ = details.LoadAsync();
+        }
     }
+
+    /// <summary>Raised to show the keyboard shortcuts.</summary>
+    public event EventHandler? ShortcutsRequested;
+
+    /// <summary>Main menu: Tools, Keyboard shortcuts (F1).</summary>
+    [RelayCommand]
+    private void ShowShortcuts() => ShortcutsRequested?.Invoke(this, EventArgs.Empty);
 
     /// <summary>Main menu: Tools, Query history.</summary>
     [RelayCommand]

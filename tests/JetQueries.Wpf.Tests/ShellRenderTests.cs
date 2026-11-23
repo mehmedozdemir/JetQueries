@@ -188,7 +188,7 @@ public sealed class ShellRenderTests
         Assert.All(colours, static pair => Assert.True(pair.Value > 12, $"{pair.Key} rendered only {pair.Value} distinct colours."));
     }
 
-    private static T Find<T>(DependencyObject root)
+    internal static T Find<T>(DependencyObject root)
         where T : DependencyObject
     {
         var queue = new Queue<DependencyObject>([root]);

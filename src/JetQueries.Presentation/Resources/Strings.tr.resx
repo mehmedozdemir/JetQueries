@@ -231,7 +231,7 @@
   <data name="RecordColumn" xml:space="preserve"><value>Sütun</value></data>
   <data name="RecordValue" xml:space="preserve"><value>Değer</value></data>
   <data name="RecordType" xml:space="preserve"><value>Tip</value></data>
-  <data name="FilterPlaceholder" xml:space="preserve"><value>Sonuçları süzmek için bir SQL ifadesi yazın (ör. balance &gt; 100 AND city LIKE 'A%')</value></data>
+  <data name="FilterPlaceholder" xml:space="preserve"><value>WHERE koşulu, ör. balance &gt; 100 AND city LIKE 'A%'</value></data>
   <data name="SqlFilterApply" xml:space="preserve"><value>Filtreyi uygula (Enter)</value></data>
   <data name="SqlFilterClear" xml:space="preserve"><value>Filtreyi kaldır</value></data>
   <data name="FilterInvalid" xml:space="preserve"><value>Filtre, sonucun sütunları üzerinde tek bir SQL koşulu olmalı (';' ve yorum olmadan, parantezler kapalı).</value></data>
@@ -473,4 +473,34 @@
   <data name="SettingOption_mode_readOnly" xml:space="preserve"><value>Salt okunur</value></data>
   <data name="SettingOption_mode_create" xml:space="preserve"><value>Dosya yoksa oluştur</value></data>
   <data name="QueryConnectionTip" xml:space="preserve"><value>Bu sekmenin çalıştığı bağlantı</value></data>
+  <data name="ShortcutsGeneral" xml:space="preserve"><value>Genel</value></data>
+  <data name="ShortcutsEditor" xml:space="preserve"><value>Editör</value></data>
+  <data name="ShortcutsResults" xml:space="preserve"><value>Sonuçlar</value></data>
+  <data name="ShortcutsExplorer" xml:space="preserve"><value>Gezgin</value></data>
+  <data name="MenuShortcuts" xml:space="preserve"><value>Klavye kısayolları</value></data>
+  <data name="ShortcutsSearch" xml:space="preserve"><value>Tuş ya da işlem ara…</value></data>
+  <data name="ShortcutSnippet" xml:space="preserve"><value>İmleçten önceki snippet'i aç</value></data>
+  <data name="ShortcutBoxSelection" xml:space="preserve"><value>Kutu seçimi (birden çok satırı düzenle)</value></data>
+  <data name="ShortcutZoom" xml:space="preserve"><value>Yakınlaştır / uzaklaştır, %100'e dön</value></data>
+  <data name="ShortcutCopyCells" xml:space="preserve"><value>Seçili hücreleri kopyala</value></data>
+  <data name="ShortcutCopyWithHeaders" xml:space="preserve"><value>Kolon adlarıyla kopyala</value></data>
+  <data name="ShortcutDoubleClick" xml:space="preserve"><value>Çift tıklama</value></data>
+  <data name="ShortcutConnect" xml:space="preserve"><value>Bağlantıyı aç</value></data>
+  <data name="ShortcutsKeys" xml:space="preserve"><value>Tuşlar</value></data>
+  <data name="ShortcutsAction" xml:space="preserve"><value>İşlem</value></data>
+  <data name="ShortcutClearFilters" xml:space="preserve"><value>Kolon filtrelerini temizle</value></data>
+  <data name="Dismiss" xml:space="preserve"><value>Kapat</value></data>
+  <data name="ResultPageSize" xml:space="preserve"><value>Sayfa</value></data>
+  <data name="FetchNextShort" xml:space="preserve"><value>Sonraki</value></data>
+  <data name="FetchAllShort" xml:space="preserve"><value>Tümü</value></data>
+  <data name="CountShort" xml:space="preserve"><value>Say</value></data>
+  <data name="ValueShort" xml:space="preserve"><value>Değer</value></data>
+  <data name="ViewGridShort" xml:space="preserve"><value>Izgara</value></data>
+  <data name="ViewTextShort" xml:space="preserve"><value>Metin</value></data>
+  <data name="ViewRecordShort" xml:space="preserve"><value>Kayıt</value></data>
+  <data name="SqlFilterToggle" xml:space="preserve"><value>SQL filtresi</value></data>
+  <data name="SqlFilterToggleTip" xml:space="preserve"><value>Sunucuda bir WHERE koşuluyla süz (sorgu yeniden çalışır)</value></data>
+  <data name="HistoryAllConnections" xml:space="preserve"><value>Tüm bağlantılar</value></data>
+  <data name="HistoryFailedOnly" xml:space="preserve"><value>Yalnızca hatalılar</value></data>
+  <data name="HistoryNoMatch" xml:space="preserve"><value>Filtrelere uyan çalıştırma yok.</value></data>
 </root>

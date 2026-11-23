@@ -24,6 +24,13 @@
         <Setter Property="Height" Value="30" />
         <Setter Property="Padding" Value="8,0" />
     </Style>
+    <!-- Small labelled buttons of the result footer and toolbar: an icon and a short word -->
+    <Style x:Key="Btn.Footer" TargetType="ButtonBase" BasedOn="{StaticResource Btn.Toolbar}">
+        <Setter Property="Height" Value="26" />
+        <Setter Property="Padding" Value="6,0" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSize.Small}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+    </Style>
     <Style x:Key="Btn.Icon.Compact" TargetType="ButtonBase" BasedOn="{StaticResource Btn.Icon}">
         <Setter Property="Width" Value="30" />
         <Setter Property="Height" Value="30" />

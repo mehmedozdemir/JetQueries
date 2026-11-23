@@ -53,6 +53,19 @@ public sealed class ResultToolsViewTests
             window.Show();
             await EditorActionsTests.Idle();
 
+            // The SQL filter bar waits behind its toolbar button; an applied filter keeps it open.
+            Assert.False(view.SqlFilterShown);
+            view.OpenSqlFilter();
+            Assert.True(view.SqlFilterShown);
+            var filtered = new QueryResultSet("Sonuç 2", [new ResultColumn("Id", "int", typeof(int))], null, null, new ImmediateDispatcher()) { AppliedFilter = "Id > 1" };
+            view.DataContext = filtered;
+            await EditorActionsTests.Idle();
+            Assert.True(view.SqlFilterShown);
+            filtered.AppliedFilter = null;
+            Assert.False(view.SqlFilterShown);
+            view.DataContext = set;
+            await EditorActionsTests.Idle();
+
             // Totals: every cell selected; the numbers summed, NULLs and text counted only as cells.
             view.VirtualGrid.SelectAll();
             await EditorActionsTests.Idle();

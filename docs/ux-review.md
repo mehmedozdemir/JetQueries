@@ -29,9 +29,10 @@ Priorities: **P1** hurts daily work or safety · **P2** friction or inconsistenc
   ("PRODUCTION · name") in the environment's colour above the toolbar. Was: A red/amber strip on the
   tab and above the editor for production/test connections (DataGrip, DBeaver do this) prevents running on the
   wrong server.
-- **P2** The toolbar repeats the menu (New connection, New query, Open, Settings). With a menu bar, an icon-only
+- **fixed** (P2) The toolbar repeats the menu (New connection, New query, Open, Settings). With a menu bar, an icon-only
   toolbar (with tooltips) would free space and look calmer.
-- **P2** No command palette / shortcut overview; shortcuts are only discoverable in menus and tooltips.
+- **fixed** (P2) No shortcut overview; shortcuts were only discoverable in menus and tooltips. Tools → Keyboard
+  shortcuts (F1) lists them by area, searchable. A full command palette is still open (P3).
 - **P3** Status text appears twice: "3 rows · 28 ms" on the query toolbar and again in the status bar.
 - **P3** Hiding the explorer (View → Explorer) is not remembered at the next start.
 
@@ -39,18 +40,18 @@ Priorities: **P1** hurts daily work or safety · **P2** friction or inconsistenc
 - **fixed** (P1) The explorer toolbar was cut off at the default width (280 px). Connect/disconnect is now an
   icon (its text is the tooltip) and the actions wrap when the panel is narrower. Was: cut off: the last icons are clipped. Move rarely
   used actions (Import, Go to object) into the menu or an overflow, or wrap.
-- **P2** A connection row carries a type mark, an environment dot, a bold name and a "connected" badge; the badge
+- **fixed** (P2) A connection row carries a type mark, an environment dot, a bold name and a "connected" badge; the badge
   repeats what bold and the expanded tree already say.
-- **P2** Script errors appear as red text at the bottom of the explorer, far from where the user clicked; a
+- **fixed** (P2) Script errors appear as red text at the bottom of the explorer, far from where the user clicked; a
   toast or inline message on the node would be seen.
 - **P3** Lazy loads show a 36 px progress bar after the name; a spinner in place of the expander arrow is
   quieter.
 - **P3** No favourites / pinned objects; no object counts on groups ("Tables (128)").
 
 ## Editor and query toolbar
-- **P2** Commit / rollback are icon-only (✓ and ↶), told apart by colour; add labels or at least distinct shapes
+- **fixed** (P2) Commit / rollback are icon-only (✓ and ↶), told apart by colour; add labels or at least distinct shapes
   and tooltips with shortcuts.
-- **P2** The database combo box is wide and visually the heaviest control on the toolbar.
+- **fixed** (P2) The database combo box is wide and visually the heaviest control on the toolbar.
 - **P3** The zoom badge in the editor corner is always visible; show it only away from 100 %.
 
 ## Results
@@ -59,25 +60,25 @@ Priorities: **P1** hurts daily work or safety · **P2** friction or inconsistenc
   (`SettingOption_<key>_<value>`, `SettingHint_<key>`). The results footer ("3 rows fetched …") was already in
   the resources: it showed English only in the test renderings, where the language is set on one thread and
   follows background work; the application itself never sets a language and uses Windows' on every thread.
-- **P2** The page-size box has no label and the footer is a row of unlabelled icons (fetch next, fetch all,
+- **fixed** (P2) The page-size box has no label and the footer is a row of unlabelled icons (fetch next, fetch all,
   count, show value); new users cannot tell what "200" means.
-- **P2** The SQL filter bar is always shown and uses a long monospace placeholder; collapse it to an icon until
+- **fixed** (P2) The SQL filter bar is always shown and uses a long monospace placeholder; collapse it to an icon until
   used, or shorten the placeholder.
-- **P2** View modes (grid / text / record) sit in a vertical strip on the left of the grid, an unusual place
+- **fixed** (P2) View modes (grid / text / record) sit in a vertical strip on the left of the grid, an unusual place
   that costs width; a segmented control in the result toolbar would be more familiar.
 - **P3** The data-type line under headers makes the header taller; offer it as a setting for users who prefer
   denser grids.
 
 ## Dialogs and windows
-- **P2** Object details open in a separate window, not as an editor tab as in DBeaver; several details windows
+- **fixed** (P2) Object details open in a separate window, not as an editor tab as in DBeaver; several details windows
   can pile up. Moving them into the document tabs needs the tab area to host more than query tabs.
-- **P2** The history window cannot filter by connection or outcome (failed only), only by text.
+- **fixed** (P2) The history window cannot filter by connection or outcome (failed only), only by text.
 - **P3** The environment is a combo box in the connection editor; coloured chips (None / Dev / Test / Prod)
   would be one click and show the colour that will be used.
 
 ## Accessibility
-- **P2** Several icon-only buttons have tooltips but no `AutomationProperties.Name`, so screen readers announce
+- **fixed** (P2) Several icon-only buttons have tooltips but no `AutomationProperties.Name`, so screen readers announce
   them as "button".
-- **P2** Muted caption text (`Brush.TextMuted`) on the light theme is below 4.5:1 contrast for small text.
+- **fixed** (P2) Muted caption text (`Brush.TextMuted`) on the light theme is below 4.5:1 contrast for small text.
 - **P3** Some custom controls remove the focus visual (`FocusVisualStyle = null`) and rely on a border change
   that is subtle in the dark theme.
