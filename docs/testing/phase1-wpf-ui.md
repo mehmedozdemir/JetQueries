@@ -306,6 +306,18 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
       pg_rewrite), SQLite (no row count; foreign keys and indexes from PRAGMAs).
 - [ ] "Open source in a new tab" in the editor menu still opens the source text in a query tab.
 
+## Which connection a tab runs on
+- [ ] A query tab on a connection shows a dot in the connection's environment colour before its title; the
+      query toolbar shows the connection's name with the same dot (tooltip: the connection this tab runs on).
+- [ ] On a Test or Production connection a strip in the environment's colour sits above the toolbar
+      ("ÜRETİM · Kartlar — canlı"); Development and unmarked connections have none. Switching the tab's
+      connection updates dot, name and strip at once.
+- [ ] The explorer's action icons all fit at the default panel width; a narrower panel wraps them to a second
+      line. Connect/disconnect is an icon whose tooltip says which.
+- [ ] Connection editor in Turkish: SQL Server's Authentication (SQL Server oturumu / Windows (tümleşik)) and
+      Encryption (Evet / Hayır / Katı), PostgreSQL's SSL, SQLite's open mode, Oracle's labels and hints are
+      Turkish; the saved values are unchanged (an existing connection opens with the same choices).
+
 ## Connection editor (compact)
 - [ ] The form is two columns: Name + Environment (with its colour) on top, the type's main settings two to a
       row, user and password side by side, "Save password" and "Read-only" switches, then "Advanced" (folder,

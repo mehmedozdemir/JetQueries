@@ -449,4 +449,28 @@
   <data name="HistoryWindowTitle" xml:space="preserve"><value>Sorgu geçmişi</value></data>
   <data name="HistoryCopy" xml:space="preserve"><value>Kopyala</value></data>
   <data name="ConnectionAdvanced" xml:space="preserve"><value>Gelişmiş</value></data>
+  <data name="Setting_serviceName" xml:space="preserve"><value>Servis adı</value></data>
+  <data name="Setting_sid" xml:space="preserve"><value>SID</value></data>
+  <data name="Setting_role" xml:space="preserve"><value>Bağlanma rolü</value></data>
+  <data name="SettingHint_server" xml:space="preserve"><value>sunucu, sunucu,port ya da sunucu\instance</value></data>
+  <data name="SettingHint_database" xml:space="preserve"><value>boş: kullanıcının varsayılan veritabanı</value></data>
+  <data name="SettingHint_trustServerCertificate" xml:space="preserve"><value>kendinden imzalı sertifikalar için gerekir</value></data>
+  <data name="SettingHint_serviceName" xml:space="preserve"><value>örn. ORCLPDB1; SID verildiyse boş bırakın</value></data>
+  <data name="SettingHint_sid" xml:space="preserve"><value>yalnızca servis adı olmayan veritabanları için</value></data>
+  <data name="SettingHint_file" xml:space="preserve"><value>bir .db, .sqlite ya da .sqlite3 dosyası</value></data>
+  <data name="SettingOption_authentication_sql" xml:space="preserve"><value>SQL Server oturumu</value></data>
+  <data name="SettingOption_authentication_windows" xml:space="preserve"><value>Windows (tümleşik)</value></data>
+  <data name="SettingOption_encrypt_true" xml:space="preserve"><value>Evet</value></data>
+  <data name="SettingOption_encrypt_false" xml:space="preserve"><value>Hayır</value></data>
+  <data name="SettingOption_encrypt_strict" xml:space="preserve"><value>Katı (TDS 8)</value></data>
+  <data name="SettingOption_role_normal" xml:space="preserve"><value>Normal</value></data>
+  <data name="SettingOption_sslMode_prefer" xml:space="preserve"><value>Tercih et</value></data>
+  <data name="SettingOption_sslMode_disable" xml:space="preserve"><value>Kapalı</value></data>
+  <data name="SettingOption_sslMode_require" xml:space="preserve"><value>Zorunlu</value></data>
+  <data name="SettingOption_sslMode_verify-ca" xml:space="preserve"><value>CA'yı doğrula</value></data>
+  <data name="SettingOption_sslMode_verify-full" xml:space="preserve"><value>Tam doğrula</value></data>
+  <data name="SettingOption_mode_readWrite" xml:space="preserve"><value>Okuma ve yazma</value></data>
+  <data name="SettingOption_mode_readOnly" xml:space="preserve"><value>Salt okunur</value></data>
+  <data name="SettingOption_mode_create" xml:space="preserve"><value>Dosya yoksa oluştur</value></data>
+  <data name="QueryConnectionTip" xml:space="preserve"><value>Bu sekmenin çalıştığı bağlantı</value></data>
 </root>

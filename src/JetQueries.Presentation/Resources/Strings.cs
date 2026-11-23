@@ -385,4 +385,5 @@ public static class Strings
     public static string HistoryWindowTitle => Get(nameof(HistoryWindowTitle));
     public static string HistoryCopy => Get(nameof(HistoryCopy));
     public static string ConnectionAdvanced => Get(nameof(ConnectionAdvanced));
+    public static string QueryConnectionTip => Get(nameof(QueryConnectionTip));
 }
