@@ -124,7 +124,7 @@
   <data name="Setting_foreignKeys" xml:space="preserve"><value>Enforce foreign keys</value></data>
   <data name="QueryNew" xml:space="preserve"><value>New query</value></data>
   <data name="QueryNewTip" xml:space="preserve"><value>New query tab (Ctrl+N)</value></data>
-  <data name="QueryRunTip" xml:space="preserve"><value>Run the query or the selection (F5, Ctrl+Enter)</value></data>
+  <data name="QueryRunTip" xml:space="preserve"><value>Run the query or the selection (F5; the statement at the cursor: Ctrl+Enter)</value></data>
   <data name="QueryCancelTip" xml:space="preserve"><value>Stop the running query (Esc)</value></data>
   <data name="QueryClose" xml:space="preserve"><value>Close</value></data>
   <data name="DocumentsEmptyTitle" xml:space="preserve"><value>No open queries</value></data>
@@ -211,7 +211,7 @@
   <data name="CountUnavailable" xml:space="preserve"><value>Only a single SELECT can be counted.</value></data>
   <data name="CountFailed" xml:space="preserve"><value>Counting failed: {0}</value></data>
   <data name="RefreshResultTip" xml:space="preserve"><value>Run the query again</value></data>
-  <data name="QueryRunShortTip" xml:space="preserve"><value>Run (F5, Ctrl+Enter)</value></data>
+  <data name="QueryRunShortTip" xml:space="preserve"><value>Run the selection or the whole text (F5); the statement at the cursor: Ctrl+Enter</value></data>
   <data name="QueryCancelShortTip" xml:space="preserve"><value>Stop (Esc)</value></data>
   <data name="FileSaveShortTip" xml:space="preserve"><value>Save (Ctrl+S)</value></data>
   <data name="SectionQuery" xml:space="preserve"><value>QUERY</value></data>
@@ -308,4 +308,6 @@
   <data name="TransactionBlocksDatabase" xml:space="preserve"><value>Commit or roll back the open transaction before switching the database.</value></data>
   <data name="TransactionAskTitle" xml:space="preserve"><value>Open transaction</value></data>
   <data name="TransactionAskMessage" xml:space="preserve"><value>{0} has changes that are not committed. Commit them or roll them back?</value></data>
+  <data name="NoStatementAtCaret" xml:space="preserve"><value>No statement at the cursor.</value></data>
+  <data name="EditorRunStatement" xml:space="preserve"><value>Run statement</value></data>
 </root>

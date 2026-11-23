@@ -291,6 +291,8 @@ public static class Strings
     public static string TransactionBlocksDatabase => Get(nameof(TransactionBlocksDatabase));
     public static string TransactionAskTitle => Get(nameof(TransactionAskTitle));
     public static string TransactionAskMessage => Get(nameof(TransactionAskMessage));
+    public static string NoStatementAtCaret => Get(nameof(NoStatementAtCaret));
+    public static string EditorRunStatement => Get(nameof(EditorRunStatement));
 
     /// <summary>A string looked up by a computed name (for example <c>Setting_server</c>), or null if there is none.</summary>
     public static string? Find(string name) => Manager.GetString(name, CultureInfo.CurrentUICulture);

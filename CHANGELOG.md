@@ -87,6 +87,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
   open transaction asks Commit / Rollback / Cancel; the database cannot be switched while one is open; a tab
   never hands an open transaction to the next one. SDK preview: `ITransactionControl`, for SQL Server, Oracle,
   PostgreSQL and SQLite.
+- Ctrl+Enter runs the statement at the cursor (F5 still runs the selection or the whole text), as DBeaver does:
+  statements end at a semicolon, an empty line or a GO / `/` line; strings, comments and quoted names never end
+  one; BEGIN … END and CASE blocks, procedures, packages and DECLARE scripts keep together. The statement that
+  runs flashes in the editor. Editor menu: "Run statement".
 
 ### Changed
 - A result set may hold up to 1,000,000 rows (was 100,000), fetched page by page.

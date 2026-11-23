@@ -374,11 +374,11 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
     public string SelectedText { get; set; } = string.Empty;
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(RunCommand), nameof(RunInNewTabCommand))]
+    [NotifyCanExecuteChangedFor(nameof(RunCommand), nameof(RunInNewTabCommand), nameof(RunStatementCommand))]
     public partial string Text { get; set; }
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(RunCommand), nameof(RunInNewTabCommand))]
+    [NotifyCanExecuteChangedFor(nameof(RunCommand), nameof(RunInNewTabCommand), nameof(RunStatementCommand))]
     [NotifyPropertyChangedFor(nameof(LanguageService), nameof(ToolTip))]
     public partial SessionOption? SelectedSession { get; set; }
 
@@ -505,7 +505,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
     public partial IResultTab? SelectedTab { get; set; }
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(RunCommand), nameof(RunInNewTabCommand), nameof(CancelCommand), nameof(RefreshCommand), nameof(CloseResultCommand))]
+    [NotifyCanExecuteChangedFor(nameof(RunCommand), nameof(RunInNewTabCommand), nameof(RunStatementCommand), nameof(CancelCommand), nameof(RefreshCommand), nameof(CloseResultCommand))]
     public partial bool IsRunning { get; set; }
 
     [ObservableProperty]
@@ -931,6 +931,32 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
 
     /// <summary>Gives the options in effect at the moment of formatting (the settings, which may change).</summary>
     public Func<SqlFormatOptions>? FormatOptionsSource { get; set; }
+
+    /// <summary>The statement at <paramref name="offset"/> of the text (Ctrl+Enter); null without a language or a statement.</summary>
+    public TextSpan? StatementAt(int offset) => LanguageService is { } language ? StatementLocator.Find(Text, offset, language) : null;
+
+    /// <summary>
+    /// Runs the selection, or else only the statement at <paramref name="offset"/> (DBeaver's Ctrl+Enter):
+    /// statements end at a semicolon, an empty line or a batch separator.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanRunStatement))]
+    private Task RunStatementAsync(int offset)
+    {
+        if (!string.IsNullOrWhiteSpace(SelectedText))
+        {
+            return RunSqlAsync(SelectedText);
+        }
+
+        if (StatementAt(offset) is not { } span)
+        {
+            Status = Strings.NoStatementAtCaret;
+            return Task.CompletedTask;
+        }
+
+        return RunSqlAsync(Text.Substring(span.Start, span.Length));
+    }
+
+    private bool CanRunStatement(int offset) => CanRun();
 
     private string TextToRun() => string.IsNullOrWhiteSpace(SelectedText) ? Text : SelectedText;
 
