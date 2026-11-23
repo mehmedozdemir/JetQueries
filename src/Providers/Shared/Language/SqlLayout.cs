@@ -175,6 +175,7 @@ internal static class SqlLayout
     private sealed class Layout(string sql, List<Part> parts, SqlFormatOptions options)
     {
         private readonly StringBuilder _out = new(sql.Length + (sql.Length / 4));
+        private readonly string _indent = options.UseTabs ? "\t" : new string(' ', Math.Clamp(options.IndentSize, 1, 16));
         private readonly Stack<Frame> _frames = new();
         private bool _lineStart = true;
         private int _lineIndent;
@@ -406,7 +407,7 @@ internal static class SqlLayout
                     {
                         frame.Between = false;
                     }
-                    else
+                    else if (options.ConditionsOnNewLine)
                     {
                         NewLine(frame.Content);
                     }
@@ -485,7 +486,7 @@ internal static class SqlLayout
             _pending = null;
             NewLine(frame.Base);
             WriteWords(i, length);
-            _pending = frame.Content;
+            _pending = options.ContentOnNewLine ? frame.Content : null;
             _modifiers = true;
             frame.Start = false;
             frame.Between = false;
@@ -563,7 +564,15 @@ internal static class SqlLayout
         }
 
         private string Case(int i) =>
-            options.UppercaseKeywords && parts[i].IsWord && Reserved.Contains(parts[i].Text) && !AfterDot(i) ? parts[i].Text.ToUpperInvariant() : parts[i].Text;
+            parts[i].IsWord && Reserved.Contains(parts[i].Text) && !AfterDot(i) ? Keyword(parts[i].Text) : parts[i].Text;
+
+        // Invariant culture: "select" never becomes "SELECT" with a dotted İ, whatever the machine's language.
+        private string Keyword(string text) => options.KeywordCase switch
+        {
+            SqlKeywordCase.Upper => text.ToUpperInvariant(),
+            SqlKeywordCase.Lower => text.ToLowerInvariant(),
+            _ => text,
+        };
 
         /// <summary>Writes on the current line, keeping a line break that is due for what follows.</summary>
         private void Hold(Action write)
@@ -581,7 +590,7 @@ internal static class SqlLayout
             for (var w = 0; w < count; w++)
             {
                 // Words read as a clause are keywords there, whatever list they are on.
-                Write(options.UppercaseKeywords ? parts[i + w].Text.ToUpperInvariant() : parts[i + w].Text, parts[i + w]);
+                Write(Keyword(parts[i + w].Text), parts[i + w]);
             }
         }
 
@@ -625,7 +634,10 @@ internal static class SqlLayout
             {
                 if (_out.Length > 0 || _lineIndent > 0)
                 {
-                    _out.Append(' ', _lineIndent * options.IndentSize);
+                    for (var level = 0; level < _lineIndent; level++)
+                    {
+                        _out.Append(_indent);
+                    }
                 }
 
                 _lineStart = false;

@@ -238,6 +238,13 @@ public class SqlEditor : UserControl
     /// <summary>Moves keyboard focus into the text.</summary>
     public void FocusText() => _editor.TextArea.Focus();
 
+    /// <summary>The text can be read and selected but not changed (previews).</summary>
+    public bool IsReadOnly
+    {
+        get => _editor.IsReadOnly;
+        set => _editor.IsReadOnly = value;
+    }
+
     /// <summary>Some text is selected.</summary>
     public bool HasSelection => _editor.SelectionLength > 0;
 

@@ -120,15 +120,26 @@ public sealed class ShellRenderTests
             // The settings screen; closing it without saving puts the defaults back.
             var settings = new SettingsViewModel(
                 new Core.Settings.JsonSettingsStore(new Core.Settings.SettingsStoreOptions(), Microsoft.Extensions.Logging.Abstractions.NullLogger<Core.Settings.JsonSettingsStore>.Instance),
-                env.Jobs, appearance, new TestTheme(), ["Segoe UI", "Segoe UI Variable Text, Segoe UI", "Cascadia Mono, Consolas", "Consolas", "Arial"]);
+                env.Jobs, appearance, new TestTheme(), ["Segoe UI", "Segoe UI Variable Text, Segoe UI", "Cascadia Mono, Consolas", "Consolas", "Arial"],
+                new JetQueries.Provider.SqlServer.SqlServerProvider().LanguageService);
             var settingsWindow = new SettingsWindow(settings) { Left = -20000, Top = 0, ShowActivated = false };
             settingsWindow.Show();
+            settings.FormatContentOnNewLine = false;
             foreach (var theme in new[] { AppTheme.Dark, AppTheme.Light })
             {
                 ThemeManager.Apply(theme, save: false);
-                await Idle();
-                results[$"settings-{theme}"] = Capture(settingsWindow, Path.Combine(directory, $"wpf-settings-{(theme == AppTheme.Dark ? "dark" : "light")}.png"));
+                foreach (var section in settings.Sections)
+                {
+                    settings.SelectedSection = section;
+                    await Idle();
+                    var suffix = theme == AppTheme.Dark ? "dark" : "light";
+                    results[$"settings-{section.Key}-{suffix}"] = Capture(settingsWindow, Path.Combine(directory, $"wpf-settings-{section.Key}-{suffix}.png"));
+                }
             }
+
+            // The formatting preview shows the options at work.
+            Assert.StartsWith("-- Son 30", settings.FormatPreview, StringComparison.Ordinal);
+            Assert.Contains("\nSELECT k.id,\n", settings.FormatPreview, StringComparison.Ordinal);
 
             settingsWindow.Close();
 
@@ -145,7 +156,7 @@ public sealed class ShellRenderTests
             return results;
         });
 
-        Assert.Equal(10, colours.Count);
+        Assert.Equal(18, colours.Count);
         Assert.All(colours, static pair => Assert.True(pair.Value > 12, $"{pair.Key} rendered only {pair.Value} distinct colours."));
     }
 

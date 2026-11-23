@@ -13,6 +13,14 @@ public partial class SettingsWindow : Window
         ArgumentNullException.ThrowIfNull(viewModel);
         InitializeComponent();
         DataContext = viewModel;
+        ShowPage(viewModel.SelectedSection.Key);
+        viewModel.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(SettingsViewModel.SelectedSection))
+            {
+                ShowPage(viewModel.SelectedSection.Key);
+            }
+        };
         SourceInitialized += (_, _) => ThemeManager.ApplyTitleBar(this);
         viewModel.CloseRequested += (_, _) =>
         {
@@ -32,5 +40,18 @@ public partial class SettingsWindow : Window
                 viewModel.CancelCommand.Execute(null);
             }
         };
+    }
+
+    /// <summary>Shows one page and scrolls it to its top.</summary>
+    private void ShowPage(string key)
+    {
+        AppearancePage.Visibility = Show(key == "appearance");
+        EditorPage.Visibility = Show(key == "editor");
+        ResultsPage.Visibility = Show(key == "results");
+        QueryPage.Visibility = Show(key == "query");
+        FormatPage.Visibility = Show(key == "format");
+        Pages.ScrollToTop();
+
+        static Visibility Show(bool shown) => shown ? Visibility.Visible : Visibility.Collapsed;
     }
 }

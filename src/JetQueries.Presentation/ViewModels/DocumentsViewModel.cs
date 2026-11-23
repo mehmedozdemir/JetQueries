@@ -107,6 +107,10 @@ public partial class DocumentsViewModel : ObservableObject
             Text = text,
             FetchSize = _settings?.Current.FetchSize ?? QueryDocumentViewModel.DefaultFetchSize,
         };
+        if (_settings is { } settings)
+        {
+            document.FormatOptionsSource = () => settings.Current.FormatOptions();
+        }
         document.MarkClean();
         if (connectionId is { } id)
         {

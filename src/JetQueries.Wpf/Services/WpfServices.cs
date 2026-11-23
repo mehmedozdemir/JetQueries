@@ -95,8 +95,20 @@ internal sealed class SettingsDialog(IServiceProvider services) : ISettingsDialo
             services.GetRequiredService<IJobQueue>(),
             services.GetRequiredService<IAppearanceService>(),
             services.GetRequiredService<IThemeService>(),
-            fonts);
+            fonts,
+            PreviewLanguage());
         new SettingsWindow(viewModel) { Owner = services.GetRequiredService<MainWindow>() }.ShowDialog();
+    }
+
+    /// <summary>A loaded provider's language for the previews, preferring one that can format (SQL Server first).</summary>
+    private Sdk.ISqlLanguageService? PreviewLanguage()
+    {
+        var languages = services.GetRequiredService<IExtensionHost>().DatabaseProviders
+            .OrderBy(static p => p.Id.Equals("sqlserver", StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+            .Select(static p => p.LanguageService)
+            .OfType<Sdk.ISqlLanguageService>()
+            .ToList();
+        return languages.FirstOrDefault(static l => l is Sdk.ISqlFormatter) ?? languages.FirstOrDefault();
     }
 }
 

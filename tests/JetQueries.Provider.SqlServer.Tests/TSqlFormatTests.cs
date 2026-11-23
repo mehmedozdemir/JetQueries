@@ -134,11 +134,33 @@ public sealed class TSqlFormatTests
         }
     }
 
+    [Theory]
+    [InlineData(SqlKeywordCase.AsWritten, "select a FROM t where b = 1", "select\n  a\nFROM\n  t\nwhere\n  b = 1")]
+    [InlineData(SqlKeywordCase.Lower, "SELECT a FROM t WHERE b = 1", "select\n  a\nfrom\n  t\nwhere\n  b = 1")]
+    public void Keywords_can_be_lower_case_or_kept_as_written(SqlKeywordCase keywordCase, string sql, string expected) =>
+        Assert.Equal(expected, Formatter.Format(sql, new SqlFormatOptions(keywordCase, IndentSize: 2)));
+
     [Fact]
-    public void Keywords_can_keep_their_case()
+    public void Tabs_compact_clauses_and_conditions_on_one_line_can_be_chosen()
     {
-        var formatted = Formatter.Format("select a from t where b = 1", new SqlFormatOptions(UppercaseKeywords: false, IndentSize: 2));
-        Assert.Equal("select\n  a\nfrom\n  t\nwhere\n  b = 1", formatted);
+        const string Sql = "select a, b from t where x = 1 and (y = 2 or z = 3) order by a";
+
+        Assert.Equal(
+            "SELECT\n\ta,\n\tb\nFROM\n\tt\nWHERE\n\tx = 1\n\tAND (y = 2 OR z = 3)\nORDER BY\n\ta",
+            Formatter.Format(Sql, SqlFormatOptions.Default with { UseTabs = true }));
+        Assert.Equal(
+            "SELECT a,\n    b\nFROM t\nWHERE x = 1\n    AND (y = 2 OR z = 3)\nORDER BY a",
+            Formatter.Format(Sql, SqlFormatOptions.Default with { ContentOnNewLine = false }));
+        Assert.Equal(
+            "SELECT a,\n    b\nFROM t\nWHERE x = 1 AND (y = 2 OR z = 3)\nORDER BY a",
+            Formatter.Format(Sql, SqlFormatOptions.Default with { ContentOnNewLine = false, ConditionsOnNewLine = false }));
+
+        // Whatever the options, a second pass changes nothing.
+        foreach (var options in new[] { SqlFormatOptions.Default with { ContentOnNewLine = false }, new SqlFormatOptions(SqlKeywordCase.Lower, 8) { UseTabs = true } })
+        {
+            var once = Formatter.Format(Sql, options);
+            Assert.Equal(once, Formatter.Format(once, options));
+        }
     }
 
     private static List<string> Tokens(string sql)

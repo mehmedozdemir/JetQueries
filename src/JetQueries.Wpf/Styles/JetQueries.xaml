@@ -134,4 +134,185 @@
         <Setter Property="Padding" Value="0,1" />
         <Setter Property="Background" Value="Transparent" />
     </Style>
+
+    <!-- ========== Settings screen building blocks (UiKit tokens only) ========== -->
+
+    <!-- A page in the settings list: icon + name; the selected one gets a soft accent and a bar on its left. -->
+    <Style x:Key="Settings.NavItem" TargetType="ListBoxItem">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+        <Setter Property="Margin" Value="0,0,0,2" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Grid>
+                        <Border x:Name="Root" CornerRadius="{StaticResource Radius.Control}" Padding="12,9" Background="Transparent">
+                            <ContentPresenter />
+                        </Border>
+                        <Border x:Name="Bar" Width="3" CornerRadius="1.5" Margin="0,10" HorizontalAlignment="Left"
+                                Background="{DynamicResource Brush.Accent}" Visibility="Collapsed" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Hover}" />
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.AccentSoft}" />
+                            <Setter TargetName="Bar" Property="Visibility" Value="Visible" />
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- One choice of a few, side by side (keyword case, indentation…): a ListBox bound to SelectedItem. -->
+    <Style x:Key="Segment" TargetType="ListBoxItem">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Border x:Name="Root" CornerRadius="4" Padding="12,4" MinWidth="40" Background="Transparent">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Hover}" />
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Accent}" />
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.AccentText}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="Segmented" TargetType="ListBox">
+        <Setter Property="ItemContainerStyle" Value="{StaticResource Segment}" />
+        <Setter Property="DisplayMemberPath" Value="Text" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="HorizontalAlignment" Value="Right" />
+        <Setter Property="ItemsPanel">
+            <Setter.Value>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBox">
+                    <Border Background="{DynamicResource Brush.Input}" BorderBrush="{DynamicResource Brush.BorderStrong}" BorderThickness="1"
+                            CornerRadius="{StaticResource Radius.Control}" Padding="2" Height="32">
+                        <ItemsPresenter />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- On / off for a yes-no setting: a CheckBox drawn as a switch. -->
+    <Style x:Key="Switch" TargetType="CheckBox">
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="CheckBox">
+                    <Border x:Name="Track" Width="40" Height="22" CornerRadius="11" BorderThickness="1"
+                            Background="{DynamicResource Brush.Input}" BorderBrush="{DynamicResource Brush.BorderStrong}">
+                        <Border x:Name="Thumb" Width="14" Height="14" CornerRadius="7" Margin="4,0" HorizontalAlignment="Left"
+                                Background="{DynamicResource Brush.TextSecondary}" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Track" Property="Background" Value="{DynamicResource Brush.Accent}" />
+                            <Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
+                            <Setter TargetName="Thumb" Property="HorizontalAlignment" Value="Right" />
+                            <Setter TargetName="Thumb" Property="Background" Value="{DynamicResource Brush.AccentText}" />
+                        </Trigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsChecked" Value="True" />
+                                <Condition Property="IsMouseOver" Value="True" />
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="Track" Property="Background" Value="{DynamicResource Brush.AccentHover}" />
+                        </MultiTrigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.5" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- A large choice card (theme): icon over a name; the chosen one has an accent border and a check. -->
+    <Style x:Key="ChoiceCard" TargetType="ListBoxItem">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Margin" Value="0,0,12,0" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Grid>
+                        <Border x:Name="Root" Width="150" Height="88" CornerRadius="{StaticResource Radius.Card}" BorderThickness="1.5"
+                                BorderBrush="{DynamicResource Brush.BorderStrong}" Background="{DynamicResource Brush.Input}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <Border x:Name="Check" Width="18" Height="18" CornerRadius="9" Background="{DynamicResource Brush.Accent}"
+                                HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,8,8,0" Visibility="Collapsed">
+                            <TextBlock Text="&#xE73E;" Style="{StaticResource Text.Icon}" FontSize="10" HorizontalAlignment="Center"
+                                       Foreground="{DynamicResource Brush.AccentText}" />
+                        </Border>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.TextMuted}" />
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.AccentSoft}" />
+                            <Setter TargetName="Check" Property="Visibility" Value="Visible" />
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- A row of a settings card: name and one line about it on the left, the control on the right. -->
+    <Style x:Key="Settings.Row" TargetType="Border">
+        <Setter Property="Padding" Value="18,13" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}" />
+        <Setter Property="BorderThickness" Value="0,1,0,0" />
+    </Style>
+
+    <Style x:Key="Settings.RowTitle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+
+    <Style x:Key="Settings.RowInfo" TargetType="TextBlock" BasedOn="{StaticResource Text.Caption}">
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="Margin" Value="0,3,0,0" />
+    </Style>
+
+    <Style x:Key="Settings.Group" TargetType="TextBlock" BasedOn="{StaticResource Text.Section}">
+        <Setter Property="Margin" Value="2,0,0,8" />
+    </Style>
 </ResourceDictionary>
