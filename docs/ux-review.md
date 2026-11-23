@@ -24,7 +24,9 @@ Priorities: **P1** hurts daily work or safety · **P2** friction or inconsistenc
 - **fixed** Result headers did not say the column's data type; it is a second, smaller line under the name.
 
 ## Shell and navigation
-- **P1** Nothing on a query tab shows which connection and environment it runs against. A red/amber strip on the
+- **fixed** (P1) Nothing on a query tab showed which connection and environment it runs against. Tabs now carry
+  the environment's colour dot, the query toolbar names the connection, and test/production tabs have a strip
+  ("PRODUCTION · name") in the environment's colour above the toolbar. Was: A red/amber strip on the
   tab and above the editor for production/test connections (DataGrip, DBeaver do this) prevents running on the
   wrong server.
 - **P2** The toolbar repeats the menu (New connection, New query, Open, Settings). With a menu bar, an icon-only
@@ -34,7 +36,8 @@ Priorities: **P1** hurts daily work or safety · **P2** friction or inconsistenc
 - **P3** Hiding the explorer (View → Explorer) is not remembered at the next start.
 
 ## Explorer
-- **P1** The explorer toolbar is cut off at the default width (280 px): the last icons are clipped. Move rarely
+- **fixed** (P1) The explorer toolbar was cut off at the default width (280 px). Connect/disconnect is now an
+  icon (its text is the tooltip) and the actions wrap when the panel is narrower. Was: cut off: the last icons are clipped. Move rarely
   used actions (Import, Go to object) into the menu or an overflow, or wrap.
 - **P2** A connection row carries a type mark, an environment dot, a bold name and a "connected" badge; the badge
   repeats what bold and the expanded tree already say.
@@ -51,9 +54,11 @@ Priorities: **P1** hurts daily work or safety · **P2** friction or inconsistenc
 - **P3** The zoom badge in the editor corner is always visible; show it only away from 100 %.
 
 ## Results
-- **P1** The results footer has English text in the Turkish UI ("3 rows fetched · 0.023 s …"); provider
-  option labels in the connection editor are English too (Yes/No, "SQL Server login"). Both should go through
-  resources.
+- **fixed** (P1) Provider option labels, hints and some field labels in the connection editor were English
+  (Yes/No, "SQL Server login", Oracle's "Service name"); the host now translates them
+  (`SettingOption_<key>_<value>`, `SettingHint_<key>`). The results footer ("3 rows fetched …") was already in
+  the resources: it showed English only in the test renderings, where the language is set on one thread and
+  follows background work; the application itself never sets a language and uses Windows' on every thread.
 - **P2** The page-size box has no label and the footer is a row of unlabelled icons (fetch next, fetch all,
   count, show value); new users cannot tell what "200" means.
 - **P2** The SQL filter bar is always shown and uses a long monospace placeholder; collapse it to an icon until

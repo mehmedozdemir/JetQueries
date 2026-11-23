@@ -37,8 +37,10 @@ public partial class SettingFieldViewModel : ObservableObject
 
         // The host's translation of a well-known key wins over the provider's English label.
         Label = Strings.Find("Setting_" + descriptor.Key) ?? descriptor.DisplayName;
+        Hint = descriptor.Hint is null ? null : Strings.Find("SettingHint_" + descriptor.Key) ?? descriptor.Hint;
+        Options = [.. descriptor.Options.Select(o => o with { DisplayName = Strings.Find("SettingOption_" + descriptor.Key + "_" + o.Value) ?? o.DisplayName })];
         Value = value ?? descriptor.DefaultValue ?? string.Empty;
-        SelectedOption = descriptor.Options.FirstOrDefault(o => string.Equals(o.Value, Value, StringComparison.OrdinalIgnoreCase));
+        SelectedOption = OptionFor(Value);
     }
 
     public ConnectionSettingDescriptor Descriptor { get; }
@@ -47,7 +49,8 @@ public partial class SettingFieldViewModel : ObservableObject
 
     public string Label { get; }
 
-    public string? Hint => Descriptor.Hint;
+    /// <summary>The hint, in the host's translation when it has one.</summary>
+    public string? Hint { get; }
 
     public bool IsRequired => Descriptor.IsRequired;
 
@@ -68,7 +71,12 @@ public partial class SettingFieldViewModel : ObservableObject
     /// <summary>Whether the value differs from the descriptor's default (an advanced field like that opens its section).</summary>
     public bool IsChanged => !string.Equals(Value.Trim(), Descriptor.DefaultValue ?? string.Empty, StringComparison.OrdinalIgnoreCase);
 
-    public IReadOnlyList<ConnectionSettingOption> Options => Descriptor.Options;
+    /// <summary>The choices, with the host's translations of their names (<c>SettingOption_&lt;key&gt;_&lt;value&gt;</c>).</summary>
+    public IReadOnlyList<ConnectionSettingOption> Options { get; }
+
+    /// <summary>The choice with this value, as listed in <see cref="Options"/>.</summary>
+    public ConnectionSettingOption? OptionFor(string value) =>
+        Options.FirstOrDefault(o => string.Equals(o.Value, value, StringComparison.OrdinalIgnoreCase));
 
     [ObservableProperty]
     public partial string Value { get; set; }
@@ -236,7 +244,7 @@ public partial class ConnectionEditorViewModel : ObservableObject
         {
             var value = parsed.Settings.GetValueOrDefault(field.Key) ?? field.Descriptor.DefaultValue ?? string.Empty;
             field.Value = value;
-            field.SelectedOption = field.Descriptor.Options.FirstOrDefault(o => string.Equals(o.Value, value, StringComparison.OrdinalIgnoreCase));
+            field.SelectedOption = field.OptionFor(value);
         }
 
         ShowAdvanced = Fields.Any(static f => f.IsAdvanced && f.IsChanged);

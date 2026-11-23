@@ -449,4 +449,28 @@
   <data name="HistoryWindowTitle" xml:space="preserve"><value>Query history</value></data>
   <data name="HistoryCopy" xml:space="preserve"><value>Copy</value></data>
   <data name="ConnectionAdvanced" xml:space="preserve"><value>Advanced</value></data>
+  <data name="Setting_serviceName" xml:space="preserve"><value>Service name</value></data>
+  <data name="Setting_sid" xml:space="preserve"><value>SID</value></data>
+  <data name="Setting_role" xml:space="preserve"><value>Connect as</value></data>
+  <data name="SettingHint_server" xml:space="preserve"><value>host, host,port or host\instance</value></data>
+  <data name="SettingHint_database" xml:space="preserve"><value>empty: the login's default database</value></data>
+  <data name="SettingHint_trustServerCertificate" xml:space="preserve"><value>needed for self-signed certificates</value></data>
+  <data name="SettingHint_serviceName" xml:space="preserve"><value>for example ORCLPDB1; leave empty when a SID is given</value></data>
+  <data name="SettingHint_sid" xml:space="preserve"><value>only for databases without a service name</value></data>
+  <data name="SettingHint_file" xml:space="preserve"><value>a .db, .sqlite or .sqlite3 file</value></data>
+  <data name="SettingOption_authentication_sql" xml:space="preserve"><value>SQL Server login</value></data>
+  <data name="SettingOption_authentication_windows" xml:space="preserve"><value>Windows (integrated)</value></data>
+  <data name="SettingOption_encrypt_true" xml:space="preserve"><value>Yes</value></data>
+  <data name="SettingOption_encrypt_false" xml:space="preserve"><value>No</value></data>
+  <data name="SettingOption_encrypt_strict" xml:space="preserve"><value>Strict (TDS 8)</value></data>
+  <data name="SettingOption_role_normal" xml:space="preserve"><value>Normal</value></data>
+  <data name="SettingOption_sslMode_prefer" xml:space="preserve"><value>Prefer</value></data>
+  <data name="SettingOption_sslMode_disable" xml:space="preserve"><value>Disable</value></data>
+  <data name="SettingOption_sslMode_require" xml:space="preserve"><value>Require</value></data>
+  <data name="SettingOption_sslMode_verify-ca" xml:space="preserve"><value>Verify CA</value></data>
+  <data name="SettingOption_sslMode_verify-full" xml:space="preserve"><value>Verify full</value></data>
+  <data name="SettingOption_mode_readWrite" xml:space="preserve"><value>Read and write</value></data>
+  <data name="SettingOption_mode_readOnly" xml:space="preserve"><value>Read only</value></data>
+  <data name="SettingOption_mode_create" xml:space="preserve"><value>Create the file if it does not exist</value></data>
+  <data name="QueryConnectionTip" xml:space="preserve"><value>The connection this tab runs on</value></data>
 </root>

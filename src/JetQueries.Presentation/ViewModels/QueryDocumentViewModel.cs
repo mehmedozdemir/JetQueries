@@ -405,8 +405,23 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(RunCommand), nameof(RunInNewTabCommand), nameof(RunStatementCommand))]
-    [NotifyPropertyChangedFor(nameof(LanguageService), nameof(ToolTip))]
+    [NotifyPropertyChangedFor(nameof(LanguageService), nameof(ToolTip), nameof(Environment), nameof(EnvironmentName), nameof(IsMarkedEnvironment))]
     public partial SessionOption? SelectedSession { get; set; }
+
+    /// <summary>The environment of the tab's connection (drawn on the tab and above the editor); null with no connection.</summary>
+    public ConnectionEnvironment? Environment => SelectedSession?.Session.Definition.Environment;
+
+    /// <summary>Test and production connections are marked with a coloured strip and their name.</summary>
+    public bool IsMarkedEnvironment => Environment is ConnectionEnvironment.Test or ConnectionEnvironment.Production;
+
+    /// <summary>The environment's name as the strip shows it ("PRODUCTION"); null when not marked.</summary>
+    public string? EnvironmentName => Environment switch
+    {
+        ConnectionEnvironment.Production => Strings.EnvironmentProduction.ToUpper(CultureInfo.CurrentCulture),
+        ConnectionEnvironment.Test => Strings.EnvironmentTest.ToUpper(CultureInfo.CurrentCulture),
+        ConnectionEnvironment.Development => Strings.EnvironmentDevelopment,
+        _ => null,
+    };
 
     /// <summary>The databases (or, for Oracle, schemas) of the connection, for the window's database selector.</summary>
     public ObservableCollection<string> Databases { get; } = [];

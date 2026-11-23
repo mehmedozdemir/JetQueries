@@ -86,6 +86,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 - Result grid headers show each column's data type under its name (UiKit `IGridColumnCaptions`).
 - Connection editor redesigned as a compact two-column form with an "Advanced" section.
 - `docs/ux-review.md`: a UX review of the whole application with prioritised findings.
+- Query tabs show which connection they run on: an environment-coloured dot on the tab, the connection name on the query toolbar, and a coloured "PRODUCTION" / "TEST" strip above it for those environments.
 
 - Transactions: each query tab has auto-commit (default) or manual commit. In manual mode text that can change
   data starts a transaction that waits for Commit or Rollback (a single SELECT never opens one); an "Open
@@ -133,6 +134,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 - View models, their service contracts and strings moved to `JetQueries.Presentation`, shared by both interfaces.
 
 ### Fixed
+- The explorer's toolbar was cut off at the default panel width; its actions are icons that wrap.
+- Connection editor choices, hints and Oracle's field labels were English in the Turkish UI.
 - Submenus did not open (UiKit menu item had no submenu popup): the explorer's Script, the grid's Copy as and the editor's Insert snippet now work.
 - The result column filter panel closed when the mouse button was released; it now opens on release and stays.
 - Oracle: Cancel now stops a statement that is waiting (on a row lock, a sleep) also through Docker, NAT and VPN

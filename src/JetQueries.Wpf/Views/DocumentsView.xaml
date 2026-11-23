@@ -46,6 +46,10 @@
             <TabControl.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal" ToolTip="{Binding ToolTip}">
+                        <!-- The connection's environment colour: which server this tab runs on -->
+                        <Ellipse x:Name="EnvironmentDot" Width="7" Height="7" Margin="0,0,7,0" VerticalAlignment="Center"
+                                 Fill="{Binding Environment, Converter={x:Static v:EnvironmentBrushConverter.Instance}}"
+                                 Visibility="{Binding SelectedSession, Converter={x:Static v:NotNullToVisibilityConverter.Instance}}" />
                         <TextBlock Text="{Binding HeaderText}" VerticalAlignment="Center" />
                         <Button Style="{StaticResource Btn.TabClose}" ToolTip="{x:Static res:Strings.QueryClose}"
                                 Command="{Binding DataContext.CloseCommand, RelativeSource={RelativeSource AncestorType=TabControl}}" CommandParameter="{Binding}" />

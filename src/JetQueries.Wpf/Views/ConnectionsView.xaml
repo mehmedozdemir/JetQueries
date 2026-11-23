@@ -9,7 +9,8 @@
         <!-- Actions on the selected node -->
         <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,0,1" Padding="6,4">
           <StackPanel>
-            <StackPanel Orientation="Horizontal">
+            <!-- Icons only, wrapping when the panel is narrow: every action fits at any width -->
+            <WrapPanel x:Name="Actions" Orientation="Horizontal">
                 <Button Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="{x:Static c:Icons.Add}"
                         Command="{Binding NewCommand}" ToolTip="{x:Static res:Strings.ConnectionNew}" />
                 <Button Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="{x:Static c:Icons.Edit}"
@@ -17,8 +18,9 @@
                 <Button Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="{x:Static c:Icons.Delete}"
                         Command="{Binding DeleteCommand}" ToolTip="{x:Static res:Strings.ConnectionDelete}" />
                 <Border Style="{StaticResource Separator.Vertical}" Height="16" Margin="4,0" />
-                <Button Style="{StaticResource Btn.Toolbar}" Height="26" c:Ui.Icon="{x:Static c:Icons.Plug}" Padding="8,0"
-                        Content="{Binding ToggleConnectionText}" Command="{Binding ToggleConnectionCommand}" />
+                <Button x:Name="ToggleConnectionButton" Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="{x:Static c:Icons.Plug}"
+                        Command="{Binding ToggleConnectionCommand}" ToolTip="{Binding ToggleConnectionText}"
+                        AutomationProperties.Name="{Binding ToggleConnectionText}" />
                 <Button Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="{x:Static c:Icons.Refresh}"
                         Command="{Binding ReloadSelectedCommand}" ToolTip="{x:Static res:Strings.ExplorerRefresh}" />
                 <Button Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="&#xE8B5;"
@@ -26,7 +28,7 @@
                 <Button Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="{x:Static c:Icons.Search}"
                         Command="{Binding DataContext.GoToObjectCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                         ToolTip="{x:Static res:Strings.GoToObjectTip}" />
-            </StackPanel>
+            </WrapPanel>
             <!-- Filter by name over what is loaded (Esc clears) -->
             <c:SearchBox x:Name="Filter" Margin="0,4,0,2" Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged, Delay=200}"
                          c:Ui.Placeholder="{x:Static res:Strings.ExplorerFilter}"

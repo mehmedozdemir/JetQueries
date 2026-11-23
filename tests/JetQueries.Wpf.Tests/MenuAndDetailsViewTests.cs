@@ -155,4 +155,57 @@ public sealed class MenuAndDetailsViewTests
 
         Assert.All(colours, static pair => Assert.True(pair.Value > 12, $"{pair.Key} rendered only {pair.Value} distinct colours."));
     }
+
+    [Fact]
+    public async Task A_production_tab_is_marked_and_the_explorer_actions_fit_the_panel()
+    {
+        var directory = Path.Combine(AppContext.BaseDirectory, "screenshots");
+        Directory.CreateDirectory(directory);
+
+        var colours = await WpfTestHost.RunAsync(async () =>
+        {
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("tr");
+            var results = new Dictionary<string, int>();
+            await using var env = new TestEnvironment();
+            var definition = await env.OpenAsync(TestEnvironment.Definition("Kartlar — canlı", environment: Core.Connections.ConnectionEnvironment.Production));
+            var query = env.Query();
+            query.RefreshSessions();
+            query.SelectSession(definition.Id);
+            query.Text = "UPDATE dbo.Cards SET Balance = 0 WHERE Id = 42";
+            var view = new QueryDocumentView { DataContext = query };
+            var window = new Window { Content = view, Width = 900, Height = 420, Left = -20000, Top = 0, ShowActivated = false, ShowInTaskbar = false };
+            window.Show();
+            await EditorActionsTests.Idle();
+
+            Assert.True(((FrameworkElement)view.FindName("EnvironmentStrip")).IsVisible);
+            Assert.Equal("Kartlar — canlı", ((TextBlock)view.FindName("ConnectionName")).Text);
+            foreach (var theme in new[] { AppTheme.Dark, AppTheme.Light })
+            {
+                ThemeManager.Apply(theme, save: false);
+                await EditorActionsTests.Idle();
+                results["production-" + theme] = ResultGridViewTests.Capture(window, Path.Combine(directory, $"wpf-production-tab-{(theme == AppTheme.Dark ? "dark" : "light")}.png"));
+            }
+
+            ThemeManager.Apply(AppTheme.Dark, save: false);
+            window.Close();
+
+            // The explorer's actions stay inside the panel at its default width.
+            var (connections, _) = await TestEnvironment.ConnectAsync(env);
+            var explorer = new ConnectionsView { DataContext = connections };
+            var panel = new Window { Content = explorer, Width = 280, Height = 300, Left = -20000, Top = 0, ShowActivated = false, ShowInTaskbar = false };
+            panel.Show();
+            await EditorActionsTests.Idle();
+            var actions = (Panel)explorer.FindName("Actions");
+            foreach (FrameworkElement child in actions.Children)
+            {
+                var right = child.TranslatePoint(new Point(child.ActualWidth, 0), explorer).X;
+                Assert.True(right <= explorer.ActualWidth, $"{child} ends at {right:0} of {explorer.ActualWidth:0}.");
+            }
+
+            panel.Close();
+            return results;
+        });
+
+        Assert.All(colours, static pair => Assert.True(pair.Value > 12, $"{pair.Key} rendered only {pair.Value} distinct colours."));
+    }
 }
