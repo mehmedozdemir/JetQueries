@@ -122,4 +122,31 @@
   <data name="Setting_file" xml:space="preserve"><value>Database file</value></data>
   <data name="Setting_mode" xml:space="preserve"><value>Open</value></data>
   <data name="Setting_foreignKeys" xml:space="preserve"><value>Enforce foreign keys</value></data>
+  <data name="QueryNew" xml:space="preserve"><value>New query</value></data>
+  <data name="QueryNewTip" xml:space="preserve"><value>New query tab (Ctrl+N)</value></data>
+  <data name="QueryRunTip" xml:space="preserve"><value>Run the query or the selection (F5, Ctrl+Enter)</value></data>
+  <data name="QueryCancelTip" xml:space="preserve"><value>Stop the running query (Esc)</value></data>
+  <data name="QueryClose" xml:space="preserve"><value>Close</value></data>
+  <data name="DocumentsEmptyTitle" xml:space="preserve"><value>No open queries</value></data>
+  <data name="DocumentsEmptyMessage" xml:space="preserve"><value>Open a new query tab to write and run SQL.</value></data>
+  <data name="ResultsEmptyTitle" xml:space="preserve"><value>No results yet</value></data>
+  <data name="ResultsEmptyMessage" xml:space="preserve"><value>Write a query and run it with Ctrl+Enter.</value></data>
+  <data name="SectionConnection" xml:space="preserve"><value>CONNECTION</value></data>
+  <data name="SectionCredential" xml:space="preserve"><value>SIGN-IN</value></data>
+  <data name="SectionOrganisation" xml:space="preserve"><value>ORGANISATION AND SAFETY</value></data>
+  <data name="GridSortAscending" xml:space="preserve"><value>Sort ascending</value></data>
+  <data name="GridSortDescending" xml:space="preserve"><value>Sort descending</value></data>
+  <data name="GridClearSort" xml:space="preserve"><value>Clear sort</value></data>
+  <data name="GridFilter" xml:space="preserve"><value>Filter…</value></data>
+  <data name="GridFitColumn" xml:space="preserve"><value>Fit column</value></data>
+  <data name="GridFitAllColumns" xml:space="preserve"><value>Fit all columns</value></data>
+  <data name="GridHideColumn" xml:space="preserve"><value>Hide column</value></data>
+  <data name="GridCopyColumnName" xml:space="preserve"><value>Copy column name</value></data>
+  <data name="GridCopy" xml:space="preserve"><value>Copy</value></data>
+  <data name="GridCopyWithHeaders" xml:space="preserve"><value>Copy with headers</value></data>
+  <data name="GridFilterByValue" xml:space="preserve"><value>Filter by this value</value></data>
+  <data name="GridExcludeValue" xml:space="preserve"><value>Exclude this value</value></data>
+  <data name="GridSelectAll" xml:space="preserve"><value>Select all</value></data>
+  <data name="GridNoRows" xml:space="preserve"><value>No rows to show</value></data>
+  <data name="ConnectionNewLong" xml:space="preserve"><value>New connection</value></data>
 </root>

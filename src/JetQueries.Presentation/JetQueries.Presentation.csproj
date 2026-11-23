@@ -9,9 +9,7 @@
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="JetQueries.Presentation.Tests" />
-    <InternalsVisibleTo Include="JetQueries.Desktop" />
     <InternalsVisibleTo Include="JetQueries.Desktop.Tests" />
-    <InternalsVisibleTo Include="JetQueries.Wpf" />
     <InternalsVisibleTo Include="JetQueries.Wpf.Tests" />
   </ItemGroup>
   <ItemGroup>

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    UiKit, the WPF design kit (tokens, control styles, VirtualGrid), copied from its own repository so that this
+    one builds on its own. Keep changes here small and take them back to UiKit; DESIGN.md there is the rule book.
+    It is vendored code: the repository's analyzer rules are not applied to it.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>UiKit</RootNamespace>
+    <AssemblyName>UiKit.Wpf</AssemblyName>
+    <Description>Dark/light data-application design kit for WPF: theme tokens, control styles and a virtualized custom-drawn data grid.</Description>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <AnalysisLevel>none</AnalysisLevel>
+    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+</Project>

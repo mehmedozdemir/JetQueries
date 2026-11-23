@@ -3,7 +3,7 @@
 Guidance for Claude Code working in this repository. The full product analysis (Turkish) is in `docs/ANALIZ.md`; approved decisions are in its last section. Read it before starting a phase.
 
 ## What this is
-JetQueries is an open-source, cross-platform **database IDE** (DBeaver/DataGrip class) built with **.NET 10 + Avalonia 12**.
+JetQueries is an open-source **database IDE** (DBeaver/DataGrip class) built with **.NET 10**. The user interface is **WPF on UiKit** (Windows); the Avalonia interface is paused (ADR 0007).
 Initial databases: **SQL Server, Oracle** (MVP, must be excellent), PostgreSQL, SQLite (basic in MVP), Redis (Phase 2).
 Pillars: elegant professional UI · never-blocking async UI · extension-based core · first-class SQL editor (IntelliSense, colouring, Ctrl+Click navigation) · versioned releases with auto-update.
 
@@ -21,14 +21,14 @@ Pillars: elegant professional UI · never-blocking async UI · extension-based c
 
 ## Tech
 - .NET 10, C# latest, nullable enabled, warnings as errors, central package management, lock files.
-- Avalonia 12.x + custom theme (design tokens in `Styles/`), light and dark from day one.
+- **UI: WPF** (`src/JetQueries.Wpf`) on **UiKit** (`src/UiKit.Wpf`, copied from the UiKit repository; its `DESIGN.md` is the rule book: only UiKit tokens and styles, light and dark). View models live in `src/JetQueries.Presentation` (no UI framework). Avalonia (`JetQueries.Desktop`, `.Editor`, `.DataGrid`) is paused: keep it building, add no features (ADR 0007).
 - MVVM: CommunityToolkit.Mvvm (source generators). DI/hosting: Microsoft.Extensions.Hosting.
-- Editor: AvaloniaEdit. Docking: Dock.Avalonia. Results grid: **custom virtualized grid** (`JetQueries.DataGrid`), drawn with `DrawingContext`.
+- Editor: AvalonEdit (`JetQueries.Wpf/Editor/SqlEditor.cs`). Results grid: UiKit `VirtualGrid`.
 - Parsers: T-SQL → Microsoft.SqlServer.TransactSql.ScriptDom; PL/SQL → hand-written structural parser + token-based completion context (ADR 0003; no ANTLR); PostgreSQL, SQLite → generic token-based tokenizer + shared completion engine (ADR 0006; a parser only when a feature needs a tree); Redis → command table.
 - Drivers: Microsoft.Data.SqlClient, Oracle.ManagedDataAccess.Core, Npgsql, Microsoft.Data.Sqlite, StackExchange.Redis.
 - Local store: SQLite (settings, query history, metadata cache). Logging: Microsoft.Extensions.Logging + Serilog.
 - Updates: Velopack (channels: stable / beta / nightly). Versioning from git tags (MinVer).
-- Tests: xUnit v3, Avalonia.Headless for UI, Testcontainers for real databases (skipped when Docker is unavailable), BenchmarkDotNet.
+- Tests: xUnit v3, WPF renderings to PNG on an STA test host (`tests/JetQueries.Wpf.Tests`), Testcontainers for real databases (skipped when Docker is unavailable), BenchmarkDotNet.
 
 ## Layout (target — create it in Phase 0)
 ```
@@ -56,7 +56,7 @@ docs/                              ANALIZ.md, adr/, testing/ (manual test checkl
 
 ## Build / run / test
 - Build: `dotnet build JetQueries.slnx`
-- Run: `dotnet run --project src/JetQueries.Desktop`
+- Run: `dotnet run --project src/JetQueries.Wpf`
 - Test: `dotnet test` (integration tests need Docker; they skip otherwise)
 - Package locally: `scripts/pack.ps1` (Velopack `vpk pack`) — create in Phase 0.
 - Logs and caches: `%LocalAppData%\JetQueries\`. User data (connections, later settings and history): `%AppData%\JetQueries\` (ADR 0005).

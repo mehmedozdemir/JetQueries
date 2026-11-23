@@ -1,0 +1,44 @@
+<UserControl x:Class="JetQueries.Wpf.Views.DocumentsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:UiKit.Controls;assembly=UiKit.Wpf"
+             xmlns:res="clr-namespace:JetQueries.Presentation.Resources;assembly=JetQueries.Presentation"
+             xmlns:v="clr-namespace:JetQueries.Wpf.Views"
+             x:Name="Root">
+    <Grid>
+        <!-- Empty state: every tab closed -->
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="{Binding Documents.Count, Converter={x:Static v:ZeroToVisibleConverter.Instance}}">
+            <Border Width="64" Height="64" CornerRadius="18" Background="{DynamicResource Brush.AccentSoft}" HorizontalAlignment="Center">
+                <TextBlock Text="{x:Static c:Icons.Code}" Style="{StaticResource Text.Icon}" FontSize="26" Foreground="{DynamicResource Brush.Accent}" />
+            </Border>
+            <TextBlock Text="{x:Static res:Strings.DocumentsEmptyTitle}" Style="{StaticResource Text.Subtitle}" HorizontalAlignment="Center" Margin="0,14,0,6" />
+            <TextBlock Text="{x:Static res:Strings.DocumentsEmptyMessage}" Foreground="{DynamicResource Brush.TextSecondary}" HorizontalAlignment="Center" />
+            <Button Style="{StaticResource Btn.Primary}" c:Ui.Icon="{x:Static c:Icons.Add}" Content="{x:Static res:Strings.QueryNew}"
+                    Command="{Binding NewQueryCommand}" HorizontalAlignment="Center" Margin="0,16,0,0" />
+            <TextBlock Text="Ctrl+N" Style="{StaticResource Text.Caption}" HorizontalAlignment="Center" Margin="0,8,0,0" />
+        </StackPanel>
+
+        <TabControl ItemsSource="{Binding Documents}" SelectedItem="{Binding Selected}"
+                    Visibility="{Binding Documents.Count, Converter={x:Static v:ZeroToCollapsedConverter.Instance}}">
+            <TabControl.ItemContainerStyle>
+                <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
+                    <Setter Property="c:Ui.Icon" Value="{x:Static c:Icons.Code}" />
+                </Style>
+            </TabControl.ItemContainerStyle>
+            <TabControl.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding Title}" VerticalAlignment="Center" />
+                        <Button Style="{StaticResource Btn.TabClose}" ToolTip="{x:Static res:Strings.QueryClose}"
+                                Command="{Binding DataContext.CloseCommand, ElementName=Root}" CommandParameter="{Binding}" />
+                    </StackPanel>
+                </DataTemplate>
+            </TabControl.ItemTemplate>
+            <TabControl.ContentTemplate>
+                <DataTemplate>
+                    <v:QueryDocumentView Margin="0,10,0,0" />
+                </DataTemplate>
+            </TabControl.ContentTemplate>
+        </TabControl>
+    </Grid>
+</UserControl>

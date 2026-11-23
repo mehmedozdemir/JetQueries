@@ -117,6 +117,33 @@ public static class Strings
     public static string Browse => Get(nameof(Browse));
     public static string BrowseDatabaseFile => Get(nameof(BrowseDatabaseFile));
     public static string DatabaseFiles => Get(nameof(DatabaseFiles));
+    public static string QueryNew => Get(nameof(QueryNew));
+    public static string QueryNewTip => Get(nameof(QueryNewTip));
+    public static string QueryRunTip => Get(nameof(QueryRunTip));
+    public static string QueryCancelTip => Get(nameof(QueryCancelTip));
+    public static string QueryClose => Get(nameof(QueryClose));
+    public static string DocumentsEmptyTitle => Get(nameof(DocumentsEmptyTitle));
+    public static string DocumentsEmptyMessage => Get(nameof(DocumentsEmptyMessage));
+    public static string ResultsEmptyTitle => Get(nameof(ResultsEmptyTitle));
+    public static string ResultsEmptyMessage => Get(nameof(ResultsEmptyMessage));
+    public static string SectionConnection => Get(nameof(SectionConnection));
+    public static string SectionCredential => Get(nameof(SectionCredential));
+    public static string SectionOrganisation => Get(nameof(SectionOrganisation));
+    public static string GridSortAscending => Get(nameof(GridSortAscending));
+    public static string GridSortDescending => Get(nameof(GridSortDescending));
+    public static string GridClearSort => Get(nameof(GridClearSort));
+    public static string GridFilter => Get(nameof(GridFilter));
+    public static string GridFitColumn => Get(nameof(GridFitColumn));
+    public static string GridFitAllColumns => Get(nameof(GridFitAllColumns));
+    public static string GridHideColumn => Get(nameof(GridHideColumn));
+    public static string GridCopyColumnName => Get(nameof(GridCopyColumnName));
+    public static string GridCopy => Get(nameof(GridCopy));
+    public static string GridCopyWithHeaders => Get(nameof(GridCopyWithHeaders));
+    public static string GridFilterByValue => Get(nameof(GridFilterByValue));
+    public static string GridExcludeValue => Get(nameof(GridExcludeValue));
+    public static string GridSelectAll => Get(nameof(GridSelectAll));
+    public static string GridNoRows => Get(nameof(GridNoRows));
+    public static string ConnectionNewLong => Get(nameof(ConnectionNewLong));
 
     /// <summary>A string looked up by a computed name (for example <c>Setting_server</c>), or null if there is none.</summary>
     public static string? Find(string name) => Manager.GetString(name, CultureInfo.CurrentUICulture);

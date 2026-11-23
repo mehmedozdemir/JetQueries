@@ -1,0 +1,62 @@
+using System.ComponentModel;
+using System.Windows;
+using System.Windows.Controls;
+using JetQueries.Wpf.Services;
+using Microsoft.Win32;
+using UiKit.Theming;
+
+namespace JetQueries.Wpf.Views;
+
+public partial class ConnectionDialog : Window
+{
+    private readonly ConnectionEditorViewModel _viewModel;
+
+    public ConnectionDialog(ConnectionEditorViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+        InitializeComponent();
+        _viewModel = viewModel;
+        DataContext = viewModel;
+        SourceInitialized += (_, _) => ThemeManager.ApplyTitleBar(this);
+        viewModel.CloseRequested += (_, saved) =>
+        {
+            DialogResult = saved;
+            Close();
+        };
+
+        // A failed test is shown in the danger colour, a successful one in the success colour.
+        viewModel.PropertyChanged += OnViewModelPropertyChanged;
+        Closed += (_, _) => viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ConnectionEditorViewModel.TestFailed))
+        {
+            TestResult.SetResourceReference(System.Windows.Controls.TextBlock.ForegroundProperty, _viewModel.TestFailed ? "Brush.Danger" : "Brush.Success");
+        }
+    }
+
+    // PasswordBox does not bind its password (by design); it is handed over as it is typed and kept nowhere else.
+    private void OnPasswordChanged(object sender, RoutedEventArgs e) => _viewModel.Password = PasswordInput.Password;
+
+    // A file setting (an SQLite database): pick an existing file; a new one can still be typed.
+    private void OnBrowseClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: SettingFieldViewModel field })
+        {
+            return;
+        }
+
+        var dialog = new OpenFileDialog
+        {
+            Title = Strings.BrowseDatabaseFile,
+            Filter = $"{Strings.DatabaseFiles}|*.db;*.sqlite;*.sqlite3;*.db3|*.*|*.*",
+            CheckFileExists = true,
+        };
+        if (dialog.ShowDialog(this) == true)
+        {
+            field.Value = dialog.FileName;
+        }
+    }
+}

@@ -122,4 +122,31 @@
   <data name="Setting_file" xml:space="preserve"><value>Veritabanı dosyası</value></data>
   <data name="Setting_mode" xml:space="preserve"><value>Açılış</value></data>
   <data name="Setting_foreignKeys" xml:space="preserve"><value>Yabancı anahtarları uygula</value></data>
+  <data name="QueryNew" xml:space="preserve"><value>Yeni sorgu</value></data>
+  <data name="QueryNewTip" xml:space="preserve"><value>Yeni sorgu sekmesi (Ctrl+N)</value></data>
+  <data name="QueryRunTip" xml:space="preserve"><value>Sorguyu ya da seçili kısmı çalıştır (F5, Ctrl+Enter)</value></data>
+  <data name="QueryCancelTip" xml:space="preserve"><value>Çalışan sorguyu durdur (Esc)</value></data>
+  <data name="QueryClose" xml:space="preserve"><value>Kapat</value></data>
+  <data name="DocumentsEmptyTitle" xml:space="preserve"><value>Açık sorgu yok</value></data>
+  <data name="DocumentsEmptyMessage" xml:space="preserve"><value>SQL yazıp çalıştırmak için yeni bir sorgu sekmesi açın.</value></data>
+  <data name="ResultsEmptyTitle" xml:space="preserve"><value>Henüz sonuç yok</value></data>
+  <data name="ResultsEmptyMessage" xml:space="preserve"><value>Bir sorgu yazıp Ctrl+Enter ile çalıştırın.</value></data>
+  <data name="SectionConnection" xml:space="preserve"><value>BAĞLANTI</value></data>
+  <data name="SectionCredential" xml:space="preserve"><value>OTURUM AÇMA</value></data>
+  <data name="SectionOrganisation" xml:space="preserve"><value>DÜZEN VE GÜVENLİK</value></data>
+  <data name="GridSortAscending" xml:space="preserve"><value>Artan sırala</value></data>
+  <data name="GridSortDescending" xml:space="preserve"><value>Azalan sırala</value></data>
+  <data name="GridClearSort" xml:space="preserve"><value>Sıralamayı kaldır</value></data>
+  <data name="GridFilter" xml:space="preserve"><value>Filtrele…</value></data>
+  <data name="GridFitColumn" xml:space="preserve"><value>Sütunu sığdır</value></data>
+  <data name="GridFitAllColumns" xml:space="preserve"><value>Tüm sütunları sığdır</value></data>
+  <data name="GridHideColumn" xml:space="preserve"><value>Sütunu gizle</value></data>
+  <data name="GridCopyColumnName" xml:space="preserve"><value>Sütun adını kopyala</value></data>
+  <data name="GridCopy" xml:space="preserve"><value>Kopyala</value></data>
+  <data name="GridCopyWithHeaders" xml:space="preserve"><value>Başlıklarla kopyala</value></data>
+  <data name="GridFilterByValue" xml:space="preserve"><value>Bu değere göre filtrele</value></data>
+  <data name="GridExcludeValue" xml:space="preserve"><value>Bu değeri hariç tut</value></data>
+  <data name="GridSelectAll" xml:space="preserve"><value>Tümünü seç</value></data>
+  <data name="GridNoRows" xml:space="preserve"><value>Gösterilecek kayıt yok</value></data>
+  <data name="ConnectionNewLong" xml:space="preserve"><value>Yeni bağlantı</value></data>
 </root>
