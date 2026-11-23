@@ -74,6 +74,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 - Editor right-click menu: run, run in new tab, cut / copy / paste / select all, format, comment / uncomment
   lines (Ctrl+/), upper / lower case (Ctrl+Shift+U / Ctrl+U), go to definition, completion, undo / redo.
 - Query tab right-click menu: close, close others, close all, copy file path.
+- Settings screen redesigned: pages listed on the left (Appearance, SQL editor, Results, Query tabs, SQL
+  formatting), cards of rows with a line about each setting, theme cards, segmented choices and switches, a
+  coloured editor preview. New SQL formatting page: keyword case (upper / lower / as typed), indentation (2, 4,
+  8 spaces or a tab), clause content on its own lines, AND / OR on new lines, with a live preview. Query tabs
+  format with the options in effect. SDK preview: `SqlFormatOptions` gains `SqlKeywordCase`, `UseTabs`,
+  `ContentOnNewLine`, `ConditionsOnNewLine` (`UppercaseKeywords`, never released, is replaced by `KeywordCase`).
 
 ### Changed
 - A result set may hold up to 1,000,000 rows (was 100,000), fetched page by page.

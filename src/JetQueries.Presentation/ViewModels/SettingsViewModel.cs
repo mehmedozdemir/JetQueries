@@ -5,6 +5,7 @@ using JetQueries.Core.Jobs;
 using JetQueries.Core.Settings;
 using JetQueries.Presentation.Resources;
 using JetQueries.Presentation.Services;
+using JetQueries.Sdk;
 
 namespace JetQueries.Presentation.ViewModels;
 
@@ -35,9 +36,31 @@ public sealed record AppearanceSettings
     /// <summary>Rows fetched per page in a new query tab (DBeaver's fetch size).</summary>
     public int FetchSize { get; init; } = QueryDocumentViewModel.DefaultFetchSize;
 
+    /// <summary>How Format SQL writes keywords.</summary>
+    public SqlKeywordCase FormatKeywordCase { get; init; } = SqlKeywordCase.Upper;
+
+    /// <summary>Spaces per indentation level of Format SQL; 0 for a tab.</summary>
+    public int FormatIndent { get; init; } = 4;
+
+    /// <summary>Format SQL puts a clause's content on the lines below it.</summary>
+    public bool FormatContentOnNewLine { get; init; } = true;
+
+    /// <summary>Format SQL starts a new line at each AND / OR of a condition.</summary>
+    public bool FormatConditionsOnNewLine { get; init; } = true;
+
+    /// <summary>The Format SQL options these settings describe.</summary>
+    public SqlFormatOptions FormatOptions() => new(FormatKeywordCase, FormatIndent > 0 ? FormatIndent : 4)
+    {
+        UseTabs = FormatIndent == 0,
+        ContentOnNewLine = FormatContentOnNewLine,
+        ConditionsOnNewLine = FormatConditionsOnNewLine,
+    };
+
     /// <summary>The values within the ranges the settings screen offers (a hand-edited file may hold anything).</summary>
     public AppearanceSettings Normalized() => this with
     {
+        FormatKeywordCase = Enum.IsDefined(FormatKeywordCase) ? FormatKeywordCase : SqlKeywordCase.Upper,
+        FormatIndent = Math.Clamp(FormatIndent, 0, 8),
         UiFontFamily = string.IsNullOrWhiteSpace(UiFontFamily) ? new AppearanceSettings().UiFontFamily : UiFontFamily,
         EditorFontFamily = string.IsNullOrWhiteSpace(EditorFontFamily) ? new AppearanceSettings().EditorFontFamily : EditorFontFamily,
         UiFontSize = Math.Clamp(UiFontSize, 10, 18),
@@ -76,6 +99,12 @@ public interface IThemeService
 /// <summary>A choice in a list of the settings screen.</summary>
 public sealed record SettingChoice<T>(T Value, string Text);
 
+/// <summary>A page of the settings screen.</summary>
+/// <param name="Key">appearance, editor, results, query or format.</param>
+/// <param name="Title">The page's name in the list.</param>
+/// <param name="Description">One line under the page's title.</param>
+public sealed record SettingsSection(string Key, string Title, string Description);
+
 /// <summary>
 /// The settings screen. Every change is previewed at once; Save keeps it (and writes it to the settings file),
 /// Cancel goes back to what was in effect when the screen opened.
@@ -89,13 +118,30 @@ public partial class SettingsViewModel : ObservableObject
     private readonly AppearanceSettings _original;
     private readonly bool _originalDark;
     private bool _loading;
+    private readonly ISqlFormatter? _formatter;
+    private int _previewVersion;
+
+    /// <summary>The text of the editor preview: keywords, names, a string, a number and a comment.</summary>
+    public const string EditorSample = "SELECT k.id, k.kart_no, SUM(h.tutar) AS toplam\nFROM kart k\nJOIN hareket h ON h.kart_id = k.id\n" +
+        "WHERE h.tarih >= '2026-01-01' AND k.limit > 1000 -- İıŞşĞğ 0Oo1lI\nGROUP BY k.id, k.kart_no;";
+
+    /// <summary>The query the formatting page lays out to show the options at work.</summary>
+    public const string FormatSample =
+        "-- Son 30 günün kart hareketleri\nwith son as (select kart_id, sum(tutar) toplam from hareket where tarih >= '2026-01-01' group by kart_id) " +
+        "select k.id, k.kart_no, case when s.toplam > 1000 then 'yüksek' else 'normal' end as seviye from kart k inner join son s on s.kart_id = k.id " +
+        "where k.durum = 1 and k.limit between 100 and 5000 order by s.toplam desc;";
 
     /// <param name="store">Where settings are saved.</param>
     /// <param name="jobs">Where saving runs.</param>
     /// <param name="appearance">Applies the preview.</param>
     /// <param name="theme">The theme.</param>
     /// <param name="fonts">The font families installed, for the font lists.</param>
-    public SettingsViewModel(ISettingsStore store, IJobQueue jobs, IAppearanceService appearance, IThemeService theme, IEnumerable<string> fonts)
+    /// <param name="previewLanguage">
+    /// A SQL language for the editor and formatting previews (colouring, and its formatter if it has one); null
+    /// shows them plain.
+    /// </param>
+    public SettingsViewModel(
+        ISettingsStore store, IJobQueue jobs, IAppearanceService appearance, IThemeService theme, IEnumerable<string> fonts, ISqlLanguageService? previewLanguage = null)
     {
         ArgumentNullException.ThrowIfNull(appearance);
         ArgumentNullException.ThrowIfNull(theme);
@@ -108,6 +154,18 @@ public partial class SettingsViewModel : ObservableObject
         _originalDark = theme.IsDark;
         Fonts = [.. fonts.Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(static f => f, StringComparer.CurrentCultureIgnoreCase)];
         Themes = [new(true, Strings.ThemeDark), new(false, Strings.ThemeLight)];
+        PreviewLanguage = previewLanguage;
+        _formatter = previewLanguage as ISqlFormatter;
+        Sections =
+        [
+            new("appearance", Strings.SettingsPageAppearance, Strings.SettingsPageAppearanceInfo),
+            new("editor", Strings.SettingsPageEditor, Strings.SettingsPageEditorInfo),
+            new("results", Strings.SettingsPageResults, Strings.SettingsPageResultsInfo),
+            new("query", Strings.SettingsPageQuery, Strings.SettingsPageQueryInfo),
+            new("format", Strings.SettingsPageFormat, Strings.SettingsPageFormatInfo),
+        ];
+        SelectedSection = Sections[0];
+        FormatPreview = FormatSample;
         UiFontFamily = string.Empty;
         EditorFontFamily = string.Empty;
         Show(_original);
@@ -153,6 +211,64 @@ public partial class SettingsViewModel : ObservableObject
 
     public IReadOnlyList<int> FetchSizes { get; } = [50, 100, 200, 500, 1000, 5000, 10000];
 
+    /// <summary>The pages of the screen, in the order listed.</summary>
+    public IReadOnlyList<SettingsSection> Sections { get; }
+
+    /// <summary>The page shown.</summary>
+    [ObservableProperty]
+    public partial SettingsSection SelectedSection { get; set; }
+
+    /// <summary>Colours the previews; null shows them plain.</summary>
+    public ISqlLanguageService? PreviewLanguage { get; }
+
+    /// <summary>Whether the formatting preview shows the options at work (a formatter is at hand).</summary>
+    public bool CanPreviewFormat => _formatter is not null;
+
+    public IReadOnlyList<SettingChoice<SqlKeywordCase>> KeywordCases { get; } =
+        [new(SqlKeywordCase.Upper, "SELECT"), new(SqlKeywordCase.Lower, "select"), new(SqlKeywordCase.AsWritten, Strings.FormatCaseAsWritten)];
+
+    [ObservableProperty]
+    public partial SettingChoice<SqlKeywordCase>? FormatKeywordCase { get; set; }
+
+    public IReadOnlyList<SettingChoice<int>> Indents { get; } = [new(2, "2"), new(4, "4"), new(8, "8"), new(0, Strings.FormatIndentTab)];
+
+    [ObservableProperty]
+    public partial SettingChoice<int>? FormatIndent { get; set; }
+
+    [ObservableProperty]
+    public partial bool FormatContentOnNewLine { get; set; }
+
+    [ObservableProperty]
+    public partial bool FormatConditionsOnNewLine { get; set; }
+
+    /// <summary><see cref="FormatSample"/> laid out with the options chosen.</summary>
+    [ObservableProperty]
+    public partial string FormatPreview { get; set; }
+
+    partial void OnFormatKeywordCaseChanged(SettingChoice<SqlKeywordCase>? value) => Preview();
+
+    partial void OnFormatIndentChanged(SettingChoice<int>? value) => Preview();
+
+    partial void OnFormatContentOnNewLineChanged(bool value) => Preview();
+
+    partial void OnFormatConditionsOnNewLineChanged(bool value) => Preview();
+
+    /// <summary>Lays the sample out again in the background; only the newest result is shown.</summary>
+    private async Task RefreshFormatPreviewAsync(SqlFormatOptions options)
+    {
+        if (_formatter is not { } formatter)
+        {
+            return;
+        }
+
+        var version = ++_previewVersion;
+        var text = await _jobs.Enqueue("Format preview", _ => Task.FromResult(formatter.Format(FormatSample, options)), JobPriority.High).Completion;
+        if (version == _previewVersion)
+        {
+            FormatPreview = text;
+        }
+    }
+
     [ObservableProperty]
     public partial int FetchSize { get; set; }
 
@@ -170,6 +286,10 @@ public partial class SettingsViewModel : ObservableObject
         GridFontSize = GridFontSize,
         QueryButtonsInTab = QueryButtonPlace?.Value ?? true,
         FetchSize = FetchSize,
+        FormatKeywordCase = FormatKeywordCase?.Value ?? SqlKeywordCase.Upper,
+        FormatIndent = FormatIndent?.Value ?? 4,
+        FormatContentOnNewLine = FormatContentOnNewLine,
+        FormatConditionsOnNewLine = FormatConditionsOnNewLine,
     }.Normalized();
 
     partial void OnUiFontFamilyChanged(string value) => Preview();
@@ -226,6 +346,10 @@ public partial class SettingsViewModel : ObservableObject
             GridFontSize = settings.GridFontSize;
             QueryButtonPlace = QueryButtonPlaces.First(p => p.Value == settings.QueryButtonsInTab);
             FetchSize = settings.FetchSize;
+            FormatKeywordCase = KeywordCases.FirstOrDefault(c => c.Value == settings.FormatKeywordCase) ?? KeywordCases[0];
+            FormatIndent = Indents.FirstOrDefault(c => c.Value == settings.FormatIndent) ?? Indents[1];
+            FormatContentOnNewLine = settings.FormatContentOnNewLine;
+            FormatConditionsOnNewLine = settings.FormatConditionsOnNewLine;
         }
         finally
         {
@@ -239,7 +363,9 @@ public partial class SettingsViewModel : ObservableObject
     {
         if (!_loading)
         {
-            _appearance.Apply(Chosen);
+            var chosen = Chosen;
+            _appearance.Apply(chosen);
+            _ = RefreshFormatPreviewAsync(chosen.FormatOptions());
         }
     }
 }

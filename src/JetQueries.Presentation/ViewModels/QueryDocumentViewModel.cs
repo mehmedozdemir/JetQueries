@@ -791,14 +791,17 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
             return null;
         }
 
-        var options = FormatOptions;
+        var options = FormatOptionsSource?.Invoke() ?? FormatOptions;
         var formatted = await _jobs.Enqueue("Format SQL", _ => Task.FromResult(formatter.Format(text, options)), JobPriority.High).Completion;
         Status = formatted == text ? Strings.FormatNoChange : Strings.FormatDone;
         return formatted;
     }
 
-    /// <summary>How <see cref="FormatAsync"/> lays SQL out.</summary>
+    /// <summary>How <see cref="FormatAsync"/> lays SQL out, unless <see cref="FormatOptionsSource"/> says.</summary>
     public SqlFormatOptions FormatOptions { get; set; } = SqlFormatOptions.Default;
+
+    /// <summary>Gives the options in effect at the moment of formatting (the settings, which may change).</summary>
+    public Func<SqlFormatOptions>? FormatOptionsSource { get; set; }
 
     private string TextToRun() => string.IsNullOrWhiteSpace(SelectedText) ? Text : SelectedText;
 

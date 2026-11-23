@@ -16,11 +16,36 @@ public interface ISqlFormatter
     string Format(string sql, SqlFormatOptions options);
 }
 
-/// <summary>How <see cref="ISqlFormatter"/> lays SQL out.</summary>
-/// <param name="UppercaseKeywords">Write keywords such as SELECT, FROM, JOIN in upper case.</param>
-/// <param name="IndentSize">Spaces per indentation level.</param>
-public sealed record SqlFormatOptions(bool UppercaseKeywords = true, int IndentSize = 4)
+/// <summary>How keywords such as SELECT, FROM, JOIN are written by <see cref="ISqlFormatter"/>.</summary>
+public enum SqlKeywordCase
 {
-    /// <summary>Upper-case keywords, four spaces.</summary>
+    /// <summary>SELECT, FROM.</summary>
+    Upper,
+
+    /// <summary>select, from.</summary>
+    Lower,
+
+    /// <summary>As they were typed.</summary>
+    AsWritten,
+}
+
+/// <summary>How <see cref="ISqlFormatter"/> lays SQL out.</summary>
+/// <param name="KeywordCase">How keywords are written.</param>
+/// <param name="IndentSize">Spaces per indentation level (ignored with <see cref="UseTabs"/>).</param>
+public sealed record SqlFormatOptions(SqlKeywordCase KeywordCase = SqlKeywordCase.Upper, int IndentSize = 4)
+{
+    /// <summary>Upper-case keywords, four spaces, content under its clause, a condition per line.</summary>
     public static SqlFormatOptions Default { get; } = new();
+
+    /// <summary>Indent with one tab per level instead of spaces.</summary>
+    public bool UseTabs { get; init; }
+
+    /// <summary>
+    /// A clause's content starts on the line below it, indented (<c>SELECT</c> / <c>    a,</c>); when false it
+    /// starts on the clause's own line (<c>SELECT a,</c>).
+    /// </summary>
+    public bool ContentOnNewLine { get; init; } = true;
+
+    /// <summary>Each AND / OR of a WHERE, HAVING or ON condition starts a new line.</summary>
+    public bool ConditionsOnNewLine { get; init; } = true;
 }

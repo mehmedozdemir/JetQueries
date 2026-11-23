@@ -28,6 +28,16 @@ public partial class DocumentsView : UserControl
     }
 }
 
+/// <summary>False → Visible, true → Collapsed.</summary>
+public sealed class FalseToVisibleConverter : IValueConverter
+{
+    public static FalseToVisibleConverter Instance { get; } = new();
+
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value is false ? Visibility.Visible : Visibility.Collapsed;
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
+}
+
 /// <summary>True when the value is not null.</summary>
 public sealed class NotNullConverter : IValueConverter
 {

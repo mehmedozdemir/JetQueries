@@ -261,4 +261,37 @@
   <data name="TabCloseOthers" xml:space="preserve"><value>Close others</value></data>
   <data name="TabCloseAll" xml:space="preserve"><value>Close all</value></data>
   <data name="TabCopyPath" xml:space="preserve"><value>Copy file path</value></data>
+  <data name="SettingsPageAppearance" xml:space="preserve"><value>Appearance</value></data>
+  <data name="SettingsPageAppearanceInfo" xml:space="preserve"><value>Theme and the font of the application.</value></data>
+  <data name="SettingsPageEditor" xml:space="preserve"><value>SQL editor</value></data>
+  <data name="SettingsPageEditorInfo" xml:space="preserve"><value>Font and text size of the query editor.</value></data>
+  <data name="SettingsPageResults" xml:space="preserve"><value>Results</value></data>
+  <data name="SettingsPageResultsInfo" xml:space="preserve"><value>The result grid and how many rows a page brings.</value></data>
+  <data name="SettingsPageQuery" xml:space="preserve"><value>Query tabs</value></data>
+  <data name="SettingsPageQueryInfo" xml:space="preserve"><value>Where the Run, Cancel and Save buttons are.</value></data>
+  <data name="SettingsPageFormat" xml:space="preserve"><value>SQL formatting</value></data>
+  <data name="SettingsPageFormatInfo" xml:space="preserve"><value>How Format SQL (Ctrl+Shift+F) lays queries out.</value></data>
+  <data name="SettingThemeInfo" xml:space="preserve"><value>The title bar follows too; the moon in the toolbar switches quickly.</value></data>
+  <data name="SettingUiFontInfo" xml:space="preserve"><value>Menus, panels, dialogs.</value></data>
+  <data name="SettingEditorFontInfo" xml:space="preserve"><value>A fixed-width font keeps columns of SQL aligned.</value></data>
+  <data name="SettingEditorSizeInfo" xml:space="preserve"><value>At 100 % zoom; Ctrl+wheel zooms a tab.</value></data>
+  <data name="SettingGridSizeInfo" xml:space="preserve"><value>Text of the result grid at 100 % zoom.</value></data>
+  <data name="SettingFetchSizeInfo" xml:space="preserve"><value>A single SELECT stops after this many rows; Next page and Fetch all bring more.</value></data>
+  <data name="SettingQueryButtonsInfo" xml:space="preserve"><value>In each tab they are icons; in the toolbar they have their names.</value></data>
+  <data name="SettingPreview" xml:space="preserve"><value>PREVIEW</value></data>
+  <data name="FieldKeywordCase" xml:space="preserve"><value>Keywords</value></data>
+  <data name="SettingKeywordCaseInfo" xml:space="preserve"><value>SELECT, FROM, JOIN… Names, strings and comments are never changed.</value></data>
+  <data name="FormatCaseAsWritten" xml:space="preserve"><value>As typed</value></data>
+  <data name="FieldIndent" xml:space="preserve"><value>Indentation</value></data>
+  <data name="SettingIndentInfo" xml:space="preserve"><value>Spaces per level, or a tab.</value></data>
+  <data name="FormatIndentTab" xml:space="preserve"><value>Tab</value></data>
+  <data name="FieldContentOnNewLine" xml:space="preserve"><value>Clause content on its own lines</value></data>
+  <data name="SettingContentOnNewLineInfo" xml:space="preserve"><value>SELECT on one line and each column below it; off: SELECT a, … on the same line.</value></data>
+  <data name="FieldConditionsOnNewLine" xml:space="preserve"><value>AND / OR on new lines</value></data>
+  <data name="SettingConditionsOnNewLineInfo" xml:space="preserve"><value>Each condition of WHERE, HAVING and ON starts a line.</value></data>
+  <data name="SettingFormatPreviewMissing" xml:space="preserve"><value>The preview needs a SQL Server, Oracle, PostgreSQL or SQLite extension.</value></data>
+  <data name="SettingsSavedHint" xml:space="preserve"><value>Changes are shown at once; Save keeps them.</value></data>
+  <data name="SettingUiSample" xml:space="preserve"><value>Explorer · New query · 1,234 rows · İıŞşĞğÜüÖöÇç</value></data>
+  <data name="SettingsGroupTheme" xml:space="preserve"><value>THEME</value></data>
+  <data name="SettingsGroupFont" xml:space="preserve"><value>FONT</value></data>
 </root>

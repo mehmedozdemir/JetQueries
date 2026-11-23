@@ -142,6 +142,20 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] Ctrl+/ comments the selected lines (or the caret's line) with `-- `, again removes it; Ctrl+Shift+U /
       Ctrl+U upper / lower case the selection or the word at the caret (`id` → `ID`, never `İD`).
 
+## Settings screen
+- [ ] Settings opens a wider window: pages on the left (Appearance, SQL editor, Results, Query tabs, SQL
+      formatting), the chosen one highlighted with a bar; the page's title and one line about it at the top;
+      Defaults, Cancel and Save at the bottom. Both themes look right; the window can be resized.
+- [ ] Appearance: the Dark / Light cards switch the theme at once (the chosen one has a check); font and size
+      change the whole window at once, with a sample line (Turkish letters) under them.
+- [ ] SQL editor: font and size change the coloured preview at once.
+- [ ] Results: grid text size and rows per page; Query tabs: where Run / Cancel / Save are (segmented choice).
+- [ ] SQL formatting: keyword case (SELECT / select / As typed), indentation (2 / 4 / 8 / Tab), the two switches;
+      the preview below lays the sample query out again at each change.
+- [ ] Save keeps everything (also after a restart); Cancel or the title bar's × puts everything back;
+      Defaults shows the defaults (kept only with Save).
+- [ ] After saving format options, Ctrl+Shift+F in an already open tab uses them.
+
 ## Query tabs
 - [ ] The × of a query tab closes it (a changed text asks to save first); middle click too.
 - [ ] Closing the last tab shows the empty page with "New query" (Ctrl+N).
@@ -186,8 +200,8 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
   are those of that execution (they may differ from the first page if the data changed meanwhile).
 - SQL Server: a query starting with WITH is not paged (SQL Server cannot count it) and is read to its end.
 - Filters on several columns are combined with AND; there is no OR (the SQL filter box takes any condition).
-- Formatting needs a connection (the formatter follows its dialect) and has no settings yet (upper-case keywords,
-  four spaces). A statement it does not recognise (DDL, EXEC, SET…) is left as written.
+- Formatting needs a connection (the formatter follows its dialect). A statement it does not recognise (DDL,
+  EXEC, SET…) is left as written. The settings previews use the SQL Server language when it is loaded.
 - Ctrl+/ may need another key on keyboards where "/" is typed with Shift (Turkish Q: use the menu, or numpad /).
 - SQL filter: no completion in the box yet. SQL Server cannot wrap a query starting with WITH, nor one whose
   columns repeat a name (`SELECT a.id, b.id …`): the server's error is shown. A query ordered by an expression

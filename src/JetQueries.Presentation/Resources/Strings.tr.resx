@@ -261,4 +261,37 @@
   <data name="TabCloseOthers" xml:space="preserve"><value>Diğerlerini kapat</value></data>
   <data name="TabCloseAll" xml:space="preserve"><value>Tümünü kapat</value></data>
   <data name="TabCopyPath" xml:space="preserve"><value>Dosya yolunu kopyala</value></data>
+  <data name="SettingsPageAppearance" xml:space="preserve"><value>Görünüm</value></data>
+  <data name="SettingsPageAppearanceInfo" xml:space="preserve"><value>Tema ve uygulamanın yazı tipi.</value></data>
+  <data name="SettingsPageEditor" xml:space="preserve"><value>SQL editörü</value></data>
+  <data name="SettingsPageEditorInfo" xml:space="preserve"><value>Sorgu editörünün yazı tipi ve boyutu.</value></data>
+  <data name="SettingsPageResults" xml:space="preserve"><value>Sonuçlar</value></data>
+  <data name="SettingsPageResultsInfo" xml:space="preserve"><value>Sonuç tablosu ve bir sayfanın getirdiği satır sayısı.</value></data>
+  <data name="SettingsPageQuery" xml:space="preserve"><value>Sorgu sekmeleri</value></data>
+  <data name="SettingsPageQueryInfo" xml:space="preserve"><value>Çalıştır, İptal ve Kaydet düğmelerinin yeri.</value></data>
+  <data name="SettingsPageFormat" xml:space="preserve"><value>SQL biçimlendirme</value></data>
+  <data name="SettingsPageFormatInfo" xml:space="preserve"><value>SQL'i biçimlendir (Ctrl+Shift+F) sorguları nasıl düzenler.</value></data>
+  <data name="SettingThemeInfo" xml:space="preserve"><value>Başlık çubuğu da uyar; araç çubuğundaki ay simgesi hızlıca değiştirir.</value></data>
+  <data name="SettingUiFontInfo" xml:space="preserve"><value>Menüler, paneller, pencereler.</value></data>
+  <data name="SettingEditorFontInfo" xml:space="preserve"><value>Sabit genişlikli bir yazı tipi SQL sütunlarını hizalı tutar.</value></data>
+  <data name="SettingEditorSizeInfo" xml:space="preserve"><value>%100 yakınlaştırmada; Ctrl+tekerlek sekmeyi yakınlaştırır.</value></data>
+  <data name="SettingGridSizeInfo" xml:space="preserve"><value>Sonuç tablosunun %100'deki yazı boyutu.</value></data>
+  <data name="SettingFetchSizeInfo" xml:space="preserve"><value>Tek bir SELECT bu kadar satırdan sonra durur; Sonraki sayfa ve Tümünü getir devamını getirir.</value></data>
+  <data name="SettingQueryButtonsInfo" xml:space="preserve"><value>Sekmede simge olarak, araç çubuğunda adlarıyla görünür.</value></data>
+  <data name="SettingPreview" xml:space="preserve"><value>ÖNİZLEME</value></data>
+  <data name="FieldKeywordCase" xml:space="preserve"><value>Anahtar sözcükler</value></data>
+  <data name="SettingKeywordCaseInfo" xml:space="preserve"><value>SELECT, FROM, JOIN… Adlar, metinler ve yorumlar hiç değişmez.</value></data>
+  <data name="FormatCaseAsWritten" xml:space="preserve"><value>Yazıldığı gibi</value></data>
+  <data name="FieldIndent" xml:space="preserve"><value>Girinti</value></data>
+  <data name="SettingIndentInfo" xml:space="preserve"><value>Düzey başına boşluk ya da sekme.</value></data>
+  <data name="FormatIndentTab" xml:space="preserve"><value>Sekme</value></data>
+  <data name="FieldContentOnNewLine" xml:space="preserve"><value>Yan tümce içeriği alt satırlarda</value></data>
+  <data name="SettingContentOnNewLineInfo" xml:space="preserve"><value>SELECT bir satırda, sütunlar altında; kapalıyken SELECT a, … aynı satırda.</value></data>
+  <data name="FieldConditionsOnNewLine" xml:space="preserve"><value>AND / OR yeni satırda</value></data>
+  <data name="SettingConditionsOnNewLineInfo" xml:space="preserve"><value>WHERE, HAVING ve ON koşullarının her biri yeni satırda başlar.</value></data>
+  <data name="SettingFormatPreviewMissing" xml:space="preserve"><value>Önizleme için SQL Server, Oracle, PostgreSQL ya da SQLite eklentisi gerekir.</value></data>
+  <data name="SettingsSavedHint" xml:space="preserve"><value>Değişiklikler hemen görünür; Kaydet ile kalıcı olur.</value></data>
+  <data name="SettingUiSample" xml:space="preserve"><value>Gezgin · Yeni sorgu · 1.234 satır · İıŞşĞğÜüÖöÇç</value></data>
+  <data name="SettingsGroupTheme" xml:space="preserve"><value>TEMA</value></data>
+  <data name="SettingsGroupFont" xml:space="preserve"><value>YAZI TİPİ</value></data>
 </root>
