@@ -64,6 +64,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
   refreshes with the filter; nothing stays open between pages. The condition must be one expression (no `;`,
   no comments, closed parentheses and strings). SDK preview: `IResultFilterQueryBuilder`, for SQL Server,
   Oracle, PostgreSQL and SQLite.
+- Run in new tab (button next to Run, Ctrl+Shift+Enter or Ctrl+\): the results shown stay and the new ones follow
+  them ("Result 2", "Result 3"…); each result pages, counts, filters and refreshes over its own query. Result tabs
+  close with × or a middle click.
+- SQL formatting (Ctrl+Shift+F, editor menu) of the selection or the whole text, as one undo step: clauses on
+  their own lines, select lists, conditions, subqueries, CTEs and CASE indented, keywords upper-cased. Comments,
+  literals and identifiers are kept; procedural code is left as written; a result that would not tokenize back
+  to the same tokens is never applied. SDK preview: `ISqlFormatter`, for SQL Server, Oracle, PostgreSQL, SQLite.
+- Editor right-click menu: run, run in new tab, cut / copy / paste / select all, format, comment / uncomment
+  lines (Ctrl+/), upper / lower case (Ctrl+Shift+U / Ctrl+U), go to definition, completion, undo / redo.
+- Query tab right-click menu: close, close others, close all, copy file path.
 
 ### Changed
 - A result set may hold up to 1,000,000 rows (was 100,000), fetched page by page.
@@ -73,3 +83,5 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 
 ### Fixed
 - History panel: two loads finishing together could fill the list twice.
+- The × of a query tab did nothing (its command binding did not resolve inside the tab header); closing the last
+  tab now leaves the empty page with "New query" instead of opening a new tab at once.

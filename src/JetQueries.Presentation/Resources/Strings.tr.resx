@@ -236,4 +236,29 @@
   <data name="SqlFilterClear" xml:space="preserve"><value>Filtreyi kaldır</value></data>
   <data name="FilterInvalid" xml:space="preserve"><value>Filtre, sonucun sütunları üzerinde tek bir SQL koşulu olmalı (';' ve yorum olmadan, parantezler kapalı).</value></data>
   <data name="FilterUnavailable" xml:space="preserve"><value>SQL ile yalnızca tek bir SELECT'in sonucu süzülebilir.</value></data>
+  <data name="QueryRunInNewTabTip" xml:space="preserve"><value>Yeni sonuç sekmesinde çalıştır, mevcut sonuçlar kalsın (Ctrl+Shift+Enter, Ctrl+\)</value></data>
+  <data name="ResultClose" xml:space="preserve"><value>Sonucu kapat</value></data>
+  <data name="QueryRunInNewTab" xml:space="preserve"><value>Yeni sekmede</value></data>
+  <data name="FormatNeedsConnection" xml:space="preserve"><value>SQL'i biçimlendirmek için sorguyu bir bağlantıya bağlayın (biçimlendirici bağlantının diline göre çalışır).</value></data>
+  <data name="FormatUnavailable" xml:space="preserve"><value>Bu bağlantının dili için SQL biçimlendirici yok.</value></data>
+  <data name="FormatNoChange" xml:space="preserve"><value>Zaten biçimli.</value></data>
+  <data name="FormatDone" xml:space="preserve"><value>SQL biçimlendirildi (Ctrl+Z ile geri alınır).</value></data>
+  <data name="EditorRun" xml:space="preserve"><value>Çalıştır</value></data>
+  <data name="EditorRunInNewTab" xml:space="preserve"><value>Yeni sekmede çalıştır</value></data>
+  <data name="EditorCut" xml:space="preserve"><value>Kes</value></data>
+  <data name="EditorCopy" xml:space="preserve"><value>Kopyala</value></data>
+  <data name="EditorPaste" xml:space="preserve"><value>Yapıştır</value></data>
+  <data name="EditorSelectAll" xml:space="preserve"><value>Tümünü seç</value></data>
+  <data name="EditorUndo" xml:space="preserve"><value>Geri al</value></data>
+  <data name="EditorRedo" xml:space="preserve"><value>Yinele</value></data>
+  <data name="EditorFormat" xml:space="preserve"><value>SQL'i biçimlendir</value></data>
+  <data name="EditorToggleComment" xml:space="preserve"><value>Satırları yorum yap / aç</value></data>
+  <data name="EditorUpperCase" xml:space="preserve"><value>Büyük harf</value></data>
+  <data name="EditorLowerCase" xml:space="preserve"><value>Küçük harf</value></data>
+  <data name="EditorGoToDefinition" xml:space="preserve"><value>Tanıma git</value></data>
+  <data name="EditorCompletion" xml:space="preserve"><value>Tamamlamayı göster</value></data>
+  <data name="TabClose" xml:space="preserve"><value>Kapat</value></data>
+  <data name="TabCloseOthers" xml:space="preserve"><value>Diğerlerini kapat</value></data>
+  <data name="TabCloseAll" xml:space="preserve"><value>Tümünü kapat</value></data>
+  <data name="TabCopyPath" xml:space="preserve"><value>Dosya yolunu kopyala</value></data>
 </root>

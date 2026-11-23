@@ -19,7 +19,7 @@
             <DockPanel>
                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
                     <Button x:Name="RefreshButton" Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="{x:Static c:Icons.Refresh}"
-                            Command="{Binding DataContext.RefreshCommand, RelativeSource={RelativeSource AncestorType=v:QueryDocumentView}}"
+                            Command="{Binding DataContext.RefreshCommand, RelativeSource={RelativeSource AncestorType=v:QueryDocumentView}}" CommandParameter="{Binding}"
                             ToolTip="{x:Static res:Strings.RefreshResultTip}" />
                     <Border Style="{StaticResource Separator.Vertical}" Height="16" Margin="4,0" />
                     <TextBox x:Name="FetchSizeBox" Width="64" Padding="6,2" VerticalAlignment="Center" HorizontalContentAlignment="Right"

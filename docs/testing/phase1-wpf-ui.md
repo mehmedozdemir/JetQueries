@@ -121,6 +121,33 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] Sort or filter while a long query is still returning rows: the new rows follow the order and the filters.
 - [ ] On 100,000 rows a sort or filter takes well under a second and the window never freezes.
 
+## Run in new tab, result tabs
+- [ ] Run a query, then press the green "run in new tab" icon next to Run (or Ctrl+Shift+Enter / Ctrl+\): the
+      first result stays and "Result 2" opens after it and is shown; again: "Result 3".
+- [ ] Next page, Fetch all, Count, the SQL filter and Refresh (↻ under the grid) on "Result 1" use its own
+      query, not the last one; Refresh reads the first page again in the same tab.
+- [ ] Each result tab has an × (and closes with a middle click); Messages has none. Run (F5) replaces all
+      results and starts again from "Result 1".
+
+## Editor menu, formatting, shortcuts
+- [ ] Right-click in the editor: the caret moves where clicked (unless inside the selection); the menu has Run,
+      Run in new tab, Cut, Copy, Paste, Select all, Format SQL, Comment / uncomment, Upper / Lower case, Go to
+      definition, Show completion, Undo, Redo. Cut / Copy are disabled without a selection.
+- [ ] Format SQL (Ctrl+Shift+F) on a connected tab: the whole text, or only the selection, is laid out (clauses
+      on their own lines, one column per line, AND / OR on their own lines, subqueries / CTE / CASE indented,
+      keywords upper case). Comments, strings and [names] are unchanged; Ctrl+Z undoes it in one step.
+- [ ] A procedure, function, package, trigger or `BEGIN … END` block is left as written; `GO` and Oracle `/`
+      lines stay on their own lines.
+- [ ] Without a connection, Format says to connect first and changes nothing.
+- [ ] Ctrl+/ comments the selected lines (or the caret's line) with `-- `, again removes it; Ctrl+Shift+U /
+      Ctrl+U upper / lower case the selection or the word at the caret (`id` → `ID`, never `İD`).
+
+## Query tabs
+- [ ] The × of a query tab closes it (a changed text asks to save first); middle click too.
+- [ ] Closing the last tab shows the empty page with "New query" (Ctrl+N).
+- [ ] Right-click a tab: Close, Close others, Close all (each changed tab asks; Cancel stops), Copy file path
+      (only for a saved file).
+
 ## SQL filter over the grid (server side)
 - [ ] Run a single SELECT: the box above the grid says "Enter a SQL expression to filter results"; for a script,
       a procedure call or DML it is disabled and its tool tip says only a single SELECT can be filtered.
@@ -159,6 +186,9 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
   are those of that execution (they may differ from the first page if the data changed meanwhile).
 - SQL Server: a query starting with WITH is not paged (SQL Server cannot count it) and is read to its end.
 - Filters on several columns are combined with AND; there is no OR (the SQL filter box takes any condition).
+- Formatting needs a connection (the formatter follows its dialect) and has no settings yet (upper-case keywords,
+  four spaces). A statement it does not recognise (DDL, EXEC, SET…) is left as written.
+- Ctrl+/ may need another key on keyboards where "/" is typed with Shift (Turkish Q: use the menu, or numpad /).
 - SQL filter: no completion in the box yet. SQL Server cannot wrap a query starting with WITH, nor one whose
   columns repeat a name (`SELECT a.id, b.id …`): the server's error is shown. A query ordered by an expression
   is wrapped with its ORDER BY inside (SQL Server: `OFFSET 0 ROWS`), where the order is kept in practice but not

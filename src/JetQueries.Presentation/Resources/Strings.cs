@@ -219,6 +219,31 @@ public static class Strings
     public static string SqlFilterClear => Get(nameof(SqlFilterClear));
     public static string FilterInvalid => Get(nameof(FilterInvalid));
     public static string FilterUnavailable => Get(nameof(FilterUnavailable));
+    public static string QueryRunInNewTabTip => Get(nameof(QueryRunInNewTabTip));
+    public static string ResultClose => Get(nameof(ResultClose));
+    public static string QueryRunInNewTab => Get(nameof(QueryRunInNewTab));
+    public static string FormatNeedsConnection => Get(nameof(FormatNeedsConnection));
+    public static string FormatUnavailable => Get(nameof(FormatUnavailable));
+    public static string FormatNoChange => Get(nameof(FormatNoChange));
+    public static string FormatDone => Get(nameof(FormatDone));
+    public static string EditorRun => Get(nameof(EditorRun));
+    public static string EditorRunInNewTab => Get(nameof(EditorRunInNewTab));
+    public static string EditorCut => Get(nameof(EditorCut));
+    public static string EditorCopy => Get(nameof(EditorCopy));
+    public static string EditorPaste => Get(nameof(EditorPaste));
+    public static string EditorSelectAll => Get(nameof(EditorSelectAll));
+    public static string EditorUndo => Get(nameof(EditorUndo));
+    public static string EditorRedo => Get(nameof(EditorRedo));
+    public static string EditorFormat => Get(nameof(EditorFormat));
+    public static string EditorToggleComment => Get(nameof(EditorToggleComment));
+    public static string EditorUpperCase => Get(nameof(EditorUpperCase));
+    public static string EditorLowerCase => Get(nameof(EditorLowerCase));
+    public static string EditorGoToDefinition => Get(nameof(EditorGoToDefinition));
+    public static string EditorCompletion => Get(nameof(EditorCompletion));
+    public static string TabClose => Get(nameof(TabClose));
+    public static string TabCloseOthers => Get(nameof(TabCloseOthers));
+    public static string TabCloseAll => Get(nameof(TabCloseAll));
+    public static string TabCopyPath => Get(nameof(TabCopyPath));
 
     /// <summary>A string looked up by a computed name (for example <c>Setting_server</c>), or null if there is none.</summary>
     public static string? Find(string name) => Manager.GetString(name, CultureInfo.CurrentUICulture);

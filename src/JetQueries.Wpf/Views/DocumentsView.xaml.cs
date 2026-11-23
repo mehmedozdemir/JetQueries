@@ -9,6 +9,14 @@ public partial class DocumentsView : UserControl
 {
     public DocumentsView() => InitializeComponent();
 
+    private void OnCopyPath(object sender, RoutedEventArgs e)
+    {
+        if (sender is MenuItem { DataContext: QueryDocumentViewModel { FilePath: { } path } })
+        {
+            Clipboard.SetText(path);
+        }
+    }
+
     private void OnTabMouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
         if (e.ChangedButton == System.Windows.Input.MouseButton.Middle && sender is TabItem { DataContext: QueryDocumentViewModel document } &&
@@ -18,6 +26,16 @@ public partial class DocumentsView : UserControl
             e.Handled = true;
         }
     }
+}
+
+/// <summary>True when the value is not null.</summary>
+public sealed class NotNullConverter : IValueConverter
+{
+    public static NotNullConverter Instance { get; } = new();
+
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value is not null;
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
 }
 
 /// <summary>0 → Visible (an empty state), anything else → Collapsed.</summary>

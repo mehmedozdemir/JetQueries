@@ -1,3 +1,4 @@
+using JetQueries.Providers.Language;
 using JetQueries.Sdk;
 
 namespace JetQueries.Providers.Language;
@@ -46,8 +47,11 @@ internal abstract class GenericSqlDialect(GenericSqlTokenizer tokenizer) : SqlDi
 /// tokens and metadata, and an error for a string or comment that is never closed. Syntax beyond that is left
 /// to the database, which reports it when the statement runs.
 /// </summary>
-internal sealed class GenericLanguageService(GenericSqlDialect dialect) : ISqlLanguageService
+internal sealed class GenericLanguageService(GenericSqlDialect dialect) : ISqlLanguageService, ISqlFormatter
 {
+    /// <inheritdoc />
+    public string Format(string sql, SqlFormatOptions options) => SqlLayout.Format(sql, dialect.Tokenize, options);
+
     public SqlLineTokens TokenizeLine(ReadOnlySpan<char> line, int startState)
     {
         var tokens = new List<LanguageToken>();

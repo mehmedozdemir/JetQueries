@@ -252,6 +252,29 @@ public partial class DocumentsViewModel : ObservableObject
         await CloseWithoutAskingAsync(document);
     }
 
+    /// <summary>Closes every tab but <paramref name="keep"/>, asking about each changed one; stops at a Cancel.</summary>
+    [RelayCommand]
+    private async Task CloseOthersAsync(QueryDocumentViewModel? keep)
+    {
+        foreach (var document in Documents.Where(d => !ReferenceEquals(d, keep)).ToList())
+        {
+            await CloseAsync(document);
+            if (Documents.Contains(document))
+            {
+                return;
+            }
+        }
+
+        if (keep is not null)
+        {
+            Selected = keep;
+        }
+    }
+
+    /// <summary>Closes every tab, asking about each changed one; stops at a Cancel.</summary>
+    [RelayCommand]
+    private Task CloseAllAsync() => CloseOthersAsync(null);
+
     private async Task CloseWithoutAskingAsync(QueryDocumentViewModel document)
     {
         document.CancelCommand.Execute(null);
@@ -260,7 +283,8 @@ public partial class DocumentsViewModel : ObservableObject
         Documents.Remove(document);
         if (Documents.Count == 0)
         {
-            NewQuery();
+            // As in SSMS and DBeaver the last tab really closes: the empty state offers a new query.
+            Selected = null;
         }
         else if (Selected is null || ReferenceEquals(Selected, document))
         {

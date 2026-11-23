@@ -193,7 +193,7 @@ public sealed class ResultGridViewTests
         }
     }
 
-    private static int Capture(FrameworkElement content, string path)
+    internal static int Capture(FrameworkElement content, string path)
     {
         content.UpdateLayout();
         var dpi = VisualTreeHelper.GetDpi(content);
