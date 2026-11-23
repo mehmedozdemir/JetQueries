@@ -344,4 +344,17 @@
   <data name="SnippetInvalid" xml:space="preserve"><value>Her parçacığın harf, rakam ve _ içeren (harfle başlayan) ve yalnızca bir kez kullanılan bir kısayolu olmalı.</value></data>
   <data name="QueryCanceling" xml:space="preserve"><value>İptal ediliyor…</value></data>
   <data name="QueryCancelSlow" xml:space="preserve"><value>İptal sürüyor: kilit bekleyen bir deyim, sunucu iptali alınca durur. Oracle: ALTER SYSTEM yetkisiyle hemen iptal edilir; yetki yoksa beklemesi bitince.</value></data>
+  <data name="ImportTitle" xml:space="preserve"><value>Bağlantıları içe aktar</value></data>
+  <data name="ImportTip" xml:space="preserve"><value>DBeaver ve SSMS'ten bağlantıları içe aktar</value></data>
+  <data name="ImportInfo" xml:space="preserve"><value>DBeaver'da ve SSMS kayıtlı sunucularında bulunan bağlantılar. Parolalar aktarılmaz: ilk bağlantıda yazarsınız (Windows Kimlik Bilgisi Yöneticisi'ne kaydedebilirsiniz). Canlı ortam bağlantıları salt okunur gelir.</value></data>
+  <data name="ImportChooseFile" xml:space="preserve"><value>Dosya seç…</value></data>
+  <data name="ImportFileFilter" xml:space="preserve"><value>DBeaver ya da SSMS ayarları|data-sources*.json;RegSrvr*.xml|Tüm dosyalar|*.*</value></data>
+  <data name="ImportSelectAll" xml:space="preserve"><value>Tümünü seç</value></data>
+  <data name="ImportSelectNone" xml:space="preserve"><value>Hiçbirini seçme</value></data>
+  <data name="ImportButton" xml:space="preserve"><value>İçe aktar</value></data>
+  <data name="ImportNoProvider" xml:space="preserve"><value>sağlayıcı yok</value></data>
+  <data name="ImportExists" xml:space="preserve"><value>zaten kayıtlı</value></data>
+  <data name="ImportNothingFound" xml:space="preserve"><value>Bu bilgisayarda DBeaver ya da SSMS ayarı bulunamadı; bir dosya seçin.</value></data>
+  <data name="ImportFileRead" xml:space="preserve"><value>{0}: {1} ({2} bağlantı)</value></data>
+  <data name="ImportFile" xml:space="preserve"><value>Dosya</value></data>
 </root>

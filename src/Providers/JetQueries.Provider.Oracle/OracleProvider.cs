@@ -18,7 +18,7 @@ public sealed class OracleExtension : IExtension
 }
 
 /// <summary>Database provider for Oracle Database, on the managed ODP.NET driver (no Oracle client installation needed).</summary>
-public sealed class OracleProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect
+public sealed class OracleProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport
 {
     /// <summary>The provider identifier stored in connection profiles.</summary>
     public const string ProviderId = "oracle";
@@ -72,6 +72,33 @@ public sealed class OracleProvider : IDatabaseProvider, IConnectionSettingsProvi
     /// <inheritdoc />
     public string? BuildCountQuery(string sql) =>
         CountQueryBuilder.Build(sql.TrimEnd().TrimEnd('/').TrimEnd(), PlSqlTokenizer.Tokenize(sql.TrimEnd().TrimEnd('/').TrimEnd()), withAllowedInside: true, orderByNeedsPaging: false);
+
+    /// <inheritdoc />
+    public IReadOnlyDictionary<string, string> ToSettings(ImportedEndpoint endpoint)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+        var settings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        if (endpoint.Host is { Length: > 0 } host)
+        {
+            settings[OracleConnectionSettings.Host] = host;
+        }
+
+        settings[OracleConnectionSettings.Port] = (endpoint.Port ?? 1521).ToString(System.Globalization.CultureInfo.InvariantCulture);
+        if (endpoint.ServiceName is { Length: > 0 } service)
+        {
+            settings[OracleConnectionSettings.ServiceName] = service;
+        }
+        else if (endpoint.Sid is { Length: > 0 } sid)
+        {
+            settings[OracleConnectionSettings.Sid] = sid;
+        }
+        else if (endpoint.Database is { Length: > 0 } database)
+        {
+            settings[OracleConnectionSettings.ServiceName] = database;
+        }
+
+        return settings;
+    }
 
     /// <inheritdoc />
     public string SelectRows(string qualifiedName, IReadOnlyList<string> quotedColumns, int rows)

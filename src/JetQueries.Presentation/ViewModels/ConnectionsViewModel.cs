@@ -342,6 +342,16 @@ public partial class ConnectionsViewModel(
     [RelayCommand]
     private Task RefreshAsync() => LoadAsync();
 
+    /// <summary>Import connections from DBeaver and SSMS; the list is read again after an import.</summary>
+    [RelayCommand]
+    private async Task ImportAsync()
+    {
+        if (await dialogs.ImportConnectionsAsync())
+        {
+            await LoadAsync();
+        }
+    }
+
     [RelayCommand]
     private async Task NewAsync()
     {

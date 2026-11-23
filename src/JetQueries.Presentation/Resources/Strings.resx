@@ -344,4 +344,17 @@
   <data name="SnippetInvalid" xml:space="preserve"><value>Each snippet needs a shortcut of letters, digits and _ (starting with a letter), used only once.</value></data>
   <data name="QueryCanceling" xml:space="preserve"><value>Canceling…</value></data>
   <data name="QueryCancelSlow" xml:space="preserve"><value>Still canceling: a statement waiting on a lock stops when the server takes the cancel. Oracle: with the ALTER SYSTEM privilege it is canceled at once; without it, when its wait ends.</value></data>
+  <data name="ImportTitle" xml:space="preserve"><value>Import connections</value></data>
+  <data name="ImportTip" xml:space="preserve"><value>Import connections from DBeaver and SSMS</value></data>
+  <data name="ImportInfo" xml:space="preserve"><value>Connections found in DBeaver and in SSMS's registered servers. Passwords are not imported: you type them at the first connect (and can save them in Windows Credential Manager). Production connections come in read-only.</value></data>
+  <data name="ImportChooseFile" xml:space="preserve"><value>Choose file…</value></data>
+  <data name="ImportFileFilter" xml:space="preserve"><value>DBeaver or SSMS settings|data-sources*.json;RegSrvr*.xml|All files|*.*</value></data>
+  <data name="ImportSelectAll" xml:space="preserve"><value>Select all</value></data>
+  <data name="ImportSelectNone" xml:space="preserve"><value>Select none</value></data>
+  <data name="ImportButton" xml:space="preserve"><value>Import</value></data>
+  <data name="ImportNoProvider" xml:space="preserve"><value>no provider</value></data>
+  <data name="ImportExists" xml:space="preserve"><value>already saved</value></data>
+  <data name="ImportNothingFound" xml:space="preserve"><value>No DBeaver or SSMS settings found on this computer; choose a file.</value></data>
+  <data name="ImportFileRead" xml:space="preserve"><value>{0}: {1} ({2} connections)</value></data>
+  <data name="ImportFile" xml:space="preserve"><value>File</value></data>
 </root>

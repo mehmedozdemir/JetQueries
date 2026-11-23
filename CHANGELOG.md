@@ -106,6 +106,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
   `case`, …); the snippet takes the line's indentation and the caret goes to its `$0`; one undo takes it back.
   Editor menu "Insert snippet" lists them. A Snippets page in Settings adds, edits and removes them (shortcuts
   checked on Save); they are kept in `%AppData%\JetQueries\snippets.json`.
+- Import connections (the import icon over the explorer): finds DBeaver's `data-sources*.json` and SSMS's
+  registered servers (`RegSrvr*.xml`) on the computer, or a file chosen, and saves the connections ticked:
+  folders / server groups and environment kept, production ones read-only, already saved ones marked. Passwords
+  are never imported. SDK preview: `IConnectionImport` (each provider maps a neutral `ImportedEndpoint` to its
+  own settings).
 
 ### Changed
 - A result set may hold up to 1,000,000 rows (was 100,000), fetched page by page.

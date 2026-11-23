@@ -52,4 +52,6 @@ internal sealed class DialogService(IServiceProvider services) : IDialogService
 
     // Paused interface (ADR 0007): what is not committed is rolled back, as closing the connection would.
     public Task<TransactionChoice> AskOpenTransactionAsync(string documentNames) => Task.FromResult(TransactionChoice.Rollback);
+
+    public Task<bool> ImportConnectionsAsync() => Task.FromResult(false);
 }

@@ -17,7 +17,7 @@ public sealed class SqliteExtension : IExtension
 }
 
 /// <summary>Database provider for SQLite database files, on Microsoft.Data.Sqlite.</summary>
-public sealed class SqliteProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect
+public sealed class SqliteProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport
 {
     /// <summary>The provider identifier stored in connection profiles.</summary>
     public const string ProviderId = "sqlite";
@@ -59,6 +59,19 @@ public sealed class SqliteProvider : IDatabaseProvider, IConnectionSettingsProvi
     /// <inheritdoc />
     public string? BuildCountQuery(string sql) =>
         CountQueryBuilder.Build(sql, SqliteSyntax.Tokenizer.Tokenize(sql), withAllowedInside: true, orderByNeedsPaging: false);
+
+    /// <inheritdoc />
+    public IReadOnlyDictionary<string, string> ToSettings(ImportedEndpoint endpoint)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+        var settings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        if ((endpoint.File ?? endpoint.Database) is { Length: > 0 } file)
+        {
+            settings[SqliteConnectionSettings.File] = file;
+        }
+
+        return settings;
+    }
 
     /// <inheritdoc />
     public string SelectRows(string qualifiedName, IReadOnlyList<string> quotedColumns, int rows)

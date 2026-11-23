@@ -17,7 +17,7 @@ public sealed class SqlServerExtension : IExtension
 }
 
 /// <summary>Database provider for Microsoft SQL Server and Azure SQL, on Microsoft.Data.SqlClient.</summary>
-public sealed class SqlServerProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect
+public sealed class SqlServerProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport
 {
     /// <summary>The provider identifier stored in connection profiles.</summary>
     public const string ProviderId = "sqlserver";
@@ -82,6 +82,37 @@ public sealed class SqlServerProvider : IDatabaseProvider, IConnectionSettingsPr
     /// <remarks>SQL Server cannot nest a WITH query or a plain ORDER BY in a derived table; the ORDER BY is left out.</remarks>
     public string? BuildCountQuery(string sql) =>
         CountQueryBuilder.Build(sql, Language.TSqlLexer.Tokenize(sql), withAllowedInside: false, orderByNeedsPaging: true);
+
+    /// <inheritdoc />
+    public IReadOnlyDictionary<string, string> ToSettings(ImportedEndpoint endpoint)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+        var settings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        if (endpoint.Host is { Length: > 0 } host)
+        {
+            settings[SqlServerConnectionSettings.Server] = endpoint.Port is { } port && !host.Contains(',', StringComparison.Ordinal)
+                ? host + "," + port.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                : host;
+        }
+
+        if (endpoint.Database is { Length: > 0 } database)
+        {
+            settings[SqlServerConnectionSettings.Database] = database;
+        }
+
+        settings[SqlServerConnectionSettings.Authentication] = endpoint.IntegratedSecurity == true ? "windows" : "sql";
+        if (endpoint.Encrypt is { } encrypt)
+        {
+            settings[SqlServerConnectionSettings.Encrypt] = encrypt ? "true" : "false";
+        }
+
+        if (endpoint.TrustServerCertificate is { } trust)
+        {
+            settings[SqlServerConnectionSettings.TrustServerCertificate] = trust ? "true" : "false";
+        }
+
+        return settings;
+    }
 
     /// <inheritdoc />
     public string SelectRows(string qualifiedName, IReadOnlyList<string> quotedColumns, int rows)
