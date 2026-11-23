@@ -67,6 +67,10 @@ public sealed class AppearanceService : IAppearanceService
         resources["Font.Code"] = new System.Windows.Media.FontFamily(settings.EditorFontFamily);
         resources["FontSize.Code"] = settings.EditorFontSize;
         GridScale = settings.GridFontSize / 13;
+
+        // Run, Cancel, Save: icons in each tab, or text buttons in the main toolbar.
+        resources["QueryButtons.Tab"] = settings.QueryButtonsInTab ? Visibility.Visible : Visibility.Collapsed;
+        resources["QueryButtons.Toolbar"] = settings.QueryButtonsInTab ? Visibility.Collapsed : Visibility.Visible;
         Changed?.Invoke(this, EventArgs.Empty);
     }
 }

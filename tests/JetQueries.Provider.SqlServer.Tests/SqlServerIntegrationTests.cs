@@ -233,6 +233,60 @@ public sealed class SqlServerIntegrationTests(SqlServerFixture fixture) : IClass
     }
 
     [Fact]
+    public async Task An_open_cursor_on_a_large_result_closes_quickly_after_a_page()
+    {
+        await using var connection = await OpenAsync();
+        using var cancel = new CancellationTokenSource();
+        const string Sql = "SELECT TOP (2000000) a.object_id, b.name FROM sys.all_objects a CROSS JOIN sys.all_objects b";
+        var events = connection.Executor.ExecuteAsync(new QueryRequest(Sql) { BatchSize = 200 }, cancel.Token).GetAsyncEnumerator(cancel.Token);
+        var rows = 0;
+        while (rows < 200 && await events.MoveNextAsync())
+        {
+            rows += events.Current is RowBatch batch ? batch.Rows.Count : 0;
+        }
+
+        Assert.Equal(200, rows);
+
+        // What the query window does on Cancel: cancel first, then close; the rest is not read.
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        await cancel.CancelAsync();
+        try
+        {
+            await events.DisposeAsync();
+        }
+        catch (OperationCanceledException)
+        {
+        }
+
+        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(3), $"closing took {watch.Elapsed}");
+        await RunAsync(connection, "SELECT 1");
+    }
+
+    [Theory]
+    [InlineData("SELECT name FROM sys.databases ORDER BY name", true)]
+    [InlineData("SELECT TOP (3) name FROM sys.databases ORDER BY name;", true)]
+    [InlineData("-- comment ; here\nSELECT name FROM sys.databases WHERE name <> 'a;b'", true)]
+    [InlineData("WITH d AS (SELECT name FROM sys.databases) SELECT * FROM d", false)]
+    [InlineData("SELECT 1; SELECT 2", false)]
+    [InlineData("SELECT name INTO #t FROM sys.databases", false)]
+    [InlineData("EXEC sp_who", false)]
+    public async Task Row_counts_are_computed_by_the_server(string sql, bool countable)
+    {
+        var provider = new SqlServerProvider();
+        var count = provider.BuildCountQuery(sql.Replace("\\n", "\n", StringComparison.Ordinal));
+        Assert.Equal(countable, count is not null);
+        if (count is null)
+        {
+            return;
+        }
+
+        // The server is the judge: an ORDER BY left where SQL Server forbids it would fail here.
+        await using var connection = await OpenAsync();
+        var rows = await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest(count), Token));
+        Assert.True(Convert.ToInt64(rows.OfType<RowBatch>().Single().Rows[0][0], System.Globalization.CultureInfo.InvariantCulture) > 0);
+    }
+
+    [Fact]
     public async Task The_current_database_can_be_read_listed_and_switched()
     {
         await using var connection = await OpenAsync();

@@ -301,6 +301,41 @@ public sealed class PostgreSqlIntegrationTests(PostgreSqlFixture fixture) : ICla
     }
 
     [Fact]
+    public async Task Row_counts_and_an_early_closed_cursor_work_on_the_server()
+    {
+        await using var connection = await OpenAsync();
+        var provider = new PostgreSqlProvider();
+        var count = provider.BuildCountQuery("WITH c AS (SELECT * FROM kart.cards) SELECT * FROM c ORDER BY id;");
+        Assert.NotNull(count);
+        var rows = await Collect(connection.Executor.ExecuteAsync(new QueryRequest(count), Token));
+        Assert.Equal(3L, rows.OfType<RowBatch>().Single().Rows[0][0]);
+        Assert.Null(provider.BuildCountQuery("SELECT 1; SELECT 2"));
+        Assert.Null(provider.BuildCountQuery("DO $$ BEGIN END $$"));
+
+        using var cancel = new CancellationTokenSource();
+        var events = connection.Executor.ExecuteAsync(new QueryRequest("SELECT g FROM generate_series(1, 5000000) g") { BatchSize = 200 }, cancel.Token)
+            .GetAsyncEnumerator(cancel.Token);
+        var fetched = 0;
+        while (fetched < 200 && await events.MoveNextAsync())
+        {
+            fetched += events.Current is RowBatch batch ? batch.Rows.Count : 0;
+        }
+
+        var watch = Stopwatch.StartNew();
+        await cancel.CancelAsync();
+        try
+        {
+            await events.DisposeAsync();
+        }
+        catch (OperationCanceledException)
+        {
+        }
+
+        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(3), $"closing took {watch.Elapsed}");
+        Assert.Single((await Collect(connection.Executor.ExecuteAsync(new QueryRequest("SELECT 1"), Token))).OfType<RowBatch>());
+    }
+
+    [Fact]
     public async Task Switching_database_reconnects_the_window_to_the_other_database()
     {
         await using var connection = await OpenAsync();

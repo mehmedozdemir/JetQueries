@@ -29,6 +29,12 @@ public sealed record AppearanceSettings
     /// <summary>Text size of result grids at 100 % zoom.</summary>
     public double GridFontSize { get; init; } = 13;
 
+    /// <summary>Run, Cancel and Save as icons in each query tab (true) or with text in the main toolbar (false).</summary>
+    public bool QueryButtonsInTab { get; init; } = true;
+
+    /// <summary>Rows fetched per page in a new query tab (DBeaver's fetch size).</summary>
+    public int FetchSize { get; init; } = QueryDocumentViewModel.DefaultFetchSize;
+
     /// <summary>The values within the ranges the settings screen offers (a hand-edited file may hold anything).</summary>
     public AppearanceSettings Normalized() => this with
     {
@@ -37,6 +43,7 @@ public sealed record AppearanceSettings
         UiFontSize = Math.Clamp(UiFontSize, 10, 18),
         EditorFontSize = Math.Clamp(EditorFontSize, 8, 28),
         GridFontSize = Math.Clamp(GridFontSize, 10, 20),
+        FetchSize = Math.Clamp(FetchSize, 1, QueryDocumentViewModel.MaxRows),
     };
 }
 
@@ -138,6 +145,21 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     public partial double GridFontSize { get; set; }
 
+    public IReadOnlyList<SettingChoice<bool>> QueryButtonPlaces { get; } =
+        [new(true, Strings.QueryButtonsInTab), new(false, Strings.QueryButtonsInToolbar)];
+
+    [ObservableProperty]
+    public partial SettingChoice<bool>? QueryButtonPlace { get; set; }
+
+    public IReadOnlyList<int> FetchSizes { get; } = [50, 100, 200, 500, 1000, 5000, 10000];
+
+    [ObservableProperty]
+    public partial int FetchSize { get; set; }
+
+    partial void OnQueryButtonPlaceChanged(SettingChoice<bool>? value) => Preview();
+
+    partial void OnFetchSizeChanged(int value) => Preview();
+
     /// <summary>The settings as currently chosen on the screen.</summary>
     public AppearanceSettings Chosen => new AppearanceSettings
     {
@@ -146,6 +168,8 @@ public partial class SettingsViewModel : ObservableObject
         EditorFontFamily = EditorFontFamily,
         EditorFontSize = EditorFontSize,
         GridFontSize = GridFontSize,
+        QueryButtonsInTab = QueryButtonPlace?.Value ?? true,
+        FetchSize = FetchSize,
     }.Normalized();
 
     partial void OnUiFontFamilyChanged(string value) => Preview();
@@ -200,6 +224,8 @@ public partial class SettingsViewModel : ObservableObject
             EditorFontFamily = settings.EditorFontFamily;
             EditorFontSize = settings.EditorFontSize;
             GridFontSize = settings.GridFontSize;
+            QueryButtonPlace = QueryButtonPlaces.First(p => p.Value == settings.QueryButtonsInTab);
+            FetchSize = settings.FetchSize;
         }
         finally
         {

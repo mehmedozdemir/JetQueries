@@ -16,20 +16,31 @@
 
         <!-- Connection of this query and what the last run did -->
         <DockPanel Margin="0,0,0,6">
-            <!-- The window's connection, then its current database (schema for Oracle), as SSMS shows it -->
-            <ComboBox DockPanel.Dock="Left" ItemsSource="{Binding Sessions}" SelectedItem="{Binding SelectedSession}"
-                      DisplayMemberPath="Name" MinWidth="170" MaxWidth="260" ToolTip="{x:Static res:Strings.QueryConnection}"
-                      c:Ui.Placeholder="{x:Static res:Strings.QueryNoConnection}" />
-            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Margin="10,0,0,0"
+            <!-- Run, Cancel, Save as icons (Settings can move them to the main toolbar) -->
+            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Margin="0,0,8,0" Visibility="{DynamicResource QueryButtons.Tab}">
+                <Button Style="{StaticResource Btn.Icon.Compact}" c:Ui.Icon="{x:Static c:Icons.Play}" Foreground="{DynamicResource Brush.Success}"
+                        Command="{Binding RunCommand}" ToolTip="{x:Static res:Strings.QueryRunShortTip}" />
+                <Button Style="{StaticResource Btn.Icon.Compact}" c:Ui.Icon="{x:Static c:Icons.Stop}"
+                        Command="{Binding CancelCommand}" ToolTip="{x:Static res:Strings.QueryCancelShortTip}" />
+                <Button Style="{StaticResource Btn.Icon.Compact}" c:Ui.Icon="{x:Static c:Icons.Save}"
+                        Command="{Binding DataContext.SaveCommand, RelativeSource={RelativeSource AncestorType=v:DocumentsView}}"
+                        ToolTip="{x:Static res:Strings.FileSaveShortTip}" />
+                <Border Style="{StaticResource Separator.Vertical}" Margin="6,0" />
+            </StackPanel>
+
+            <!-- The window's current database (schema for Oracle), as SSMS shows it; the connection is in the status bar -->
+            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal"
                         Visibility="{Binding CanChangeDatabase, Converter={StaticResource BoolToVisibility}}">
                 <TextBlock Text="{x:Static c:Icons.Database}" Style="{StaticResource Text.Icon}" FontSize="13" Margin="0,0,6,0"
                            Foreground="{DynamicResource Brush.Accent}" />
                 <ComboBox x:Name="DatabaseBox" ItemsSource="{Binding Databases}" SelectedItem="{Binding SelectedDatabase}" MinWidth="200" MaxWidth="320"
                           ToolTip="{x:Static res:Strings.QueryDatabase}" />
             </StackPanel>
+            <TextBlock DockPanel.Dock="Left" Text="{x:Static res:Strings.QueryNoConnection}" Style="{StaticResource Text.Caption}" VerticalAlignment="Center"
+                       Visibility="{Binding SelectedSession, Converter={x:Static v:NullToVisibleConverter.Instance}}" />
             <ProgressBar DockPanel.Dock="Left" IsIndeterminate="{Binding IsRunning}" Width="80" Margin="12,0,0,0" VerticalAlignment="Center"
                          Visibility="{Binding IsRunning, Converter={StaticResource BoolToVisibility}}" />
-            <TextBlock Text="{Binding Status}" Style="{StaticResource Text.Status}" HorizontalAlignment="Right" />
+            <TextBlock Text="{Binding Status}" Style="{StaticResource Text.Status}" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis" />
         </DockPanel>
 
         <!-- Editor -->

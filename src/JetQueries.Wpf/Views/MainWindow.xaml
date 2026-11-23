@@ -42,13 +42,16 @@
                             Command="{Binding Documents.NewQueryCommand}" ToolTip="{x:Static res:Strings.QueryNewTip}" />
                     <Button Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.OpenFile}" Content="{x:Static res:Strings.FileOpen}"
                             Command="{Binding Documents.OpenFileCommand}" ToolTip="{x:Static res:Strings.FileOpenTip}" />
-                    <Button Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.Save}" Content="{x:Static res:Strings.FileSave}"
-                            Command="{Binding Documents.SaveCommand}" ToolTip="{x:Static res:Strings.FileSaveTip}" />
-                    <Border Style="{StaticResource Separator.Vertical}" />
-                    <Button Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.Play}" Content="{x:Static res:Strings.QueryRun}"
-                            Command="{Binding Documents.Selected.RunCommand}" ToolTip="{x:Static res:Strings.QueryRunTip}" />
-                    <Button Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.Stop}" Content="{x:Static res:Strings.QueryCancel}"
-                            Command="{Binding Documents.Selected.CancelCommand}" ToolTip="{x:Static res:Strings.QueryCancelTip}" />
+                    <!-- Shown here when the settings say so; otherwise each query tab has them -->
+                    <StackPanel Orientation="Horizontal" Visibility="{DynamicResource QueryButtons.Toolbar}">
+                        <Button Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.Save}" Content="{x:Static res:Strings.FileSave}"
+                                Command="{Binding Documents.SaveCommand}" ToolTip="{x:Static res:Strings.FileSaveTip}" />
+                        <Border Style="{StaticResource Separator.Vertical}" />
+                        <Button Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.Play}" Content="{x:Static res:Strings.QueryRun}"
+                                Command="{Binding Documents.Selected.RunCommand}" ToolTip="{x:Static res:Strings.QueryRunTip}" />
+                        <Button Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.Stop}" Content="{x:Static res:Strings.QueryCancel}"
+                                Command="{Binding Documents.Selected.CancelCommand}" ToolTip="{x:Static res:Strings.QueryCancelTip}" />
+                    </StackPanel>
                 </StackPanel>
 
                 <Button x:Name="ThemeButton" DockPanel.Dock="Right" Style="{StaticResource Btn.Icon.Compact}"

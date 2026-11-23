@@ -32,6 +32,17 @@ public sealed class InverseBoolToVisibilityConverter : IValueConverter
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
 }
 
+/// <summary>null → Visible, anything else → Collapsed.</summary>
+public sealed class NullToVisibleConverter : IValueConverter
+{
+    public static NullToVisibleConverter Instance { get; } = new();
+
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value is null ? Visibility.Visible : Visibility.Collapsed;
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
+}
+
 /// <summary>A non-null value → Visible.</summary>
 public sealed class NotNullToVisibilityConverter : IValueConverter
 {

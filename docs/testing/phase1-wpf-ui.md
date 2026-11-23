@@ -82,6 +82,25 @@ dotnet run --project src/JetQueries.Wpf
       coloured; Ctrl+C copies.
 - [ ] The Messages tab shows server messages; error lines in red; text can be selected and copied.
 
+## Query tab layout and paged results (DBeaver-style)
+- [ ] A query tab has Run (green), Stop and Save as icons at its top left, then the database selector; there is
+      no connection list (the connection is in the status bar and in the tab's tool tip). A tab without a
+      connection says so.
+- [ ] Settings → Query → "Run, Cancel, Save": "In the main toolbar" moves them there with text and removes them
+      from the tabs; switching back restores the icons.
+- [ ] Run a query returning more rows than the page size (default 200, Settings → Query → Rows per page): the
+      first 200 rows show, the counter under the grid says "200+", the status line says rows · time (fetch
+      time) · clock. The editor, explorer and other tabs stay usable.
+- [ ] "Next page" (↓) adds the next page; "Fetch all" fetches the rest (up to 1,000,000 rows); the counter
+      loses its "+"; a result that fits one page shows no "+" and its cursor closes at once.
+- [ ] The page size box under the grid changes the size for the next run and the next page (Enter applies).
+- [ ] Count (calculator icon) shows "200 / 12,345" without fetching more rows; while a page is open it uses a
+      second connection; a script of several statements, a procedure call or DML says "Only a single SELECT
+      can be counted.". SQL Server: a query ending in ORDER BY is counted; WITH queries are not (SQL Server rule).
+- [ ] Stop on a paged result closes its cursor at once even on millions of rows; the rows stay; a new run,
+      Refresh (↻ under the grid), switching database and closing the tab also close it.
+- [ ] A long-running first page can still be stopped with Stop / Esc.
+
 ## Sorting and filtering results
 Sorting and filtering work on the rows already received (at most 100,000), on the client, in the background.
 - [ ] Click a header: ascending; click again: descending (arrow in the header). Shift+click adds the column
@@ -106,6 +125,9 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 
 ## Known limits
 - Sorting and filtering apply to the rows received, not to the database query (no ORDER BY / WHERE is added).
+- While a page is open, the statement's cursor stays open on the tab's connection (as in DBeaver): it may hold
+  locks or a snapshot until the next page, a new run or Stop. Messages of later statements of a script appear
+  after the open result has been read to its end.
 - Filters on several columns are combined with AND; there is no OR.
 - Idle memory of the WPF application is about 370 MB (budget: 200 MB); not investigated yet.
 - The editor's zoom is shared by the query tabs (one editor view shows the selected tab).

@@ -160,6 +160,20 @@ public sealed class OracleProviderTests
     public void Other_statements_define_no_stored_unit(string sql) =>
         Assert.Null(OracleQueryExecutor.StoredUnit(sql));
 
+    [Theory]
+    [InlineData("SELECT * FROM cards ORDER BY id", "SELECT * FROM cards ORDER BY id")]
+    [InlineData("SELECT * FROM cards;", "SELECT * FROM cards")]
+    [InlineData("SELECT * FROM cards\n/", "SELECT * FROM cards")]
+    [InlineData("WITH c AS (SELECT 1 n FROM dual) SELECT * FROM c", "WITH c AS (SELECT 1 n FROM dual) SELECT * FROM c")]
+    public void A_query_is_counted_inside_an_inline_view(string sql, string inner) =>
+        Assert.Equal("SELECT COUNT(*) FROM (\n" + inner + "\n) jq_count", new OracleProvider().BuildCountQuery(sql.Replace("\\n", "\n", StringComparison.Ordinal)));
+
+    [Theory]
+    [InlineData("BEGIN NULL; END;")]
+    [InlineData("SELECT 1 FROM dual; SELECT 2 FROM dual")]
+    [InlineData("INSERT INTO t SELECT * FROM s")]
+    public void Other_text_is_not_counted(string sql) => Assert.Null(new OracleProvider().BuildCountQuery(sql));
+
     [Fact]
     public async Task The_provider_loads_as_an_extension_with_its_own_driver()
     {

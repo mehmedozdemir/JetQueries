@@ -64,7 +64,9 @@ public sealed class QueryDocumentTests
 
         var request = Assert.Single(env.Provider.Executed);
         Assert.Equal("SELECT * FROM cards", request.Sql);
-        Assert.Equal(QueryDocumentViewModel.MaxRows, request.MaxRows);
+        // Pages end on the client: the provider is not limited, and batches are one page.
+        Assert.Null(request.MaxRows);
+        Assert.Equal(QueryDocumentViewModel.DefaultFetchSize, request.BatchSize);
     }
 
     [Fact]

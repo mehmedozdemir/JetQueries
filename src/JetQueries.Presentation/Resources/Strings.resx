@@ -202,4 +202,21 @@
   <data name="ButtonDontSave" xml:space="preserve"><value>Don't save</value></data>
   <data name="SqlFiles" xml:space="preserve"><value>SQL files</value></data>
   <data name="AllFiles" xml:space="preserve"><value>All files</value></data>
+  <data name="QueryPaused" xml:space="preserve"><value>{0:N0} rows fetched; more may follow</value></data>
+  <data name="ResultFetched" xml:space="preserve"><value>{0:N0} rows fetched · {1} s ({2} s fetch) · {3}</value></data>
+  <data name="FetchSizeTip" xml:space="preserve"><value>Rows fetched per page</value></data>
+  <data name="FetchNextPageTip" xml:space="preserve"><value>Fetch the next page</value></data>
+  <data name="FetchAllTip" xml:space="preserve"><value>Fetch all rows</value></data>
+  <data name="CountRowsTip" xml:space="preserve"><value>Count all rows of the query without fetching them</value></data>
+  <data name="CountUnavailable" xml:space="preserve"><value>Only a single SELECT can be counted.</value></data>
+  <data name="CountFailed" xml:space="preserve"><value>Counting failed: {0}</value></data>
+  <data name="RefreshResultTip" xml:space="preserve"><value>Run the query again</value></data>
+  <data name="QueryRunShortTip" xml:space="preserve"><value>Run (F5, Ctrl+Enter)</value></data>
+  <data name="QueryCancelShortTip" xml:space="preserve"><value>Stop (Esc)</value></data>
+  <data name="FileSaveShortTip" xml:space="preserve"><value>Save (Ctrl+S)</value></data>
+  <data name="SectionQuery" xml:space="preserve"><value>QUERY</value></data>
+  <data name="FieldQueryButtons" xml:space="preserve"><value>Run, Cancel, Save</value></data>
+  <data name="QueryButtonsInTab" xml:space="preserve"><value>In each query tab (icons)</value></data>
+  <data name="QueryButtonsInToolbar" xml:space="preserve"><value>In the main toolbar</value></data>
+  <data name="FieldFetchSize" xml:space="preserve"><value>Rows per page</value></data>
 </root>

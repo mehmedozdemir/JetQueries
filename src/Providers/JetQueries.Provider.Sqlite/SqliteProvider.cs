@@ -17,7 +17,7 @@ public sealed class SqliteExtension : IExtension
 }
 
 /// <summary>Database provider for SQLite database files, on Microsoft.Data.Sqlite.</summary>
-public sealed class SqliteProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter
+public sealed class SqliteProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder
 {
     /// <summary>The provider identifier stored in connection profiles.</summary>
     public const string ProviderId = "sqlite";
@@ -55,6 +55,10 @@ public sealed class SqliteProvider : IDatabaseProvider, IConnectionSettingsProvi
     /// <inheritdoc />
     public IReadOnlyList<ScriptBatch> SplitBatches(string script) =>
         SqlStatementSplitter.Split(script, SqliteSyntax.Tokenizer.Tokenize(script), StatementBlockRule.TriggerBody);
+
+    /// <inheritdoc />
+    public string? BuildCountQuery(string sql) =>
+        CountQueryBuilder.Build(sql, SqliteSyntax.Tokenizer.Tokenize(sql), withAllowedInside: true, orderByNeedsPaging: false);
 
     /// <inheritdoc />
     public string QuoteIdentifier(string identifier) => SqliteNames.Quote(identifier);

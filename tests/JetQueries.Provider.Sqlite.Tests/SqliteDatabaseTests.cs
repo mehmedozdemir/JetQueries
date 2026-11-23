@@ -168,6 +168,19 @@ public sealed class SqliteDatabaseTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Row_counts_are_computed_without_fetching()
+    {
+        var provider = new SqliteProvider();
+        var count = provider.BuildCountQuery("-- all cards\nSELECT * FROM cards ORDER BY id;");
+        Assert.NotNull(count);
+        Assert.Equal(3L, (await RunAsync(count)).OfType<RowBatch>().Single().Rows[0][0]);
+        // The insert trigger turned the NULL balance into 0: one card has a positive balance.
+        Assert.Equal(1L, (await RunAsync(provider.BuildCountQuery("WITH c AS (SELECT * FROM cards) SELECT * FROM c WHERE balance > 0")!)).OfType<RowBatch>().Single().Rows[0][0]);
+        Assert.Null(provider.BuildCountQuery("UPDATE cards SET balance = 0"));
+        Assert.Null(provider.BuildCountQuery("SELECT 1; SELECT 2"));
+    }
+
+    [Fact]
     public async Task A_read_only_connection_cannot_write()
     {
         await using var readOnly = await new SqliteProvider().OpenConnectionAsync(

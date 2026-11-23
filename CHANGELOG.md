@@ -48,6 +48,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
   asked about when a tab closes; middle click closes a tab.
 - Workspace: open tabs (texts, files, connections, databases, selection) are saved while the application runs and
   restored at the next start; restored tabs wait for their own connection.
+- DBeaver-style paged results: the first page (fetch size, default 200) is fetched and the cursor stays open;
+  a footer under the grid with Refresh, page size, Next page, Fetch all (up to 1,000,000 rows), total row count
+  without fetching (SDK preview: `IRowCountQueryBuilder`, for SQL Server, Oracle, PostgreSQL, SQLite) and the
+  fetch line (rows, time, fetch time, clock).
+- Run, Stop and Save as icons in each query tab by default (Settings can move them to the main toolbar); the
+  query tab's connection list is gone, the database selector stays.
+
+### Changed
+- A result set may hold up to 1,000,000 rows (was 100,000), fetched page by page.
 
 ### Changed
 - View models, their service contracts and strings moved to `JetQueries.Presentation`, shared by both interfaces.

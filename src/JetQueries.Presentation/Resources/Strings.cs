@@ -185,6 +185,23 @@ public static class Strings
     public static string ButtonDontSave => Get(nameof(ButtonDontSave));
     public static string SqlFiles => Get(nameof(SqlFiles));
     public static string AllFiles => Get(nameof(AllFiles));
+    public static string QueryPaused => Get(nameof(QueryPaused));
+    public static string ResultFetched => Get(nameof(ResultFetched));
+    public static string FetchSizeTip => Get(nameof(FetchSizeTip));
+    public static string FetchNextPageTip => Get(nameof(FetchNextPageTip));
+    public static string FetchAllTip => Get(nameof(FetchAllTip));
+    public static string CountRowsTip => Get(nameof(CountRowsTip));
+    public static string CountUnavailable => Get(nameof(CountUnavailable));
+    public static string CountFailed => Get(nameof(CountFailed));
+    public static string RefreshResultTip => Get(nameof(RefreshResultTip));
+    public static string QueryRunShortTip => Get(nameof(QueryRunShortTip));
+    public static string QueryCancelShortTip => Get(nameof(QueryCancelShortTip));
+    public static string FileSaveShortTip => Get(nameof(FileSaveShortTip));
+    public static string SectionQuery => Get(nameof(SectionQuery));
+    public static string FieldQueryButtons => Get(nameof(FieldQueryButtons));
+    public static string QueryButtonsInTab => Get(nameof(QueryButtonsInTab));
+    public static string QueryButtonsInToolbar => Get(nameof(QueryButtonsInToolbar));
+    public static string FieldFetchSize => Get(nameof(FieldFetchSize));
 
     /// <summary>A string looked up by a computed name (for example <c>Setting_server</c>), or null if there is none.</summary>
     public static string? Find(string name) => Manager.GetString(name, CultureInfo.CurrentUICulture);
