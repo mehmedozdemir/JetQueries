@@ -15,7 +15,7 @@ namespace JetQueries.Provider.SqlServer;
 /// Naming convention of the objects returned: a database is <c>(null, null, database)</c>, a schema is
 /// <c>(database, null, schema)</c>, everything else is <c>(database, schema, name)</c>.
 /// </remarks>
-internal sealed class SqlServerMetadataProvider(SqlConnection connection) : IMetadataProvider
+internal sealed partial class SqlServerMetadataProvider(SqlConnection connection) : IMetadataProvider, IObjectDetailsProvider
 {
     // sys.objects.type codes per kind. Literals chosen here, never user input.
     private static readonly (DatabaseObjectKinds Kind, string[] Types)[] ObjectTypes =

@@ -255,7 +255,7 @@
   <data name="EditorToggleComment" xml:space="preserve"><value>Satırları yorum yap / aç</value></data>
   <data name="EditorUpperCase" xml:space="preserve"><value>Büyük harf</value></data>
   <data name="EditorLowerCase" xml:space="preserve"><value>Küçük harf</value></data>
-  <data name="EditorGoToDefinition" xml:space="preserve"><value>Tanıma git</value></data>
+  <data name="EditorGoToDefinition" xml:space="preserve"><value>Kaynağı yeni sekmede aç</value></data>
   <data name="EditorCompletion" xml:space="preserve"><value>Tamamlamayı göster</value></data>
   <data name="TabClose" xml:space="preserve"><value>Kapat</value></data>
   <data name="TabCloseOthers" xml:space="preserve"><value>Diğerlerini kapat</value></data>
@@ -375,4 +375,78 @@
   <data name="ExplorerDetails" xml:space="preserve"><value>Ayrıntılar</value></data>
   <data name="ExplorerScriptAlter" xml:space="preserve"><value>ALTER (nesneyi değiştir)</value></data>
   <data name="ExplorerScriptDrop" xml:space="preserve"><value>DROP</value></data>
+  <data name="DetailsNotFound" xml:space="preserve"><value>{0} bulunamadı ya da görme izniniz yok.</value></data>
+  <data name="DetailsProperties" xml:space="preserve"><value>Özellikler</value></data>
+  <data name="DetailsDdl" xml:space="preserve"><value>DDL</value></data>
+  <data name="DetailsOpenData" xml:space="preserve"><value>Verileri aç</value></data>
+  <data name="DetailsOpenDdl" xml:space="preserve"><value>Editörde aç</value></data>
+  <data name="DetailsRefresh" xml:space="preserve"><value>Yenile</value></data>
+  <data name="DetailsRowHint" xml:space="preserve"><value>Satırdaki nesneyi açmak için çift tıklayın.</value></data>
+  <data name="DetailsSource" xml:space="preserve"><value>Kaynak</value></data>
+  <data name="DetailsLoading" xml:space="preserve"><value>Katalog okunuyor…</value></data>
+  <data name="Detail_columns" xml:space="preserve"><value>Kolonlar</value></data>
+  <data name="Detail_constraints" xml:space="preserve"><value>Kısıtlar</value></data>
+  <data name="Detail_foreignKeys" xml:space="preserve"><value>Yabancı anahtarlar</value></data>
+  <data name="Detail_references" xml:space="preserve"><value>Referanslar</value></data>
+  <data name="Detail_indexes" xml:space="preserve"><value>İndeksler</value></data>
+  <data name="Detail_triggers" xml:space="preserve"><value>Tetikleyiciler</value></data>
+  <data name="Detail_dependencies" xml:space="preserve"><value>Bağımlılıklar</value></data>
+  <data name="Detail_parameters" xml:space="preserve"><value>Parametreler</value></data>
+  <data name="Detail_name" xml:space="preserve"><value>Ad</value></data>
+  <data name="Detail_position" xml:space="preserve"><value>#</value></data>
+  <data name="Detail_dataType" xml:space="preserve"><value>Veri tipi</value></data>
+  <data name="Detail_nullable" xml:space="preserve"><value>Null olabilir</value></data>
+  <data name="Detail_default" xml:space="preserve"><value>Varsayılan</value></data>
+  <data name="Detail_identity" xml:space="preserve"><value>Identity / hesaplanan</value></data>
+  <data name="Detail_key" xml:space="preserve"><value>Anahtar</value></data>
+  <data name="Detail_collation" xml:space="preserve"><value>Collation</value></data>
+  <data name="Detail_comment" xml:space="preserve"><value>Açıklama</value></data>
+  <data name="Detail_kind" xml:space="preserve"><value>Tür</value></data>
+  <data name="Detail_columnList" xml:space="preserve"><value>Kolonlar</value></data>
+  <data name="Detail_definition" xml:space="preserve"><value>Tanım</value></data>
+  <data name="Detail_table" xml:space="preserve"><value>Tablo</value></data>
+  <data name="Detail_referencedColumns" xml:space="preserve"><value>Başvurulan kolonlar</value></data>
+  <data name="Detail_onDelete" xml:space="preserve"><value>Silmede</value></data>
+  <data name="Detail_onUpdate" xml:space="preserve"><value>Güncellemede</value></data>
+  <data name="Detail_unique" xml:space="preserve"><value>Tekil</value></data>
+  <data name="Detail_included" xml:space="preserve"><value>Dahil edilen</value></data>
+  <data name="Detail_filter" xml:space="preserve"><value>Filtre</value></data>
+  <data name="Detail_status" xml:space="preserve"><value>Durum</value></data>
+  <data name="Detail_events" xml:space="preserve"><value>Olaylar</value></data>
+  <data name="Detail_direction" xml:space="preserve"><value>Yön</value></data>
+  <data name="Detail_objectType" xml:space="preserve"><value>Tür</value></data>
+  <data name="Detail_schema" xml:space="preserve"><value>Şema</value></data>
+  <data name="Detail_database" xml:space="preserve"><value>Veritabanı</value></data>
+  <data name="Detail_created" xml:space="preserve"><value>Oluşturulma</value></data>
+  <data name="Detail_modified" xml:space="preserve"><value>Değiştirilme</value></data>
+  <data name="Detail_rows" xml:space="preserve"><value>Satır (tahmini)</value></data>
+  <data name="Detail_size" xml:space="preserve"><value>Boyut</value></data>
+  <data name="Detail_tablespace" xml:space="preserve"><value>Tablespace / filegroup</value></data>
+  <data name="Kind_Table" xml:space="preserve"><value>Tablo</value></data>
+  <data name="Kind_View" xml:space="preserve"><value>Görünüm</value></data>
+  <data name="Kind_Procedure" xml:space="preserve"><value>Prosedür</value></data>
+  <data name="Kind_Function" xml:space="preserve"><value>Fonksiyon</value></data>
+  <data name="Kind_Package" xml:space="preserve"><value>Paket</value></data>
+  <data name="Kind_PackageBody" xml:space="preserve"><value>Paket gövdesi</value></data>
+  <data name="Kind_Sequence" xml:space="preserve"><value>Sekans</value></data>
+  <data name="Kind_Synonym" xml:space="preserve"><value>Eş anlamlı</value></data>
+  <data name="Kind_Trigger" xml:space="preserve"><value>Tetikleyici</value></data>
+  <data name="Kind_Type" xml:space="preserve"><value>Tip</value></data>
+  <data name="EditorShowDetails" xml:space="preserve"><value>Nesne ayrıntıları</value></data>
+  <data name="MenuFile" xml:space="preserve"><value>_Dosya</value></data>
+  <data name="MenuConnection" xml:space="preserve"><value>_Bağlantı</value></data>
+  <data name="MenuQuery" xml:space="preserve"><value>_Sorgu</value></data>
+  <data name="MenuView" xml:space="preserve"><value>_Görünüm</value></data>
+  <data name="MenuTools" xml:space="preserve"><value>_Araçlar</value></data>
+  <data name="MenuExit" xml:space="preserve"><value>Çıkış</value></data>
+  <data name="MenuSaveAs" xml:space="preserve"><value>Farklı kaydet…</value></data>
+  <data name="MenuHistory" xml:space="preserve"><value>Sorgu geçmişi</value></data>
+  <data name="MenuExplorer" xml:space="preserve"><value>Gezgin</value></data>
+  <data name="MenuImportConnections" xml:space="preserve"><value>Bağlantıları içe aktar…</value></data>
+  <data name="MenuGoToObject" xml:space="preserve"><value>Nesneye git…</value></data>
+  <data name="MenuTheme" xml:space="preserve"><value>Koyu tema</value></data>
+  <data name="MenuSettings" xml:space="preserve"><value>Ayarlar…</value></data>
+  <data name="HistoryWindowTitle" xml:space="preserve"><value>Sorgu geçmişi</value></data>
+  <data name="HistoryCopy" xml:space="preserve"><value>Kopyala</value></data>
+  <data name="ConnectionAdvanced" xml:space="preserve"><value>Gelişmiş</value></data>
 </root>

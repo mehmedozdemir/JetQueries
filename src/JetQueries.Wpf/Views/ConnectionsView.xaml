@@ -54,6 +54,9 @@
             <TreeView x:Name="Tree" ItemsSource="{Binding Roots}" BorderThickness="0" Background="Transparent" Padding="4,6"
                       Visibility="{Binding IsEmpty, Converter={x:Static v:InverseBoolToVisibilityConverter.Instance}}"
                       SelectedItemChanged="OnSelectedItemChanged" MouseDoubleClick="OnTreeDoubleClick">
+                <TreeView.InputBindings>
+                    <KeyBinding Key="F4" Command="{Binding OpenDetailsCommand}" />
+                </TreeView.InputBindings>
                 <TreeView.ItemContainerStyle>
                     <Style TargetType="TreeViewItem" BasedOn="{StaticResource {x:Type TreeViewItem}}">
                         <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />

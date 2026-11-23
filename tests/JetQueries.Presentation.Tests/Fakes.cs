@@ -230,6 +230,9 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
 
     public string? MetadataError { get; set; }
 
+    /// <summary>What the details view reads; null: the catalog has no such object.</summary>
+    public Func<DatabaseObject, ObjectDetails?> Details { get; set; } = static _ => null;
+
     /// <summary>Every request that reached the "database".</summary>
     public List<QueryRequest> Executed { get; } = [];
 
@@ -454,8 +457,14 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
     }
 
     /// <summary>A small fixed catalog: databases Cards and master, schemas dbo and kart, a few objects in dbo.</summary>
-    private sealed class FakeMetadata(FakeProvider owner) : IMetadataProvider
+    private sealed class FakeMetadata(FakeProvider owner) : IMetadataProvider, IObjectDetailsProvider
     {
+        public Task<ObjectDetails?> GetDetailsAsync(DatabaseObject target, CancellationToken cancellationToken)
+        {
+            owner.MetadataCalls.Add($"details:{target.Name}");
+            return Task.FromResult(owner.Details(target));
+        }
+
         public async IAsyncEnumerable<DatabaseObject> GetObjectsAsync(
             DatabaseObject? parent, DatabaseObjectKinds kinds, [EnumeratorCancellation] CancellationToken cancellationToken)
         {

@@ -233,6 +233,81 @@ public sealed class SqlServerIntegrationTests(SqlServerFixture fixture) : IClass
     }
 
     [Fact]
+    public async Task Object_details_list_columns_keys_references_indexes_triggers_and_dependencies()
+    {
+        await using var connection = await OpenAsync();
+        var database = "jq_" + Guid.NewGuid().ToString("N")[..8];
+        await RunAsync(connection, $"CREATE DATABASE [{database}];");
+        await RunAsync(connection, $"""
+            EXEC [{database}].sys.sp_executesql N'CREATE TABLE dbo.Kart (
+                Id int IDENTITY(1,1) NOT NULL CONSTRAINT PK_Kart PRIMARY KEY, No varchar(19) NOT NULL CONSTRAINT UQ_Kart_No UNIQUE,
+                Bakiye decimal(12,2) NOT NULL CONSTRAINT DF_Kart_Bakiye DEFAULT (0) CONSTRAINT CK_Kart_Bakiye CHECK (Bakiye >= 0),
+                Toplam AS (Bakiye * 2))';
+            EXEC [{database}].sys.sp_executesql N'CREATE TABLE dbo.Hareket (
+                Id int NOT NULL PRIMARY KEY, KartId int NOT NULL CONSTRAINT FK_Hareket_Kart REFERENCES dbo.Kart (Id) ON DELETE CASCADE, Tutar money NULL)';
+            EXEC [{database}].sys.sp_executesql N'CREATE INDEX IX_Hareket_Kart ON dbo.Hareket (KartId DESC) INCLUDE (Tutar) WHERE Tutar IS NOT NULL';
+            EXEC [{database}].sys.sp_executesql N'CREATE TRIGGER dbo.Kart_Izle ON dbo.Kart AFTER INSERT, UPDATE AS BEGIN SET NOCOUNT ON; END';
+            EXEC [{database}].sys.sp_executesql N'CREATE VIEW dbo.KartOzet AS SELECT k.Id, k.No FROM dbo.Kart k';
+            EXEC [{database}].sys.sp_executesql N'CREATE PROCEDURE dbo.KartBul @no varchar(19), @adet int = 5 OUTPUT AS SELECT * FROM dbo.Kart WHERE No = @no';
+            EXEC [{database}].sys.sp_executesql N'CREATE SEQUENCE dbo.Sira START WITH 100 INCREMENT BY 5';
+            """);
+        var details = (IObjectDetailsProvider)connection.Metadata;
+        var kart = new DatabaseObject(new DatabaseObjectName(database, "dbo", "Kart"), DatabaseObjectKinds.Table);
+
+        var table = await details.GetDetailsAsync(kart, Token);
+        Assert.NotNull(table);
+        Assert.Equal("USER TABLE", table.Properties.Single(static p => p.Key == ObjectDetailKeys.ObjectType).Value);
+        Assert.Equal("0", table.Properties.Single(static p => p.Key == ObjectDetailKeys.Rows).Value);
+        ObjectDetailSection Section(ObjectDetails d, string key) => d.Sections.Single(s => s.Key == key);
+        string?[] Row(ObjectDetailSection section, string first) => [.. section.Rows.Single(r => r.Cells[0] == first || r.Cells[1] == first).Cells];
+
+        var columns = Section(table, ObjectDetailKeys.Columns);
+        Assert.Equal("1|Id|int|||IDENTITY(1, 1)|PK||", string.Join('|', Row(columns, "Id")));
+        Assert.Equal("((0))", Row(columns, "Bakiye")[4]);
+        Assert.Equal("AS ([Bakiye]*(2))", Row(columns, "Toplam")[5]);
+
+        var constraints = Section(table, ObjectDetailKeys.Constraints);
+        Assert.Equal(["PK_Kart", "UQ_Kart_No", "CK_Kart_Bakiye", "DF_Kart_Bakiye"], constraints.Rows.Select(static r => r.Cells[0]));
+        Assert.Equal("PRIMARY KEY", Row(constraints, "PK_Kart")[1]);
+        Assert.Equal("([Bakiye]>=(0))", Row(constraints, "CK_Kart_Bakiye")[3]);
+
+        var references = Section(table, ObjectDetailKeys.References);
+        var reference = Assert.Single(references.Rows);
+        Assert.Equal("FK_Hareket_Kart|dbo.Hareket|KartId|Id|CASCADE|NO ACTION", string.Join('|', reference.Cells));
+        Assert.Equal(new DatabaseObject(new DatabaseObjectName(database, "dbo", "Hareket"), DatabaseObjectKinds.Table), reference.Target);
+        Assert.DoesNotContain(table.Sections, static s => s.Key == ObjectDetailKeys.ForeignKeys);
+
+        var trigger = Assert.Single(Section(table, ObjectDetailKeys.Triggers).Rows);
+        Assert.Equal("Kart_Izle|AFTER|INSERT, UPDATE|enabled", string.Join('|', trigger.Cells));
+        Assert.Contains("CREATE TRIGGER dbo.Kart_Izle", trigger.Source, StringComparison.Ordinal);
+        Assert.Contains(Section(table, ObjectDetailKeys.Dependencies).Rows, static r => r.Cells[0] == "used by" && r.Cells[1] == "dbo.KartOzet");
+
+        var hareket = await details.GetDetailsAsync(new DatabaseObject(new DatabaseObjectName(database, "dbo", "Hareket"), DatabaseObjectKinds.Table), Token);
+        var foreignKey = Assert.Single(Section(hareket!, ObjectDetailKeys.ForeignKeys).Rows);
+        Assert.Equal("FK_Hareket_Kart|KartId|dbo.Kart|Id|CASCADE|NO ACTION|", string.Join('|', foreignKey.Cells));
+        Assert.Equal(kart, foreignKey.Target);
+        var index = Row(Section(hareket!, ObjectDetailKeys.Indexes), "IX_Hareket_Kart");
+        Assert.Equal("IX_Hareket_Kart|NONCLUSTERED||KartId DESC|Tutar|([Tutar] IS NOT NULL)|", string.Join('|', index));
+
+        var procedure = await details.GetDetailsAsync(new DatabaseObject(new DatabaseObjectName(database, "dbo", "KartBul"), DatabaseObjectKinds.Procedure), Token);
+        var parameters = Section(procedure!, ObjectDetailKeys.Parameters);
+        Assert.Equal(["1|@no|varchar(19)|IN|", "2|@adet|int|OUT|"], parameters.Rows.Select(static r => string.Join('|', r.Cells)));
+        Assert.Contains(Section(procedure!, ObjectDetailKeys.Dependencies).Rows, static r => r.Cells[0] == "uses" && r.Cells[1] == "dbo.Kart");
+
+        var sequence = await details.GetDetailsAsync(new DatabaseObject(new DatabaseObjectName(database, "dbo", "Sira"), DatabaseObjectKinds.Sequence), Token);
+        Assert.Equal("100", sequence!.Properties.Single(static p => p.Key == "start").Value);
+        Assert.Equal("5", sequence.Properties.Single(static p => p.Key == "increment").Value);
+
+        Assert.Null(await details.GetDetailsAsync(new DatabaseObject(new DatabaseObjectName(database, "dbo", "Yok"), DatabaseObjectKinds.Table), Token));
+
+        // The explorer's ALTER of the view runs as written.
+        var view = new DatabaseObject(new DatabaseObjectName(database, "dbo", "KartOzet"), DatabaseObjectKinds.View);
+        var alter = new SqlServerProvider().ScriptAlter(view, (await connection.Metadata.GetDefinitionAsync(view, Token))!);
+        Assert.StartsWith("ALTER VIEW dbo.KartOzet", alter, StringComparison.Ordinal);
+        await RunAsync(connection, $"EXEC [{database}].sys.sp_executesql N'{alter!.Replace("'", "''", StringComparison.Ordinal)}'");
+    }
+
+    [Fact]
     public async Task An_open_cursor_on_a_large_result_closes_quickly_after_a_page()
     {
         await using var connection = await OpenAsync();

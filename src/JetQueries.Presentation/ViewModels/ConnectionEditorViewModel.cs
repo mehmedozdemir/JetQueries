@@ -59,6 +59,15 @@ public partial class SettingFieldViewModel : ObservableObject
 
     public bool IsFilePath => Descriptor.Kind == ConnectionSettingKind.FilePath;
 
+    /// <summary>
+    /// Fine-tuning rather than where to connect: optional switches and numbers (timeouts, certificate trust…),
+    /// shown under "Advanced" so that the form stays short.
+    /// </summary>
+    public bool IsAdvanced => !IsRequired && Descriptor.Kind is ConnectionSettingKind.Boolean or ConnectionSettingKind.Number;
+
+    /// <summary>Whether the value differs from the descriptor's default (an advanced field like that opens its section).</summary>
+    public bool IsChanged => !string.Equals(Value.Trim(), Descriptor.DefaultValue ?? string.Empty, StringComparison.OrdinalIgnoreCase);
+
     public IReadOnlyList<ConnectionSettingOption> Options => Descriptor.Options;
 
     [ObservableProperty]
@@ -230,6 +239,7 @@ public partial class ConnectionEditorViewModel : ObservableObject
             field.SelectedOption = field.Descriptor.Options.FirstOrDefault(o => string.Equals(o.Value, value, StringComparison.OrdinalIgnoreCase));
         }
 
+        ShowAdvanced = Fields.Any(static f => f.IsAdvanced && f.IsChanged);
         UpdateNeedsCredential();
         if (NeedsCredential && parsed.UserName is { Length: > 0 } user)
         {
@@ -393,7 +403,20 @@ public partial class ConnectionEditorViewModel : ObservableObject
         }
 
         UpdateNeedsCredential();
+        OnPropertyChanged(nameof(FieldColumns));
+        OnPropertyChanged(nameof(HasAdvancedFields));
+        ShowAdvanced = Fields.Any(static f => f.IsAdvanced && f.IsChanged);
     }
+
+    /// <summary>Columns of the main fields: two, or one when a file path needs the width.</summary>
+    public int FieldColumns => Fields.Any(static f => f.IsFilePath) ? 1 : 2;
+
+    /// <summary>Whether the type has fields under "Advanced".</summary>
+    public bool HasAdvancedFields => Fields.Any(static f => f.IsAdvanced);
+
+    /// <summary>Whether "Advanced" is open (it opens by itself when one of its fields is not at its default).</summary>
+    [ObservableProperty]
+    public partial bool ShowAdvanced { get; set; }
 
     private void OnFieldChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {

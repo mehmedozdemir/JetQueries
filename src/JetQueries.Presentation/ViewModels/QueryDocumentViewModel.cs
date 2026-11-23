@@ -454,6 +454,41 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
             cancellationToken).Completion;
     }
 
+    /// <summary>Raised when the details view of the object under the caret should open (Ctrl+Click, F12).</summary>
+    public event EventHandler<ObjectDetailsRequest>? DetailsRequested;
+
+    /// <summary>Finds what the name at <paramref name="offset"/> refers to and opens its details view.</summary>
+    public async Task ShowDetailsAsync(string text, int offset)
+    {
+        if (SelectedSession?.Session is not { Provider.LanguageService: { } service } session)
+        {
+            return;
+        }
+
+        try
+        {
+            var document = Document(text, new SessionMetadataProvider(session, _metadata));
+            var definition = await _jobs.Enqueue("Find object", context => service.GetDefinitionAsync(document, offset, context.CancellationToken), JobPriority.High).Completion;
+            if (definition?.Target is { } target)
+            {
+                DetailsRequested?.Invoke(this, new ObjectDetailsRequest(session.Definition.Id, target));
+            }
+            else
+            {
+                Status = Strings.DefinitionNotFound;
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+#pragma warning disable CA1031 // Navigation is a convenience; the server's reason is shown, nothing else is disturbed.
+        catch (Exception ex)
+#pragma warning restore CA1031
+        {
+            Status = ex.Message;
+        }
+    }
+
     /// <summary>Finds what the name at <paramref name="offset"/> refers to and opens its source in a new tab.</summary>
     public async Task GoToDefinitionAsync(string text, int offset)
     {

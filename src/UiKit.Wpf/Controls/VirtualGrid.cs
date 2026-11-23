@@ -223,6 +223,16 @@ public sealed class VirtualGrid : FrameworkElement
         set => SetValue(ShowFilterButtonsProperty, value);
     }
 
+    /// <summary>The small kind marks (#, 1.2, Aa, date, check) before header names; off for plain tables of text.</summary>
+    public static readonly DependencyProperty ShowTypeTagsProperty = DependencyProperty.Register(nameof(ShowTypeTags), typeof(bool), typeof(VirtualGrid),
+        new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsRender | FrameworkPropertyMetadataOptions.AffectsArrange));
+
+    public bool ShowTypeTags
+    {
+        get => (bool)GetValue(ShowTypeTagsProperty);
+        set => SetValue(ShowTypeTagsProperty, value);
+    }
+
     public static readonly DependencyProperty ShowRowNumbersProperty = DependencyProperty.Register(nameof(ShowRowNumbers), typeof(bool), typeof(VirtualGrid),
         new FrameworkPropertyMetadata(true, (d, _) => ((VirtualGrid)d).RecomputeLayout()));
 
@@ -827,7 +837,7 @@ public sealed class VirtualGrid : FrameworkElement
         }
     }
 
-    private double TypeTagWidth(int column) => _source.GetColumnKind(column) switch
+    private double TypeTagWidth(int column) => !ShowTypeTags ? -6 : _source.GetColumnKind(column) switch
     {
         GridColumnKind.DateTime or GridColumnKind.Boolean => 13,
         var kind => _smallText?.Measure(TypeTag(kind), _pixelsPerDip) ?? 14,
@@ -842,6 +852,8 @@ public sealed class VirtualGrid : FrameworkElement
 
     private void DrawTypeTag(DrawingContext dc, int column, double x, double smallBaseline, double iconBaseline)
     {
+        if (!ShowTypeTags)
+            return;
         switch (_source.GetColumnKind(column))
         {
             case GridColumnKind.DateTime:

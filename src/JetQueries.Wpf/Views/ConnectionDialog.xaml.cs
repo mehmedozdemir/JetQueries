@@ -67,6 +67,7 @@ public partial class ConnectionDialog : Window
         if (e.PropertyName == nameof(ConnectionEditorViewModel.TestFailed))
         {
             TestResult.SetResourceReference(System.Windows.Controls.TextBlock.ForegroundProperty, _viewModel.TestFailed ? "Brush.Danger" : "Brush.Success");
+            TestResultCard.SetResourceReference(System.Windows.Controls.Border.BorderBrushProperty, _viewModel.TestFailed ? "Brush.Danger" : "Brush.Success");
         }
     }
 

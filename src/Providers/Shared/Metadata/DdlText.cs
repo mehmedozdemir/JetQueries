@@ -7,7 +7,7 @@ namespace JetQueries.Providers.Metadata;
 internal static partial class DdlText
 {
     // Leading blanks and comments, then CREATE [OR ALTER | OR REPLACE] [EDITIONABLE | NONEDITIONABLE].
-    [GeneratedRegex(@"\A(?<lead>(?:\s+|--[^\n]*\n|/\*.*?\*/)*)CREATE(?:\s+OR\s+(?:ALTER|REPLACE))?(?:\s+(?:EDITIONABLE|NONEDITIONABLE))?\b",
+    [GeneratedRegex(@"\A(?<lead>(?:\s+|--[^\n]*\n|/\*.*?\*/)*)CREATE(?:\s+OR\s+(?:ALTER|REPLACE))?(?:\s+(?:EDITIONABLE|NONEDITIONABLE))?\b[ \t]*",
         RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.CultureInvariant)]
     private static partial Regex LeadingCreate();
 
@@ -16,7 +16,7 @@ internal static partial class DdlText
     {
         ArgumentNullException.ThrowIfNull(definition);
         var match = LeadingCreate().Match(definition);
-        return match.Success ? match.Groups["lead"].Value + head + definition[match.Length..] : null;
+        return match.Success ? match.Groups["lead"].Value + head + " " + definition[match.Length..].TrimStart(' ', '	') : null;
     }
 
     /// <summary>The keyword of a kind in DROP statements (TABLE, VIEW, …); null for kinds that are not dropped by name.</summary>

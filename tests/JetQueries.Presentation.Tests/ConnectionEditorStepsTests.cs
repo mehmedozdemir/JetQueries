@@ -151,6 +151,30 @@ public sealed class ConnectionEditorStepsTests
     }
 
     [Fact]
+    public async Task Fine_tuning_fields_wait_under_advanced_until_one_is_set()
+    {
+        await using var env = new TestEnvironment();
+        var editor = SqlServerForm(env);
+
+        Assert.Equal(["trustServerCertificate", "readOnlyIntent", "connectTimeoutSeconds"], editor.Fields.Where(static f => f.IsAdvanced).Select(static f => f.Key));
+        Assert.True(editor.HasAdvancedFields);
+        Assert.False(editor.ShowAdvanced);
+        Assert.Equal(2, editor.FieldColumns);
+
+        editor.ConnectionString = "Server=db;Database=x;Integrated Security=true;TrustServerCertificate=true";
+        editor.ApplyConnectionStringCommand.Execute(null);
+        Assert.True(editor.ShowAdvanced);
+
+        // A saved connection with a changed timeout opens with Advanced open.
+        var existing = new ConnectionDefinition
+        {
+            Id = Guid.NewGuid(), Name = "x", ProviderId = SqlServerProvider.ProviderId,
+            Settings = new Dictionary<string, string> { ["server"] = "db", ["connectTimeoutSeconds"] = "60" },
+        };
+        Assert.True(Editor(env, existing).ShowAdvanced);
+    }
+
+    [Fact]
     public async Task Cancel_forgets_the_pasted_text()
     {
         await using var env = new TestEnvironment();

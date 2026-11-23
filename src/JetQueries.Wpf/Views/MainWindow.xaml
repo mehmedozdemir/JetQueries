@@ -13,6 +13,7 @@
         <KeyBinding Gesture="Ctrl+S" Command="{Binding Documents.SaveCommand}" />
         <KeyBinding Gesture="Ctrl+Shift+S" Command="{Binding Documents.SaveAsCommand}" />
         <KeyBinding Gesture="Ctrl+Shift+N" Command="{Binding GoToObjectCommand}" />
+        <KeyBinding Gesture="Ctrl+Shift+H" Command="{Binding ShowHistoryCommand}" />
     </Window.InputBindings>
 
     <Grid>
@@ -35,7 +36,43 @@
                         </Border.Background>
                         <TextBlock Text="{x:Static c:Icons.Database}" Style="{StaticResource Text.Icon}" Foreground="White" FontSize="15" />
                     </Border>
-                    <TextBlock Text="JetQueries" FontSize="{DynamicResource FontSize.Subtitle}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,10,0" />
+                    <TextBlock Text="JetQueries" FontSize="{DynamicResource FontSize.Subtitle}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" />
+
+                    <!-- Main menu -->
+                    <Menu x:Name="MainMenu" VerticalAlignment="Center" Margin="0,0,6,0">
+                        <MenuItem Header="{x:Static res:Strings.MenuFile}">
+                            <MenuItem Header="{x:Static res:Strings.QueryNew}" c:Ui.Icon="{x:Static c:Icons.Add}" InputGestureText="Ctrl+N" Command="{Binding Documents.NewQueryCommand}" />
+                            <MenuItem Header="{x:Static res:Strings.FileOpen}" c:Ui.Icon="{x:Static c:Icons.OpenFile}" InputGestureText="Ctrl+O" Command="{Binding Documents.OpenFileCommand}" />
+                            <MenuItem Header="{x:Static res:Strings.FileSave}" c:Ui.Icon="{x:Static c:Icons.Save}" InputGestureText="Ctrl+S" Command="{Binding Documents.SaveCommand}" />
+                            <MenuItem Header="{x:Static res:Strings.MenuSaveAs}" InputGestureText="Ctrl+Shift+S" Command="{Binding Documents.SaveAsCommand}" />
+                            <Separator />
+                            <MenuItem Header="{x:Static res:Strings.MenuExit}" InputGestureText="Alt+F4" Click="OnExit" />
+                        </MenuItem>
+                        <MenuItem Header="{x:Static res:Strings.MenuConnection}">
+                            <MenuItem Header="{x:Static res:Strings.ConnectionNewLong}" c:Ui.Icon="{x:Static c:Icons.Plug}" Command="{Binding Connections.NewCommand}" />
+                            <MenuItem Header="{x:Static res:Strings.MenuImportConnections}" c:Ui.Icon="&#xE8B5;" Command="{Binding Connections.ImportCommand}" />
+                            <Separator />
+                            <MenuItem Header="{Binding Connections.ToggleConnectionText}" Command="{Binding Connections.ToggleConnectionCommand}" />
+                            <MenuItem Header="{x:Static res:Strings.ExplorerRefresh}" c:Ui.Icon="{x:Static c:Icons.Refresh}" Command="{Binding Connections.ReloadSelectedCommand}" />
+                            <Separator />
+                            <MenuItem Header="{x:Static res:Strings.MenuGoToObject}" c:Ui.Icon="{x:Static c:Icons.Search}" InputGestureText="Ctrl+Shift+N" Command="{Binding GoToObjectCommand}" />
+                        </MenuItem>
+                        <MenuItem Header="{x:Static res:Strings.MenuQuery}">
+                            <MenuItem Header="{x:Static res:Strings.QueryRun}" c:Ui.Icon="{x:Static c:Icons.Play}" InputGestureText="F5" Command="{Binding Documents.Selected.RunCommand}" />
+                            <MenuItem Header="{x:Static res:Strings.QueryRunInNewTab}" c:Ui.Icon="&#xE8A7;" InputGestureText="Ctrl+Shift+Enter" Command="{Binding Documents.Selected.RunInNewTabCommand}" />
+                            <MenuItem Header="{x:Static res:Strings.QueryCancel}" c:Ui.Icon="{x:Static c:Icons.Stop}" InputGestureText="Esc" Command="{Binding Documents.Selected.CancelCommand}" />
+                        </MenuItem>
+                        <MenuItem Header="{x:Static res:Strings.MenuView}">
+                            <MenuItem x:Name="ExplorerMenuItem" Header="{x:Static res:Strings.MenuExplorer}" IsCheckable="True" IsChecked="True" Click="OnToggleExplorer" />
+                            <MenuItem Header="{x:Static res:Strings.MenuTheme}" IsCheckable="True" IsChecked="{Binding IsDark, Mode=OneWay}" Command="{Binding ToggleThemeCommand}" />
+                        </MenuItem>
+                        <MenuItem Header="{x:Static res:Strings.MenuTools}">
+                            <MenuItem Header="{x:Static res:Strings.MenuHistory}" c:Ui.Icon="{x:Static c:Icons.History}" InputGestureText="Ctrl+Shift+H" Command="{Binding ShowHistoryCommand}" />
+                            <Separator />
+                            <MenuItem Header="{x:Static res:Strings.MenuSettings}" c:Ui.Icon="{x:Static c:Icons.Settings}" Command="{Binding OpenSettingsCommand}" />
+                        </MenuItem>
+                    </Menu>
+                    <Border Style="{StaticResource Separator.Vertical}" />
 
                     <Button Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.Plug}" Content="{x:Static res:Strings.ConnectionNewLong}"
                             Command="{Binding Connections.NewCommand}" />
@@ -68,24 +105,17 @@
         <!-- ================= Body ================= -->
         <Grid Grid.Row="1" Margin="{StaticResource Space.Page.Compact}">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="280" MinWidth="200" />
+                <ColumnDefinition x:Name="ExplorerColumn" Width="280" MinWidth="200" />
                 <ColumnDefinition Width="8" />
                 <ColumnDefinition Width="*" MinWidth="320" />
             </Grid.ColumnDefinitions>
 
-            <!-- Explorer and history -->
-            <Border Style="{StaticResource Card.Surface}">
-                <TabControl x:Name="SideTabs" Padding="0">
-                    <TabItem Header="{x:Static res:Strings.ExplorerTab}" c:Ui.Icon="{x:Static c:Icons.Database}">
-                        <v:ConnectionsView DataContext="{Binding Connections}" />
-                    </TabItem>
-                    <TabItem Header="{x:Static res:Strings.HistoryTab}" c:Ui.Icon="{x:Static c:Icons.History}">
-                        <v:HistoryView DataContext="{Binding History}" />
-                    </TabItem>
-                </TabControl>
+            <!-- Explorer (the history has its own window: Tools, Query history) -->
+            <Border x:Name="ExplorerPanel" Style="{StaticResource Card.Surface}">
+                <v:ConnectionsView DataContext="{Binding Connections}" />
             </Border>
 
-            <GridSplitter Grid.Column="1" Width="8" HorizontalAlignment="Stretch" ResizeBehavior="PreviousAndNext" />
+            <GridSplitter x:Name="ExplorerSplitter" Grid.Column="1" Width="8" HorizontalAlignment="Stretch" ResizeBehavior="PreviousAndNext" />
 
             <!-- Query tabs -->
             <v:DocumentsView Grid.Column="2" DataContext="{Binding Documents}" />

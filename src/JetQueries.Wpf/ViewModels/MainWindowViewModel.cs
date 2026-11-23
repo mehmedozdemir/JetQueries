@@ -2,6 +2,9 @@ using System.Globalization;
 using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using JetQueries.Core.Connections;
+using JetQueries.Core.Jobs;
+using JetQueries.Core.Metadata;
 using JetQueries.Sdk;
 using JetQueries.Wpf.Services;
 
@@ -13,11 +16,18 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly IThemeService _themeService;
     private readonly IUiDispatcher _ui;
     private readonly ISettingsDialog? _settings;
+    private readonly IConnectionManager? _manager;
+    private readonly IMetadataService? _metadata;
+    private readonly IJobQueue? _jobs;
 
+    /// <param name="manager">Open sessions, for object details; without it (tests) details are not shown.</param>
     public MainWindowViewModel(
         IThemeService themeService, IUiDispatcher ui, ConnectionsViewModel connections, DocumentsViewModel documents, HistoryViewModel history,
-        ISettingsDialog? settings = null)
+        ISettingsDialog? settings = null, IConnectionManager? manager = null, IMetadataService? metadata = null, IJobQueue? jobs = null)
     {
+        _manager = manager;
+        _metadata = metadata;
+        _jobs = jobs;
         ArgumentNullException.ThrowIfNull(themeService);
         ArgumentNullException.ThrowIfNull(connections);
         ArgumentNullException.ThrowIfNull(documents);
@@ -31,6 +41,10 @@ public partial class MainWindowViewModel : ObservableObject
 
         // "New query" on an explorer node opens a tab on its connection and database.
         connections.NewQueryRequested += (_, request) => _ = documents.OpenAsync(request);
+
+        // Details of an object: from the explorer (Details, F4) and from the editor (Ctrl+Click, F12).
+        connections.DetailsRequested += (_, request) => ShowDetails(request);
+        documents.DetailsRequested += (_, request) => ShowDetails(request);
 
         // A new query starts on the connection that is selected in the explorer.
         connections.PropertyChanged += (_, e) =>
@@ -78,6 +92,31 @@ public partial class MainWindowViewModel : ObservableObject
     /// <summary>Go to object (Ctrl+Shift+N).</summary>
     [RelayCommand]
     private void GoToObject() => GoToObjectRequested?.Invoke(this, new GoToObjectViewModel(Connections, _ui));
+
+    /// <summary>Raised with the view model of an object's details window (the view reuses an open one for the same object).</summary>
+    public event EventHandler<ObjectDetailsViewModel>? DetailsRequested;
+
+    /// <summary>Raised to show the query history window.</summary>
+    public event EventHandler? HistoryRequested;
+
+    /// <summary>Opens the details of an object on an open connection.</summary>
+    public void ShowDetails(ObjectDetailsRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        if (_manager?.Sessions.FirstOrDefault(s => s.Definition.Id == request.ConnectionId) is not { } session || _metadata is null || _jobs is null)
+        {
+            return;
+        }
+
+        var details = new ObjectDetailsViewModel(session, request.Target, _metadata, _jobs);
+        details.NewQueryRequested += (_, query) => _ = Documents.OpenAsync(query);
+        details.DetailsRequested += (_, next) => ShowDetails(next);
+        DetailsRequested?.Invoke(this, details);
+    }
+
+    /// <summary>Main menu: Tools, Query history.</summary>
+    [RelayCommand]
+    private void ShowHistory() => HistoryRequested?.Invoke(this, EventArgs.Empty);
 
     [RelayCommand]
     private void ToggleTheme() => _themeService.Toggle();

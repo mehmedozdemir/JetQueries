@@ -88,27 +88,29 @@ public sealed class ShellRenderTests
             var dialog = new ConnectionDialog(editor) { Left = -20000, Top = 0, ShowActivated = false };
             dialog.Show();
 
+            // The history has its own window (Tools, Query history), opened once and reused.
+            var historyWindow = window.ShowHistory(shell);
+            historyWindow.Left = -20000;
+            Assert.Same(historyWindow, window.ShowHistory(shell));
+            history.Selected = history.Entries[0];
+            await Idle();
+            Assert.Equal(history.Entries[0].Entry.Sql, historyWindow.PreviewText);
+
             foreach (var theme in new[] { AppTheme.Dark, AppTheme.Light })
             {
                 ThemeManager.Apply(theme, save: false);
                 var suffix = theme == AppTheme.Dark ? "dark" : "light";
-                window.FindName("SideTabs");
-                ((TabControl)window.FindName("SideTabs")).SelectedIndex = 0;
                 await Idle();
                 results[$"window-{suffix}"] = Capture(window, Path.Combine(directory, $"wpf-window-{suffix}.png"));
-                ((TabControl)window.FindName("SideTabs")).SelectedIndex = 1;
-                query.SelectedTab = query.Messages;
-                await Idle();
-                results[$"history-{suffix}"] = Capture(window, Path.Combine(directory, $"wpf-history-{suffix}.png"));
-                query.SelectedTab = query.Tabs[0];
+                results[$"history-{suffix}"] = Capture(historyWindow, Path.Combine(directory, $"wpf-history-{suffix}.png"));
                 results[$"dialog-{suffix}"] = Capture(dialog, Path.Combine(directory, $"wpf-dialog-{suffix}.png"));
             }
 
             dialog.Close();
+            historyWindow.Close();
 
             // Larger text from the settings, the explorer filtered, the editor zoomed to 120 %.
             ThemeManager.Apply(AppTheme.Dark, save: false);
-            ((TabControl)window.FindName("SideTabs")).SelectedIndex = 0;
             var appearance = new AppearanceService();
             appearance.Apply(new AppearanceSettings { UiFontSize = 15, EditorFontSize = 14, GridFontSize = 15 });
             connections.FilterText = "Cards";

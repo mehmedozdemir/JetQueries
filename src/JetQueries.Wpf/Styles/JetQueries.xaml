@@ -347,6 +347,46 @@
         </Setter>
     </Style>
 
+    <!-- A section that opens and closes: a chevron and a label (the connection editor's "Advanced"). -->
+    <Style x:Key="Disclosure" TargetType="ToggleButton">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border x:Name="Root" Background="Transparent" CornerRadius="{StaticResource Radius.Control}" Padding="2,4,8,4">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Name="Chevron" Text="{x:Static c:Icons.ChevronRight}" Style="{StaticResource Text.Icon}" FontSize="10" Width="16"
+                                       RenderTransformOrigin="0.5,0.5" Foreground="{TemplateBinding Foreground}">
+                                <TextBlock.RenderTransform>
+                                    <RotateTransform x:Name="Turn" Angle="0" />
+                                </TextBlock.RenderTransform>
+                            </TextBlock>
+                            <ContentPresenter VerticalAlignment="Center" Margin="2,0,0,0" TextElement.FontWeight="SemiBold" />
+                        </StackPanel>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Chevron" Property="RenderTransform">
+                                <Setter.Value>
+                                    <RotateTransform Angle="90" />
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Hover}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- Two or three views of one thing side by side: RadioButtons in a Segmented.Frame border. -->
     <Style x:Key="Segmented.Frame" TargetType="Border">
         <Setter Property="Background" Value="{DynamicResource Brush.Input}" />

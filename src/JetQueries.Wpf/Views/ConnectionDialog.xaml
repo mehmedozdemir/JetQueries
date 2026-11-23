@@ -4,27 +4,48 @@
         xmlns:c="clr-namespace:UiKit.Controls;assembly=UiKit.Wpf"
         xmlns:res="clr-namespace:JetQueries.Presentation.Resources;assembly=JetQueries.Presentation"
         xmlns:v="clr-namespace:JetQueries.Wpf.Views"
-        Title="{Binding Title}" Width="660" SizeToContent="Height" ResizeMode="NoResize"
+        Title="{Binding Title}" Width="640" SizeToContent="Height" ResizeMode="NoResize"
         ShowInTaskbar="False" WindowStartupLocation="CenterOwner"
         Style="{StaticResource Window.App}">
     <Window.Resources>
-        <Style x:Key="Field" TargetType="Grid">
-            <Setter Property="Margin" Value="0,0,0,10" />
+        <!-- A field: a small label above its input (compact two-column forms, as in DataGrip and TablePlus). -->
+        <Style x:Key="Field" TargetType="StackPanel">
+            <Setter Property="Margin" Value="0,0,12,10" />
+        </Style>
+        <Style x:Key="Label" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+            <Setter Property="FontSize" Value="{DynamicResource FontSize.Small}" />
+            <Setter Property="Margin" Value="1,0,0,4" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+        <!-- One height for every input, so that rows line up. -->
+        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="Height" Value="32" />
+            <Setter Property="Padding" Value="8,0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style TargetType="PasswordBox" BasedOn="{StaticResource {x:Type PasswordBox}}">
+            <Setter Property="Height" Value="32" />
+            <Setter Property="Padding" Value="8,0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+            <Setter Property="Height" Value="32" />
         </Style>
     </Window.Resources>
 
     <Grid>
-        <!-- Step 1: the database type -->
-        <DockPanel Margin="22,20,22,18" Visibility="{Binding IsChoosingType, Converter={StaticResource BoolToVisibility}}">
-            <StackPanel DockPanel.Dock="Top" Margin="0,0,0,16">
+        <!-- ============ Step 1: the database type ============ -->
+        <DockPanel Margin="20,18,20,16" Visibility="{Binding IsChoosingType, Converter={StaticResource BoolToVisibility}}">
+            <StackPanel DockPanel.Dock="Top" Margin="0,0,0,14">
                 <TextBlock Text="{x:Static res:Strings.ConnectionChooseTypeTitle}" Style="{StaticResource Text.Subtitle}" />
                 <TextBlock Text="{x:Static res:Strings.ConnectionChooseTypeInfo}" Foreground="{DynamicResource Brush.TextSecondary}"
-                           TextWrapping="Wrap" Margin="0,4,0,0" />
+                           TextWrapping="Wrap" Margin="0,3,0,0" />
             </StackPanel>
-            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,6,0,0">
                 <Button Content="{x:Static res:Strings.ButtonCancel}" Command="{Binding CancelCommand}" IsCancel="True" MinWidth="88" />
             </StackPanel>
-            <ItemsControl x:Name="TypeList" ItemsSource="{Binding Providers}" Focusable="False" Margin="0,0,-10,0">
+            <ItemsControl x:Name="TypeList" ItemsSource="{Binding Providers}" Focusable="False" Margin="0,0,-8,0">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <UniformGrid Columns="2" />
@@ -36,10 +57,10 @@
                                 Command="{Binding DataContext.ChooseTypeCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                 CommandParameter="{Binding}">
                             <DockPanel>
-                                <v:ProviderMarkView DockPanel.Dock="Left" Mark="{Binding Mark}" Size="40" Margin="0,0,14,0" VerticalAlignment="Center" />
+                                <v:ProviderMarkView DockPanel.Dock="Left" Mark="{Binding Mark}" Size="34" Margin="0,0,12,0" VerticalAlignment="Center" />
                                 <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" FontSize="{DynamicResource FontSize.Subtitle}" />
-                                    <TextBlock Text="{Binding Description}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="0,2,0,0" />
+                                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding Description}" Style="{StaticResource Text.Caption}" TextTrimming="CharacterEllipsis" Margin="0,1,0,0" />
                                 </StackPanel>
                             </DockPanel>
                         </Button>
@@ -48,169 +69,218 @@
             </ItemsControl>
         </DockPanel>
 
-        <!-- Step 2: the details of the chosen type -->
-        <DockPanel Margin="22,18,22,18" Visibility="{Binding IsEditingSettings, Converter={StaticResource BoolToVisibility}}">
-            <!-- The type, a way back to the list, and form / connection string -->
-            <DockPanel DockPanel.Dock="Top" Margin="0,0,0,16">
-                <Border DockPanel.Dock="Right" Style="{StaticResource Segmented.Frame}" VerticalAlignment="Center"
-                        Visibility="{Binding SelectedProvider.ReadsConnectionStrings, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}">
-                    <StackPanel Orientation="Horizontal">
-                        <RadioButton Style="{StaticResource SegmentRadio}" GroupName="EditorMode" Content="{x:Static res:Strings.ConnectionModeForm}"
-                                     IsChecked="{Binding IsFormMode}" />
-                        <RadioButton x:Name="StringMode" Style="{StaticResource SegmentRadio}" GroupName="EditorMode"
-                                     Content="{x:Static res:Strings.ConnectionModeString}" IsChecked="{Binding IsConnectionStringMode}" />
-                    </StackPanel>
-                </Border>
-                <v:ProviderMarkView DockPanel.Dock="Left" Mark="{Binding SelectedProvider.Mark}" Size="34" Margin="0,0,12,0" VerticalAlignment="Center" />
-                <StackPanel VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="{Binding SelectedProvider.DisplayName}" Style="{StaticResource Text.Subtitle}" />
+        <!-- ============ Step 2: the details of the chosen type ============ -->
+        <DockPanel Visibility="{Binding IsEditingSettings, Converter={StaticResource BoolToVisibility}}">
+            <!-- Header: type, a way back, form / connection string -->
+            <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,0,1" Padding="20,12,20,12">
+                <DockPanel>
+                    <Border DockPanel.Dock="Right" Style="{StaticResource Segmented.Frame}" VerticalAlignment="Center"
+                            Visibility="{Binding SelectedProvider.ReadsConnectionStrings, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}">
+                        <StackPanel Orientation="Horizontal">
+                            <RadioButton Style="{StaticResource SegmentRadio}" GroupName="EditorMode" Content="{x:Static res:Strings.ConnectionModeForm}"
+                                         IsChecked="{Binding IsFormMode}" />
+                            <RadioButton x:Name="StringMode" Style="{StaticResource SegmentRadio}" GroupName="EditorMode"
+                                         Content="{x:Static res:Strings.ConnectionModeString}" IsChecked="{Binding IsConnectionStringMode}" />
+                        </StackPanel>
+                    </Border>
+                    <v:ProviderMarkView DockPanel.Dock="Left" Mark="{Binding SelectedProvider.Mark}" Size="28" Margin="0,0,10,0" VerticalAlignment="Center" />
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding SelectedProvider.DisplayName}" FontSize="{DynamicResource FontSize.Subtitle}" FontWeight="SemiBold" VerticalAlignment="Center" />
                         <Button Style="{StaticResource Btn.Link}" Content="{x:Static res:Strings.ConnectionChangeType}" Command="{Binding ChangeTypeCommand}"
-                                Margin="10,0,0,0" VerticalAlignment="Center"
+                                Margin="8,0,0,0" VerticalAlignment="Center"
                                 Visibility="{Binding CanChangeType, Converter={StaticResource BoolToVisibility}}" />
                     </StackPanel>
-                    <TextBlock Text="{Binding SelectedProvider.Description}" Style="{StaticResource Text.Caption}" />
-                </StackPanel>
-            </DockPanel>
+                </DockPanel>
+            </Border>
 
-            <!-- Buttons -->
-            <DockPanel DockPanel.Dock="Bottom" Margin="0,16,0,0">
-                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                    <Button Content="{x:Static res:Strings.ButtonCancel}" Command="{Binding CancelCommand}" IsCancel="True" MinWidth="88" Margin="0,0,8,0" />
-                    <Button Style="{StaticResource Btn.Primary}" Content="{x:Static res:Strings.ButtonSave}" Command="{Binding SaveCommand}" IsDefault="True" MinWidth="88"
-                            Visibility="{Binding IsFormMode, Converter={StaticResource BoolToVisibility}}" />
-                    <Button Style="{StaticResource Btn.Primary}" Content="{x:Static res:Strings.ConnectionStringApply}" Command="{Binding ApplyConnectionStringCommand}"
-                            IsDefault="True" MinWidth="88"
-                            Visibility="{Binding IsConnectionStringMode, Converter={StaticResource BoolToVisibility}}" />
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" Visibility="{Binding IsFormMode, Converter={StaticResource BoolToVisibility}}">
-                    <Button Content="{x:Static res:Strings.ButtonTest}" Command="{Binding TestCommand}" c:Ui.Icon="{x:Static c:Icons.Plug}" />
-                    <Button Style="{StaticResource Btn.Link}" Content="{x:Static res:Strings.ButtonCancelTest}" Command="{Binding StopTestCommand}" Margin="8,0,0,0"
-                            Visibility="{Binding IsTesting, Converter={StaticResource BoolToVisibility}}" />
-                </StackPanel>
-            </DockPanel>
+            <!-- Footer: test (with its result beside it), cancel, save -->
+            <Border DockPanel.Dock="Bottom" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,1,0,0" Padding="20,10"
+                    Background="{DynamicResource Brush.SurfaceAlt}">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                        <Button Content="{x:Static res:Strings.ButtonCancel}" Command="{Binding CancelCommand}" IsCancel="True" MinWidth="84" Margin="0,0,8,0" />
+                        <Button Style="{StaticResource Btn.Primary}" Content="{x:Static res:Strings.ButtonSave}" Command="{Binding SaveCommand}" IsDefault="True" MinWidth="84"
+                                Visibility="{Binding IsFormMode, Converter={StaticResource BoolToVisibility}}" />
+                        <Button Style="{StaticResource Btn.Primary}" Content="{x:Static res:Strings.ConnectionStringApply}" Command="{Binding ApplyConnectionStringCommand}"
+                                IsDefault="True" MinWidth="84"
+                                Visibility="{Binding IsConnectionStringMode, Converter={StaticResource BoolToVisibility}}" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Visibility="{Binding IsFormMode, Converter={StaticResource BoolToVisibility}}">
+                        <Button Content="{x:Static res:Strings.ButtonTest}" Command="{Binding TestCommand}" c:Ui.Icon="{x:Static c:Icons.Plug}" />
+                        <Button Style="{StaticResource Btn.Link}" Content="{x:Static res:Strings.ButtonCancelTest}" Command="{Binding StopTestCommand}" Margin="8,0,0,0"
+                                VerticalAlignment="Center" Visibility="{Binding IsTesting, Converter={StaticResource BoolToVisibility}}" />
+                        <ProgressBar IsIndeterminate="{Binding IsTesting}" Width="48" Margin="10,0,0,0" VerticalAlignment="Center"
+                                     Visibility="{Binding IsTesting, Converter={StaticResource BoolToVisibility}}" />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
 
-            <!-- Messages -->
-            <StackPanel DockPanel.Dock="Bottom" Margin="0,6,0,0">
-                <ProgressBar IsIndeterminate="{Binding IsTesting}" Margin="0,0,0,8" Visibility="{Binding IsTesting, Converter={StaticResource BoolToVisibility}}" />
-                <TextBlock Text="{Binding ValidationMessage}" Foreground="{DynamicResource Brush.Danger}" TextWrapping="Wrap"
-                           Visibility="{Binding ValidationMessage, Converter={x:Static v:NotNullToVisibilityConverter.Instance}}" />
-                <TextBlock x:Name="TestResult" Text="{Binding TestMessage}" TextWrapping="Wrap" Foreground="{DynamicResource Brush.Success}"
-                           Visibility="{Binding TestMessage, Converter={x:Static v:NotNullToVisibilityConverter.Instance}}" />
+            <!-- Messages: why it cannot be saved, how the test went -->
+            <StackPanel DockPanel.Dock="Bottom" Margin="20,0,20,10">
+                <Border Background="{DynamicResource Brush.SurfaceAlt}" BorderBrush="{DynamicResource Brush.Danger}" BorderThickness="3,0,0,0" Padding="10,6"
+                        CornerRadius="{StaticResource Radius.Control}"
+                        Visibility="{Binding ValidationMessage, Converter={x:Static v:NotNullToVisibilityConverter.Instance}}">
+                    <TextBlock Text="{Binding ValidationMessage}" Foreground="{DynamicResource Brush.Danger}" TextWrapping="Wrap" />
+                </Border>
+                <Border x:Name="TestResultCard" Background="{DynamicResource Brush.SurfaceAlt}" BorderBrush="{DynamicResource Brush.Success}" BorderThickness="3,0,0,0"
+                        Padding="10,6" Margin="0,6,0,0" CornerRadius="{StaticResource Radius.Control}"
+                        Visibility="{Binding TestMessage, Converter={x:Static v:NotNullToVisibilityConverter.Instance}}">
+                    <TextBlock x:Name="TestResult" Text="{Binding TestMessage}" TextWrapping="Wrap" Foreground="{DynamicResource Brush.Success}" />
+                </Border>
             </StackPanel>
 
-            <Grid>
+            <Grid Margin="20,14,20,4">
                 <!-- Connection string -->
-                <StackPanel Visibility="{Binding IsConnectionStringMode, Converter={StaticResource BoolToVisibility}}">
+                <StackPanel Visibility="{Binding IsConnectionStringMode, Converter={StaticResource BoolToVisibility}}" Margin="0,0,0,10">
                     <TextBlock Text="{x:Static res:Strings.ConnectionStringInfo}" Foreground="{DynamicResource Brush.TextSecondary}" TextWrapping="Wrap" Margin="0,0,0,10" />
                     <TextBox x:Name="ConnectionStringInput" Text="{Binding ConnectionString, UpdateSourceTrigger=PropertyChanged}"
-                             AcceptsReturn="False" TextWrapping="Wrap" Height="110" VerticalContentAlignment="Top" Padding="8,6"
-                             FontFamily="Cascadia Mono, Consolas" VerticalScrollBarVisibility="Auto"
+                             AcceptsReturn="False" TextWrapping="Wrap" Height="104" VerticalContentAlignment="Top" Padding="8,6"
+                             FontFamily="{DynamicResource Font.Code}" VerticalScrollBarVisibility="Auto"
                              c:Ui.Placeholder="Server=…;Database=…;User Id=…;Password=…" />
                     <TextBlock Text="{Binding ConnectionStringMessage}" Foreground="{DynamicResource Brush.Danger}" TextWrapping="Wrap" Margin="0,8,0,0"
                                Visibility="{Binding ConnectionStringFailed, Converter={StaticResource BoolToVisibility}}" />
                 </StackPanel>
 
                 <!-- Details -->
-                <StackPanel Visibility="{Binding IsFormMode, Converter={StaticResource BoolToVisibility}}">
-                    <Border Background="{DynamicResource Brush.AccentSoft}" CornerRadius="{StaticResource Radius.Control}" Padding="10,7" Margin="0,0,0,12"
+                <StackPanel x:Name="Form" Visibility="{Binding IsFormMode, Converter={StaticResource BoolToVisibility}}" Margin="0,0,-12,0">
+                    <Border Background="{DynamicResource Brush.AccentSoft}" CornerRadius="{StaticResource Radius.Control}" Padding="10,7" Margin="0,0,12,12"
                             Visibility="{Binding ConnectionStringMessage, Converter={x:Static v:NotNullToVisibilityConverter.Instance}}">
                         <TextBlock Text="{Binding ConnectionStringMessage}" TextWrapping="Wrap" />
                     </Border>
 
-                    <Grid Style="{StaticResource Field}">
+                    <!-- Name and environment: what the explorer shows -->
+                    <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="170" />
                             <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="180" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="{x:Static res:Strings.FieldName}" Style="{StaticResource Text.FieldLabel}" />
-                        <TextBox x:Name="NameInput" Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
+                        <StackPanel Style="{StaticResource Field}">
+                            <TextBlock Text="{x:Static res:Strings.FieldName}" Style="{StaticResource Label}" />
+                            <TextBox x:Name="NameInput" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Style="{StaticResource Field}">
+                            <TextBlock Text="{x:Static res:Strings.FieldEnvironment}" Style="{StaticResource Label}" />
+                            <ComboBox ItemsSource="{Binding Environments}" SelectedItem="{Binding SelectedEnvironment}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Ellipse Width="8" Height="8" Margin="0,0,8,0" VerticalAlignment="Center"
+                                                     Fill="{Binding Value, Converter={x:Static v:EnvironmentBrushConverter.Instance}}" />
+                                            <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
                     </Grid>
 
-                    <TextBlock Text="{x:Static res:Strings.SectionConnection}" Style="{StaticResource Text.Section}" Margin="0,8,0,6" />
-
-                    <!-- Settings defined by the chosen provider -->
-                    <ItemsControl ItemsSource="{Binding Fields}" Focusable="False">
+                    <!-- Where to connect: the provider's main settings, two to a row -->
+                    <ItemsControl x:Name="MainFields" ItemsSource="{Binding Fields}" Focusable="False">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Columns="{Binding DataContext.FieldColumns, RelativeSource={RelativeSource AncestorType=ItemsControl}}" VerticalAlignment="Top" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemContainerStyle>
+                            <Style TargetType="ContentPresenter">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsAdvanced}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ItemsControl.ItemContainerStyle>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Grid Style="{StaticResource Field}">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="170" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="{Binding Label}" Style="{StaticResource Text.FieldLabel}" VerticalAlignment="Top" Margin="0,7,0,0" />
-                                    <StackPanel Grid.Column="1">
-                                        <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
-                                                 Visibility="{Binding IsText, Converter={StaticResource BoolToVisibility}}" />
-                                        <DockPanel Visibility="{Binding IsFilePath, Converter={StaticResource BoolToVisibility}}">
-                                            <Button DockPanel.Dock="Right" Margin="8,0,0,0" Content="{x:Static res:Strings.Browse}" Click="OnBrowseClick" />
-                                            <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" />
-                                        </DockPanel>
-                                        <ComboBox ItemsSource="{Binding Options}" SelectedItem="{Binding SelectedOption}" DisplayMemberPath="DisplayName"
-                                                  Visibility="{Binding IsChoice, Converter={StaticResource BoolToVisibility}}" />
-                                        <CheckBox IsChecked="{Binding BooleanValue}" Margin="0,6,0,0"
-                                                  Visibility="{Binding IsBoolean, Converter={StaticResource BoolToVisibility}}" />
-                                        <TextBlock Text="{Binding Hint}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="0,3,0,0"
-                                                   Visibility="{Binding Hint, Converter={x:Static v:NotNullToVisibilityConverter.Instance}}" />
-                                    </StackPanel>
-                                </Grid>
+                                <StackPanel Style="{StaticResource Field}" ToolTip="{Binding Hint}" ToolTipService.IsEnabled="{Binding Hint, Converter={x:Static v:NotNullConverter.Instance}}">
+                                    <TextBlock Text="{Binding Label}" Style="{StaticResource Label}" />
+                                    <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" c:Ui.Placeholder="{Binding Hint}"
+                                             Visibility="{Binding IsText, Converter={StaticResource BoolToVisibility}}" />
+                                    <DockPanel Visibility="{Binding IsFilePath, Converter={StaticResource BoolToVisibility}}">
+                                        <Button DockPanel.Dock="Right" Margin="8,0,0,0" Content="{x:Static res:Strings.Browse}" Click="OnBrowseClick" />
+                                        <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" c:Ui.Placeholder="{Binding Hint}" />
+                                    </DockPanel>
+                                    <ComboBox ItemsSource="{Binding Options}" SelectedItem="{Binding SelectedOption}" DisplayMemberPath="DisplayName"
+                                              Visibility="{Binding IsChoice, Converter={StaticResource BoolToVisibility}}" />
+                                    <CheckBox IsChecked="{Binding BooleanValue}" Content="{Binding Label}" Margin="0,2,0,0"
+                                              Visibility="{Binding IsBoolean, Converter={StaticResource BoolToVisibility}}" />
+                                </StackPanel>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
 
-                    <!-- Credential -->
-                    <StackPanel Visibility="{Binding NeedsCredential, Converter={StaticResource BoolToVisibility}}">
-                        <TextBlock Text="{x:Static res:Strings.SectionCredential}" Style="{StaticResource Text.Section}" Margin="0,8,0,6" />
-                        <Grid Style="{StaticResource Field}">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="170" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="{x:Static res:Strings.FieldUserName}" Style="{StaticResource Text.FieldLabel}" />
-                            <TextBox Grid.Column="1" Text="{Binding UserName, UpdateSourceTrigger=PropertyChanged}" />
-                        </Grid>
-                        <Grid Style="{StaticResource Field}">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="170" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="{x:Static res:Strings.FieldPassword}" Style="{StaticResource Text.FieldLabel}" VerticalAlignment="Top" Margin="0,7,0,0" />
-                            <StackPanel Grid.Column="1">
-                                <PasswordBox x:Name="PasswordInput" PasswordChanged="OnPasswordChanged" />
-                                <TextBlock Text="{Binding PasswordHint}" Style="{StaticResource Text.Caption}" Margin="0,3,0,0"
-                                           Visibility="{Binding PasswordHint, Converter={x:Static v:NotNullToVisibilityConverter.Instance}}" />
-                                <CheckBox Content="{x:Static res:Strings.FieldSavePassword}" IsChecked="{Binding SavePassword}" Margin="0,8,0,0" />
-                                <TextBlock Text="{x:Static res:Strings.PasswordNotPersistentHint}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="0,3,0,0"
-                                           Visibility="{Binding CanPersistPasswords, Converter={x:Static v:InverseBoolToVisibilityConverter.Instance}}" />
-                            </StackPanel>
-                        </Grid>
-                    </StackPanel>
+                    <!-- Credential: user and password side by side -->
+                    <Grid Visibility="{Binding NeedsCredential, Converter={StaticResource BoolToVisibility}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Style="{StaticResource Field}">
+                            <TextBlock Text="{x:Static res:Strings.FieldUserName}" Style="{StaticResource Label}" />
+                            <TextBox x:Name="UserNameInput" Text="{Binding UserName, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Style="{StaticResource Field}">
+                            <TextBlock Text="{x:Static res:Strings.FieldPassword}" Style="{StaticResource Label}" />
+                            <PasswordBox x:Name="PasswordInput" PasswordChanged="OnPasswordChanged" />
+                            <TextBlock Text="{Binding PasswordHint}" Style="{StaticResource Text.Caption}" Margin="1,3,0,0" TextWrapping="Wrap"
+                                       Visibility="{Binding PasswordHint, Converter={x:Static v:NotNullToVisibilityConverter.Instance}}" />
+                        </StackPanel>
+                    </Grid>
 
-                    <!-- Organisation and safety -->
-                    <TextBlock Text="{x:Static res:Strings.SectionOrganisation}" Style="{StaticResource Text.Section}" Margin="0,8,0,6" />
-                    <Grid Style="{StaticResource Field}">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="170" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="{x:Static res:Strings.FieldFolder}" Style="{StaticResource Text.FieldLabel}" />
-                        <TextBox Grid.Column="1" Text="{Binding Folder, UpdateSourceTrigger=PropertyChanged}" c:Ui.Placeholder="{x:Static res:Strings.FieldFolderHint}" />
-                    </Grid>
-                    <Grid Style="{StaticResource Field}">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="170" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="{x:Static res:Strings.FieldEnvironment}" Style="{StaticResource Text.FieldLabel}" />
-                        <ComboBox Grid.Column="1" ItemsSource="{Binding Environments}" SelectedItem="{Binding SelectedEnvironment}" DisplayMemberPath="DisplayName" />
-                    </Grid>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="170" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <CheckBox Grid.Column="1" Content="{x:Static res:Strings.FieldReadOnly}" IsChecked="{Binding IsReadOnly}" />
-                    </Grid>
+                    <!-- Switches: save password, read-only -->
+                    <WrapPanel Margin="1,0,12,8">
+                        <CheckBox Content="{x:Static res:Strings.FieldSavePassword}" IsChecked="{Binding SavePassword}" Margin="0,0,22,4"
+                                  Visibility="{Binding NeedsCredential, Converter={StaticResource BoolToVisibility}}" />
+                        <CheckBox Content="{x:Static res:Strings.FieldReadOnly}" IsChecked="{Binding IsReadOnly}" Margin="0,0,22,4" />
+                    </WrapPanel>
+                    <TextBlock Text="{x:Static res:Strings.PasswordNotPersistentHint}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="1,0,12,8">
+                        <TextBlock.Visibility>
+                            <MultiBinding Converter="{x:Static v:AllTrueToVisibilityConverter.Instance}">
+                                <Binding Path="NeedsCredential" />
+                                <Binding Path="CanPersistPasswords" Converter="{x:Static v:NotConverter.Instance}" />
+                            </MultiBinding>
+                        </TextBlock.Visibility>
+                    </TextBlock>
+
+                    <!-- Advanced: folder, timeouts, certificate trust and other switches (opens by itself when one is set) -->
+                    <StackPanel Margin="0,0,12,10">
+                        <ToggleButton x:Name="AdvancedToggle" Style="{StaticResource Disclosure}" IsChecked="{Binding ShowAdvanced}" Content="{x:Static res:Strings.ConnectionAdvanced}" />
+                        <StackPanel Margin="0,10,-12,0" Visibility="{Binding ShowAdvanced, Converter={StaticResource BoolToVisibility}}">
+                            <StackPanel Style="{StaticResource Field}">
+                                <TextBlock Text="{x:Static res:Strings.FieldFolder}" Style="{StaticResource Label}" />
+                                <TextBox Text="{Binding Folder, UpdateSourceTrigger=PropertyChanged}" c:Ui.Placeholder="{x:Static res:Strings.FieldFolderHint}" />
+                            </StackPanel>
+                            <ItemsControl ItemsSource="{Binding Fields}" Focusable="False">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="2" VerticalAlignment="Top" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemContainerStyle>
+                                    <Style TargetType="ContentPresenter">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsAdvanced}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ItemsControl.ItemContainerStyle>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Style="{StaticResource Field}" ToolTip="{Binding Hint}" ToolTipService.IsEnabled="{Binding Hint, Converter={x:Static v:NotNullConverter.Instance}}">
+                                            <TextBlock Text="{Binding Label}" Style="{StaticResource Label}"
+                                                       Visibility="{Binding IsBoolean, Converter={x:Static v:InverseBoolToVisibilityConverter.Instance}}" />
+                                            <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" c:Ui.Placeholder="{Binding Hint}"
+                                                     Visibility="{Binding IsText, Converter={StaticResource BoolToVisibility}}" />
+                                            <CheckBox IsChecked="{Binding BooleanValue}" Content="{Binding Label}" Margin="0,4,0,0"
+                                                      Visibility="{Binding IsBoolean, Converter={StaticResource BoolToVisibility}}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </StackPanel>
                 </StackPanel>
             </Grid>
         </DockPanel>
