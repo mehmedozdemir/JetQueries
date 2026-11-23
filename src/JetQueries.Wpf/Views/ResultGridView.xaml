@@ -22,23 +22,24 @@
                             Command="{Binding DataContext.RefreshCommand, RelativeSource={RelativeSource AncestorType=v:QueryDocumentView}}" CommandParameter="{Binding}"
                             ToolTip="{x:Static res:Strings.RefreshResultTip}" />
                     <Border Style="{StaticResource Separator.Vertical}" Height="16" Margin="4,0" />
+                    <TextBlock Text="{x:Static res:Strings.ResultPageSize}" Style="{StaticResource Text.Status}" Margin="2,0,6,0" />
                     <TextBox x:Name="FetchSizeBox" Width="64" Padding="6,2" VerticalAlignment="Center" HorizontalContentAlignment="Right"
                              Text="{Binding DataContext.FetchSize, RelativeSource={RelativeSource AncestorType=v:QueryDocumentView}, UpdateSourceTrigger=LostFocus}"
                              ToolTip="{x:Static res:Strings.FetchSizeTip}" KeyDown="OnFetchSizeKeyDown" />
-                    <Button Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="&#xE74B;" Margin="2,0,0,0"
+                    <Button Style="{StaticResource Btn.Footer}" c:Ui.Icon="&#xE74B;" Content="{x:Static res:Strings.FetchNextShort}" Margin="4,0,0,0"
                             Command="{Binding DataContext.FetchNextPageCommand, RelativeSource={RelativeSource AncestorType=v:QueryDocumentView}}"
                             CommandParameter="{Binding}" ToolTip="{x:Static res:Strings.FetchNextPageTip}" />
-                    <Button Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="&#xE896;"
+                    <Button Style="{StaticResource Btn.Footer}" c:Ui.Icon="&#xE896;" Content="{x:Static res:Strings.FetchAllShort}"
                             Command="{Binding DataContext.FetchAllCommand, RelativeSource={RelativeSource AncestorType=v:QueryDocumentView}}"
                             CommandParameter="{Binding}" ToolTip="{x:Static res:Strings.FetchAllTip}" />
                     <Border Style="{StaticResource Separator.Vertical}" Height="16" Margin="4,0" />
-                    <Button Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="&#xE8EF;"
+                    <Button Style="{StaticResource Btn.Footer}" c:Ui.Icon="&#xE8EF;" Content="{x:Static res:Strings.CountShort}"
                             Command="{Binding DataContext.CountRowsCommand, RelativeSource={RelativeSource AncestorType=v:QueryDocumentView}}"
                             CommandParameter="{Binding}" ToolTip="{x:Static res:Strings.CountRowsTip}" />
                     <Border Style="{StaticResource Badge}" Margin="4,0,8,0" ToolTip="{x:Static res:Strings.CountRowsTip}">
                         <TextBlock Text="{Binding RowsText}" FontSize="{DynamicResource FontSize.Small}" Foreground="{DynamicResource Brush.TextSecondary}" />
                     </Border>
-                    <ToggleButton x:Name="ValuePanelToggle" Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="&#xE7B3;"
+                    <ToggleButton x:Name="ValuePanelToggle" Style="{StaticResource Btn.Footer}" c:Ui.Icon="&#xE7B3;" Content="{x:Static res:Strings.ValueShort}"
                                   ToolTip="{x:Static res:Strings.ValuePanelTip}" Click="OnValuePanelToggle" Margin="0,0,6,0" />
                     <ProgressBar IsIndeterminate="{Binding IsCounting}" Width="40" VerticalAlignment="Center" Margin="0,0,8,0"
                                  Visibility="{Binding IsCounting, Converter={StaticResource BoolToVisibility}}" />
@@ -51,9 +52,45 @@
             </DockPanel>
         </Border>
 
+        <!-- Result toolbar: how to show the rows (grid / text / record) and the server-side SQL filter -->
+        <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,0,1" Padding="6,4">
+            <StackPanel Orientation="Horizontal">
+                <Border Style="{StaticResource Segmented.Frame}">
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton x:Name="GridMode" Style="{StaticResource SegmentRadio}" Click="OnModeClick" Tag="Grid"
+                                     ToolTip="{x:Static res:Strings.ViewGrid}" AutomationProperties.Name="{x:Static res:Strings.ViewGridShort}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{x:Static c:Icons.Table}" Style="{StaticResource Text.Icon}" FontSize="12" Margin="0,0,6,0" />
+                                <TextBlock Text="{x:Static res:Strings.ViewGridShort}" />
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton x:Name="TextMode" Style="{StaticResource SegmentRadio}" Click="OnModeClick" Tag="Text"
+                                     ToolTip="{x:Static res:Strings.ViewText}" AutomationProperties.Name="{x:Static res:Strings.ViewTextShort}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE8D2;" Style="{StaticResource Text.Icon}" FontSize="12" Margin="0,0,6,0" />
+                                <TextBlock Text="{x:Static res:Strings.ViewTextShort}" />
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton x:Name="RecordMode" Style="{StaticResource SegmentRadio}" Click="OnModeClick" Tag="Record"
+                                     ToolTip="{x:Static res:Strings.ViewRecord}" AutomationProperties.Name="{x:Static res:Strings.ViewRecordShort}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE8A1;" Style="{StaticResource Text.Icon}" FontSize="12" Margin="0,0,6,0" />
+                                <TextBlock Text="{x:Static res:Strings.ViewRecordShort}" />
+                            </StackPanel>
+                        </RadioButton>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Separator.Vertical}" Height="18" Margin="8,0" />
+                <!-- The SQL filter bar opens on demand; it stays open while a filter is applied -->
+                <ToggleButton x:Name="SqlFilterToggle" Style="{StaticResource Btn.Footer}" c:Ui.Icon="{x:Static c:Icons.Filter}"
+                              Content="{x:Static res:Strings.SqlFilterToggle}" ToolTip="{x:Static res:Strings.SqlFilterToggleTip}"
+                              Click="OnSqlFilterToggle" />
+            </StackPanel>
+        </Border>
+
         <!-- DBeaver's "Enter a SQL expression to filter results": the query runs again on the server with a WHERE -->
         <Border x:Name="SqlFilterBar" DockPanel.Dock="Top" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,0,1" Padding="6,4"
-                IsEnabled="{Binding CanFilter}" ToolTipService.ShowOnDisabled="True">
+                IsEnabled="{Binding CanFilter}" ToolTipService.ShowOnDisabled="True" Visibility="Collapsed">
             <Border.Style>
                 <Style TargetType="Border">
                     <Style.Triggers>
@@ -85,18 +122,6 @@
                     </TextBox.Style>
                 </TextBox>
             </DockPanel>
-        </Border>
-
-        <!-- Grid / Text / Record, as DBeaver's vertical tabs -->
-        <Border DockPanel.Dock="Left" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,1,0" Padding="3,6">
-            <StackPanel>
-                <ToggleButton x:Name="GridMode" Style="{StaticResource Btn.Icon}" Width="28" Height="28" Margin="0,0,0,4"
-                              c:Ui.Icon="{x:Static c:Icons.Table}" ToolTip="{x:Static res:Strings.ViewGrid}" Click="OnModeClick" Tag="Grid" />
-                <ToggleButton x:Name="TextMode" Style="{StaticResource Btn.Icon}" Width="28" Height="28" Margin="0,0,0,4"
-                              c:Ui.Icon="&#xE8D2;" ToolTip="{x:Static res:Strings.ViewText}" Click="OnModeClick" Tag="Text" />
-                <ToggleButton x:Name="RecordMode" Style="{StaticResource Btn.Icon}" Width="28" Height="28"
-                              c:Ui.Icon="&#xE8A1;" ToolTip="{x:Static res:Strings.ViewRecord}" Click="OnModeClick" Tag="Record" />
-            </StackPanel>
         </Border>
 
         <!-- Active filters, hidden columns and how many rows are shown (DESIGN.md: filter chips) -->

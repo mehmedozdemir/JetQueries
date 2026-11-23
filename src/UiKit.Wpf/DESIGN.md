@@ -38,7 +38,7 @@ XAML'de her zaman `{DynamicResource Brush.X}` kullanın (tema çalışma anında
 | GridLine | `#252932` | `#EEF0F3` | Grid hücre çizgileri |
 | Text | `#E7E9EE` | `#1C2128` | Birincil metin |
 | TextSecondary | `#AEB5C2` | `#4B5563` | Başlıklar, ikincil metin, ikon butonları |
-| TextMuted | `#747C8B` | `#8A93A3` | Açıklama, yer tutucu, NULL, satır numarası |
+| TextMuted | `#8C94A3` | `#626A78` | Açıklama, yer tutucu, NULL, satır numarası (küçük yazıda ≥ 4.5:1 kontrast) |
 | Accent | `#5B8CFF` | `#2F6FEB` | Birincil buton, odak, aktif sekme/filtre, sıralama oku |
 | AccentHover | `#7AA2FF` | `#1F5DD8` | Vurgu üzerinde hover |
 | AccentText | `#FFFFFF` | `#FFFFFF` | Vurgu zeminindeki metin |

@@ -90,8 +90,39 @@ public sealed partial class SqliteQueryHistory : IQueryHistory, IAsyncDisposable
     }
 
     /// <inheritdoc />
-    public Task<IReadOnlyList<QueryHistoryEntry>> SearchAsync(string? search, int limit, CancellationToken cancellationToken)
+    public Task<IReadOnlyList<QueryHistoryEntry>> SearchAsync(string? search, int limit, CancellationToken cancellationToken) =>
+        FindAsync(new QueryHistoryFilter(search), limit, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<string>> GetConnectionNamesAsync(CancellationToken cancellationToken) =>
+        RunAsync<IReadOnlyList<string>>(
+            connection =>
+            {
+                if (connection is null)
+                {
+                    return [.. _memory.Select(static e => e.ConnectionName).Distinct(StringComparer.Ordinal).Order(StringComparer.CurrentCulture)];
+                }
+
+                using var command = connection.CreateCommand();
+                command.CommandText = "SELECT DISTINCT connection_name FROM history";
+                var names = new List<string>();
+                using var reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    names.Add(reader.GetString(0));
+                }
+
+                return [.. names.Order(StringComparer.CurrentCulture)];
+            },
+            cancellationToken);
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<QueryHistoryEntry>> FindAsync(QueryHistoryFilter filter, int limit, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(filter);
+        var search = filter.Search;
+        var connectionName = string.IsNullOrEmpty(filter.ConnectionName) ? null : filter.ConnectionName;
+        var failedOnly = filter.FailedOnly;
         var term = string.IsNullOrWhiteSpace(search) ? null : search.Trim();
         return RunAsync<IReadOnlyList<QueryHistoryEntry>>(
             connection =>
@@ -100,6 +131,8 @@ public sealed partial class SqliteQueryHistory : IQueryHistory, IAsyncDisposable
                 {
                     return [.. _memory
                         .Where(e => term is null || e.Sql.Contains(term, StringComparison.OrdinalIgnoreCase) || e.ConnectionName.Contains(term, StringComparison.OrdinalIgnoreCase))
+                        .Where(e => connectionName is null || e.ConnectionName == connectionName)
+                        .Where(e => !failedOnly || e.Outcome == QueryOutcome.Failed)
                         .Take(limit)];
                 }
 
@@ -108,7 +141,9 @@ public sealed partial class SqliteQueryHistory : IQueryHistory, IAsyncDisposable
                     """
                     SELECT id, executed_at, connection_id, connection_name, provider_id, sql, duration_ms, outcome, row_count, error
                     FROM history
-                    WHERE $term IS NULL OR sql LIKE $pattern ESCAPE '\' OR connection_name LIKE $pattern ESCAPE '\'
+                    WHERE ($term IS NULL OR sql LIKE $pattern ESCAPE '\' OR connection_name LIKE $pattern ESCAPE '\')
+                      AND ($connection IS NULL OR connection_name = $connection)
+                      AND ($failed = 0 OR outcome = $failedOutcome)
                     ORDER BY id DESC
                     LIMIT $limit
                     """;
@@ -120,6 +155,9 @@ public sealed partial class SqliteQueryHistory : IQueryHistory, IAsyncDisposable
                 command.Parameters.AddWithValue("$term", (object?)term ?? DBNull.Value);
                 command.Parameters.AddWithValue("$pattern", (object?)pattern ?? DBNull.Value);
                 command.Parameters.AddWithValue("$limit", limit);
+                command.Parameters.AddWithValue("$connection", (object?)connectionName ?? DBNull.Value);
+                command.Parameters.AddWithValue("$failed", failedOnly ? 1 : 0);
+                command.Parameters.AddWithValue("$failedOutcome", (int)QueryOutcome.Failed);
 
                 var entries = new List<QueryHistoryEntry>();
                 using var reader = command.ExecuteReader();

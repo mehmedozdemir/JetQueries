@@ -79,7 +79,11 @@ public partial class DocumentsViewModel : ObservableObject
 
         // Raised on whatever thread opened or closed the session.
         manager.SessionsChanged += (_, _) => ui.Post(RefreshSessions);
-        Documents.CollectionChanged += (_, _) => ScheduleWorkspaceSave();
+        Documents.CollectionChanged += (_, e) =>
+        {
+            SyncTabs(e);
+            ScheduleWorkspaceSave();
+        };
         NewQuery();
     }
 
@@ -94,7 +98,145 @@ public partial class DocumentsViewModel : ObservableObject
     /// <summary>The connection a new query should start on, set by the explorer's selection.</summary>
     public Guid? PreferredConnectionId { get; set; }
 
-    partial void OnSelectedChanged(QueryDocumentViewModel? value) => ScheduleWorkspaceSave();
+    partial void OnSelectedChanged(QueryDocumentViewModel? value)
+    {
+        if (value is not null && !ReferenceEquals(SelectedTab, value))
+        {
+            SelectedTab = value;
+        }
+
+        ScheduleWorkspaceSave();
+    }
+
+    /// <summary>
+    /// Every tab of the document area in order: the query tabs (<see cref="Documents"/>) and object details tabs.
+    /// </summary>
+    public ObservableCollection<object> Tabs { get; } = [];
+
+    /// <summary>The tab shown; <see cref="Selected"/> is it when it is a query, null when it is a details tab.</summary>
+    [ObservableProperty]
+    public partial object? SelectedTab { get; set; }
+
+    partial void OnSelectedTabChanged(object? value)
+    {
+        if (value is QueryDocumentViewModel query)
+        {
+            Selected = query;
+        }
+        else if (value is not null)
+        {
+            // Run, Save and the status bar act on queries only: none is "current" behind a details tab.
+            Selected = null;
+        }
+    }
+
+    /// <summary>Shows an object's details in a tab (the open one for the same object is selected instead).</summary>
+    public ObjectDetailsViewModel OpenDetails(ObjectDetailsViewModel details)
+    {
+        ArgumentNullException.ThrowIfNull(details);
+        var open = Tabs.OfType<ObjectDetailsViewModel>().FirstOrDefault(d =>
+            d.ConnectionId == details.ConnectionId && d.Target.Name.Equals(details.Target.Name) && d.Target.Kind == details.Target.Kind);
+        if (open is not null)
+        {
+            SelectedTab = open;
+            return open;
+        }
+
+        var index = SelectedTab is null ? Tabs.Count : Tabs.IndexOf(SelectedTab) + 1;
+        Tabs.Insert(Math.Clamp(index, 0, Tabs.Count), details);
+        SelectedTab = details;
+        return details;
+    }
+
+    /// <summary>Closes any tab: a query as <see cref="CloseCommand"/> does (asking about changes), a details tab at once.</summary>
+    [RelayCommand]
+    private async Task CloseTabAsync(object? tab)
+    {
+        switch (tab)
+        {
+            case QueryDocumentViewModel query:
+                await CloseAsync(query);
+                break;
+            case ObjectDetailsViewModel details:
+                CloseDetails(details);
+                break;
+            default:
+                break;
+        }
+    }
+
+    /// <summary>Closes every tab but <paramref name="keep"/> (queries ask about their changes; a Cancel stops).</summary>
+    [RelayCommand]
+    private async Task CloseOtherTabsAsync(object? keep)
+    {
+        foreach (var details in Tabs.OfType<ObjectDetailsViewModel>().Where(d => !ReferenceEquals(d, keep)).ToList())
+        {
+            CloseDetails(details);
+        }
+
+        await CloseOthersAsync(keep as QueryDocumentViewModel);
+        if (keep is not null && Tabs.Contains(keep))
+        {
+            SelectedTab = keep;
+        }
+    }
+
+    /// <summary>Closes every tab.</summary>
+    [RelayCommand]
+    private Task CloseAllTabsAsync() => CloseOtherTabsAsync(null);
+
+    private void CloseDetails(ObjectDetailsViewModel details)
+    {
+        var index = Tabs.IndexOf(details);
+        if (index < 0)
+        {
+            return;
+        }
+
+        Tabs.RemoveAt(index);
+        if (ReferenceEquals(SelectedTab, details) || SelectedTab is null)
+        {
+            SelectedTab = Tabs.Count == 0 ? null : Tabs[Math.Clamp(index - 1, 0, Tabs.Count - 1)];
+            if (SelectedTab is null)
+            {
+                Selected = null;
+            }
+        }
+    }
+
+    // Query tabs join and leave the tab list with their collection; a new one goes after the shown tab.
+    private void SyncTabs(System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        if (e.OldItems is not null)
+        {
+            foreach (var old in e.OldItems)
+            {
+                Tabs.Remove(old);
+            }
+        }
+
+        if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Reset)
+        {
+            foreach (var query in Tabs.OfType<QueryDocumentViewModel>().ToList())
+            {
+                Tabs.Remove(query);
+            }
+        }
+
+        if (e.NewItems is not null)
+        {
+            var index = SelectedTab is not null && Tabs.IndexOf(SelectedTab) is >= 0 and var at ? at + 1 : Tabs.Count;
+            foreach (var added in e.NewItems)
+            {
+                Tabs.Insert(Math.Min(index++, Tabs.Count), added);
+            }
+        }
+
+        if (SelectedTab is not null && !Tabs.Contains(SelectedTab))
+        {
+            SelectedTab = Selected;
+        }
+    }
 
     [RelayCommand]
     private void NewQuery() => OpenEmpty(PreferredConnectionId, null);
@@ -345,8 +487,9 @@ public partial class DocumentsViewModel : ObservableObject
         {
             // As in SSMS and DBeaver the last tab really closes: the empty state offers a new query.
             Selected = null;
+            SelectedTab = Tabs.LastOrDefault();
         }
-        else if (Selected is null || ReferenceEquals(Selected, document))
+        else if (SelectedTab is null || ReferenceEquals(SelectedTab, document) || (Selected is null && SelectedTab is not ObjectDetailsViewModel))
         {
             Selected = Documents[Math.Clamp(index, 0, Documents.Count - 1)];
         }

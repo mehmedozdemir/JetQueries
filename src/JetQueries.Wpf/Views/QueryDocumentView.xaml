@@ -59,7 +59,7 @@
                         Visibility="{Binding CanChangeDatabase, Converter={StaticResource BoolToVisibility}}">
                 <TextBlock Text="{x:Static c:Icons.Database}" Style="{StaticResource Text.Icon}" FontSize="13" Margin="0,0,6,0"
                            Foreground="{DynamicResource Brush.Accent}" />
-                <ComboBox x:Name="DatabaseBox" ItemsSource="{Binding Databases}" SelectedItem="{Binding SelectedDatabase}" MinWidth="200" MaxWidth="320"
+                <ComboBox x:Name="DatabaseBox" ItemsSource="{Binding Databases}" SelectedItem="{Binding SelectedDatabase}" MinWidth="140" MaxWidth="240" Height="28"
                           ToolTip="{x:Static res:Strings.QueryDatabase}" />
             </StackPanel>
             <!-- Auto-commit or manual commit; Commit / Rollback; a warning while a transaction is open -->
@@ -81,9 +81,12 @@
                     </Button.Style>
                 </Button>
                 <StackPanel Orientation="Horizontal" Visibility="{Binding ShowTransactionButtons, Converter={StaticResource BoolToVisibility}}">
-                    <Button Style="{StaticResource Btn.Icon.Compact}" c:Ui.Icon="{x:Static c:Icons.Check}" Foreground="{DynamicResource Brush.Success}"
+                    <!-- Named, not only coloured: commit and rollback must never be mistaken for each other -->
+                    <Button x:Name="CommitButton" Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.Check}"
+                            Content="{x:Static res:Strings.TransactionCommit}" Foreground="{DynamicResource Brush.Success}"
                             Command="{Binding CommitCommand}" ToolTip="{x:Static res:Strings.TransactionCommitTip}" />
-                    <Button Style="{StaticResource Btn.Icon.Compact}" c:Ui.Icon="&#xE7A7;" Foreground="{DynamicResource Brush.Danger}"
+                    <Button x:Name="RollbackButton" Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="&#xE7A7;"
+                            Content="{x:Static res:Strings.TransactionRollback}" Foreground="{DynamicResource Brush.Danger}"
                             Command="{Binding RollbackCommand}" ToolTip="{x:Static res:Strings.TransactionRollbackTip}" />
                 </StackPanel>
                 <Border Style="{StaticResource Badge}" Margin="6,0,0,0" Background="{DynamicResource Brush.Chip}" ToolTip="{x:Static res:Strings.TransactionOpenTip}"

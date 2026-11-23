@@ -36,9 +36,18 @@
           </StackPanel>
         </Border>
 
-        <!-- Why a script could not be written -->
-        <TextBlock DockPanel.Dock="Bottom" Text="{Binding ScriptError}" Foreground="{DynamicResource Brush.Danger}" TextWrapping="Wrap"
-                   Margin="8,4" Visibility="{Binding ScriptError, Converter={x:Static v:NotNullToVisibilityConverter.Instance}}" />
+        <!-- Why a script or details could not be read: at the top, where the eye is, until dismissed -->
+        <Border x:Name="ScriptErrorBanner" DockPanel.Dock="Top" Margin="6,6,6,0" Padding="10,6,4,6" CornerRadius="{StaticResource Radius.Control}"
+                Background="{DynamicResource Brush.SurfaceAlt}" BorderBrush="{DynamicResource Brush.Danger}" BorderThickness="3,0,0,0"
+                Visibility="{Binding ScriptError, Converter={x:Static v:NotNullToVisibilityConverter.Instance}}">
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Style="{StaticResource Btn.Icon}" Width="22" Height="22" c:Ui.Icon="{x:Static c:Icons.Clear}"
+                        VerticalAlignment="Top" Command="{Binding DismissScriptErrorCommand}" ToolTip="{x:Static res:Strings.Dismiss}" />
+                <TextBlock Text="{x:Static c:Icons.Error}" Style="{StaticResource Text.Icon}" FontSize="13" Foreground="{DynamicResource Brush.Danger}"
+                           VerticalAlignment="Top" Margin="0,2,8,0" />
+                <TextBlock Text="{Binding ScriptError}" TextWrapping="Wrap" />
+            </DockPanel>
+        </Border>
 
         <Grid>
             <!-- Empty state -->
@@ -115,10 +124,6 @@
                             <Ellipse Width="7" Height="7" Margin="0,0,7,0" VerticalAlignment="Center"
                                      Fill="{Binding Definition.Environment, Converter={x:Static v:EnvironmentBrushConverter.Instance}}" />
                             <TextBlock x:Name="Name" Text="{Binding Name}" VerticalAlignment="Center" />
-                            <Border Style="{StaticResource Badge}" Background="{DynamicResource Brush.AccentSoft}" Margin="8,0,0,0" Padding="6,0"
-                                    Visibility="{Binding IsConnected, Converter={StaticResource BoolToVisibility}}">
-                                <TextBlock Text="{x:Static res:Strings.ConnectionConnectedBadge}" FontSize="10.5" Foreground="{DynamicResource Brush.Accent}" />
-                            </Border>
                             <Border Style="{StaticResource Badge}" Margin="6,0,0,0" Padding="6,0"
                                     Visibility="{Binding IsReadOnly, Converter={StaticResource BoolToVisibility}}">
                                 <TextBlock Text="{x:Static res:Strings.ConnectionReadOnlyBadge}" FontSize="10.5" Foreground="{DynamicResource Brush.TextSecondary}" />

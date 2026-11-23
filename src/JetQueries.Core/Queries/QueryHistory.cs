@@ -39,6 +39,12 @@ public sealed record QueryHistoryEntry(
     long? RowCount = null,
     string? Error = null);
 
+/// <summary>What the history window shows.</summary>
+/// <param name="Search">Text that must occur in the SQL or the connection name (case-insensitive); null or empty for all.</param>
+/// <param name="ConnectionName">Only runs on this connection (by name, as recorded); null for all.</param>
+/// <param name="FailedOnly">Only runs that failed.</param>
+public sealed record QueryHistoryFilter(string? Search, string? ConnectionName = null, bool FailedOnly = false);
+
 /// <summary>The queries the user has run, newest first. Stored on this machine only.</summary>
 public interface IQueryHistory
 {
@@ -54,7 +60,18 @@ public interface IQueryHistory
     /// <param name="search">Text that must occur in the SQL or the connection name (case-insensitive); <see langword="null"/> or empty for all.</param>
     /// <param name="limit">Most entries to return.</param>
     /// <param name="cancellationToken">Cancels the read.</param>
-    Task<IReadOnlyList<QueryHistoryEntry>> SearchAsync(string? search, int limit, CancellationToken cancellationToken);
+    Task<IReadOnlyList<QueryHistoryEntry>> SearchAsync(string? search, int limit, CancellationToken cancellationToken) =>
+        FindAsync(new QueryHistoryFilter(search), limit, cancellationToken);
+
+    /// <summary>Returns entries matching a filter, newest first.</summary>
+    /// <param name="filter">Text, connection and outcome to match.</param>
+    /// <param name="limit">Most entries to return.</param>
+    /// <param name="cancellationToken">Cancels the read.</param>
+    Task<IReadOnlyList<QueryHistoryEntry>> FindAsync(QueryHistoryFilter filter, int limit, CancellationToken cancellationToken);
+
+    /// <summary>The names of the connections that have runs, in order.</summary>
+    /// <param name="cancellationToken">Cancels the read.</param>
+    Task<IReadOnlyList<string>> GetConnectionNamesAsync(CancellationToken cancellationToken);
 
     /// <summary>Removes one entry.</summary>
     /// <param name="id">The entry's identity.</param>

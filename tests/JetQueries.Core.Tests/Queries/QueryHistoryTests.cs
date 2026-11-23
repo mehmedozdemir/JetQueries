@@ -69,6 +69,20 @@ public sealed class SqliteQueryHistoryTests
     }
 
     [Fact]
+    public async Task Find_filters_by_connection_and_failures_in_the_store()
+    {
+        await using var history = Create(NewPath());
+        await history.AddAsync(Entry("SELECT 1"), Token);
+        await history.AddAsync(Entry("SELECT 2") with { ConnectionName = "Prod" }, Token);
+        await history.AddAsync(Entry("SELECT x") with { ConnectionName = "Prod", Outcome = QueryOutcome.Failed, Error = "no", RowCount = null }, Token);
+
+        Assert.Equal(["Cards TEST", "Prod"], await history.GetConnectionNamesAsync(Token));
+        Assert.Equal(["SELECT x", "SELECT 2"], (await history.FindAsync(new QueryHistoryFilter(null, "Prod"), 50, Token)).Select(static e => e.Sql));
+        Assert.Equal(["SELECT x"], (await history.FindAsync(new QueryHistoryFilter(null, FailedOnly: true), 50, Token)).Select(static e => e.Sql));
+        Assert.Empty(await history.FindAsync(new QueryHistoryFilter("SELECT 1", "Prod"), 50, Token));
+    }
+
+    [Fact]
     public async Task Search_finds_text_in_the_sql_or_the_connection_name_and_treats_wildcards_literally()
     {
         await using var history = Create(NewPath());

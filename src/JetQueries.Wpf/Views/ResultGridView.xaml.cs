@@ -317,6 +317,8 @@ public partial class ResultGridView : UserControl
         _set = set;
         _hidden.Clear();
         FilterPopup.IsOpen = false;
+        _sqlFilterOpen = false;
+        UpdateSqlFilterBar();
         if (set is null)
         {
             Grid.Source = ArrayGridDataSource.Empty;
@@ -410,6 +412,40 @@ public partial class ResultGridView : UserControl
         {
             ApplyMode(_mode);
         }
+        else if (e.PropertyName == nameof(QueryResultSet.IsFiltered))
+        {
+            UpdateSqlFilterBar();
+        }
+    }
+
+    private bool _sqlFilterOpen;
+
+    /// <summary>Opens or closes the SQL filter bar (it stays while a filter is applied).</summary>
+    private void OnSqlFilterToggle(object sender, RoutedEventArgs e)
+    {
+        _sqlFilterOpen = SqlFilterToggle.IsChecked == true;
+        UpdateSqlFilterBar();
+        if (_sqlFilterOpen)
+        {
+            Dispatcher.BeginInvoke(() => SqlFilterBox.Focus(), DispatcherPriority.Input);
+        }
+    }
+
+    /// <summary>Whether the SQL filter bar shows, for tests.</summary>
+    internal bool SqlFilterShown => SqlFilterBar.Visibility == Visibility.Visible;
+
+    /// <summary>Opens the SQL filter bar, as its toolbar button does.</summary>
+    internal void OpenSqlFilter()
+    {
+        SqlFilterToggle.IsChecked = true;
+        OnSqlFilterToggle(SqlFilterToggle, new RoutedEventArgs());
+    }
+
+    private void UpdateSqlFilterBar()
+    {
+        var shown = _sqlFilterOpen || _set?.IsFiltered == true;
+        SqlFilterBar.Visibility = shown ? Visibility.Visible : Visibility.Collapsed;
+        SqlFilterToggle.IsChecked = shown;
     }
 
     /// <summary>Shows the grid, the text or the record view; the record view starts at the grid's current row and the grid comes back on the record's row.</summary>

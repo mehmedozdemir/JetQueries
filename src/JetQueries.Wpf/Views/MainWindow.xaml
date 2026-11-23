@@ -14,6 +14,7 @@
         <KeyBinding Gesture="Ctrl+Shift+S" Command="{Binding Documents.SaveAsCommand}" />
         <KeyBinding Gesture="Ctrl+Shift+N" Command="{Binding GoToObjectCommand}" />
         <KeyBinding Gesture="Ctrl+Shift+H" Command="{Binding ShowHistoryCommand}" />
+        <KeyBinding Key="F1" Command="{Binding ShowShortcutsCommand}" />
     </Window.InputBindings>
 
     <Grid>
@@ -68,36 +69,37 @@
                         </MenuItem>
                         <MenuItem Header="{x:Static res:Strings.MenuTools}">
                             <MenuItem Header="{x:Static res:Strings.MenuHistory}" c:Ui.Icon="{x:Static c:Icons.History}" InputGestureText="Ctrl+Shift+H" Command="{Binding ShowHistoryCommand}" />
+                            <MenuItem Header="{x:Static res:Strings.MenuShortcuts}" c:Ui.Icon="&#xE765;" InputGestureText="F1" Command="{Binding ShowShortcutsCommand}" />
                             <Separator />
                             <MenuItem Header="{x:Static res:Strings.MenuSettings}" c:Ui.Icon="{x:Static c:Icons.Settings}" Command="{Binding OpenSettingsCommand}" />
                         </MenuItem>
                     </Menu>
                     <Border Style="{StaticResource Separator.Vertical}" />
 
-                    <Button Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.Plug}" Content="{x:Static res:Strings.ConnectionNewLong}"
+                    <Button ToolTip="{x:Static res:Strings.ConnectionNewLong}" Style="{StaticResource Btn.Icon.Compact}" c:Ui.Icon="{x:Static c:Icons.Plug}"
                             Command="{Binding Connections.NewCommand}" />
-                    <Button Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.Add}" Content="{x:Static res:Strings.QueryNew}"
+                    <Button Style="{StaticResource Btn.Icon.Compact}" c:Ui.Icon="{x:Static c:Icons.Add}"
                             Command="{Binding Documents.NewQueryCommand}" ToolTip="{x:Static res:Strings.QueryNewTip}" />
-                    <Button Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.OpenFile}" Content="{x:Static res:Strings.FileOpen}"
+                    <Button Style="{StaticResource Btn.Icon.Compact}" c:Ui.Icon="{x:Static c:Icons.OpenFile}"
                             Command="{Binding Documents.OpenFileCommand}" ToolTip="{x:Static res:Strings.FileOpenTip}" />
-                    <!-- Shown here when the settings say so; otherwise each query tab has them -->
+                    <!-- Icons only: the menu has the same commands with their names. Run buttons are here when the settings say so;
+                         otherwise each query tab has them -->
                     <StackPanel Orientation="Horizontal" Visibility="{DynamicResource QueryButtons.Toolbar}">
-                        <Button Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.Save}" Content="{x:Static res:Strings.FileSave}"
+                        <Button Style="{StaticResource Btn.Icon.Compact}" c:Ui.Icon="{x:Static c:Icons.Save}"
                                 Command="{Binding Documents.SaveCommand}" ToolTip="{x:Static res:Strings.FileSaveTip}" />
                         <Border Style="{StaticResource Separator.Vertical}" />
-                        <Button Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.Play}" Content="{x:Static res:Strings.QueryRun}"
+                        <Button Style="{StaticResource Btn.Icon.Compact}" c:Ui.Icon="{x:Static c:Icons.Play}"
                                 Command="{Binding Documents.Selected.RunCommand}" ToolTip="{x:Static res:Strings.QueryRunTip}" />
-                        <Button Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="&#xE8A7;" Content="{x:Static res:Strings.QueryRunInNewTab}"
+                        <Button Style="{StaticResource Btn.Icon.Compact}" c:Ui.Icon="&#xE8A7;"
                                 Command="{Binding Documents.Selected.RunInNewTabCommand}" ToolTip="{x:Static res:Strings.QueryRunInNewTabTip}" />
-                        <Button Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.Stop}" Content="{x:Static res:Strings.QueryCancel}"
+                        <Button Style="{StaticResource Btn.Icon.Compact}" c:Ui.Icon="{x:Static c:Icons.Stop}"
                                 Command="{Binding Documents.Selected.CancelCommand}" ToolTip="{x:Static res:Strings.QueryCancelTip}" />
                     </StackPanel>
                 </StackPanel>
 
                 <Button x:Name="ThemeButton" DockPanel.Dock="Right" Style="{StaticResource Btn.Icon.Compact}"
                         Command="{Binding ToggleThemeCommand}" ToolTip="{x:Static res:Strings.ToggleTheme}" Margin="4,0,0,0" />
-                <Button DockPanel.Dock="Right" Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.Settings}"
-                        Content="{x:Static res:Strings.Settings}" Command="{Binding OpenSettingsCommand}" ToolTip="{x:Static res:Strings.SettingsTip}" />
+                <Button DockPanel.Dock="Right" Style="{StaticResource Btn.Icon.Compact}" c:Ui.Icon="{x:Static c:Icons.Settings}" Command="{Binding OpenSettingsCommand}" ToolTip="{x:Static res:Strings.SettingsTip}" />
                 <Grid />
             </DockPanel>
         </Border>

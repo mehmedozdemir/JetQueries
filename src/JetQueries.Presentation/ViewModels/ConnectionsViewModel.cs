@@ -282,9 +282,13 @@ public partial class ConnectionsViewModel(
     /// <summary>Raised when an object's details view should open.</summary>
     public event EventHandler<ObjectDetailsRequest>? DetailsRequested;
 
-    /// <summary>The last problem writing a script (shown under the explorer); null when none.</summary>
+    /// <summary>The last problem writing a script (shown at the top of the explorer); null when none.</summary>
     [ObservableProperty]
     public partial string? ScriptError { get; set; }
+
+    /// <summary>Hides the script problem.</summary>
+    [RelayCommand]
+    private void DismissScriptError() => ScriptError = null;
 
     private async Task ScriptAsync(ExplorerNodeViewModel? node, ObjectScriptKind kind)
     {

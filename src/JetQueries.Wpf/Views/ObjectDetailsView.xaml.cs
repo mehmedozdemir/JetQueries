@@ -3,45 +3,56 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using UiKit.Controls;
-using UiKit.Theming;
 
 namespace JetQueries.Wpf.Views;
 
 /// <summary>
-/// The details of a database object in its own window: properties, a tab per table the provider gives
+/// The details of a database object as a document tab: properties, a tab per table the provider gives
 /// (columns, constraints, foreign keys, references, indexes, triggers, parameters, dependencies) and the DDL.
 /// Opened by Ctrl+Click in the editor, F4 and the explorer's "Details".
 /// </summary>
-public partial class ObjectDetailsWindow : Window
+public partial class ObjectDetailsView : UserControl
 {
-    private readonly ObjectDetailsViewModel _viewModel;
     private readonly List<TabItem> _sectionTabs = [];
+    private ObjectDetailsViewModel? _viewModel;
 
-    public ObjectDetailsWindow(ObjectDetailsViewModel viewModel)
+    public ObjectDetailsView()
     {
-        ArgumentNullException.ThrowIfNull(viewModel);
-        _viewModel = viewModel;
         InitializeComponent();
-        DataContext = viewModel;
-        SourceInitialized += (_, _) => ThemeManager.ApplyTitleBar(this);
-        viewModel.Sections.CollectionChanged += OnSectionsChanged;
-        viewModel.PropertyChanged += (_, e) =>
+        DataContextChanged += (_, e) => Attach(e.NewValue as ObjectDetailsViewModel);
+    }
+
+    private void Attach(ObjectDetailsViewModel? viewModel)
+    {
+        if (_viewModel is not null)
         {
-            if (e.PropertyName == nameof(ObjectDetailsViewModel.Ddl))
-            {
-                DdlEditor.Text = viewModel.Ddl ?? string.Empty;
-            }
-        };
-        DdlEditor.Text = viewModel.Ddl ?? string.Empty;
+            _viewModel.Sections.CollectionChanged -= OnSectionsChanged;
+            _viewModel.PropertyChanged -= OnViewModelChanged;
+        }
+
+        _viewModel = viewModel;
+        if (viewModel is not null)
+        {
+            viewModel.Sections.CollectionChanged += OnSectionsChanged;
+            viewModel.PropertyChanged += OnViewModelChanged;
+        }
+
+        DdlEditor.Text = viewModel?.Ddl ?? string.Empty;
         BuildSectionTabs();
     }
 
-    public ObjectDetailsViewModel ViewModel => _viewModel;
+    private void OnViewModelChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ObjectDetailsViewModel.Ddl))
+        {
+            DdlEditor.Text = _viewModel?.Ddl ?? string.Empty;
+        }
+    }
+
+    public ObjectDetailsViewModel? ViewModel => _viewModel;
 
     /// <summary>The section tabs' titles, for tests.</summary>
     internal IReadOnlyList<string> SectionTitles => [.. _sectionTabs.Select(static t => (string)t.Header)];
-
-    private void OnClose(object sender, ExecutedRoutedEventArgs e) => Close();
 
     private void OnSectionsChanged(object? sender, NotifyCollectionChangedEventArgs e) => BuildSectionTabs();
 
@@ -56,7 +67,7 @@ public partial class ObjectDetailsWindow : Window
 
         _sectionTabs.Clear();
         var index = Tabs.Items.IndexOf(DdlTab);
-        foreach (var section in _viewModel.Sections)
+        foreach (var section in _viewModel?.Sections ?? [])
         {
             var tab = new TabItem { Header = section.Header, Tag = section.Key, Content = SectionContent(section) };
             Ui.SetIcon(tab, IconOf(section.Key));
@@ -110,14 +121,14 @@ public partial class ObjectDetailsWindow : Window
             {
                 if (e.ClickCount == 2 && e.GetPosition(grid).Y > 40 && grid.CurrentRow >= 0 && grid.CurrentRow < rows.Count)
                 {
-                    _viewModel.OpenRow(rows[grid.CurrentRow]);
+                    _viewModel?.OpenRow(rows[grid.CurrentRow]);
                 }
             }), handledEventsToo: true);
         }
 
         if (section.HasSource)
         {
-            var source = new Editor.SqlEditor { IsReadOnly = true, Margin = new Thickness(4, 6, 4, 4), LanguageService = _viewModel.LanguageService };
+            var source = new Editor.SqlEditor { IsReadOnly = true, Margin = new Thickness(4, 6, 4, 4), LanguageService = _viewModel?.LanguageService };
             var sourceCard = new Border { Child = source, Height = 190, Margin = new Thickness(0, 8, 0, 0) };
             sourceCard.SetResourceReference(StyleProperty, "Card.Surface");
             DockPanel.SetDock(sourceCard, Dock.Bottom);

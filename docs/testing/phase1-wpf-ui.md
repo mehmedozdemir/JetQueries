@@ -318,6 +318,25 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
       Encryption (Evet / Hayır / Katı), PostgreSQL's SSL, SQLite's open mode, Oracle's labels and hints are
       Turkish; the saved values are unchanged (an existing connection opens with the same choices).
 
+## P2 refinements
+- [ ] The main toolbar shows icons only (new connection, new query, open; save/run/run in new tab/cancel when
+      the settings put them there; settings, theme); every icon has a tooltip.
+- [ ] Tools → Keyboard shortcuts (F1) lists the shortcuts under General, Editor, Results, Explorer; typing in
+      the search box narrows by keys ("ctrl+shift") or action ("biçim"); Esc closes; F1 again brings it forward.
+- [ ] Explorer: a connected connection is bold with no "connected" badge. A script that cannot be written shows
+      a banner at the top of the explorer with an × that hides it.
+- [ ] Query toolbar: in manual-commit mode with an open transaction, "Commit" and "Rollback" are written out next
+      to their icons. The database box is narrower.
+- [ ] Results: a toolbar above the grid with Izgara / Metin / Kayıt and "SQL filtresi". The SQL filter bar is
+      hidden until that button is pressed (the box gets the focus); while a filter is applied it stays open, and
+      clearing the filter hides it again. The footer reads "Sayfa [200] Sonraki Tümü | Say [n] Değer".
+- [ ] Object details (Ctrl+Click, F4, explorer Details) open as a tab beside the queries with the object's icon
+      and environment dot; asking again for the same object selects its tab; middle click, × and the tab menu
+      (Close, Close others, Close all) close it. With a details tab selected, Run and Save in the menus do nothing.
+- [ ] History window: "Tüm bağlantılar" lists the connections with runs; choosing one shows only its runs;
+      "Yalnızca hatalılar" shows failed runs only; filters combine with the search; with no match it says so.
+- [ ] Light theme: captions, placeholders and NULLs are darker than before and readable on white and grey.
+
 ## Connection editor (compact)
 - [ ] The form is two columns: Name + Environment (with its colour) on top, the type's main settings two to a
       row, user and password side by side, "Save password" and "Read-only" switches, then "Advanced" (folder,
@@ -327,7 +346,7 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] Test connection: the result appears in a card above the footer, green on success, red on failure.
 
 ## Known limits
-- Object details open in their own window, not in a document tab. SQLite shows no CHECK constraints; Oracle
+- SQLite shows no CHECK constraints; Oracle
   parameter defaults show only whether there is one; routines declared inside an Oracle package have no details
   of their own (open the package). PostgreSQL keeps no created/modified dates.
 - Header sorting and column filters apply to the rows received; the SQL filter box above the grid is the one

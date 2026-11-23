@@ -23,7 +23,17 @@ public partial class MainWindow : Window
         viewModel.GoToObjectRequested += (_, goTo) => new GoToObjectWindow(goTo) { Owner = this }.ShowDialog();
 
         viewModel.HistoryRequested += (_, _) => ShowHistory(viewModel);
-        viewModel.DetailsRequested += (_, details) => ShowDetails(details);
+        viewModel.ShortcutsRequested += (_, _) =>
+        {
+            if (OwnedWindows.OfType<ShortcutsWindow>().FirstOrDefault() is { } open)
+            {
+                open.Activate();
+            }
+            else
+            {
+                new ShortcutsWindow(new KeyboardShortcutsViewModel()) { Owner = this }.Show();
+            }
+        };
 
         Loaded += (_, _) =>
         {
@@ -76,27 +86,6 @@ public partial class MainWindow : Window
         }
 
         return _history;
-    }
-
-    /// <summary>An object's details window; the open one for the same object is brought forward instead.</summary>
-    private void ShowDetails(ObjectDetailsViewModel details)
-    {
-        var open = OwnedWindows.OfType<ObjectDetailsWindow>().FirstOrDefault(w =>
-            w.ViewModel.ConnectionId == details.ConnectionId && w.ViewModel.Target.Name.Equals(details.Target.Name) && w.ViewModel.Target.Kind == details.Target.Kind);
-        if (open is not null)
-        {
-            if (open.WindowState == WindowState.Minimized)
-            {
-                open.WindowState = WindowState.Normal;
-            }
-
-            open.Activate();
-            return;
-        }
-
-        var window = new ObjectDetailsWindow(details) { Owner = this };
-        window.Show();
-        _ = details.LoadAsync();
     }
 
     private void OnExit(object sender, RoutedEventArgs e) => Close();

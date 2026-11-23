@@ -121,6 +121,8 @@
     </Style>
 
     <Style x:Key="Btn.Icon" TargetType="ButtonBase" BasedOn="{StaticResource Btn.Base}">
+        <!-- An icon has no text of its own: screen readers announce the tooltip. -->
+        <Setter Property="AutomationProperties.Name" Value="{Binding ToolTip, RelativeSource={RelativeSource Self}}" />
         <Setter Property="Width" Value="34" />
         <Setter Property="Height" Value="34" />
         <Setter Property="Padding" Value="0" />

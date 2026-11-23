@@ -78,6 +78,8 @@ public partial class HistoryViewModel : ObservableObject
         _documents = documents;
         _ui = ui;
         SearchText = string.Empty;
+        Connections.Add(AllConnections);
+        SelectedConnection = AllConnections;
 
         // Raised on whatever thread recorded the run.
         history.Changed += (_, _) => ui.Post(() => _ = LoadAsync());
@@ -102,10 +104,13 @@ public partial class HistoryViewModel : ObservableObject
         // Typing fires a load per key; only the answer to the latest request is shown.
         var version = Interlocked.Increment(ref _version);
         var search = SearchText;
+        var filter = new QueryHistoryFilter(search, SelectedConnection == AllConnections ? null : SelectedConnection, FailedOnly);
         IReadOnlyList<QueryHistoryEntry> entries;
+        IReadOnlyList<string> connections;
         try
         {
-            entries = await _jobs.Enqueue("Load history", context => _history.SearchAsync(search, PageSize, context.CancellationToken), JobPriority.Low).Completion;
+            entries = await _jobs.Enqueue("Load history", context => _history.FindAsync(filter, PageSize, context.CancellationToken), JobPriority.Low).Completion;
+            connections = await _jobs.Enqueue("History connections", context => _history.GetConnectionNamesAsync(context.CancellationToken), JobPriority.Low).Completion;
         }
         catch (OperationCanceledException)
         {
@@ -120,6 +125,22 @@ public partial class HistoryViewModel : ObservableObject
                 return;
             }
 
+            // The connection list follows the history; the chosen one stays while it has runs.
+            if (!Connections.Skip(1).SequenceEqual(connections, StringComparer.Ordinal))
+            {
+                var chosen = SelectedConnection;
+                _keepFilter = true;
+                Connections.Clear();
+                Connections.Add(AllConnections);
+                foreach (var name in connections)
+                {
+                    Connections.Add(name);
+                }
+
+                SelectedConnection = Connections.Contains(chosen) ? chosen : AllConnections;
+                _keepFilter = false;
+            }
+
             var selectedId = Selected?.Entry.Id;
             Entries.Clear();
             foreach (var entry in entries)
@@ -128,11 +149,53 @@ public partial class HistoryViewModel : ObservableObject
             }
 
             Selected = Entries.FirstOrDefault(e => e.Entry.Id == selectedId);
-            IsEmpty = Entries.Count == 0 && search.Length == 0;
+            IsEmpty = Entries.Count == 0 && search.Length == 0 && filter.ConnectionName is null && !filter.FailedOnly;
+            IsFilteredEmpty = Entries.Count == 0 && !IsEmpty;
         });
     }
 
     partial void OnSearchTextChanged(string value) => _ = LoadAsync();
+
+    /// <summary>The "all connections" choice of the connection filter (read once: it is compared by value).</summary>
+    public string AllConnections { get; } = Strings.HistoryAllConnections;
+
+    /// <summary>The connections that have runs, after "all connections".</summary>
+    public ObservableCollection<string> Connections { get; } = [];
+
+    /// <summary>Only runs on this connection (or all).</summary>
+    [ObservableProperty]
+    public partial string SelectedConnection { get; set; }
+
+    /// <summary>Only runs that failed.</summary>
+    [ObservableProperty]
+    public partial bool FailedOnly { get; set; }
+
+    /// <summary>The filters match nothing (the history itself is not empty).</summary>
+    [ObservableProperty]
+    public partial bool IsFilteredEmpty { get; set; }
+
+    private bool _keepFilter;
+
+    partial void OnSelectedConnectionChanged(string value)
+    {
+        // A list being rebuilt clears its selection for a moment (the view writes null back): not a choice.
+        if (value is null)
+        {
+            if (!_keepFilter)
+            {
+                SelectedConnection = AllConnections;
+            }
+
+            return;
+        }
+
+        if (!_keepFilter)
+        {
+            _ = LoadAsync();
+        }
+    }
+
+    partial void OnFailedOnlyChanged(bool value) => _ = LoadAsync();
 
     private bool HasSelection() => Selected is not null;
 

@@ -86,6 +86,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 - Result grid headers show each column's data type under its name (UiKit `IGridColumnCaptions`).
 - Connection editor redesigned as a compact two-column form with an "Advanced" section.
 - `docs/ux-review.md`: a UX review of the whole application with prioritised findings.
+- Keyboard shortcuts overview (Tools → Keyboard shortcuts, F1), searchable.
+- Object details open as document tabs beside the queries instead of separate windows.
+- History window filters by connection and by failed runs (in the store, not only in the loaded page).
+- Results: a toolbar with Grid / Text / Record and an on-demand SQL filter bar; the footer's actions are labelled.
 - Query tabs show which connection they run on: an environment-coloured dot on the tab, the connection name on the query toolbar, and a coloured "PRODUCTION" / "TEST" strip above it for those environments.
 
 - Transactions: each query tab has auto-commit (default) or manual commit. In manual mode text that can change
@@ -129,9 +133,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 
 ### Changed
 - A result set may hold up to 1,000,000 rows (was 100,000), fetched page by page.
-
-### Changed
 - View models, their service contracts and strings moved to `JetQueries.Presentation`, shared by both interfaces.
+- The main toolbar is icon-only (the menu names the commands); Commit and Rollback are labelled; the explorer's "connected" badge is gone and script errors show as a dismissible banner at its top.
+- Accessibility: icon buttons give screen readers their tooltip as name; muted text is darker in both themes (≥ 4.5:1 for small text).
 
 ### Fixed
 - The explorer's toolbar was cut off at the default panel width; its actions are icons that wrap.

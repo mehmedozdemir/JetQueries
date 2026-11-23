@@ -5,7 +5,7 @@
         xmlns:res="clr-namespace:JetQueries.Presentation.Resources;assembly=JetQueries.Presentation"
         xmlns:e="clr-namespace:JetQueries.Wpf.Editor"
         xmlns:v="clr-namespace:JetQueries.Wpf.Views"
-        Title="{x:Static res:Strings.HistoryWindowTitle}" Width="1080" Height="640" MinWidth="700" MinHeight="420"
+        Title="{x:Static res:Strings.HistoryWindowTitle}" Width="1120" Height="660" MinWidth="820" MinHeight="420"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
         Style="{StaticResource Window.App}">
     <Window.InputBindings>
@@ -24,8 +24,13 @@
                 </Border>
                 <Button DockPanel.Dock="Right" Style="{StaticResource Btn.Link}" Content="{x:Static res:Strings.HistoryClear}" Command="{Binding ClearCommand}"
                         VerticalAlignment="Center" Margin="12,0,0,0" />
-                <c:SearchBox x:Name="Search" DockPanel.Dock="Right" Width="320" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=250}"
+                <c:SearchBox x:Name="Search" DockPanel.Dock="Right" Width="260" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=250}"
                              c:Ui.Placeholder="{x:Static res:Strings.HistorySearch}" VerticalAlignment="Center" />
+                <!-- Narrow down by connection and outcome -->
+                <ToggleButton x:Name="FailedOnly" DockPanel.Dock="Right" Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.Error}"
+                              Content="{x:Static res:Strings.HistoryFailedOnly}" IsChecked="{Binding FailedOnly}" Margin="8,0" VerticalAlignment="Center" />
+                <ComboBox x:Name="ConnectionFilter" DockPanel.Dock="Right" Width="200" Height="30" VerticalAlignment="Center"
+                          ItemsSource="{Binding Connections}" SelectedItem="{Binding SelectedConnection}" />
                 <TextBlock Text="{x:Static res:Strings.HistoryWindowTitle}" Style="{StaticResource Text.Subtitle}" VerticalAlignment="Center" />
             </DockPanel>
         </Border>
@@ -46,6 +51,9 @@
                         <TextBlock Text="{x:Static res:Strings.HistoryEmpty}" Foreground="{DynamicResource Brush.TextSecondary}"
                                    TextWrapping="Wrap" TextAlignment="Center" Margin="0,12,0,0" MaxWidth="260" />
                     </StackPanel>
+                    <TextBlock Text="{x:Static res:Strings.HistoryNoMatch}" Foreground="{DynamicResource Brush.TextSecondary}" Margin="20"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap"
+                               Visibility="{Binding IsFilteredEmpty, Converter={StaticResource BoolToVisibility}}" />
                     <ListBox x:Name="List" ItemsSource="{Binding Entries}" SelectedItem="{Binding Selected}" BorderThickness="0" Background="Transparent"
                              Padding="4" ScrollViewer.HorizontalScrollBarVisibility="Disabled" MouseDoubleClick="OnListDoubleClick" KeyDown="OnListKeyDown"
                              Visibility="{Binding IsEmpty, Converter={x:Static v:InverseBoolToVisibilityConverter.Instance}}">
