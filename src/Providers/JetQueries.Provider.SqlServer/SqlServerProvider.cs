@@ -17,7 +17,7 @@ public sealed class SqlServerExtension : IExtension
 }
 
 /// <summary>Database provider for Microsoft SQL Server and Azure SQL, on Microsoft.Data.SqlClient.</summary>
-public sealed class SqlServerProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder
+public sealed class SqlServerProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect
 {
     /// <summary>The provider identifier stored in connection profiles.</summary>
     public const string ProviderId = "sqlserver";
@@ -82,6 +82,17 @@ public sealed class SqlServerProvider : IDatabaseProvider, IConnectionSettingsPr
     /// <remarks>SQL Server cannot nest a WITH query or a plain ORDER BY in a derived table; the ORDER BY is left out.</remarks>
     public string? BuildCountQuery(string sql) =>
         CountQueryBuilder.Build(sql, Language.TSqlLexer.Tokenize(sql), withAllowedInside: false, orderByNeedsPaging: true);
+
+    /// <inheritdoc />
+    public string SelectRows(string qualifiedName, IReadOnlyList<string> quotedColumns, int rows)
+    {
+        ArgumentNullException.ThrowIfNull(qualifiedName);
+        ArgumentNullException.ThrowIfNull(quotedColumns);
+        return "SELECT TOP (" + rows.ToString(System.Globalization.CultureInfo.InvariantCulture) + ") " + Columns(quotedColumns) + "\nFROM " + qualifiedName;
+
+        // One column per line once there are several.
+        static string Columns(IReadOnlyList<string> columns) => columns.Count == 0 ? "*" : columns.Count <= 3 ? string.Join(", ", columns) : "\n    " + string.Join(",\n    ", columns);
+    }
 
     /// <inheritdoc />
     public string? BuildFilterQuery(string sql, string condition)

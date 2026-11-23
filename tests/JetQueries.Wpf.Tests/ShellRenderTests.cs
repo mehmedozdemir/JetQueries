@@ -147,6 +147,28 @@ public sealed class ShellRenderTests
 
             settingsWindow.Close();
 
+            // Go to object: "kart" over the open connection, then the first result revealed and selected in the tree.
+            var goTo = new GoToObjectViewModel(connections, ui);
+            var goToWindow = new GoToObjectWindow(goTo) { Left = -20000, Top = 0, ShowActivated = false };
+            goToWindow.Show();
+            await goTo.IndexAsync();
+            goTo.SearchText = "card";
+            foreach (var theme in new[] { AppTheme.Dark, AppTheme.Light })
+            {
+                ThemeManager.Apply(theme, save: false);
+                await Idle();
+                results[$"goto-{theme}"] = Capture(goToWindow, Path.Combine(directory, $"wpf-goto-{(theme == AppTheme.Dark ? "dark" : "light")}.png"));
+            }
+
+            ThemeManager.Apply(AppTheme.Dark, save: false);
+            var chosen = goTo.Results.First(static r => r.Name == "CardSummary").Node;
+            goTo.Selected = goTo.Results.First(r => ReferenceEquals(r.Node, chosen));
+            goTo.OpenCommand.Execute(null);
+            await Idle();
+            Assert.False(goToWindow.IsVisible);
+            var explorer = Find<ConnectionsView>(window);
+            Assert.True(explorer.ContainerOf(chosen)?.IsSelected);
+
             var saveChanges = new SaveChangesDialog("Sorgu 1") { Left = -20000, Top = 0, ShowActivated = false };
             saveChanges.Show();
             await Idle();
@@ -160,7 +182,7 @@ public sealed class ShellRenderTests
             return results;
         });
 
-        Assert.Equal(18, colours.Count);
+        Assert.Equal(20, colours.Count);
         Assert.All(colours, static pair => Assert.True(pair.Value > 12, $"{pair.Key} rendered only {pair.Value} distinct colours."));
     }
 

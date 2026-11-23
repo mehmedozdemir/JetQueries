@@ -455,6 +455,16 @@ public sealed class OracleIntegrationTests(OracleFixture fixture) : IClassFixtur
         return -1;
     }
 
+    [Fact]
+    public async Task The_first_rows_select_runs_in_the_dialect()
+    {
+        await using var connection = await OpenAsync();
+        var provider = new OracleProvider();
+        var sql = provider.SelectRows("all_users", ["username", "user_id", "created", "common"], 2);
+        var events = await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest(sql), Token));
+        Assert.Equal(2, events.OfType<RowBatch>().Sum(static b => b.Rows.Count));
+    }
+
     private async Task<IDatabaseConnection> OpenAsync()
     {
         Assert.SkipWhen(fixture.SkipReason is not null, fixture.SkipReason ?? string.Empty);

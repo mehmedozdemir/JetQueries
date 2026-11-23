@@ -12,6 +12,7 @@
         <KeyBinding Gesture="Ctrl+O" Command="{Binding Documents.OpenFileCommand}" />
         <KeyBinding Gesture="Ctrl+S" Command="{Binding Documents.SaveCommand}" />
         <KeyBinding Gesture="Ctrl+Shift+S" Command="{Binding Documents.SaveAsCommand}" />
+        <KeyBinding Gesture="Ctrl+Shift+N" Command="{Binding GoToObjectCommand}" />
     </Window.InputBindings>
 
     <Grid>

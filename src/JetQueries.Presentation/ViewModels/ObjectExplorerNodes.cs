@@ -126,6 +126,12 @@ public sealed class DatabaseObjectNodeViewModel(ExplorerContext context, Databas
 {
     public DatabaseObject Target { get; } = databaseObject;
 
+    /// <inheritdoc />
+    public override bool HasData => ObjectScripts.HasData(Target.Kind);
+
+    /// <inheritdoc />
+    public override bool HasDefinition => ObjectScripts.HasDefinition(Target.Kind);
+
     /// <summary>The open connection the object belongs to.</summary>
     public ConnectionSession Session => context.Session;
 

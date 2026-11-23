@@ -142,6 +142,17 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] Ctrl+/ comments the selected lines (or the caret's line) with `-- `, again removes it; Ctrl+Shift+U /
       Ctrl+U upper / lower case the selection or the word at the caret (`id` → `ID`, never `İD`).
 
+## Explorer scripts and Go to object
+- [ ] Right-click a table: "Select first 1000 rows" opens a tab named after it, in its database, and runs it
+      (SQL Server `TOP (1000)`, Oracle `FETCH FIRST`, PostgreSQL / SQLite `LIMIT`).
+- [ ] Script → SELECT / INSERT / UPDATE / DELETE open templates with quoted names; run as written, UPDATE and
+      DELETE change nothing (`= NULL` on the key, or `WHERE 1 = 0` without a primary key).
+- [ ] Script → CREATE opens the definition of a table, view, procedure, function, package; an encrypted one says
+      so under the explorer. A database, schema or group has no Script item.
+- [ ] Ctrl+Shift+N (or the search icon): type part of a name ("müşteri" finds "Müşteri İşlemleri"); ↑↓ moves,
+      Enter or a double click selects the object in the explorer (its parents open), Esc closes. With no open
+      connection it says to connect first. A large server: results appear while lists are loading.
+
 ## Run the statement at the cursor
 - [ ] Several statements separated by `;` or empty lines: Ctrl+Enter with the cursor inside one runs only that
       one (it flashes for a moment); with the cursor right after its `;` too; on an empty line, the one above.
@@ -221,6 +232,8 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
   are those of that execution (they may differ from the first page if the data changed meanwhile).
 - SQL Server: a query starting with WITH is not paged (SQL Server cannot count it) and is read to its end.
 - Filters on several columns are combined with AND; there is no OR (the SQL filter box takes any condition).
+- Go to object searches what the explorer can list (all databases of a connection, loaded once and cached);
+  favourites in the explorer are not there yet.
 - Disconnecting a connection from the explorer while a tab has an open transaction does not ask: the server
   rolls it back.
 - Oracle and PostgreSQL count a transaction as open once it has changed something (a BEGIN alone is not).

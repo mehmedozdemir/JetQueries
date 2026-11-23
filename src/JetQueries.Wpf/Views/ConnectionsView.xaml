@@ -21,6 +21,9 @@
                         Content="{Binding ToggleConnectionText}" Command="{Binding ToggleConnectionCommand}" />
                 <Button Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="{x:Static c:Icons.Refresh}"
                         Command="{Binding ReloadSelectedCommand}" ToolTip="{x:Static res:Strings.ExplorerRefresh}" />
+                <Button Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="{x:Static c:Icons.Search}"
+                        Command="{Binding DataContext.GoToObjectCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                        ToolTip="{x:Static res:Strings.GoToObjectTip}" />
             </StackPanel>
             <!-- Filter by name over what is loaded (Esc clears) -->
             <c:SearchBox x:Name="Filter" Margin="0,4,0,2" Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged, Delay=200}"
@@ -28,6 +31,10 @@
                          Visibility="{Binding IsEmpty, Converter={x:Static v:InverseBoolToVisibilityConverter.Instance}}" />
           </StackPanel>
         </Border>
+
+        <!-- Why a script could not be written -->
+        <TextBlock DockPanel.Dock="Bottom" Text="{Binding ScriptError}" Foreground="{DynamicResource Brush.Danger}" TextWrapping="Wrap"
+                   Margin="8,4" Visibility="{Binding ScriptError, Converter={x:Static v:NotNullToVisibilityConverter.Instance}}" />
 
         <Grid>
             <!-- Empty state -->
@@ -64,6 +71,23 @@
                                               Command="{Binding PlacementTarget.Tag.ToggleConnectionCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
                                     <MenuItem Header="{x:Static res:Strings.ExplorerRefresh}" c:Ui.Icon="{x:Static c:Icons.Refresh}"
                                               Command="{Binding PlacementTarget.Tag.ReloadSelectedCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                    <!-- Tables and views: their data; anything with a definition: its CREATE -->
+                                    <Separator Visibility="{Binding HasDefinition, Converter={StaticResource BoolToVisibility}}" />
+                                    <MenuItem Header="{x:Static res:Strings.ExplorerSelectRows}" c:Ui.Icon="{x:Static c:Icons.Table}"
+                                              Command="{Binding PlacementTarget.Tag.SelectRowsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"
+                                              Visibility="{Binding HasData, Converter={StaticResource BoolToVisibility}}" />
+                                    <MenuItem Header="{x:Static res:Strings.ExplorerScript}" c:Ui.Icon="{x:Static c:Icons.Code}"
+                                              Visibility="{Binding HasDefinition, Converter={StaticResource BoolToVisibility}}">
+                                        <MenuItem Header="{x:Static res:Strings.ExplorerScriptSelect}" Command="{Binding PlacementTarget.Tag.ScriptSelectCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"
+                                                  Visibility="{Binding HasData, Converter={StaticResource BoolToVisibility}}" />
+                                        <MenuItem Header="{x:Static res:Strings.ExplorerScriptInsert}" Command="{Binding PlacementTarget.Tag.ScriptInsertCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"
+                                                  Visibility="{Binding HasData, Converter={StaticResource BoolToVisibility}}" />
+                                        <MenuItem Header="{x:Static res:Strings.ExplorerScriptUpdate}" Command="{Binding PlacementTarget.Tag.ScriptUpdateCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"
+                                                  Visibility="{Binding HasData, Converter={StaticResource BoolToVisibility}}" />
+                                        <MenuItem Header="{x:Static res:Strings.ExplorerScriptDelete}" Command="{Binding PlacementTarget.Tag.ScriptDeleteCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"
+                                                  Visibility="{Binding HasData, Converter={StaticResource BoolToVisibility}}" />
+                                        <MenuItem Header="{x:Static res:Strings.ExplorerScriptCreate}" Command="{Binding PlacementTarget.Tag.ScriptCreateCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                    </MenuItem>
                                 </ContextMenu>
                             </Setter.Value>
                         </Setter>

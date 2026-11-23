@@ -310,4 +310,17 @@
   <data name="TransactionAskMessage" xml:space="preserve"><value>{0} içinde commit edilmemiş değişiklikler var. Commit edilsin mi, geri mi alınsın?</value></data>
   <data name="NoStatementAtCaret" xml:space="preserve"><value>İmlecin olduğu yerde deyim yok.</value></data>
   <data name="EditorRunStatement" xml:space="preserve"><value>Deyimi çalıştır</value></data>
+  <data name="ExplorerSelectRows" xml:space="preserve"><value>İlk 1000 satırı seç</value></data>
+  <data name="ExplorerScript" xml:space="preserve"><value>Script oluştur</value></data>
+  <data name="ExplorerScriptSelect" xml:space="preserve"><value>SELECT</value></data>
+  <data name="ExplorerScriptInsert" xml:space="preserve"><value>INSERT</value></data>
+  <data name="ExplorerScriptUpdate" xml:space="preserve"><value>UPDATE</value></data>
+  <data name="ExplorerScriptDelete" xml:space="preserve"><value>DELETE</value></data>
+  <data name="ExplorerScriptCreate" xml:space="preserve"><value>CREATE (tanım)</value></data>
+  <data name="GoToObject" xml:space="preserve"><value>Nesneye git</value></data>
+  <data name="GoToObjectTip" xml:space="preserve"><value>Açık bağlantılarda tablo, view ya da rutini adıyla bul (Ctrl+Shift+N)</value></data>
+  <data name="GoToObjectPlaceholder" xml:space="preserve"><value>Tablo, view, prosedür adı…</value></data>
+  <data name="GoToObjectNoConnection" xml:space="preserve"><value>Önce bir bağlantı açın: açık bağlantıların nesneleri aranır.</value></data>
+  <data name="GoToObjectIndexing" xml:space="preserve"><value>Listeler yükleniyor…</value></data>
+  <data name="GoToObjectCount" xml:space="preserve"><value>{0:N0} nesne</value></data>
 </root>

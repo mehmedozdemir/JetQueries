@@ -293,6 +293,19 @@ public static class Strings
     public static string TransactionAskMessage => Get(nameof(TransactionAskMessage));
     public static string NoStatementAtCaret => Get(nameof(NoStatementAtCaret));
     public static string EditorRunStatement => Get(nameof(EditorRunStatement));
+    public static string ExplorerSelectRows => Get(nameof(ExplorerSelectRows));
+    public static string ExplorerScript => Get(nameof(ExplorerScript));
+    public static string ExplorerScriptSelect => Get(nameof(ExplorerScriptSelect));
+    public static string ExplorerScriptInsert => Get(nameof(ExplorerScriptInsert));
+    public static string ExplorerScriptUpdate => Get(nameof(ExplorerScriptUpdate));
+    public static string ExplorerScriptDelete => Get(nameof(ExplorerScriptDelete));
+    public static string ExplorerScriptCreate => Get(nameof(ExplorerScriptCreate));
+    public static string GoToObject => Get(nameof(GoToObject));
+    public static string GoToObjectTip => Get(nameof(GoToObjectTip));
+    public static string GoToObjectPlaceholder => Get(nameof(GoToObjectPlaceholder));
+    public static string GoToObjectNoConnection => Get(nameof(GoToObjectNoConnection));
+    public static string GoToObjectIndexing => Get(nameof(GoToObjectIndexing));
+    public static string GoToObjectCount => Get(nameof(GoToObjectCount));
 
     /// <summary>A string looked up by a computed name (for example <c>Setting_server</c>), or null if there is none.</summary>
     public static string? Find(string name) => Manager.GetString(name, CultureInfo.CurrentUICulture);

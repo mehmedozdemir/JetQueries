@@ -19,6 +19,9 @@ public partial class MainWindow : Window
         Closed += (_, _) => ThemeManager.ThemeChanged -= UpdateThemeIcon;
         UpdateThemeIcon();
 
+        // Go to object opens over the window; the chosen object is revealed in the explorer.
+        viewModel.GoToObjectRequested += (_, goTo) => new GoToObjectWindow(goTo) { Owner = this }.ShowDialog();
+
         Loaded += (_, _) =>
         {
             viewModel.Connections.RefreshCommand.Execute(null);
