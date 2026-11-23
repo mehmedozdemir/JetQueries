@@ -57,16 +57,40 @@ public partial class QueryDocumentView : UserControl
         RedoItem.IsEnabled = Editor.CanRedo;
     }
 
+    /// <summary>Runs the selection, or the statement at the caret, which flashes so it is clear what ran.</summary>
+    private void RunStatement(QueryDocumentViewModel viewModel)
+    {
+        viewModel.SelectedText = Editor.SelectedText;
+        var caret = Editor.CaretOffset;
+        if (!Editor.HasSelection && viewModel.StatementAt(caret) is { } span)
+        {
+            Editor.Flash(span.Start, span.Length);
+        }
+
+        if (viewModel.RunStatementCommand.CanExecute(caret))
+        {
+            viewModel.RunStatementCommand.Execute(caret);
+        }
+    }
+
     private void OnMenuRun(object sender, System.Windows.RoutedEventArgs e)
     {
-        if (DataContext is QueryDocumentViewModel viewModel && sender is MenuItem { Tag: string tag })
+        if (DataContext is not QueryDocumentViewModel viewModel || sender is not MenuItem { Tag: string tag })
         {
-            viewModel.SelectedText = Editor.SelectedText;
-            var command = tag == "NewTab" ? viewModel.RunInNewTabCommand : viewModel.RunCommand;
-            if (command.CanExecute(null))
-            {
-                command.Execute(null);
-            }
+            return;
+        }
+
+        if (tag == "Statement")
+        {
+            RunStatement(viewModel);
+            return;
+        }
+
+        viewModel.SelectedText = Editor.SelectedText;
+        var command = tag == "NewTab" ? viewModel.RunInNewTabCommand : viewModel.RunCommand;
+        if (command.CanExecute(null))
+        {
+            command.Execute(null);
         }
     }
 
@@ -158,7 +182,14 @@ public partial class QueryDocumentView : UserControl
         }
 
         var modifiers = Keyboard.Modifiers;
-        var run = e.Key == Key.F5 && modifiers == ModifierKeys.None || (e.Key == Key.Enter && modifiers == ModifierKeys.Control);
+        var run = e.Key == Key.F5 && modifiers == ModifierKeys.None;
+        if (e.Key == Key.Enter && modifiers == ModifierKeys.Control)
+        {
+            RunStatement(viewModel);
+            e.Handled = true;
+            return;
+        }
+
 
         // DBeaver's "Execute in new tab" is Ctrl+\; Ctrl+Shift+Enter is easier on keyboards where \ needs AltGr.
         var runInNewTab = (e.Key == Key.Enter && modifiers == (ModifierKeys.Control | ModifierKeys.Shift)) ||

@@ -84,7 +84,8 @@
                 <e:SqlEditor x:Name="Editor" Margin="0,6,0,2" Text="{Binding Text}" LanguageService="{Binding LanguageService}">
                     <e:SqlEditor.ContextMenu>
                         <ContextMenu x:Name="EditorMenu" Opened="OnEditorMenuOpened">
-                            <MenuItem Header="{x:Static res:Strings.EditorRun}" c:Ui.Icon="{x:Static c:Icons.Play}" InputGestureText="F5" Click="OnMenuRun" Tag="Run" />
+                            <MenuItem Header="{x:Static res:Strings.EditorRunStatement}" c:Ui.Icon="{x:Static c:Icons.Play}" InputGestureText="Ctrl+Enter" Click="OnMenuRun" Tag="Statement" />
+                            <MenuItem Header="{x:Static res:Strings.EditorRun}" InputGestureText="F5" Click="OnMenuRun" Tag="Run" />
                             <MenuItem Header="{x:Static res:Strings.EditorRunInNewTab}" c:Ui.Icon="&#xE8A7;" InputGestureText="Ctrl+Shift+Enter" Click="OnMenuRun" Tag="NewTab" />
                             <Separator />
                             <MenuItem x:Name="CutItem" Header="{x:Static res:Strings.EditorCut}" c:Ui.Icon="&#xE8C6;" InputGestureText="Ctrl+X" Click="OnMenuEdit" Tag="Cut" />

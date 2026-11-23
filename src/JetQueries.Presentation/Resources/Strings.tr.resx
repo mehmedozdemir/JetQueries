@@ -124,7 +124,7 @@
   <data name="Setting_foreignKeys" xml:space="preserve"><value>Yabancı anahtarları uygula</value></data>
   <data name="QueryNew" xml:space="preserve"><value>Yeni sorgu</value></data>
   <data name="QueryNewTip" xml:space="preserve"><value>Yeni sorgu sekmesi (Ctrl+N)</value></data>
-  <data name="QueryRunTip" xml:space="preserve"><value>Sorguyu ya da seçili kısmı çalıştır (F5, Ctrl+Enter)</value></data>
+  <data name="QueryRunTip" xml:space="preserve"><value>Sorguyu ya da seçili kısmı çalıştır (F5; imleçteki deyim: Ctrl+Enter)</value></data>
   <data name="QueryCancelTip" xml:space="preserve"><value>Çalışan sorguyu durdur (Esc)</value></data>
   <data name="QueryClose" xml:space="preserve"><value>Kapat</value></data>
   <data name="DocumentsEmptyTitle" xml:space="preserve"><value>Açık sorgu yok</value></data>
@@ -211,7 +211,7 @@
   <data name="CountUnavailable" xml:space="preserve"><value>Yalnızca tek bir SELECT sayılabilir.</value></data>
   <data name="CountFailed" xml:space="preserve"><value>Sayılamadı: {0}</value></data>
   <data name="RefreshResultTip" xml:space="preserve"><value>Sorguyu yeniden çalıştır</value></data>
-  <data name="QueryRunShortTip" xml:space="preserve"><value>Çalıştır (F5, Ctrl+Enter)</value></data>
+  <data name="QueryRunShortTip" xml:space="preserve"><value>Seçimi ya da tüm metni çalıştır (F5); imleçteki deyim: Ctrl+Enter</value></data>
   <data name="QueryCancelShortTip" xml:space="preserve"><value>Durdur (Esc)</value></data>
   <data name="FileSaveShortTip" xml:space="preserve"><value>Kaydet (Ctrl+S)</value></data>
   <data name="SectionQuery" xml:space="preserve"><value>SORGU</value></data>
@@ -308,4 +308,6 @@
   <data name="TransactionBlocksDatabase" xml:space="preserve"><value>Veritabanını değiştirmeden önce açık transaction'ı commit edin ya da geri alın.</value></data>
   <data name="TransactionAskTitle" xml:space="preserve"><value>Açık transaction</value></data>
   <data name="TransactionAskMessage" xml:space="preserve"><value>{0} içinde commit edilmemiş değişiklikler var. Commit edilsin mi, geri mi alınsın?</value></data>
+  <data name="NoStatementAtCaret" xml:space="preserve"><value>İmlecin olduğu yerde deyim yok.</value></data>
+  <data name="EditorRunStatement" xml:space="preserve"><value>Deyimi çalıştır</value></data>
 </root>

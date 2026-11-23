@@ -142,6 +142,14 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] Ctrl+/ comments the selected lines (or the caret's line) with `-- `, again removes it; Ctrl+Shift+U /
       Ctrl+U upper / lower case the selection or the word at the caret (`id` → `ID`, never `İD`).
 
+## Run the statement at the cursor
+- [ ] Several statements separated by `;` or empty lines: Ctrl+Enter with the cursor inside one runs only that
+      one (it flashes for a moment); with the cursor right after its `;` too; on an empty line, the one above.
+- [ ] A selection: Ctrl+Enter runs the selection. F5 runs the selection or the whole text, as before.
+- [ ] `'a;b'`, `-- ;`, `[x;y]` do not end a statement; an `IF … BEGIN … END` block, a `CREATE PROCEDURE` up to
+      `GO`, an Oracle `BEGIN … END;` block or package up to `/`, a script starting with DECLARE run whole.
+- [ ] Only comments at the cursor: "No statement at the cursor.", nothing is sent.
+
 ## Transactions
 - [ ] A connected tab shows "Auto-commit" after the database selector. Click: "Manual commit" (amber), with
       Commit (✓) and Rollback (↶) next to it.

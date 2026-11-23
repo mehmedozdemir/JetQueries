@@ -86,6 +86,8 @@ public class SqlEditor : UserControl
     private IReadOnlyList<SqlDiagnostic> _diagnostics = [];
     private int _diagnosticVersion;
     private bool _updatingText;
+    private (int Start, int Length)? _flash;
+    private readonly DispatcherTimer _flashTimer = new() { Interval = TimeSpan.FromMilliseconds(450) };
     private CompletionWindow? _completionWindow;
     private int _completionVersion;
 
@@ -122,6 +124,13 @@ public class SqlEditor : UserControl
 
         var view = _editor.TextArea.TextView;
         view.BackgroundRenderers.Add(new SquiggleRenderer(this));
+        view.BackgroundRenderers.Add(new FlashRenderer(this));
+        _flashTimer.Tick += (_, _) =>
+        {
+            _flashTimer.Stop();
+            _flash = null;
+            _editor.TextArea.TextView.InvalidateLayer(KnownLayer.Selection);
+        };
         _editor.MouseHover += OnMouseHover;
         _editor.MouseHoverStopped += (_, _) => _toolTip.IsOpen = false;
         _editor.TextArea.PreviewMouseLeftButtonDown += OnPreviewMouseDown;
@@ -237,6 +246,18 @@ public class SqlEditor : UserControl
 
     /// <summary>Moves keyboard focus into the text.</summary>
     public void FocusText() => _editor.TextArea.Focus();
+
+    /// <summary>Highlights a range for a moment (the statement Ctrl+Enter runs).</summary>
+    public void Flash(int start, int length)
+    {
+        _flash = (start, length);
+        _editor.TextArea.TextView.InvalidateLayer(KnownLayer.Selection);
+        _flashTimer.Stop();
+        _flashTimer.Start();
+    }
+
+    /// <summary>The range highlighted now, for the renderer and tests; null when none.</summary>
+    internal (int Start, int Length)? Flashed => _flash;
 
     /// <summary>The text can be read and selected but not changed (previews).</summary>
     public bool IsReadOnly
@@ -842,5 +863,29 @@ public class SqlEditor : UserControl
             CompletionItemKind.Keyword => string.Empty,
             var other => other.ToString().ToLowerInvariant(),
         };
+    }
+
+    /// <summary>Paints the flashed range in the selection colour, softly.</summary>
+    private sealed class FlashRenderer(SqlEditor owner) : IBackgroundRenderer
+    {
+        public KnownLayer Layer => KnownLayer.Selection;
+
+        public void Draw(TextView textView, DrawingContext drawingContext)
+        {
+            if (owner._flash is not { } flash || owner.SelectionBrush is not { } brush)
+            {
+                return;
+            }
+
+            var length = owner._editor.Document.TextLength;
+            var start = Math.Clamp(flash.Start, 0, length);
+            var segment = new TextSegment { StartOffset = start, EndOffset = Math.Clamp(flash.Start + flash.Length, start, length) };
+            var builder = new BackgroundGeometryBuilder { CornerRadius = 2, AlignToWholePixels = true };
+            builder.AddSegment(textView, segment);
+            if (builder.CreateGeometry() is { } geometry)
+            {
+                drawingContext.DrawGeometry(brush, null, geometry);
+            }
+        }
     }
 }

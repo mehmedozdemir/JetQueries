@@ -99,7 +99,7 @@ public sealed class EditorActionsTests
             var menu = Assert.IsType<ContextMenu>(editor.ContextMenu);
             var headers = menu.Items.OfType<MenuItem>().Select(static m => (string)m.Header).ToList();
             Assert.Equal(
-                ["Run", "Run in new tab", "Cut", "Copy", "Paste", "Select all", "Format SQL", "Comment / uncomment lines", "Upper case", "Lower case",
+                ["Run statement", "Run", "Run in new tab", "Cut", "Copy", "Paste", "Select all", "Format SQL", "Comment / uncomment lines", "Upper case", "Lower case",
                  "Go to definition", "Show completion", "Undo", "Redo"],
                 headers);
 

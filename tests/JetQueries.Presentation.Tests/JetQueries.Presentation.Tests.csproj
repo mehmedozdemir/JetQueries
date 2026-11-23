@@ -19,5 +19,8 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\JetQueries.Presentation\JetQueries.Presentation.csproj" />
+    <!-- The statement locator is checked against real dialect tokenizers (tests only). -->
+    <ProjectReference Include="..\..\src\Providers\JetQueries.Provider.SqlServer\JetQueries.Provider.SqlServer.csproj" />
+    <ProjectReference Include="..\..\src\Providers\JetQueries.Provider.Oracle\JetQueries.Provider.Oracle.csproj" />
   </ItemGroup>
 </Project>
