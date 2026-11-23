@@ -54,15 +54,18 @@ public partial class DocumentsViewModel : ObservableObject
     private readonly IDialogService _dialogs;
     private readonly IUiDispatcher _ui;
     private readonly ISettingsStore? _workspace;
+    private readonly IAppearanceService? _settings;
     private int _saveVersion;
     private bool _restoring;
     private int _counter;
 
     /// <param name="workspace">Where the open tabs are remembered; without one they are not.</param>
+    /// <param name="settings">The user's settings (the fetch size of new tabs); defaults without.</param>
     public DocumentsViewModel(
         IConnectionManager manager, IMetadataService metadata, IQueryHistory history, IJobQueue jobs, IDialogService dialogs, IUiDispatcher ui,
-        ISettingsStore? workspace = null)
+        ISettingsStore? workspace = null, IAppearanceService? settings = null)
     {
+        _settings = settings;
         _manager = manager;
         _metadata = metadata;
         _history = history;
@@ -99,7 +102,11 @@ public partial class DocumentsViewModel : ObservableObject
     /// </summary>
     public QueryDocumentViewModel Open(string title, string text, Guid? connectionId, string? database = null)
     {
-        var document = new QueryDocumentViewModel(title, _manager, _metadata, _history, _jobs, _dialogs, _ui, database) { Text = text };
+        var document = new QueryDocumentViewModel(title, _manager, _metadata, _history, _jobs, _dialogs, _ui, database)
+        {
+            Text = text,
+            FetchSize = _settings?.Current.FetchSize ?? QueryDocumentViewModel.DefaultFetchSize,
+        };
         document.MarkClean();
         if (connectionId is { } id)
         {

@@ -18,7 +18,7 @@ public sealed class PostgreSqlExtension : IExtension
 }
 
 /// <summary>Database provider for PostgreSQL, on the Npgsql driver.</summary>
-public sealed class PostgreSqlProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter
+public sealed class PostgreSqlProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder
 {
     /// <summary>The provider identifier stored in connection profiles.</summary>
     public const string ProviderId = "postgresql";
@@ -74,6 +74,10 @@ public sealed class PostgreSqlProvider : IDatabaseProvider, IConnectionSettingsP
     /// <inheritdoc />
     public IReadOnlyList<ScriptBatch> SplitBatches(string script) =>
         SqlStatementSplitter.Split(script, PostgreSqlSyntax.Tokenizer.Tokenize(script), StatementBlockRule.BeginAtomic);
+
+    /// <inheritdoc />
+    public string? BuildCountQuery(string sql) =>
+        CountQueryBuilder.Build(sql, PostgreSqlSyntax.Tokenizer.Tokenize(sql), withAllowedInside: true, orderByNeedsPaging: false);
 
     /// <inheritdoc />
     public string QuoteIdentifier(string identifier) => PostgreSqlNames.Quote(identifier);

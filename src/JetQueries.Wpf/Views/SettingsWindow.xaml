@@ -83,6 +83,25 @@
                 <ComboBox Grid.Column="1" ItemsSource="{Binding GridSizes}" SelectedItem="{Binding GridFontSize}" />
             </Grid>
             <TextBlock Text="{x:Static res:Strings.SettingsZoomHint}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="0,6,0,0" />
+
+            <TextBlock Text="{x:Static res:Strings.SectionQuery}" Style="{StaticResource Text.Section}" Margin="0,14,0,6" />
+            <Grid Style="{StaticResource Field}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="150" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{x:Static res:Strings.FieldQueryButtons}" Style="{StaticResource Text.FieldLabel}" />
+                <ComboBox Grid.Column="1" ItemsSource="{Binding QueryButtonPlaces}" SelectedItem="{Binding QueryButtonPlace}" DisplayMemberPath="Text" />
+            </Grid>
+            <Grid Style="{StaticResource Field}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="150" />
+                    <ColumnDefinition Width="90" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{x:Static res:Strings.FieldFetchSize}" Style="{StaticResource Text.FieldLabel}" />
+                <ComboBox Grid.Column="1" ItemsSource="{Binding FetchSizes}" SelectedItem="{Binding FetchSize}" />
+            </Grid>
         </StackPanel>
     </DockPanel>
 </Window>

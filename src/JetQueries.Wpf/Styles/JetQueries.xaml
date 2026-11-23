@@ -11,6 +11,10 @@
     <FontFamily x:Key="Font.Code">Cascadia Mono, Consolas</FontFamily>
     <sys:Double x:Key="FontSize.Code">13</sys:Double>
 
+    <!-- Where Run, Cancel and Save are (Settings): in each query tab by default. -->
+    <Visibility x:Key="QueryButtons.Tab">Visible</Visibility>
+    <Visibility x:Key="QueryButtons.Toolbar">Collapsed</Visibility>
+
     <!-- Tighter than UiKit's defaults: more room for data. -->
     <Thickness x:Key="Space.Page.Compact">8,6,8,0</Thickness>
     <Style x:Key="Toolbar.Compact" TargetType="Border" BasedOn="{StaticResource Toolbar}">

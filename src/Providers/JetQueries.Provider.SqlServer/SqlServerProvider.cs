@@ -1,4 +1,5 @@
 using JetQueries.Provider.SqlServer.Language;
+using JetQueries.Providers.Language;
 using JetQueries.Sdk;
 using Microsoft.Data.SqlClient;
 
@@ -16,7 +17,7 @@ public sealed class SqlServerExtension : IExtension
 }
 
 /// <summary>Database provider for Microsoft SQL Server and Azure SQL, on Microsoft.Data.SqlClient.</summary>
-public sealed class SqlServerProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter
+public sealed class SqlServerProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder
 {
     /// <summary>The provider identifier stored in connection profiles.</summary>
     public const string ProviderId = "sqlserver";
@@ -76,6 +77,11 @@ public sealed class SqlServerProvider : IDatabaseProvider, IConnectionSettingsPr
         ArgumentNullException.ThrowIfNull(settings);
         return SqlServerConnectionSettings.ParseEndpoint(settings.GetValueOrDefault(SqlServerConnectionSettings.Server));
     }
+
+    /// <inheritdoc />
+    /// <remarks>SQL Server cannot nest a WITH query or a plain ORDER BY in a derived table; the ORDER BY is left out.</remarks>
+    public string? BuildCountQuery(string sql) =>
+        CountQueryBuilder.Build(sql, Language.TSqlLexer.Tokenize(sql), withAllowedInside: false, orderByNeedsPaging: true);
 
     /// <inheritdoc />
     public string QuoteIdentifier(string identifier) => SqlServerNames.Quote(identifier);

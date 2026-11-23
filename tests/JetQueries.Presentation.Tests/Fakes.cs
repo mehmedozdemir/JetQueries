@@ -205,7 +205,7 @@ internal sealed class FakeExtensions(IDatabaseProvider provider) : IExtensionHos
 }
 
 /// <summary>A provider with SQL Server-like settings that connects to nothing.</summary>
-internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvider
+internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvider, IRowCountQueryBuilder
 {
     public string? OpenError { get; set; }
 
@@ -254,6 +254,53 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
     ];
 
     public string QuoteIdentifier(string identifier) => identifier;
+
+    /// <summary>"COUNT(" + the query + ")" for a SELECT; null otherwise.</summary>
+    public string? BuildCountQuery(string sql) => sql.StartsWith("SELECT", StringComparison.OrdinalIgnoreCase) ? "COUNT(" + sql + ")" : null;
+
+    /// <summary>How many result enumerations were disposed before they ended (open cursors closed early).</summary>
+    public int ClosedEarly => _closedEarly;
+
+    private int _closedEarly;
+
+    /// <summary>
+    /// Makes queries return <paramref name="rows"/> rows of one column (1, 2, …) in the request's batch size, and
+    /// COUNT(…) return <paramref name="rows"/>.
+    /// </summary>
+    public void ReturnRows(int rows) => Execute = (request, token) => Rows(request, rows, token);
+
+    private async IAsyncEnumerable<QueryEvent> Rows(QueryRequest request, int rows, [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        await Task.Yield();
+        if (request.Sql.StartsWith("COUNT(", StringComparison.Ordinal))
+        {
+            yield return new ResultSetStarted([new ResultColumn("count", "bigint", typeof(long))]);
+            yield return new RowBatch([[(long)rows]]);
+            yield return new ResultSetCompleted(1, false);
+            yield break;
+        }
+
+        var completed = false;
+        try
+        {
+            yield return new ResultSetStarted([new ResultColumn("n", "int", typeof(int))]);
+            for (var i = 0; i < rows; i += request.BatchSize)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                yield return new RowBatch([.. Enumerable.Range(i + 1, Math.Min(request.BatchSize, rows - i)).Select(static n => new object?[] { n })]);
+            }
+
+            yield return new ResultSetCompleted(rows, false);
+            completed = true;
+        }
+        finally
+        {
+            if (!completed)
+            {
+                Interlocked.Increment(ref _closedEarly);
+            }
+        }
+    }
 
     public bool RequiresCredential(IReadOnlyDictionary<string, string> settings) => settings.GetValueOrDefault("authentication", "sql") != "windows";
 

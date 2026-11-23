@@ -1,5 +1,6 @@
 using System.Globalization;
 using JetQueries.Provider.Oracle.Language;
+using JetQueries.Providers.Language;
 using JetQueries.Sdk;
 using Oracle.ManagedDataAccess.Client;
 
@@ -17,7 +18,7 @@ public sealed class OracleExtension : IExtension
 }
 
 /// <summary>Database provider for Oracle Database, on the managed ODP.NET driver (no Oracle client installation needed).</summary>
-public sealed class OracleProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter
+public sealed class OracleProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder
 {
     /// <summary>The provider identifier stored in connection profiles.</summary>
     public const string ProviderId = "oracle";
@@ -67,6 +68,10 @@ public sealed class OracleProvider : IDatabaseProvider, IConnectionSettingsProvi
 
     /// <inheritdoc />
     public IReadOnlyList<ScriptBatch> SplitBatches(string script) => OracleScriptSplitter.Split(script);
+
+    /// <inheritdoc />
+    public string? BuildCountQuery(string sql) =>
+        CountQueryBuilder.Build(sql.TrimEnd().TrimEnd('/').TrimEnd(), PlSqlTokenizer.Tokenize(sql.TrimEnd().TrimEnd('/').TrimEnd()), withAllowedInside: true, orderByNeedsPaging: false);
 
     /// <inheritdoc />
     public string QuoteIdentifier(string identifier) => OracleNames.Quote(identifier);

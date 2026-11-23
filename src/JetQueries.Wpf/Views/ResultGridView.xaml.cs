@@ -95,6 +95,16 @@ public partial class ResultGridView : UserControl
 
     private void OnZoomReset(object sender, RoutedEventArgs e) => Zoom = 1;
 
+    // Enter in the page size box takes the value at once, as leaving the box does.
+    private void OnFetchSizeKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            FetchSizeBox.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
+            e.Handled = true;
+        }
+    }
+
     /// <summary>The grid, for tests.</summary>
     internal VirtualGrid VirtualGrid => Grid;
 
