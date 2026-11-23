@@ -38,9 +38,14 @@
                     <Border Style="{StaticResource Badge}" Margin="4,0,8,0" ToolTip="{x:Static res:Strings.CountRowsTip}">
                         <TextBlock Text="{Binding RowsText}" FontSize="{DynamicResource FontSize.Small}" Foreground="{DynamicResource Brush.TextSecondary}" />
                     </Border>
+                    <ToggleButton x:Name="ValuePanelToggle" Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="&#xE7B3;"
+                                  ToolTip="{x:Static res:Strings.ValuePanelTip}" Click="OnValuePanelToggle" Margin="0,0,6,0" />
                     <ProgressBar IsIndeterminate="{Binding IsCounting}" Width="40" VerticalAlignment="Center" Margin="0,0,8,0"
                                  Visibility="{Binding IsCounting, Converter={StaticResource BoolToVisibility}}" />
                 </StackPanel>
+                <!-- Count, sum, average, min, max of the selected cells -->
+                <TextBlock x:Name="SelectionStatsText" DockPanel.Dock="Right" Style="{StaticResource Text.Status}" Margin="12,0,4,0"
+                           Foreground="{DynamicResource Brush.TextSecondary}" />
                 <TextBlock Text="{Binding FetchStatus}" Style="{StaticResource Text.Status}" Foreground="{DynamicResource Brush.TextMuted}"
                            TextTrimming="CharacterEllipsis" />
             </DockPanel>
@@ -128,6 +133,36 @@
                         Visibility="Collapsed" Click="OnShowColumns" />
             </WrapPanel>
         </DockPanel>
+
+        <!-- The current cell in full, beside the grid (toggled under the grid) -->
+        <Grid x:Name="ValuePanelHost" DockPanel.Dock="Right" Visibility="Collapsed">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="6" />
+                <ColumnDefinition Width="320" MinWidth="160" />
+            </Grid.ColumnDefinitions>
+            <GridSplitter Grid.Column="0" Width="6" HorizontalAlignment="Stretch" ResizeDirection="Columns" ResizeBehavior="CurrentAndNext" />
+            <Border Grid.Column="1" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1,0,0,0">
+                <DockPanel>
+                    <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,0,1" Padding="10,6,4,6">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Style="{StaticResource Btn.Icon}" Width="24" Height="24" c:Ui.Icon="&#xE711;" Click="OnCloseValuePanel" />
+                            <StackPanel>
+                                <TextBlock x:Name="ValueColumn" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                <TextBlock x:Name="ValueInfo" Style="{StaticResource Text.Caption}" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                    <Grid>
+                        <TextBox x:Name="ValueText" Style="{StaticResource TextBox.ReadOnly}" FontFamily="{DynamicResource Font.Code}"
+                                 FontSize="{DynamicResource FontSize.Small}" TextWrapping="Wrap" VerticalContentAlignment="Top" Padding="10,8"
+                                 VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" AcceptsReturn="True" />
+                        <ScrollViewer x:Name="ValueImageHost" Visibility="Collapsed" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                            <Image x:Name="ValueImage" Stretch="None" Margin="10" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                        </ScrollViewer>
+                    </Grid>
+                </DockPanel>
+            </Border>
+        </Grid>
 
         <Grid>
             <c:VirtualGrid x:Name="Grid" NullText="NULL" ShowFilterButtons="True" />

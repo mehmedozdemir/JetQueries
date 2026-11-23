@@ -306,6 +306,17 @@ public static class Strings
     public static string GoToObjectNoConnection => Get(nameof(GoToObjectNoConnection));
     public static string GoToObjectIndexing => Get(nameof(GoToObjectIndexing));
     public static string GoToObjectCount => Get(nameof(GoToObjectCount));
+    public static string ValueCharacters => Get(nameof(ValueCharacters));
+    public static string CopyAs => Get(nameof(CopyAs));
+    public static string CopyAsCsv => Get(nameof(CopyAsCsv));
+    public static string CopyAsJson => Get(nameof(CopyAsJson));
+    public static string CopyAsMarkdown => Get(nameof(CopyAsMarkdown));
+    public static string CopyAsInsert => Get(nameof(CopyAsInsert));
+    public static string CopyAsInList => Get(nameof(CopyAsInList));
+    public static string ShowValue => Get(nameof(ShowValue));
+    public static string ValuePanelTip => Get(nameof(ValuePanelTip));
+    public static string SelectionCells => Get(nameof(SelectionCells));
+    public static string SelectionNumbers => Get(nameof(SelectionNumbers));
 
     /// <summary>A string looked up by a computed name (for example <c>Setting_server</c>), or null if there is none.</summary>
     public static string? Find(string name) => Manager.GetString(name, CultureInfo.CurrentUICulture);

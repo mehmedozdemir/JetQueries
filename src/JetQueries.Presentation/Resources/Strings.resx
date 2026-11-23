@@ -323,4 +323,15 @@
   <data name="GoToObjectNoConnection" xml:space="preserve"><value>Connect to a database first: objects of open connections are searched.</value></data>
   <data name="GoToObjectIndexing" xml:space="preserve"><value>Loading lists…</value></data>
   <data name="GoToObjectCount" xml:space="preserve"><value>{0:N0} objects</value></data>
+  <data name="ValueCharacters" xml:space="preserve"><value>characters</value></data>
+  <data name="CopyAs" xml:space="preserve"><value>Copy as</value></data>
+  <data name="CopyAsCsv" xml:space="preserve"><value>CSV</value></data>
+  <data name="CopyAsJson" xml:space="preserve"><value>JSON</value></data>
+  <data name="CopyAsMarkdown" xml:space="preserve"><value>Markdown table</value></data>
+  <data name="CopyAsInsert" xml:space="preserve"><value>SQL INSERT</value></data>
+  <data name="CopyAsInList" xml:space="preserve"><value>SQL IN list</value></data>
+  <data name="ShowValue" xml:space="preserve"><value>Show value</value></data>
+  <data name="ValuePanelTip" xml:space="preserve"><value>Value panel: the current cell in full (JSON and XML laid out, binary as hex, images)</value></data>
+  <data name="SelectionCells" xml:space="preserve"><value>{0:N0} cells</value></data>
+  <data name="SelectionNumbers" xml:space="preserve"><value>{0:N0} cells · Sum {1} · Avg {2} · Min {3} · Max {4}</value></data>
 </root>

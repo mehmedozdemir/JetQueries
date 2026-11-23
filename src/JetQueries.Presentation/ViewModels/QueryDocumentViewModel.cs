@@ -195,6 +195,32 @@ public sealed partial class QueryResultSet : ObservableObject, IResultTab
     [RelayCommand(CanExecute = nameof(CanGoOn))]
     private void LastRecord() => RecordIndex = View.RowCount - 1;
 
+    /// <summary>Rows <paramref name="first"/>…<paramref name="last"/> as shown (sorted and filtered), read on the UI thread.</summary>
+    public IReadOnlyList<object?[]> ShownRows(int first, int last)
+    {
+        last = Math.Min(last, View.RowCount - 1);
+        var rows = new List<object?[]>(Math.Max(0, last - first + 1));
+        for (var r = Math.Max(0, first); r <= last; r++)
+        {
+            rows.Add(_rows[View.SourceRow(r)]);
+        }
+
+        return rows;
+    }
+
+    /// <summary>The value at a shown row, for the value panel.</summary>
+    public object? ShownValue(int row, int column) =>
+        row >= 0 && row < View.RowCount && column >= 0 && column < Columns.Count ? _rows[View.SourceRow(row)][column] : null;
+
+    /// <summary>Counts and sums the selected cells as a background job.</summary>
+    public Task<SelectionStats> SelectionStatsAsync(int first, int last, IReadOnlyList<int> columns)
+    {
+        var rows = ShownRows(first, last);
+        return _jobs is null
+            ? Task.FromResult(SelectionStats.Compute(rows, columns, CancellationToken.None))
+            : _jobs.Enqueue("Selection totals", context => Task.FromResult(SelectionStats.Compute(rows, columns, context.CancellationToken)), JobPriority.Low).Completion;
+    }
+
     /// <summary>The rows as the text view shows them (in the view's order), built as a background job.</summary>
     /// <param name="visible">The columns to write; null for all.</param>
     public Task<string> BuildTextAsync(IReadOnlyList<int>? visible)
