@@ -207,6 +207,20 @@ public sealed class SqliteDatabaseTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task A_formatted_query_returns_the_same_rows()
+    {
+        const string Sql = "with c as (select id, card_no, balance from cards) select id, case when balance > 100 then 'high' else 'low' end band " +
+            "from c where card_no like '52%' or id in (select id from cards where balance is null) order by id desc";
+        var formatted = ((ISqlFormatter)new SqliteProvider().LanguageService!).Format(Sql, SqlFormatOptions.Default);
+
+        Assert.Contains("\n", formatted, StringComparison.Ordinal);
+        Assert.Equal(Rows(await RunAsync(Sql)), Rows(await RunAsync(formatted)));
+
+        static string Rows(List<QueryEvent> events) =>
+            string.Join("|", events.OfType<RowBatch>().SelectMany(static b => b.Rows).Select(static r => string.Join(",", r)));
+    }
+
+    [Fact]
     public async Task A_read_only_connection_cannot_write()
     {
         await using var readOnly = await new SqliteProvider().OpenConnectionAsync(

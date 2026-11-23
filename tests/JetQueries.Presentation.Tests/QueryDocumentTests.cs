@@ -229,6 +229,9 @@ public sealed class QueryDocumentTests
         documents.CloseCommand.Execute(second);
         Assert.Same(first, documents.Selected);
         documents.CloseCommand.Execute(first);
+        Assert.Empty(documents.Documents);
+        Assert.Null(documents.Selected);
+        documents.NewQueryCommand.Execute(null);
         Assert.Equal("Query 3", Assert.Single(documents.Documents).Title);
         _ = cards;
     }

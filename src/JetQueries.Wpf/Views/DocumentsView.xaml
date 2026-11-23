@@ -25,6 +25,22 @@
                     <Setter Property="c:Ui.Icon" Value="{x:Static c:Icons.Code}" />
                     <!-- Middle click closes a tab, as in browsers and Visual Studio. -->
                     <EventSetter Event="PreviewMouseUp" Handler="OnTabMouseUp" />
+                    <Setter Property="Tag" Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=TabControl}}" />
+                    <Setter Property="ContextMenu">
+                        <Setter.Value>
+                            <ContextMenu>
+                                <MenuItem Header="{x:Static res:Strings.TabClose}" c:Ui.Icon="&#xE711;"
+                                          Command="{Binding PlacementTarget.Tag.CloseCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                <MenuItem Header="{x:Static res:Strings.TabCloseOthers}"
+                                          Command="{Binding PlacementTarget.Tag.CloseOthersCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                <MenuItem Header="{x:Static res:Strings.TabCloseAll}"
+                                          Command="{Binding PlacementTarget.Tag.CloseAllCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                <Separator />
+                                <MenuItem Header="{x:Static res:Strings.TabCopyPath}" c:Ui.Icon="&#xE8C8;" Click="OnCopyPath"
+                                          IsEnabled="{Binding FilePath, Converter={x:Static v:NotNullConverter.Instance}}" />
+                            </ContextMenu>
+                        </Setter.Value>
+                    </Setter>
                 </Style>
             </TabControl.ItemContainerStyle>
             <TabControl.ItemTemplate>
@@ -32,7 +48,7 @@
                     <StackPanel Orientation="Horizontal" ToolTip="{Binding ToolTip}">
                         <TextBlock Text="{Binding HeaderText}" VerticalAlignment="Center" />
                         <Button Style="{StaticResource Btn.TabClose}" ToolTip="{x:Static res:Strings.QueryClose}"
-                                Command="{Binding DataContext.CloseCommand, ElementName=Root}" CommandParameter="{Binding}" />
+                                Command="{Binding DataContext.CloseCommand, RelativeSource={RelativeSource AncestorType=TabControl}}" CommandParameter="{Binding}" />
                     </StackPanel>
                 </DataTemplate>
             </TabControl.ItemTemplate>

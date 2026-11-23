@@ -7,8 +7,11 @@ namespace JetQueries.Provider.SqlServer.Language;
 /// Language service for T-SQL: colouring and completion. Both work on tokens, not on a parse tree, because the
 /// text being typed is almost never a complete statement.
 /// </summary>
-internal sealed class TSqlLanguageService : ISqlLanguageService
+internal sealed class TSqlLanguageService : ISqlLanguageService, ISqlFormatter
 {
+    /// <inheritdoc />
+    public string Format(string sql, SqlFormatOptions options) => SqlLayout.Format(sql, TSqlLexer.Tokenize, options);
+
     public SqlLineTokens TokenizeLine(ReadOnlySpan<char> line, int startState)
     {
         var tokens = new List<LanguageToken>();

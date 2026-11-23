@@ -126,6 +126,9 @@ public class SqlEditor : UserControl
         _editor.MouseHoverStopped += (_, _) => _toolTip.IsOpen = false;
         _editor.TextArea.PreviewMouseLeftButtonDown += OnPreviewMouseDown;
 
+        // A right click outside the selection moves the caret there first, so the menu acts where it was opened.
+        _editor.TextArea.PreviewMouseRightButtonDown += OnPreviewRightButtonDown;
+
         // Errors are looked for once typing pauses, not on every key.
         _diagnosticTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(600) };
         _diagnosticTimer.Tick += (_, _) =>
@@ -234,6 +237,170 @@ public class SqlEditor : UserControl
 
     /// <summary>Moves keyboard focus into the text.</summary>
     public void FocusText() => _editor.TextArea.Focus();
+
+    /// <summary>Some text is selected.</summary>
+    public bool HasSelection => _editor.SelectionLength > 0;
+
+    /// <summary>The last change can be undone.</summary>
+    public bool CanUndo => _editor.CanUndo;
+
+    /// <summary>An undone change can be done again.</summary>
+    public bool CanRedo => _editor.CanRedo;
+
+    /// <summary>Cuts the selection to the clipboard.</summary>
+    public void Cut() => _editor.Cut();
+
+    /// <summary>Copies the selection to the clipboard.</summary>
+    public void Copy() => _editor.Copy();
+
+    /// <summary>Pastes the clipboard at the caret.</summary>
+    public void Paste() => _editor.Paste();
+
+    /// <summary>Selects the whole text.</summary>
+    public void SelectAll() => _editor.SelectAll();
+
+    /// <summary>Undoes the last change.</summary>
+    public void Undo() => _editor.Undo();
+
+    /// <summary>Does an undone change again.</summary>
+    public void Redo() => _editor.Redo();
+
+    /// <summary>
+    /// Replaces the selection, or the whole text when nothing is selected, with what <paramref name="transform"/>
+    /// makes of it, as one step that Undo takes back. Nothing changes when the text was edited meanwhile, or when
+    /// the transform gives null.
+    /// </summary>
+    /// <returns>Whether the text changed.</returns>
+    public async Task<bool> TransformAsync(Func<string, Task<string?>> transform)
+    {
+        ArgumentNullException.ThrowIfNull(transform);
+        var document = _editor.Document;
+        var selected = _editor.SelectionLength > 0;
+        var start = selected ? _editor.SelectionStart : 0;
+        var length = selected ? _editor.SelectionLength : document.TextLength;
+        var version = document.Version;
+        var result = await transform(document.GetText(start, length));
+        var unchanged = version is not null && document.Version is { } now && version.BelongsToSameDocumentAs(now) && version.CompareAge(now) == 0;
+        if (result is null || !unchanged || result == document.GetText(start, length))
+        {
+            return false;
+        }
+
+        document.Replace(start, length, result);
+        if (selected)
+        {
+            _editor.Select(start, result.Length);
+        }
+        else
+        {
+            _editor.CaretOffset = Math.Min(_editor.CaretOffset, document.TextLength);
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Comments out the lines of the selection (or the caret's line) with <c>--</c>, or, when they all are already,
+    /// takes the comment marks away. One step for Undo.
+    /// </summary>
+    public void ToggleLineComment()
+    {
+        var document = _editor.Document;
+        var first = document.GetLineByOffset(_editor.SelectionLength > 0 ? _editor.SelectionStart : _editor.CaretOffset);
+        var last = _editor.SelectionLength > 0 ? document.GetLineByOffset(_editor.SelectionStart + _editor.SelectionLength) : first;
+        if (last.LineNumber > first.LineNumber && last.Offset == _editor.SelectionStart + _editor.SelectionLength)
+        {
+            // A selection ending at the start of a line does not take that line.
+            last = last.PreviousLine;
+        }
+
+        var lines = new List<DocumentLine>();
+        for (var line = first; line is not null && line.LineNumber <= last.LineNumber; line = line.NextLine)
+        {
+            lines.Add(line);
+        }
+
+        string Text(DocumentLine line) => document.GetText(line.Offset, line.Length);
+        var filled = lines.Where(l => !string.IsNullOrWhiteSpace(Text(l))).ToList();
+        if (filled.Count == 0)
+        {
+            return;
+        }
+
+        var commented = filled.All(l => Text(l).TrimStart().StartsWith("--", StringComparison.Ordinal));
+        var indent = filled.Min(l => Text(l).Length - Text(l).TrimStart().Length);
+        document.BeginUpdate();
+        try
+        {
+            // From the bottom up, so that offsets above stay valid.
+            foreach (var line in Enumerable.Reverse(filled))
+            {
+                var text = Text(line);
+                if (commented)
+                {
+                    var at = text.IndexOf("--", StringComparison.Ordinal);
+                    var remove = text.Length > at + 2 && text[at + 2] == ' ' ? 3 : 2;
+                    document.Remove(line.Offset + at, remove);
+                }
+                else
+                {
+                    document.Insert(line.Offset + indent, "-- ");
+                }
+            }
+        }
+        finally
+        {
+            document.EndUpdate();
+        }
+    }
+
+    /// <summary>Upper- or lower-cases the selection, or the word at the caret. One step for Undo.</summary>
+    public void ChangeCase(bool upper)
+    {
+        var document = _editor.Document;
+        int start, length;
+        if (_editor.SelectionLength > 0)
+        {
+            (start, length) = (_editor.SelectionStart, _editor.SelectionLength);
+        }
+        else
+        {
+            start = _editor.CaretOffset;
+            var end = start;
+            while (start > 0 && IsWordChar(document.GetCharAt(start - 1)))
+            {
+                start--;
+            }
+
+            while (end < document.TextLength && IsWordChar(document.GetCharAt(end)))
+            {
+                end++;
+            }
+
+            length = end - start;
+        }
+
+        if (length == 0)
+        {
+            return;
+        }
+
+        var text = document.GetText(start, length);
+
+        // Invariant culture: "i" becomes "I" (not "İ"), as SQL keywords and identifiers expect.
+        var changed = upper ? text.ToUpperInvariant() : text.ToLowerInvariant();
+        if (changed != text)
+        {
+            var selected = _editor.SelectionLength > 0;
+            document.Replace(start, length, changed);
+            if (selected)
+            {
+                _editor.Select(start, changed.Length);
+            }
+        }
+
+        static bool IsWordChar(char c) => char.IsLetterOrDigit(c) || c is '_' or '@' or '#' or '$';
+    }
 
     /// <summary>Opens the completion list at the caret, as Ctrl+Space does.</summary>
     public Task ShowCompletionAsync() => RequestCompletionAsync();
@@ -367,6 +534,17 @@ public class SqlEditor : UserControl
             Zoom = StepZoom(Zoom, e.Key is Key.OemPlus or Key.Add);
             e.Handled = true;
         }
+    }
+
+    private void OnPreviewRightButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (OffsetAt(e) is { } offset && (offset < _editor.SelectionStart || offset > _editor.SelectionStart + _editor.SelectionLength || _editor.SelectionLength == 0))
+        {
+            _editor.Select(offset, 0);
+            _editor.CaretOffset = offset;
+        }
+
+        _editor.TextArea.Focus();
     }
 
     private int? OffsetAt(MouseEventArgs e)

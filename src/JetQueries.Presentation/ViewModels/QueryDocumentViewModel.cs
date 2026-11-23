@@ -96,6 +96,12 @@ public sealed partial class QueryResultSet : ObservableObject, IResultTab
     [NotifyPropertyChangedFor(nameof(RowsText))]
     public partial bool HasMore { get; set; }
 
+    /// <summary>
+    /// The single SELECT this result comes from, run again for more pages, a count or a filter; null for a result of
+    /// a script or a procedure call (read to its end at once).
+    /// </summary>
+    internal string? PagedSql { get; set; }
+
     /// <summary>The result comes from a single SELECT, so a SQL condition can narrow it on the server.</summary>
     [ObservableProperty]
     public partial bool CanFilter { get; set; }
@@ -368,11 +374,11 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
     public string SelectedText { get; set; } = string.Empty;
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(RunCommand))]
+    [NotifyCanExecuteChangedFor(nameof(RunCommand), nameof(RunInNewTabCommand))]
     public partial string Text { get; set; }
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(RunCommand))]
+    [NotifyCanExecuteChangedFor(nameof(RunCommand), nameof(RunInNewTabCommand))]
     [NotifyPropertyChangedFor(nameof(LanguageService), nameof(ToolTip))]
     public partial SessionOption? SelectedSession { get; set; }
 
@@ -499,7 +505,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
     public partial IResultTab? SelectedTab { get; set; }
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(RunCommand), nameof(CancelCommand))]
+    [NotifyCanExecuteChangedFor(nameof(RunCommand), nameof(RunInNewTabCommand), nameof(CancelCommand), nameof(RefreshCommand), nameof(CloseResultCommand))]
     public partial bool IsRunning { get; set; }
 
     [ObservableProperty]
@@ -740,9 +746,10 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
     [NotifyCanExecuteChangedFor(nameof(RefreshCommand), nameof(CountRowsCommand))]
     public partial string? LastSql { get; set; }
 
-    // The result of the last run when it is a single SELECT that stopped after a page: more rows can be fetched by
-    // running it again. Nothing stays open on the server between pages (no cursor, no locks, no snapshot).
-    private QueryResultSet? _pagedSet;
+    // How many results the tab has numbered since it was last cleared ("Result 3" follows "Result 2" when a run
+    // keeps the earlier results). Results of a single SELECT keep their SQL (QueryResultSet.PagedSql): more rows
+    // are fetched by running it again; nothing stays open on the server between pages.
+    private int _resultCount;
 
     partial void OnFetchSizeChanged(int value)
     {
@@ -762,21 +769,100 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
     /// for more rows would repeat what it does.
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanRun))]
-    private Task RunAsync() => RunSqlAsync(string.IsNullOrWhiteSpace(SelectedText) ? Text : SelectedText);
+    private Task RunAsync() => RunSqlAsync(TextToRun());
 
-    private bool CanRefresh() => !IsRunning && LastSql is not null && SelectedSession is not null;
+    /// <summary>
+    /// Runs the selection, or the whole text, keeping the results shown: its results open in new tabs after them
+    /// ("Result 2", "Result 3"…), as DBeaver's "Execute in new tab".
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanRun))]
+    private Task RunInNewTabAsync() => RunSqlAsync(TextToRun(), keepResults: true);
 
-    /// <summary>Runs the last SQL again (DBeaver's Refresh of a result).</summary>
+    /// <summary>
+    /// Lays <paramref name="text"/> out with the connection's SQL formatter, as a background job. Null when the
+    /// connection's language has no formatter (or there is no connection); the status says so.
+    /// </summary>
+    public async Task<string?> FormatAsync(string text)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        if (LanguageService is not ISqlFormatter formatter)
+        {
+            Status = SelectedSession is null ? Strings.FormatNeedsConnection : Strings.FormatUnavailable;
+            return null;
+        }
+
+        var options = FormatOptions;
+        var formatted = await _jobs.Enqueue("Format SQL", _ => Task.FromResult(formatter.Format(text, options)), JobPriority.High).Completion;
+        Status = formatted == text ? Strings.FormatNoChange : Strings.FormatDone;
+        return formatted;
+    }
+
+    /// <summary>How <see cref="FormatAsync"/> lays SQL out.</summary>
+    public SqlFormatOptions FormatOptions { get; set; } = SqlFormatOptions.Default;
+
+    private string TextToRun() => string.IsNullOrWhiteSpace(SelectedText) ? Text : SelectedText;
+
+    private bool CanRefresh(QueryResultSet? set) => !IsRunning && (set?.PagedSql ?? LastSql) is not null && SelectedSession is not null;
+
+    /// <summary>
+    /// DBeaver's Refresh of a result: a result of a single SELECT reads its first page again in place (its filter
+    /// kept); otherwise, or without a result, the last SQL runs again.
+    /// </summary>
     [RelayCommand(CanExecute = nameof(CanRefresh))]
-    private Task RefreshAsync() => RunSqlAsync(LastSql!, _pagedSet?.AppliedFilter);
+    private async Task RefreshAsync(QueryResultSet? set)
+    {
+        if (set is { PagedSql: not null })
+        {
+            if (await RefetchAsync(set, Math.Max(1, FetchSize)))
+            {
+                set.TotalRows = null;
+            }
 
-    /// <summary>Runs <paramref name="sql"/>; with <paramref name="filter"/>, narrowed by that SQL condition (Refresh keeps the filter).</summary>
-    private async Task RunSqlAsync(string sql, string? filter = null)
+            return;
+        }
+
+        if (LastSql is { } sql)
+        {
+            await RunSqlAsync(sql, Tabs.OfType<QueryResultSet>().LastOrDefault(s => s.PagedSql == sql)?.AppliedFilter);
+        }
+    }
+
+    private bool CanCloseResult(IResultTab? tab) => tab is QueryResultSet && !IsRunning;
+
+    /// <summary>Closes one result tab (the messages stay).</summary>
+    [RelayCommand(CanExecute = nameof(CanCloseResult))]
+    private void CloseResult(IResultTab? tab)
+    {
+        var index = tab is QueryResultSet found ? Tabs.IndexOf(found) : -1;
+        if (index < 0 || tab is not QueryResultSet set)
+        {
+            return;
+        }
+
+        Tabs.Remove(set);
+        if (ReferenceEquals(SelectedTab, set) || SelectedTab is null)
+        {
+            SelectedTab = Tabs[Math.Clamp(index, 0, Tabs.Count - 1)];
+        }
+
+        if (!Tabs.OfType<QueryResultSet>().Any())
+        {
+            _resultCount = 0;
+        }
+    }
+
+    /// <summary>
+    /// Runs <paramref name="sql"/>; with <paramref name="filter"/>, narrowed by that SQL condition (Refresh keeps the
+    /// filter); with <paramref name="keepResults"/>, after the results already shown instead of in their place.
+    /// </summary>
+    private async Task RunSqlAsync(string sql, string? filter = null, bool keepResults = false)
     {
         var session = SelectedSession!.Session;
         await CloseCursorAsync();
-        ClearResults();
-        _pagedSet = null;
+        if (!keepResults)
+        {
+            ClearResults();
+        }
         var risk = StatementGuard.Analyze(sql);
         if (session.Definition.IsReadOnly && risk.WritesData)
         {
@@ -818,14 +904,14 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
 
         // Batches of one page (within reason), so that a page ends exactly at the fetch size.
         var request = new QueryRequest(run) { BatchSize = Math.Min(fetchSize, 5000) };
-        var cursor = new QueryCursor(channel, request, session, pageable ? fetchSize : MaxRows);
+        var cursor = new QueryCursor(channel, request, session, pageable ? fetchSize : MaxRows) { SelectFirst = keepResults };
         _cursor = cursor;
         await ReadPageAsync(cursor);
 
         // The one result of a single SELECT can be paged, counted and filtered on the server.
-        if (pageable && Tabs.OfType<QueryResultSet>().FirstOrDefault() is { } set)
+        if (pageable && cursor.First is { } set)
         {
-            _pagedSet = set;
+            set.PagedSql = sql;
             set.CanFilter = session.Provider is IResultFilterQueryBuilder;
             set.AppliedFilter = filter;
             set.SqlFilter = filter ?? string.Empty;
@@ -842,12 +928,12 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
         : session.Provider is IResultFilterQueryBuilder builder && builder.BuildFilterQuery(sql, filter) is { } filtered && !StatementGuard.Analyze(filtered).WritesData ? filtered
         : null;
 
-    /// <summary>The SQL the rows of <paramref name="set"/> come from: the last run, with the result's filter.</summary>
+    /// <summary>The SQL the rows of <paramref name="set"/> come from, with its filter; the last run for a result of a script.</summary>
     private string? SqlOf(QueryResultSet set, ConnectionSession session) =>
-        LastSql is not { } sql ? null : ReferenceEquals(set, _pagedSet) ? Filtered(session, sql, set.AppliedFilter) : sql;
+        set.PagedSql is { } sql ? Filtered(session, sql, set.AppliedFilter) : LastSql;
 
     private bool CanApplyFilter(QueryResultSet? set) =>
-        !IsRunning && set is { CanFilter: true } && ReferenceEquals(set, _pagedSet) && LastSql is not null && SelectedSession is not null;
+        !IsRunning && set is { CanFilter: true, PagedSql: not null } && SelectedSession is not null;
 
     /// <summary>
     /// Narrows the result to the rows matching the SQL condition in its filter box (DBeaver's "Enter a SQL
@@ -857,7 +943,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
     [RelayCommand(CanExecute = nameof(CanApplyFilter))]
     private async Task ApplyFilterAsync(QueryResultSet? set)
     {
-        if (set is null || LastSql is not { } sql || SelectedSession?.Session is not { } session)
+        if (set?.PagedSql is not { } sql || SelectedSession?.Session is not { } session)
         {
             return;
         }
@@ -891,7 +977,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
     }
 
     private bool CanFetchMore(QueryResultSet? set) =>
-        !IsRunning && set is { HasMore: true } && ReferenceEquals(set, _pagedSet) && LastSql is not null && SelectedSession is not null;
+        !IsRunning && set is { HasMore: true, PagedSql: not null } && SelectedSession is not null;
 
     /// <summary>Fetches one more page: the query runs again and is read up to the next page's end, then closed.</summary>
     [RelayCommand(CanExecute = nameof(CanFetchMore))]
@@ -1088,7 +1174,6 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
             {
                 // A page is complete and more rows may follow. The statement is closed at once: nothing waits on
                 // the server between pages; the next page runs the query again.
-                _pagedSet = cursor.Current;
                 await DisposeCursorAsync(cursor);
                 Status = Format(Strings.QueryPaused, cursor.CurrentRows);
                 await RecordOnceAsync(cursor, QueryOutcome.Succeeded, null);
@@ -1207,12 +1292,19 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
     // The tab appears with the first rows (or at the end of an empty result), so that its column widths can fit the data.
     private QueryResultSet OpenResult(QueryCursor cursor, IReadOnlyList<object?[]>? sample)
     {
-        var created = new QueryResultSet(Format(Strings.ResultTitle, ++cursor.ResultNumber), cursor.PendingColumns!, sample, _jobs, _ui);
+        var created = new QueryResultSet(Format(Strings.ResultTitle, Interlocked.Increment(ref _resultCount)), cursor.PendingColumns!, sample, _jobs, _ui);
         cursor.PendingColumns = null;
+        var first = ++cursor.ResultNumber == 1;
+        if (first)
+        {
+            cursor.First = created;
+        }
+
+        var select = first && cursor.SelectFirst;
         _ui.Post(() =>
         {
             Tabs.Insert(Tabs.Count - 1, created);
-            if (ReferenceEquals(SelectedTab, Messages))
+            if (select || ReferenceEquals(SelectedTab, Messages))
             {
                 SelectedTab = created;
             }
@@ -1326,7 +1418,14 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
 
         public QueryResultSet? Current { get; set; }
 
+        /// <summary>Results opened by this run so far.</summary>
         public int ResultNumber { get; set; }
+
+        /// <summary>The run's first result.</summary>
+        public QueryResultSet? First { get; set; }
+
+        /// <summary>Show the first result as soon as it opens (a run that keeps the earlier results).</summary>
+        public bool SelectFirst { get; init; }
 
         public int CurrentRows { get; set; }
 
@@ -1395,6 +1494,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
         }
 
         Messages.Lines.Clear();
+        _resultCount = 0;
         SelectedTab = Messages;
     }
 

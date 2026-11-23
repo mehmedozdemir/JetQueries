@@ -49,6 +49,8 @@
                         <Border Style="{StaticResource Separator.Vertical}" />
                         <Button Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.Play}" Content="{x:Static res:Strings.QueryRun}"
                                 Command="{Binding Documents.Selected.RunCommand}" ToolTip="{x:Static res:Strings.QueryRunTip}" />
+                        <Button Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="&#xE8A7;" Content="{x:Static res:Strings.QueryRunInNewTab}"
+                                Command="{Binding Documents.Selected.RunInNewTabCommand}" ToolTip="{x:Static res:Strings.QueryRunInNewTabTip}" />
                         <Button Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.Stop}" Content="{x:Static res:Strings.QueryCancel}"
                                 Command="{Binding Documents.Selected.CancelCommand}" ToolTip="{x:Static res:Strings.QueryCancelTip}" />
                     </StackPanel>

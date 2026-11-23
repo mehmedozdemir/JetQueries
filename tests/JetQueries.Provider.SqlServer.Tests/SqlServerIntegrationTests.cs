@@ -384,6 +384,23 @@ public sealed class SqlServerIntegrationTests(SqlServerFixture fixture) : IClass
     }
 
     [Fact]
+    public async Task A_formatted_query_returns_the_same_rows_on_the_server()
+    {
+        const string Sql = "with d as (select top (10) name, database_id from sys.databases order by database_id) select name, " +
+            "case when database_id <= 4 then N'sistem' else N'kullanıcı' end as kind from d where name not like 'x%' " +
+            "and database_id between 1 and 100 order by name";
+        var formatted = ((ISqlFormatter)new SqlServerProvider().LanguageService!).Format(Sql, SqlFormatOptions.Default);
+        Assert.Contains("\n", formatted, StringComparison.Ordinal);
+
+        await using var connection = await OpenAsync();
+        Assert.Equal(await RowsAsync(connection, Sql), await RowsAsync(connection, formatted));
+
+        static async Task<string> RowsAsync(IDatabaseConnection connection, string sql) =>
+            string.Join("|", (await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest(sql), Token))).OfType<RowBatch>()
+                .SelectMany(static b => b.Rows).Select(static r => string.Join(",", r)));
+    }
+
+    [Fact]
     public async Task The_current_database_can_be_read_listed_and_switched()
     {
         await using var connection = await OpenAsync();

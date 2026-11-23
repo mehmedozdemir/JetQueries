@@ -134,8 +134,11 @@ internal sealed class OracleDialect : SqlDialect
 /// structural parser chosen in ADR 0003. Expression and SQL syntax is not checked here: Oracle reports that
 /// when the code is compiled or run.
 /// </summary>
-internal sealed class OracleLanguageService : ISqlLanguageService
+internal sealed class OracleLanguageService : ISqlLanguageService, ISqlFormatter
 {
+    /// <inheritdoc />
+    public string Format(string sql, SqlFormatOptions options) => SqlLayout.Format(sql, PlSqlTokenizer.Tokenize, options);
+
     public SqlLineTokens TokenizeLine(ReadOnlySpan<char> line, int startState)
     {
         var tokens = new List<LanguageToken>();
