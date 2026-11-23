@@ -24,6 +24,9 @@
     <ProjectReference Include="..\..\src\JetQueries.Wpf\JetQueries.Wpf.csproj" />
     <!-- Real colouring and formatting for the settings previews in the renders (the app itself never references a provider). -->
     <ProjectReference Include="..\..\src\Providers\JetQueries.Provider.SqlServer\JetQueries.Provider.SqlServer.csproj" />
+    <ProjectReference Include="..\..\src\Providers\JetQueries.Provider.Oracle\JetQueries.Provider.Oracle.csproj" />
+    <ProjectReference Include="..\..\src\Providers\JetQueries.Provider.PostgreSql\JetQueries.Provider.PostgreSql.csproj" />
+    <ProjectReference Include="..\..\src\Providers\JetQueries.Provider.Sqlite\JetQueries.Provider.Sqlite.csproj" />
     <Compile Include="..\JetQueries.Presentation.Tests\Fakes.cs" Link="Fakes.cs" />
   </ItemGroup>
 </Project>

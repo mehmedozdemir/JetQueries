@@ -65,6 +65,10 @@ public sealed partial class ConnectionNodeViewModel(ConnectionDefinition definit
 
     public ConnectionDefinition Definition { get; } = definition;
 
+    /// <summary>The mark of the connection's database type; the default until the providers are known.</summary>
+    [ObservableProperty]
+    public partial ProviderMark Mark { get; set; } = ProviderMark.Default;
+
     public override bool CanLoad => _context is not null;
 
     /// <summary>The connection is open: show its objects underneath.</summary>
@@ -120,7 +124,25 @@ public partial class ConnectionsViewModel(
     IJobQueue jobs,
     IDialogService dialogs) : ObservableObject
 {
+    private Dictionary<string, ProviderMark> _marks = new(StringComparer.Ordinal);
+
     public ObservableCollection<ExplorerNodeViewModel> Roots { get; } = [];
+
+    /// <summary>The loaded providers: connections show the mark of their database type. Call on the UI thread.</summary>
+    public void SetProviders(IEnumerable<IDatabaseProvider> providers)
+    {
+        ArgumentNullException.ThrowIfNull(providers);
+        _marks = providers.ToDictionary(static p => p.Id, ProviderMark.For, StringComparer.Ordinal);
+        foreach (var node in Flatten(Roots).OfType<ConnectionNodeViewModel>())
+        {
+            node.Mark = MarkOf(node.Definition);
+        }
+
+        static IEnumerable<ExplorerNodeViewModel> Flatten(IEnumerable<ExplorerNodeViewModel> nodes) =>
+            nodes.SelectMany(static n => n is FolderNodeViewModel folder ? Flatten(folder.Children) : [n]);
+    }
+
+    private ProviderMark MarkOf(ConnectionDefinition definition) => _marks.GetValueOrDefault(definition.ProviderId) ?? ProviderMark.Default;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(EditCommand), nameof(DeleteCommand), nameof(ToggleConnectionCommand), nameof(ReloadSelectedCommand))]
@@ -321,7 +343,7 @@ public partial class ConnectionsViewModel(
                 siblings = folder.Children;
             }
 
-            var node = new ConnectionNodeViewModel(definition);
+            var node = new ConnectionNodeViewModel(definition) { Mark = MarkOf(definition) };
             siblings.Add(node);
             if (open.TryGetValue(definition.Id, out var session))
             {

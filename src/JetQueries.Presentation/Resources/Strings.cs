@@ -33,6 +33,17 @@ public static class Strings
     public static string ConnectionsEmpty => Get(nameof(ConnectionsEmpty));
     public static string ConnectionReadOnlyBadge => Get(nameof(ConnectionReadOnlyBadge));
     public static string ConnectionConnectedBadge => Get(nameof(ConnectionConnectedBadge));
+    public static string ConnectionChooseTypeTitle => Get(nameof(ConnectionChooseTypeTitle));
+    public static string ConnectionChooseTypeInfo => Get(nameof(ConnectionChooseTypeInfo));
+    public static string ConnectionChangeType => Get(nameof(ConnectionChangeType));
+    public static string ConnectionModeForm => Get(nameof(ConnectionModeForm));
+    public static string ConnectionModeString => Get(nameof(ConnectionModeString));
+    public static string ConnectionStringInfo => Get(nameof(ConnectionStringInfo));
+    public static string ConnectionStringApply => Get(nameof(ConnectionStringApply));
+    public static string ConnectionStringRead => Get(nameof(ConnectionStringRead));
+    public static string ConnectionStringReadWithPassword => Get(nameof(ConnectionStringReadWithPassword));
+    public static string ConnectionStringIgnored => Get(nameof(ConnectionStringIgnored));
+    public static string ConnectionStringUnreadable => Get(nameof(ConnectionStringUnreadable));
     public static string ConnectionDialogTitleNew => Get(nameof(ConnectionDialogTitleNew));
     public static string ConnectionDialogTitleEdit => Get(nameof(ConnectionDialogTitleEdit));
     public static string FieldName => Get(nameof(FieldName));

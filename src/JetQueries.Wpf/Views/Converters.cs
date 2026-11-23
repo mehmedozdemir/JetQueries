@@ -68,7 +68,8 @@ public sealed class ExplorerIconConverter : IValueConverter
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value switch
     {
         FolderNodeViewModel => Folder,
-        ConnectionNodeViewModel => Icons.Database,
+        // A connection shows the mark of its database type instead (in its template).
+        ConnectionNodeViewModel => null,
         CategoryNodeViewModel => Group,
         ColumnNodeViewModel { IsPrimaryKey: true } => Icons.Key,
         ColumnNodeViewModel => Icons.Column,

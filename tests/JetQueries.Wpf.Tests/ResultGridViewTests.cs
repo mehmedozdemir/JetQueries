@@ -204,7 +204,8 @@ public sealed class ResultGridViewTests
         {
             var bounds = new Rect(0, 0, content.ActualWidth, content.ActualHeight);
             context.DrawRectangle((Brush)Application.Current.FindResource("Brush.Window"), null, bounds);
-            context.DrawRectangle(new VisualBrush(content), null, bounds);
+            // One to one: a brush would otherwise stretch what was drawn (not the layout box) over the bounds.
+            context.DrawRectangle(new VisualBrush(content) { Stretch = Stretch.None, AlignmentX = AlignmentX.Left, AlignmentY = AlignmentY.Top, ViewboxUnits = BrushMappingMode.Absolute, Viewbox = bounds }, null, bounds);
         }
 
         bitmap.Render(visual);

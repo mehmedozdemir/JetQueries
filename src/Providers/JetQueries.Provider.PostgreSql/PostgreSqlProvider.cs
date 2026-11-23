@@ -18,7 +18,8 @@ public sealed class PostgreSqlExtension : IExtension
 }
 
 /// <summary>Database provider for PostgreSQL, on the Npgsql driver.</summary>
-public sealed class PostgreSqlProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport
+public sealed class PostgreSqlProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport,
+    IConnectionStringImport, IProviderAppearance
 {
     /// <summary>The provider identifier stored in connection profiles.</summary>
     public const string ProviderId = "postgresql";
@@ -33,6 +34,18 @@ public sealed class PostgreSqlProvider : IDatabaseProvider, IConnectionSettingsP
     public ProviderCapabilities Capabilities =>
         ProviderCapabilities.Schemas | ProviderCapabilities.MultipleResultSets | ProviderCapabilities.Transactions |
         ProviderCapabilities.ServerSideCancel | ProviderCapabilities.Routines | ProviderCapabilities.Sequences | ProviderCapabilities.UserTypes;
+
+    /// <inheritdoc />
+    public string IconPathData => "M4 6c0-1.7 3.6-3 8-3s8 1.3 8 3v12c0 1.7-3.6 3-8 3s-8-1.3-8-3z M12 7.6c-3.3 0-5.8-.8-6.4-1.6.6-.8 3.1-1.6 6.4-1.6s5.8.8 6.4 1.6c-.6.8-3.1 1.6-6.4 1.6z M4 11.4c1 1.3 4.3 2.2 8 2.2s7-.9 8-2.2V13c-1 1.3-4.3 2.2-8 2.2S5 14.3 4 13z";
+
+    /// <inheritdoc />
+    public string AccentColor => "#336791";
+
+    /// <inheritdoc />
+    public string Description => "PostgreSQL and compatible servers";
+
+    /// <inheritdoc />
+    public ParsedConnectionString ParseConnectionString(string connectionString) => PostgreSqlConnectionStringParser.Parse(connectionString);
 
     /// <inheritdoc />
     public ISqlLanguageService? LanguageService { get; } = new GenericLanguageService(PostgreSqlDialect.Instance);

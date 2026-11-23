@@ -17,7 +17,8 @@ public sealed class SqlServerExtension : IExtension
 }
 
 /// <summary>Database provider for Microsoft SQL Server and Azure SQL, on Microsoft.Data.SqlClient.</summary>
-public sealed class SqlServerProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport
+public sealed class SqlServerProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport,
+    IConnectionStringImport, IProviderAppearance
 {
     /// <summary>The provider identifier stored in connection profiles.</summary>
     public const string ProviderId = "sqlserver";
@@ -33,6 +34,18 @@ public sealed class SqlServerProvider : IDatabaseProvider, IConnectionSettingsPr
         ProviderCapabilities.MultipleDatabases | ProviderCapabilities.Schemas | ProviderCapabilities.MultipleResultSets |
         ProviderCapabilities.Transactions | ProviderCapabilities.ServerSideCancel | ProviderCapabilities.Routines |
         ProviderCapabilities.Sequences | ProviderCapabilities.Synonyms | ProviderCapabilities.UserTypes;
+
+    /// <inheritdoc />
+    public string IconPathData => "M5.5 4h13A1.5 1.5 0 0 1 20 5.5v4A1.5 1.5 0 0 1 18.5 11h-13A1.5 1.5 0 0 1 4 9.5v-4A1.5 1.5 0 0 1 5.5 4z M7 6.5h1.5v2H7z M10.5 6.5h1.5v2h-1.5z M5.5 13h13a1.5 1.5 0 0 1 1.5 1.5v4a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5v-4A1.5 1.5 0 0 1 5.5 13z M7 15.5h1.5v2H7z M10.5 15.5h1.5v2h-1.5z";
+
+    /// <inheritdoc />
+    public string AccentColor => "#B4262D";
+
+    /// <inheritdoc />
+    public string Description => "SQL Server and Azure SQL";
+
+    /// <inheritdoc />
+    public ParsedConnectionString ParseConnectionString(string connectionString) => SqlServerConnectionStringParser.Parse(connectionString);
 
     /// <inheritdoc />
     public ISqlLanguageService? LanguageService { get; } = new TSqlLanguageService();

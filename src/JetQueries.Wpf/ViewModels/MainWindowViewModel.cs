@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using JetQueries.Sdk;
 using JetQueries.Wpf.Services;
 
 namespace JetQueries.Wpf.ViewModels;
@@ -67,6 +68,9 @@ public partial class MainWindowViewModel : ObservableObject
             : string.Format(CultureInfo.CurrentCulture, CompositeFormat.Parse(Strings.ExtensionsLoadedWithFailures), loaded, failed);
         _ui.Post(() => ExtensionStatus = text);
     }
+
+    /// <summary>Hands the loaded providers to the explorer. Safe to call from any thread.</summary>
+    public void ShowProviders(IReadOnlyCollection<IDatabaseProvider> providers) => _ui.Post(() => Connections.SetProviders(providers));
 
     /// <summary>Raised to show Go to object for the open connections.</summary>
     public event EventHandler<GoToObjectViewModel>? GoToObjectRequested;

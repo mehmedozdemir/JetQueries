@@ -357,4 +357,19 @@
   <data name="ImportNothingFound" xml:space="preserve"><value>Bu bilgisayarda DBeaver ya da SSMS ayarı bulunamadı; bir dosya seçin.</value></data>
   <data name="ImportFileRead" xml:space="preserve"><value>{0}: {1} ({2} bağlantı)</value></data>
   <data name="ImportFile" xml:space="preserve"><value>Dosya</value></data>
+  <data name="ConnectionChooseTypeTitle" xml:space="preserve"><value>Veritabanı türünü seçin</value></data>
+  <data name="ConnectionChooseTypeInfo" xml:space="preserve"><value>Bağlantı bilgileri sonraki adımda sorulur. Orada connection string de yapıştırabilirsiniz.</value></data>
+  <data name="ConnectionChangeType" xml:space="preserve"><value>Değiştir</value></data>
+  <data name="ConnectionModeForm" xml:space="preserve"><value>Bilgiler</value></data>
+  <data name="ConnectionModeString" xml:space="preserve"><value>Connection string</value></data>
+  <data name="ConnectionStringInfo" xml:space="preserve"><value>Bir connection string yapıştırın: sürücünün kendi biçimi (Server=…;Database=…), bir JDBC adresi ya da postgresql://… gibi bir URL. İçinde parola varsa yalnızca korumalı depoya kaydedilir.</value></data>
+  <data name="ConnectionStringApply" xml:space="preserve"><value>Oku ve doldur</value></data>
+  <data name="ConnectionStringRead" xml:space="preserve"><value>Bilgiler connection string'den dolduruldu.</value></data>
+  <data name="ConnectionStringReadWithPassword" xml:space="preserve"><value>Bilgiler ve parola connection string'den dolduruldu.</value></data>
+  <data name="ConnectionStringIgnored" xml:space="preserve"><value>Alınmayanlar: {0}.</value></data>
+  <data name="ConnectionStringUnreadable" xml:space="preserve"><value>Connection string okunamadı: {0}</value></data>
+  <data name="ProviderDescription_sqlserver" xml:space="preserve"><value>SQL Server ve Azure SQL</value></data>
+  <data name="ProviderDescription_oracle" xml:space="preserve"><value>Oracle Database, istemci kurulumu gerekmez</value></data>
+  <data name="ProviderDescription_postgresql" xml:space="preserve"><value>PostgreSQL ve uyumlu sunucular</value></data>
+  <data name="ProviderDescription_sqlite" xml:space="preserve"><value>Yerel veritabanı dosyası</value></data>
 </root>
