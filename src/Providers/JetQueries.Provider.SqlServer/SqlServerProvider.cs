@@ -17,7 +17,7 @@ public sealed class SqlServerExtension : IExtension
 }
 
 /// <summary>Database provider for Microsoft SQL Server and Azure SQL, on Microsoft.Data.SqlClient.</summary>
-public sealed class SqlServerProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder
+public sealed class SqlServerProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder
 {
     /// <summary>The provider identifier stored in connection profiles.</summary>
     public const string ProviderId = "sqlserver";
@@ -82,6 +82,14 @@ public sealed class SqlServerProvider : IDatabaseProvider, IConnectionSettingsPr
     /// <remarks>SQL Server cannot nest a WITH query or a plain ORDER BY in a derived table; the ORDER BY is left out.</remarks>
     public string? BuildCountQuery(string sql) =>
         CountQueryBuilder.Build(sql, Language.TSqlLexer.Tokenize(sql), withAllowedInside: false, orderByNeedsPaging: true);
+
+    /// <inheritdoc />
+    public string? BuildFilterQuery(string sql, string condition)
+    {
+        ArgumentNullException.ThrowIfNull(sql);
+        ArgumentNullException.ThrowIfNull(condition);
+        return CountQueryBuilder.BuildFilter(sql, Language.TSqlLexer.Tokenize(sql), condition, Language.TSqlLexer.Tokenize(condition), withAllowedInside: false, orderByNeedsPaging: true);
+    }
 
     /// <inheritdoc />
     public string QuoteIdentifier(string identifier) => SqlServerNames.Quote(identifier);

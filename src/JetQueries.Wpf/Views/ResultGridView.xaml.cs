@@ -116,6 +116,27 @@ public partial class ResultGridView : UserControl
         UpdateChips();
     }
 
+    /// <summary>Enter applies the SQL filter; Esc puts back the one applied.</summary>
+    private void OnSqlFilterKeyDown(object sender, KeyEventArgs e)
+    {
+        if (_set is null)
+        {
+            return;
+        }
+
+        if (e.Key == Key.Enter && ApplySqlFilterButton.Command is { } apply && apply.CanExecute(_set))
+        {
+            apply.Execute(_set);
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Escape)
+        {
+            _set.SqlFilter = _set.AppliedFilter ?? string.Empty;
+            SqlFilterBox.CaretIndex = SqlFilterBox.Text.Length;
+            e.Handled = true;
+        }
+    }
+
     /// <summary>The text view, for tests.</summary>
     internal string ShownText => TextView.Text;
 

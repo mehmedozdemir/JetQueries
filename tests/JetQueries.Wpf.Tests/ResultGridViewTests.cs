@@ -126,6 +126,8 @@ public sealed class ResultGridViewTests
                 i % 3 == 0 ? "Teslimat adresi güncellendi, müşteri bilgilendirildi" : null,
             })]);
             await set.View.SetSortAsync(2, descending: true);
+            set.CanFilter = true;
+            set.SqlFilter = set.AppliedFilter = "Balance > 100 AND City LIKE N'İ%'";
 
             var view = new ResultGridView { DataContext = set };
             var window = new Window

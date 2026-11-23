@@ -96,6 +96,22 @@ public sealed partial class QueryResultSet : ObservableObject, IResultTab
     [NotifyPropertyChangedFor(nameof(RowsText))]
     public partial bool HasMore { get; set; }
 
+    /// <summary>The result comes from a single SELECT, so a SQL condition can narrow it on the server.</summary>
+    [ObservableProperty]
+    public partial bool CanFilter { get; set; }
+
+    /// <summary>The SQL condition being typed in the filter box over the grid.</summary>
+    [ObservableProperty]
+    public partial string SqlFilter { get; set; } = string.Empty;
+
+    /// <summary>The SQL condition the rows shown were fetched with; null when unfiltered.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsFiltered))]
+    public partial string? AppliedFilter { get; set; }
+
+    /// <summary>The rows shown were narrowed by a SQL condition.</summary>
+    public bool IsFiltered => AppliedFilter is not null;
+
     /// <summary>How many rows, how long, when — the line under the grid.</summary>
     [ObservableProperty]
     public partial string FetchStatus { get; set; } = string.Empty;
@@ -752,9 +768,10 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
 
     /// <summary>Runs the last SQL again (DBeaver's Refresh of a result).</summary>
     [RelayCommand(CanExecute = nameof(CanRefresh))]
-    private Task RefreshAsync() => RunSqlAsync(LastSql!);
+    private Task RefreshAsync() => RunSqlAsync(LastSql!, _pagedSet?.AppliedFilter);
 
-    private async Task RunSqlAsync(string sql)
+    /// <summary>Runs <paramref name="sql"/>; with <paramref name="filter"/>, narrowed by that SQL condition (Refresh keeps the filter).</summary>
+    private async Task RunSqlAsync(string sql, string? filter = null)
     {
         var session = SelectedSession!.Session;
         await CloseCursorAsync();
@@ -793,12 +810,84 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
 
         LastSql = sql;
         var fetchSize = Math.Max(1, FetchSize);
+        var pageable = !risk.WritesData && session.Provider is IRowCountQueryBuilder builder && builder.BuildCountQuery(sql) is not null;
+        if (!pageable || Filtered(session, sql, filter) is not { } run)
+        {
+            (run, filter) = (sql, null);
+        }
 
         // Batches of one page (within reason), so that a page ends exactly at the fetch size.
-        var request = new QueryRequest(sql) { BatchSize = Math.Min(fetchSize, 5000) };
-        var pageable = !risk.WritesData && session.Provider is IRowCountQueryBuilder builder && builder.BuildCountQuery(sql) is not null;
-        _cursor = new QueryCursor(channel, request, session, pageable ? fetchSize : MaxRows);
-        await ReadPageAsync(_cursor);
+        var request = new QueryRequest(run) { BatchSize = Math.Min(fetchSize, 5000) };
+        var cursor = new QueryCursor(channel, request, session, pageable ? fetchSize : MaxRows);
+        _cursor = cursor;
+        await ReadPageAsync(cursor);
+
+        // The one result of a single SELECT can be paged, counted and filtered on the server.
+        if (pageable && Tabs.OfType<QueryResultSet>().FirstOrDefault() is { } set)
+        {
+            _pagedSet = set;
+            set.CanFilter = session.Provider is IResultFilterQueryBuilder;
+            set.AppliedFilter = filter;
+            set.SqlFilter = filter ?? string.Empty;
+            FetchNextPageCommand.NotifyCanExecuteChanged();
+            FetchAllCommand.NotifyCanExecuteChanged();
+            ApplyFilterCommand.NotifyCanExecuteChanged();
+            ClearFilterCommand.NotifyCanExecuteChanged();
+        }
+    }
+
+    /// <summary><paramref name="sql"/> narrowed by <paramref name="filter"/>; the SQL itself when there is no filter; null when it cannot be filtered.</summary>
+    private static string? Filtered(ConnectionSession session, string sql, string? filter) =>
+        string.IsNullOrWhiteSpace(filter) ? sql
+        : session.Provider is IResultFilterQueryBuilder builder && builder.BuildFilterQuery(sql, filter) is { } filtered && !StatementGuard.Analyze(filtered).WritesData ? filtered
+        : null;
+
+    /// <summary>The SQL the rows of <paramref name="set"/> come from: the last run, with the result's filter.</summary>
+    private string? SqlOf(QueryResultSet set, ConnectionSession session) =>
+        LastSql is not { } sql ? null : ReferenceEquals(set, _pagedSet) ? Filtered(session, sql, set.AppliedFilter) : sql;
+
+    private bool CanApplyFilter(QueryResultSet? set) =>
+        !IsRunning && set is { CanFilter: true } && ReferenceEquals(set, _pagedSet) && LastSql is not null && SelectedSession is not null;
+
+    /// <summary>
+    /// Narrows the result to the rows matching the SQL condition in its filter box (DBeaver's "Enter a SQL
+    /// expression to filter results"): the query runs again wrapped in a WHERE and its first page is shown. An
+    /// empty box removes the filter.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanApplyFilter))]
+    private async Task ApplyFilterAsync(QueryResultSet? set)
+    {
+        if (set is null || LastSql is not { } sql || SelectedSession?.Session is not { } session)
+        {
+            return;
+        }
+
+        var filter = string.IsNullOrWhiteSpace(set.SqlFilter) ? null : set.SqlFilter.Trim();
+        if (Filtered(session, sql, filter) is not { } run)
+        {
+            AddMessage(Strings.FilterInvalid, isError: true);
+            Status = Strings.FilterInvalid;
+            return;
+        }
+
+        if (await RefetchAsync(set, Math.Max(1, FetchSize), run))
+        {
+            set.AppliedFilter = filter;
+            set.TotalRows = null;
+        }
+    }
+
+    /// <summary>Removes the result's SQL filter and shows its first page again.</summary>
+    [RelayCommand(CanExecute = nameof(CanApplyFilter))]
+    private Task ClearFilterAsync(QueryResultSet? set)
+    {
+        if (set is null)
+        {
+            return Task.CompletedTask;
+        }
+
+        set.SqlFilter = string.Empty;
+        return set.AppliedFilter is null ? Task.CompletedTask : ApplyFilterAsync(set);
     }
 
     private bool CanFetchMore(QueryResultSet? set) =>
@@ -818,11 +907,12 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
     /// replace those shown, so that all of them come from one execution: no row is skipped or shown twice when
     /// the data changed in between, or when the query has no ORDER BY.
     /// </summary>
-    private async Task RefetchAsync(QueryResultSet set, int target)
+    /// <returns>Whether the rows were replaced.</returns>
+    private async Task<bool> RefetchAsync(QueryResultSet set, int target, string? sqlToRun = null)
     {
-        if (LastSql is not { } sql || SelectedSession?.Session is not { } session || await EnsureChannelAsync() is not { } channel)
+        if (SelectedSession?.Session is not { } session || (sqlToRun ?? SqlOf(set, session)) is not { } sql || await EnsureChannelAsync() is not { } channel)
         {
-            return;
+            return false;
         }
 
         IsRunning = true;
@@ -864,7 +954,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
                 // The table changed between the runs: the shown rows cannot take the new ones.
                 AddMessage(Strings.ResultShapeChanged, isError: true);
                 Status = Strings.ResultShapeChanged;
-                return;
+                return false;
             }
 
             var more = !finished && rows.Count >= target && target < MaxRows;
@@ -877,11 +967,14 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
             {
                 AddMessage(Format(Strings.QueryTruncated, MaxRows), isError: false);
             }
+
+            return true;
         }
         catch (OperationCanceledException)
         {
             await DisposeCursorAsync(cursor);
             Status = Format(Strings.QueryCanceled, Elapsed(cursor.Watch));
+            return false;
         }
 #pragma warning disable CA1031 // The server's reason is shown; the rows already shown stay.
         catch (Exception ex)
@@ -890,6 +983,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
             await DisposeCursorAsync(cursor);
             AddMessage(ex.Message, isError: true);
             Status = Format(Strings.QueryFailed, Elapsed(cursor.Watch));
+            return false;
         }
         finally
         {
@@ -897,6 +991,8 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
             IsRunning = false;
             FetchNextPageCommand.NotifyCanExecuteChanged();
             FetchAllCommand.NotifyCanExecuteChanged();
+            ApplyFilterCommand.NotifyCanExecuteChanged();
+            ClearFilterCommand.NotifyCanExecuteChanged();
         }
     }
 
@@ -909,7 +1005,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
     [RelayCommand(CanExecute = nameof(CanCount))]
     private async Task CountRowsAsync(QueryResultSet? set)
     {
-        if (set is null || LastSql is not { } sql || SelectedSession?.Session is not { } session)
+        if (set is null || SelectedSession?.Session is not { } session || SqlOf(set, session) is not { } sql)
         {
             return;
         }

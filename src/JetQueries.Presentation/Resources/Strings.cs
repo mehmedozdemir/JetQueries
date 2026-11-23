@@ -214,6 +214,11 @@ public static class Strings
     public static string RecordColumn => Get(nameof(RecordColumn));
     public static string RecordValue => Get(nameof(RecordValue));
     public static string RecordType => Get(nameof(RecordType));
+    public static string FilterPlaceholder => Get(nameof(FilterPlaceholder));
+    public static string SqlFilterApply => Get(nameof(SqlFilterApply));
+    public static string SqlFilterClear => Get(nameof(SqlFilterClear));
+    public static string FilterInvalid => Get(nameof(FilterInvalid));
+    public static string FilterUnavailable => Get(nameof(FilterUnavailable));
 
     /// <summary>A string looked up by a computed name (for example <c>Setting_server</c>), or null if there is none.</summary>
     public static string? Find(string name) => Manager.GetString(name, CultureInfo.CurrentUICulture);

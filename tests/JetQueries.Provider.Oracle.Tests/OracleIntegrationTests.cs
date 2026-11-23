@@ -375,6 +375,32 @@ public sealed class OracleIntegrationTests(OracleFixture fixture) : IClassFixtur
         Assert.Equal(user, await context.GetCurrentAsync(Token));
     }
 
+    private const string Numbers = "SELECT LEVEL n, MOD(LEVEL, 3) m FROM dual CONNECT BY LEVEL <= 9";
+
+    [Theory]
+    [InlineData(Numbers + " ORDER BY n DESC", "m = 0", "9,6,3")]
+    [InlineData("SELECT t.n, t.m FROM (" + Numbers + ") t ORDER BY t.n DESC;", "m = 0", "9,6,3")]
+    [InlineData(Numbers + " ORDER BY m, n DESC\n/", "n > 6", "9,7,8")]
+    [InlineData(Numbers + " ORDER BY n FETCH FIRST 4 ROWS ONLY", "MOD(n, 2) = 0", "2,4")]
+    [InlineData(Numbers + " ORDER BY n", "m = 0; DROP TABLE x", null)]
+    [InlineData(Numbers + " ORDER BY n", "m = 0 -- the rest", null)]
+    [InlineData(Numbers + " ORDER BY n", "(m = 0", null)]
+    [InlineData(Numbers + " ORDER BY n", "m = 'never ends", null)]
+    public async Task A_sql_filter_narrows_the_query_on_the_server_and_keeps_its_order(string sql, string condition, string? expected)
+    {
+        var filtered = new OracleProvider().BuildFilterQuery(sql.Replace("\\n", "\n", StringComparison.Ordinal), condition);
+        if (expected is null)
+        {
+            Assert.Null(filtered);
+            return;
+        }
+
+        Assert.NotNull(filtered);
+        await using var connection = await OpenAsync();
+        var events = await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest(filtered), Token));
+        Assert.Equal(expected, string.Join(",", events.OfType<RowBatch>().SelectMany(static b => b.Rows).Select(static r => Convert.ToInt64(r[0], System.Globalization.CultureInfo.InvariantCulture))));
+    }
+
     private async Task<IDatabaseConnection> OpenAsync()
     {
         Assert.SkipWhen(fixture.SkipReason is not null, fixture.SkipReason ?? string.Empty);

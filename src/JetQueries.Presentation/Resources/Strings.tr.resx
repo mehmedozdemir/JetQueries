@@ -231,4 +231,9 @@
   <data name="RecordColumn" xml:space="preserve"><value>Sütun</value></data>
   <data name="RecordValue" xml:space="preserve"><value>Değer</value></data>
   <data name="RecordType" xml:space="preserve"><value>Tip</value></data>
+  <data name="FilterPlaceholder" xml:space="preserve"><value>Sonuçları süzmek için bir SQL ifadesi yazın (ör. balance &gt; 100 AND city LIKE 'A%')</value></data>
+  <data name="SqlFilterApply" xml:space="preserve"><value>Filtreyi uygula (Enter)</value></data>
+  <data name="SqlFilterClear" xml:space="preserve"><value>Filtreyi kaldır</value></data>
+  <data name="FilterInvalid" xml:space="preserve"><value>Filtre, sonucun sütunları üzerinde tek bir SQL koşulu olmalı (';' ve yorum olmadan, parantezler kapalı).</value></data>
+  <data name="FilterUnavailable" xml:space="preserve"><value>SQL ile yalnızca tek bir SELECT'in sonucu süzülebilir.</value></data>
 </root>

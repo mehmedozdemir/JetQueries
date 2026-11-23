@@ -231,4 +231,9 @@
   <data name="RecordColumn" xml:space="preserve"><value>Column</value></data>
   <data name="RecordValue" xml:space="preserve"><value>Value</value></data>
   <data name="RecordType" xml:space="preserve"><value>Type</value></data>
+  <data name="FilterPlaceholder" xml:space="preserve"><value>Enter a SQL expression to filter results (e.g. balance &gt; 100 AND city LIKE 'A%')</value></data>
+  <data name="SqlFilterApply" xml:space="preserve"><value>Apply filter (Enter)</value></data>
+  <data name="SqlFilterClear" xml:space="preserve"><value>Remove filter</value></data>
+  <data name="FilterInvalid" xml:space="preserve"><value>The filter must be one SQL condition over the result's columns (no ';', no comments, closed parentheses).</value></data>
+  <data name="FilterUnavailable" xml:space="preserve"><value>Only the result of a single SELECT can be filtered with SQL.</value></data>
 </root>
