@@ -327,6 +327,19 @@ public static class Strings
     public static string SnippetInvalid => Get(nameof(SnippetInvalid));
     public static string QueryCanceling => Get(nameof(QueryCanceling));
     public static string QueryCancelSlow => Get(nameof(QueryCancelSlow));
+    public static string ImportTitle => Get(nameof(ImportTitle));
+    public static string ImportTip => Get(nameof(ImportTip));
+    public static string ImportInfo => Get(nameof(ImportInfo));
+    public static string ImportChooseFile => Get(nameof(ImportChooseFile));
+    public static string ImportFileFilter => Get(nameof(ImportFileFilter));
+    public static string ImportSelectAll => Get(nameof(ImportSelectAll));
+    public static string ImportSelectNone => Get(nameof(ImportSelectNone));
+    public static string ImportButton => Get(nameof(ImportButton));
+    public static string ImportNoProvider => Get(nameof(ImportNoProvider));
+    public static string ImportExists => Get(nameof(ImportExists));
+    public static string ImportNothingFound => Get(nameof(ImportNothingFound));
+    public static string ImportFileRead => Get(nameof(ImportFileRead));
+    public static string ImportFile => Get(nameof(ImportFile));
 
     /// <summary>A string looked up by a computed name (for example <c>Setting_server</c>), or null if there is none.</summary>
     public static string? Find(string name) => Manager.GetString(name, CultureInfo.CurrentUICulture);

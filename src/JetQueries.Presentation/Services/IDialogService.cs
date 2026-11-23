@@ -38,6 +38,9 @@ public interface IDialogService
     /// <summary>"Commit or roll back the open transaction of …?" (Cancel keeps it open and stops what asked).</summary>
     /// <param name="documentNames">The query tab, or several tabs, holding open transactions.</param>
     Task<TransactionChoice> AskOpenTransactionAsync(string documentNames);
+
+    /// <summary>Shows Import connections (DBeaver, SSMS); true when something was imported.</summary>
+    Task<bool> ImportConnectionsAsync();
 }
 
 /// <summary>The answer to "save changes?".</summary>

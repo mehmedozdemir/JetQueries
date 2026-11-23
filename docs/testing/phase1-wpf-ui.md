@@ -142,6 +142,15 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] Ctrl+/ comments the selected lines (or the caret's line) with `-- `, again removes it; Ctrl+Shift+U /
       Ctrl+U upper / lower case the selection or the word at the caret (`id` → `ID`, never `İD`).
 
+## Import connections
+- [ ] The import icon over the explorer opens "Import connections": SSMS registered servers (and DBeaver, if
+      installed) are listed with name, server / database, group, login and source; connections of a database
+      JetQueries has no provider for are listed but cannot be ticked.
+- [ ] "Choose file…" reads a `data-sources.json` or `RegSrvr.xml` from elsewhere.
+- [ ] Import: the ticked ones appear in the explorer in their folders, with the environment colour; a production
+      one is read-only; the first connect asks for the password. Opening the window again marks them "already
+      saved".
+
 ## Snippets and column editing
 - [ ] Type `sel` then Tab: `SELECT *` / `FROM |` (caret after FROM); on an indented line every line keeps the
       indent; Ctrl+Z restores `sel`. `t.sel` + Tab or `xsel` + Tab: a normal Tab. With the completion list open,
@@ -260,6 +269,8 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - Filters on several columns are combined with AND; there is no OR (the SQL filter box takes any condition).
 - Multiple independent cursors (Ctrl+click carets) are not supported by the editor component (AvalonEdit); box
   selection (Alt+drag) covers editing several lines at once.
+- Import reads DBeaver and SSMS (registered servers); DataGrip, and SSMS's recent-server list, are not read.
+  Passwords are never imported. SSH tunnels are not supported yet.
 - Go to object searches what the explorer can list (all databases of a connection, loaded once and cached);
   favourites in the explorer are not there yet.
 - Disconnecting a connection from the explorer while a tab has an open transaction does not ask: the server

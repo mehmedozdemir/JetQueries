@@ -18,7 +18,7 @@ public sealed class PostgreSqlExtension : IExtension
 }
 
 /// <summary>Database provider for PostgreSQL, on the Npgsql driver.</summary>
-public sealed class PostgreSqlProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect
+public sealed class PostgreSqlProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport
 {
     /// <summary>The provider identifier stored in connection profiles.</summary>
     public const string ProviderId = "postgresql";
@@ -78,6 +78,25 @@ public sealed class PostgreSqlProvider : IDatabaseProvider, IConnectionSettingsP
     /// <inheritdoc />
     public string? BuildCountQuery(string sql) =>
         CountQueryBuilder.Build(sql, PostgreSqlSyntax.Tokenizer.Tokenize(sql), withAllowedInside: true, orderByNeedsPaging: false);
+
+    /// <inheritdoc />
+    public IReadOnlyDictionary<string, string> ToSettings(ImportedEndpoint endpoint)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+        var settings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        if (endpoint.Host is { Length: > 0 } host)
+        {
+            settings[PostgreSqlConnectionSettings.Host] = host;
+        }
+
+        settings[PostgreSqlConnectionSettings.Port] = (endpoint.Port ?? 5432).ToString(System.Globalization.CultureInfo.InvariantCulture);
+        if (endpoint.Database is { Length: > 0 } database)
+        {
+            settings[PostgreSqlConnectionSettings.Database] = database;
+        }
+
+        return settings;
+    }
 
     /// <inheritdoc />
     public string SelectRows(string qualifiedName, IReadOnlyList<string> quotedColumns, int rows)

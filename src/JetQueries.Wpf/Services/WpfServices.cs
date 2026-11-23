@@ -176,6 +176,17 @@ internal sealed class WpfDialogService(IServiceProvider services) : IDialogServi
         return Task.FromResult(dialog.Choice);
     }
 
+    public async Task<bool> ImportConnectionsAsync()
+    {
+        var extensions = services.GetRequiredService<IExtensionHost>();
+        await extensions.LoadAsync(CancellationToken.None);
+        var viewModel = new ImportConnectionsViewModel(
+            extensions.DatabaseProviders, services.GetRequiredService<Core.Connections.IConnectionStore>(), services.GetRequiredService<IJobQueue>());
+        var window = new ImportConnectionsWindow(viewModel) { Owner = Owner };
+        window.ShowDialog();
+        return window.Imported;
+    }
+
     public Task<TransactionChoice> AskOpenTransactionAsync(string documentNames)
     {
         var dialog = new TransactionDialog(documentNames) { Owner = Owner };

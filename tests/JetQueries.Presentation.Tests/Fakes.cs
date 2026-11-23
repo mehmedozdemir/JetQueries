@@ -187,6 +187,12 @@ internal sealed class FakeDialogs : IDialogService
 
     public TransactionChoice TransactionChoice { get; set; } = TransactionChoice.Cancel;
 
+    public Task<bool> ImportConnectionsAsync()
+    {
+        Asked.Add("import");
+        return Task.FromResult(true);
+    }
+
     public Task<TransactionChoice> AskOpenTransactionAsync(string documentNames)
     {
         Asked.Add("transaction:" + documentNames);

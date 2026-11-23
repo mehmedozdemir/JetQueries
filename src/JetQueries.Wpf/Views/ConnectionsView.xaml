@@ -21,6 +21,8 @@
                         Content="{Binding ToggleConnectionText}" Command="{Binding ToggleConnectionCommand}" />
                 <Button Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="{x:Static c:Icons.Refresh}"
                         Command="{Binding ReloadSelectedCommand}" ToolTip="{x:Static res:Strings.ExplorerRefresh}" />
+                <Button Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="&#xE8B5;"
+                        Command="{Binding ImportCommand}" ToolTip="{x:Static res:Strings.ImportTip}" />
                 <Button Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="{x:Static c:Icons.Search}"
                         Command="{Binding DataContext.GoToObjectCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                         ToolTip="{x:Static res:Strings.GoToObjectTip}" />
