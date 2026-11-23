@@ -111,6 +111,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
   folders / server groups and environment kept, production ones read-only, already saved ones marked. Passwords
   are never imported. SDK preview: `IConnectionImport` (each provider maps a neutral `ImportedEndpoint` to its
   own settings).
+- New connection in two steps: first the database type, as cards with each type's mark and a line about it, then
+  its details. "Connection string" next to the details reads a pasted string into the form: the driver's own
+  syntax, JDBC URLs (SQL Server, Oracle thin, PostgreSQL, SQLite), `postgresql://` URLs and libpq keyword strings,
+  Oracle EZConnect / connect descriptors / `user/password@host:port/service`. The user name fills its box; a
+  password goes to the password box and from there only to the protected store; keywords without a matching
+  setting are listed as not taken; the pasted text is cleared once read. The explorer shows each connection with
+  its type's mark. SDK preview: `IConnectionStringImport` (`ParsedConnectionString`) and `IProviderAppearance`
+  (mark as SVG path data, colour, description).
 
 ### Changed
 - A result set may hold up to 1,000,000 rows (was 100,000), fetched page by page.

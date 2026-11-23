@@ -212,6 +212,7 @@ internal sealed class ExtensionStartupService(IJobQueue jobs, IExtensionHost ext
                 var results = await extensions.LoadAsync(context.CancellationToken).ConfigureAwait(false);
                 var loaded = results.Count(static r => r.State == ExtensionState.Loaded);
                 shell.ShowExtensions(loaded, results.Count - loaded);
+                shell.ShowProviders(extensions.DatabaseProviders);
             },
             JobPriority.High,
             CancellationToken.None);

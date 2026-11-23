@@ -18,7 +18,8 @@ public sealed class OracleExtension : IExtension
 }
 
 /// <summary>Database provider for Oracle Database, on the managed ODP.NET driver (no Oracle client installation needed).</summary>
-public sealed class OracleProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport
+public sealed class OracleProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport,
+    IConnectionStringImport, IProviderAppearance
 {
     /// <summary>The provider identifier stored in connection profiles.</summary>
     public const string ProviderId = "oracle";
@@ -34,6 +35,18 @@ public sealed class OracleProvider : IDatabaseProvider, IConnectionSettingsProvi
         ProviderCapabilities.Schemas | ProviderCapabilities.Transactions | ProviderCapabilities.ServerSideCancel |
         ProviderCapabilities.Routines | ProviderCapabilities.Packages | ProviderCapabilities.Sequences |
         ProviderCapabilities.Synonyms | ProviderCapabilities.UserTypes;
+
+    /// <inheritdoc />
+    public string IconPathData => "M8 6h8a6 6 0 0 1 0 12H8A6 6 0 0 1 8 6z M8.5 8.5h7a3.5 3.5 0 0 1 0 7h-7a3.5 3.5 0 0 1 0-7z";
+
+    /// <inheritdoc />
+    public string AccentColor => "#D9622B";
+
+    /// <inheritdoc />
+    public string Description => "Oracle Database, no client installation needed";
+
+    /// <inheritdoc />
+    public ParsedConnectionString ParseConnectionString(string connectionString) => OracleConnectionStringParser.Parse(connectionString);
 
     /// <inheritdoc />
     public ISqlLanguageService? LanguageService { get; } = new OracleLanguageService();

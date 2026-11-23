@@ -12,6 +12,7 @@
   <ItemGroup>
     <!-- Completion engine and generic tokenizer shared between providers as source: a provider may reference nothing but the SDK. -->
     <Compile Include="..\Shared\Language\*.cs" LinkBase="Language\Shared" />
+    <Compile Include="..\Shared\Connections\*.cs" LinkBase="Connections\Shared" />
     <Compile Include="..\Shared\Generic\*.cs" LinkBase="Language\Generic" />
   </ItemGroup>
   <ItemGroup>

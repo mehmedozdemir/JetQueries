@@ -26,11 +26,44 @@ public partial class ConnectionDialog : Window
 
         // A failed test is shown in the danger colour, a successful one in the success colour.
         viewModel.PropertyChanged += OnViewModelPropertyChanged;
-        Closed += (_, _) => viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+        viewModel.PasswordProvided += OnPasswordProvided;
+        Closed += (_, _) =>
+        {
+            viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+            viewModel.PasswordProvided -= OnPasswordProvided;
+        };
+        Loaded += (_, _) => FocusStep();
     }
+
+    // A password read from a pasted connection string: into the box, from where it reaches the view model as typed ones do.
+    private void OnPasswordProvided(object? sender, string password) => PasswordInput.Password = password;
+
+    // Keyboard focus follows the step: the first type card, the connection string box, or the name.
+    private void FocusStep() => Dispatcher.BeginInvoke(
+        () =>
+        {
+            if (_viewModel.IsChoosingType)
+            {
+                TypeList.MoveFocus(new System.Windows.Input.TraversalRequest(System.Windows.Input.FocusNavigationDirection.First));
+            }
+            else if (_viewModel.IsConnectionStringMode)
+            {
+                ConnectionStringInput.Focus();
+            }
+            else if (_viewModel.Name.Length == 0)
+            {
+                NameInput.Focus();
+            }
+        },
+        System.Windows.Threading.DispatcherPriority.Input);
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (e.PropertyName is nameof(ConnectionEditorViewModel.IsChoosingType) or nameof(ConnectionEditorViewModel.IsConnectionStringMode))
+        {
+            FocusStep();
+        }
+
         if (e.PropertyName == nameof(ConnectionEditorViewModel.TestFailed))
         {
             TestResult.SetResourceReference(System.Windows.Controls.TextBlock.ForegroundProperty, _viewModel.TestFailed ? "Brush.Danger" : "Brush.Success");

@@ -357,4 +357,19 @@
   <data name="ImportNothingFound" xml:space="preserve"><value>No DBeaver or SSMS settings found on this computer; choose a file.</value></data>
   <data name="ImportFileRead" xml:space="preserve"><value>{0}: {1} ({2} connections)</value></data>
   <data name="ImportFile" xml:space="preserve"><value>File</value></data>
+  <data name="ConnectionChooseTypeTitle" xml:space="preserve"><value>Choose the database type</value></data>
+  <data name="ConnectionChooseTypeInfo" xml:space="preserve"><value>The connection details are asked next. A connection string can be pasted there too.</value></data>
+  <data name="ConnectionChangeType" xml:space="preserve"><value>Change</value></data>
+  <data name="ConnectionModeForm" xml:space="preserve"><value>Details</value></data>
+  <data name="ConnectionModeString" xml:space="preserve"><value>Connection string</value></data>
+  <data name="ConnectionStringInfo" xml:space="preserve"><value>Paste a connection string: the driver's own (Server=…;Database=…), a JDBC URL, or a URL such as postgresql://… The password, if it has one, goes to the protected store only.</value></data>
+  <data name="ConnectionStringApply" xml:space="preserve"><value>Read and fill in</value></data>
+  <data name="ConnectionStringRead" xml:space="preserve"><value>The details were filled in from the connection string.</value></data>
+  <data name="ConnectionStringReadWithPassword" xml:space="preserve"><value>The details and the password were filled in from the connection string.</value></data>
+  <data name="ConnectionStringIgnored" xml:space="preserve"><value>Not taken: {0}.</value></data>
+  <data name="ConnectionStringUnreadable" xml:space="preserve"><value>The connection string could not be read: {0}</value></data>
+  <data name="ProviderDescription_sqlserver" xml:space="preserve"><value>SQL Server and Azure SQL</value></data>
+  <data name="ProviderDescription_oracle" xml:space="preserve"><value>Oracle Database, no client installation needed</value></data>
+  <data name="ProviderDescription_postgresql" xml:space="preserve"><value>PostgreSQL and compatible servers</value></data>
+  <data name="ProviderDescription_sqlite" xml:space="preserve"><value>A local database file</value></data>
 </root>

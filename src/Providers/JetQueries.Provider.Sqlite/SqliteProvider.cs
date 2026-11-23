@@ -17,7 +17,8 @@ public sealed class SqliteExtension : IExtension
 }
 
 /// <summary>Database provider for SQLite database files, on Microsoft.Data.Sqlite.</summary>
-public sealed class SqliteProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport
+public sealed class SqliteProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport,
+    IConnectionStringImport, IProviderAppearance
 {
     /// <summary>The provider identifier stored in connection profiles.</summary>
     public const string ProviderId = "sqlite";
@@ -30,6 +31,18 @@ public sealed class SqliteProvider : IDatabaseProvider, IConnectionSettingsProvi
 
     /// <inheritdoc />
     public ProviderCapabilities Capabilities => ProviderCapabilities.MultipleResultSets | ProviderCapabilities.Transactions | ProviderCapabilities.ServerSideCancel;
+
+    /// <inheritdoc />
+    public string IconPathData => "M6.5 2H14l5 5v13.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 20.5v-17A1.5 1.5 0 0 1 6.5 2z M13.5 3.5V8H18z M8 12h8v1.5H8z M8 15.5h8V17H8z";
+
+    /// <inheritdoc />
+    public string AccentColor => "#0E8A8A";
+
+    /// <inheritdoc />
+    public string Description => "A local database file";
+
+    /// <inheritdoc />
+    public ParsedConnectionString ParseConnectionString(string connectionString) => SqliteConnectionStringParser.Parse(connectionString);
 
     /// <inheritdoc />
     public ISqlLanguageService? LanguageService { get; } = new GenericLanguageService(SqliteDialect.Instance);

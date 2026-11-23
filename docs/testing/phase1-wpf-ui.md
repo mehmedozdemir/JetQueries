@@ -58,8 +58,17 @@ dotnet run --project src/JetQueries.Wpf
 - [ ] Completion after switching database (SQL Server) offers the tables of the new database.
 
 ## Connections and explorer
-- [ ] New connection opens the dialog; the provider list shows names (not type names); provider settings,
-      sign-in, folder, environment and read-only fields work; Browse picks an SQLite file.
+- [ ] New connection opens on "Choose the database type": four cards (Oracle, PostgreSQL, SQL Server, SQLite) with
+      their marks and a line each; Tab moves between cards, Enter or a click opens the details.
+      "Change" next to the type name goes back (only for a new connection; editing opens on the details).
+- [ ] Provider settings, sign-in, folder, environment and read-only fields work; Browse picks an SQLite file.
+- [ ] "Connection string" (top right of the details): paste a string and "Read and fill in" — the fields, user
+      name and password box are filled, the name is suggested (server / database) when empty, a note lists what
+      was not taken, and the box is empty again. Try `Server=…;Database=…;User Id=…;Password=…`,
+      `jdbc:oracle:thin:@//host:1521/FREEPDB1`, `postgresql://user@host:5432/db?sslmode=require`,
+      `Data Source=C:\data\app.db`. A TNS alias (`Data Source=PROD`) is refused with a message; the form is unchanged.
+- [ ] Save after pasting: the password is in Windows Credential Manager, not in `connections.json`.
+- [ ] The explorer shows each connection with its type's coloured mark before the environment dot.
 - [ ] The password box is styled like the other inputs; saving with "save password" stores it in Windows
       Credential Manager (as before).
 - [ ] The explorer shows folders, environment dots (green / amber / red), the "connected" and "read-only"
@@ -269,6 +278,8 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - Filters on several columns are combined with AND; there is no OR (the SQL filter box takes any condition).
 - Multiple independent cursors (Ctrl+click carets) are not supported by the editor component (AvalonEdit); box
   selection (Alt+drag) covers editing several lines at once.
+- Connection strings: TNS aliases (tnsnames.ora), Azure AD authentication other than integrated, Oracle wallets
+  and encrypted SQLite files are not read (listed as not taken or refused).
 - Import reads DBeaver and SSMS (registered servers); DataGrip, and SSMS's recent-server list, are not read.
   Passwords are never imported. SSH tunnels are not supported yet.
 - Go to object searches what the explorer can list (all databases of a connection, loaded once and cached);

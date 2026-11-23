@@ -14,6 +14,14 @@ namespace JetQueries.Presentation.ViewModels;
 public sealed record ProviderOption(IDatabaseProvider Provider)
 {
     public string DisplayName => Provider.DisplayName;
+
+    /// <summary>One line under the name.</summary>
+    public string Description { get; } = ProviderMark.DescriptionOf(Provider);
+
+    public ProviderMark Mark { get; } = ProviderMark.For(Provider);
+
+    /// <summary>Whether a connection string can be pasted for this type.</summary>
+    public bool ReadsConnectionStrings => Provider is IConnectionStringImport;
 }
 
 /// <summary>An environment the user can choose in the connection editor.</summary>
@@ -120,6 +128,149 @@ public partial class ConnectionEditorViewModel : ObservableObject
         ValidationMessage = string.Empty;
         SelectedEnvironment = Environments.First(e => e.Value == (existing?.Environment ?? ConnectionEnvironment.Unspecified));
         SelectedProvider = Providers.FirstOrDefault(p => p.Provider.Id == existing?.ProviderId) ?? (Providers.Count == 1 ? Providers[0] : null);
+
+        // A new connection starts with the choice of database type (unless there is nothing to choose).
+        IsChoosingType = SelectedProvider is null;
+        ConnectionString = string.Empty;
+        ConnectionStringMessage = string.Empty;
+    }
+
+    /// <summary>Raised when a pasted connection string gave a password: the view puts it in its password box.</summary>
+    public event EventHandler<string>? PasswordProvided;
+
+    /// <summary>The first step: the list of database types is shown instead of the form.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsEditingSettings))]
+    [NotifyCanExecuteChangedFor(nameof(TestCommand), nameof(SaveCommand))]
+    public partial bool IsChoosingType { get; set; }
+
+    /// <summary>The second step: the form of the chosen type.</summary>
+    public bool IsEditingSettings => !IsChoosingType;
+
+    /// <summary>The type of a saved connection is not changed (its settings belong to it).</summary>
+    public bool CanChangeType => _existing is null && Providers.Count > 1 && !IsTesting;
+
+    /// <summary>The connection string box is shown instead of the fields.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsFormMode))]
+    public partial bool IsConnectionStringMode { get; set; }
+
+    /// <summary>The fields are shown (the other side of <see cref="IsConnectionStringMode"/>).</summary>
+    public bool IsFormMode
+    {
+        get => !IsConnectionStringMode;
+        set => IsConnectionStringMode = !value;
+    }
+
+    /// <summary>The pasted text. It may hold a password: it is emptied as soon as it has been read.</summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ApplyConnectionStringCommand))]
+    public partial string ConnectionString { get; set; }
+
+    /// <summary>What reading the connection string gave (or why it could not be read).</summary>
+    [ObservableProperty]
+    public partial string ConnectionStringMessage { get; set; }
+
+    /// <summary>Whether <see cref="ConnectionStringMessage"/> is an error.</summary>
+    [ObservableProperty]
+    public partial bool ConnectionStringFailed { get; set; }
+
+    [RelayCommand]
+    private void ChooseType(ProviderOption? option)
+    {
+        if (option is null)
+        {
+            return;
+        }
+
+        SelectedProvider = option;
+        IsConnectionStringMode = false;
+        ConnectionStringMessage = string.Empty;
+        ValidationMessage = string.Empty;
+        IsChoosingType = false;
+    }
+
+    [RelayCommand]
+    private void ChangeType()
+    {
+        if (CanChangeType && !IsTesting)
+        {
+            IsChoosingType = true;
+        }
+    }
+
+    private bool CanApplyConnectionString() => !string.IsNullOrWhiteSpace(ConnectionString) && SelectedProvider?.Provider is IConnectionStringImport;
+
+    /// <summary>Reads the pasted connection string into the fields, the user name and the password box.</summary>
+    [RelayCommand(CanExecute = nameof(CanApplyConnectionString))]
+    private void ApplyConnectionString()
+    {
+        if (SelectedProvider?.Provider is not IConnectionStringImport reader)
+        {
+            return;
+        }
+
+        ParsedConnectionString parsed;
+        try
+        {
+            parsed = reader.ParseConnectionString(ConnectionString);
+        }
+        catch (FormatException ex)
+        {
+            ConnectionStringFailed = true;
+            ConnectionStringMessage = string.Format(CultureInfo.CurrentCulture, CompositeFormat.Parse(Strings.ConnectionStringUnreadable), ex.Message);
+            return;
+        }
+
+        // What the string does not say goes back to its default: the result is the pasted connection.
+        foreach (var field in Fields)
+        {
+            var value = parsed.Settings.GetValueOrDefault(field.Key) ?? field.Descriptor.DefaultValue ?? string.Empty;
+            field.Value = value;
+            field.SelectedOption = field.Descriptor.Options.FirstOrDefault(o => string.Equals(o.Value, value, StringComparison.OrdinalIgnoreCase));
+        }
+
+        UpdateNeedsCredential();
+        if (NeedsCredential && parsed.UserName is { Length: > 0 } user)
+        {
+            UserName = user;
+        }
+
+        var gotPassword = NeedsCredential && parsed.Password is { Length: > 0 };
+        if (gotPassword)
+        {
+            Password = parsed.Password!;
+            PasswordProvided?.Invoke(this, parsed.Password!);
+        }
+
+        if (string.IsNullOrWhiteSpace(Name))
+        {
+            Name = SuggestName(parsed.Settings);
+        }
+
+        var message = gotPassword ? Strings.ConnectionStringReadWithPassword : Strings.ConnectionStringRead;
+        if (parsed.Ignored.Count > 0)
+        {
+            message += " " + string.Format(CultureInfo.CurrentCulture, CompositeFormat.Parse(Strings.ConnectionStringIgnored), string.Join(", ", parsed.Ignored));
+        }
+
+        ConnectionStringFailed = false;
+        ConnectionStringMessage = message;
+        ConnectionString = string.Empty;
+        IsConnectionStringMode = false;
+    }
+
+    // "server / database", or the file name of a file database.
+    private string SuggestName(IReadOnlyDictionary<string, string> settings)
+    {
+        var endpoint = (SelectedProvider?.Provider as IConnectionSettingsProvider)?.GetEndpoint(settings);
+        var field = Fields.FirstOrDefault(static f => f.IsFilePath && f.Value.Length > 0);
+        var place = field is not null
+            ? Path.GetFileName(field.Value)
+            : endpoint?.Host ?? Fields.FirstOrDefault(static f => f.IsRequired && f.Value.Length > 0)?.Value ?? string.Empty;
+        // The first optional text setting that has a value: the database, service name… of the provider.
+        var database = Fields.FirstOrDefault(static f => !f.IsRequired && f.Descriptor.Kind == ConnectionSettingKind.Text && f.Value.Length > 0)?.Value;
+        return database is null || place.Length == 0 ? place : place + " / " + database;
     }
 
     /// <summary>Raised when the dialog should close; the argument tells whether the connection was saved.</summary>
@@ -169,6 +320,7 @@ public partial class ConnectionEditorViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(TestCommand), nameof(StopTestCommand), nameof(SaveCommand))]
+    [NotifyPropertyChangedFor(nameof(CanChangeType))]
     public partial bool IsTesting { get; set; }
 
     [ObservableProperty]
@@ -215,6 +367,13 @@ public partial class ConnectionEditorViewModel : ObservableObject
 
     partial void OnSelectedProviderChanged(ProviderOption? value)
     {
+        ApplyConnectionStringCommand.NotifyCanExecuteChanged();
+
+        // A type chosen any other way (the paused Avalonia dialog's list) also ends the first step.
+        if (value is not null)
+        {
+            IsChoosingType = false;
+        }
         foreach (var field in Fields)
         {
             field.PropertyChanged -= OnFieldChanged;
@@ -274,7 +433,7 @@ public partial class ConnectionEditorViewModel : ObservableObject
         return ValidationMessage.Length == 0;
     }
 
-    private bool CanStartTest() => !IsTesting;
+    private bool CanStartTest() => !IsTesting && !IsChoosingType;
 
     [RelayCommand(CanExecute = nameof(CanStartTest))]
     private async Task TestAsync()
@@ -350,6 +509,7 @@ public partial class ConnectionEditorViewModel : ObservableObject
     {
         _test?.Cancel();
         Password = string.Empty;
+        ConnectionString = string.Empty;
         CloseRequested?.Invoke(this, false);
     }
 }
