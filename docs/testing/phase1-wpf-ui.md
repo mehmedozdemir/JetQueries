@@ -88,18 +88,20 @@ dotnet run --project src/JetQueries.Wpf
       connection says so.
 - [ ] Settings → Query → "Run, Cancel, Save": "In the main toolbar" moves them there with text and removes them
       from the tabs; switching back restores the icons.
-- [ ] Run a query returning more rows than the page size (default 200, Settings → Query → Rows per page): the
-      first 200 rows show, the counter under the grid says "200+", the status line says rows · time (fetch
-      time) · clock. The editor, explorer and other tabs stay usable.
-- [ ] "Next page" (↓) adds the next page; "Fetch all" fetches the rest (up to 1,000,000 rows); the counter
-      loses its "+"; a result that fits one page shows no "+" and its cursor closes at once.
+- [ ] Run a single SELECT returning more rows than the page size (default 200, Settings → Query → Rows per
+      page): the first 200 rows show, the counter under the grid says "200+", the status line says rows · time
+      (fetch time) · clock. On the server the statement is already closed: in SSMS's Activity Monitor or
+      `sys.dm_exec_requests` / `pg_stat_activity` the session is idle, holding no locks.
+- [ ] "Next page" (↓) runs the query again and shows the first 400 rows; "Fetch all" runs it again and reads all
+      of it (up to 1,000,000 rows); the counter loses its "+".
+- [ ] A procedure call or a script returning many rows is read to its end at once, without pages (running it
+      again for a page would repeat what it does).
 - [ ] The page size box under the grid changes the size for the next run and the next page (Enter applies).
 - [ ] Count (calculator icon) shows "200 / 12,345" without fetching more rows; while a page is open it uses a
       second connection; a script of several statements, a procedure call or DML says "Only a single SELECT
       can be counted.". SQL Server: a query ending in ORDER BY is counted; WITH queries are not (SQL Server rule).
-- [ ] Stop on a paged result closes its cursor at once even on millions of rows; the rows stay; a new run,
-      Refresh (↻ under the grid), switching database and closing the tab also close it.
-- [ ] A long-running first page can still be stopped with Stop / Esc.
+- [ ] Refresh (↻ under the grid) runs the last query again from its first page.
+- [ ] A long-running query can be stopped with Stop / Esc; a page of millions of rows stops at once.
 
 ## Sorting and filtering results
 Sorting and filtering work on the rows already received (at most 100,000), on the client, in the background.
@@ -125,9 +127,11 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 
 ## Known limits
 - Sorting and filtering apply to the rows received, not to the database query (no ORDER BY / WHERE is added).
-- While a page is open, the statement's cursor stays open on the tab's connection (as in DBeaver): it may hold
-  locks or a snapshot until the next page, a new run or Stop. Messages of later statements of a script appear
-  after the open result has been read to its end.
+- Nothing stays open on the server between pages (checked on SQL Server and PostgreSQL: DDL on the table is not
+  blocked, no snapshot is held). While a page is being read the statement takes the usual short-lived read locks
+  of any SELECT. "Next page" and "Fetch all" run the query again: each costs a new execution, and the rows shown
+  are those of that execution (they may differ from the first page if the data changed meanwhile).
+- SQL Server: a query starting with WITH is not paged (SQL Server cannot count it) and is read to its end.
 - Filters on several columns are combined with AND; there is no OR.
 - Idle memory of the WPF application is about 370 MB (budget: 200 MB); not investigated yet.
 - The editor's zoom is shared by the query tabs (one editor view shows the selected tab).

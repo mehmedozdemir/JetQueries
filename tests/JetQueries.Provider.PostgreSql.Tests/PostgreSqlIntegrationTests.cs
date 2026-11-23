@@ -335,6 +335,79 @@ public sealed class PostgreSqlIntegrationTests(PostgreSqlFixture fixture) : ICla
         Assert.Single((await Collect(connection.Executor.ExecuteAsync(new QueryRequest("SELECT 1"), Token))).OfType<RowBatch>());
     }
 
+    /// <summary>
+    /// After a page is read and the statement closed, the session holds no table lock (DDL goes through) and no
+    /// snapshot (its backend_xmin is gone, so vacuum is not held back). For contrast, a reader left open blocks
+    /// the DDL.
+    /// </summary>
+    [Fact]
+    public async Task A_page_read_and_closed_leaves_no_lock_and_no_snapshot()
+    {
+        await using var setup = await OpenAsync();
+        var table = "paging_" + Guid.NewGuid().ToString("N")[..8];
+        await Collect(setup.Executor.ExecuteAsync(new QueryRequest($"CREATE TABLE {table} AS SELECT g AS id, repeat('x', 200) AS pad FROM generate_series(1, 300000) g"), Token));
+
+        await using (var reader = await OpenAsync())
+        {
+            var pid = (int)(await Collect(reader.Executor.ExecuteAsync(new QueryRequest("SELECT pg_backend_pid()"), Token))).OfType<RowBatch>().Single().Rows[0][0]!;
+            await ReadPageAsync(reader, $"SELECT * FROM {table}", close: true);
+
+            await Collect(setup.Executor.ExecuteAsync(new QueryRequest($"SET lock_timeout = '2s'"), Token));
+            await Collect(setup.Executor.ExecuteAsync(new QueryRequest($"ALTER TABLE {table} ADD COLUMN added1 int"), Token));
+            var state = (await Collect(setup.Executor.ExecuteAsync(
+                new QueryRequest($"SELECT state, backend_xmin IS NULL FROM pg_stat_activity WHERE pid = {pid}"), Token))).OfType<RowBatch>().Single().Rows[0];
+            Assert.Equal("idle", state[0]);
+            Assert.Equal(true, state[1]);
+        }
+
+        await using (var reader = await OpenAsync())
+        {
+            var open = await ReadPageAsync(reader, $"SELECT * FROM {table}", close: false);
+            var error = await Assert.ThrowsAnyAsync<Exception>(async () => await Collect(setup.Executor.ExecuteAsync(new QueryRequest($"ALTER TABLE {table} ADD COLUMN added2 int"), Token)));
+            Assert.Contains("55P03", error.Message, StringComparison.Ordinal);
+            await open.DisposeAsync();
+        }
+
+        await Collect(setup.Executor.ExecuteAsync(new QueryRequest($"DROP TABLE {table}"), Token));
+    }
+
+    private sealed class OpenReader(CancellationTokenSource cancel, IAsyncEnumerator<QueryEvent> events) : IAsyncDisposable
+    {
+        public async ValueTask DisposeAsync()
+        {
+            await cancel.CancelAsync();
+            try
+            {
+                await events.DisposeAsync();
+            }
+            catch (OperationCanceledException)
+            {
+            }
+
+            cancel.Dispose();
+        }
+    }
+
+    private static async Task<OpenReader> ReadPageAsync(IDatabaseConnection connection, string sql, bool close)
+    {
+        var cancel = new CancellationTokenSource();
+        var events = connection.Executor.ExecuteAsync(new QueryRequest(sql) { BatchSize = 200 }, cancel.Token).GetAsyncEnumerator(cancel.Token);
+        var rows = 0;
+        while (rows < 200 && await events.MoveNextAsync())
+        {
+            rows += events.Current is RowBatch batch ? batch.Rows.Count : 0;
+        }
+
+        Assert.Equal(200, rows);
+        var reader = new OpenReader(cancel, events);
+        if (close)
+        {
+            await reader.DisposeAsync();
+        }
+
+        return reader;
+    }
+
     [Fact]
     public async Task Switching_database_reconnects_the_window_to_the_other_database()
     {

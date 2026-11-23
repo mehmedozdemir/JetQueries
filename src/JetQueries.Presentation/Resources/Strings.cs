@@ -202,6 +202,7 @@ public static class Strings
     public static string QueryButtonsInTab => Get(nameof(QueryButtonsInTab));
     public static string QueryButtonsInToolbar => Get(nameof(QueryButtonsInToolbar));
     public static string FieldFetchSize => Get(nameof(FieldFetchSize));
+    public static string ResultShapeChanged => Get(nameof(ResultShapeChanged));
 
     /// <summary>A string looked up by a computed name (for example <c>Setting_server</c>), or null if there is none.</summary>
     public static string? Find(string name) => Manager.GetString(name, CultureInfo.CurrentUICulture);

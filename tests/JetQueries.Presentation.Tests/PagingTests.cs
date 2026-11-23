@@ -3,6 +3,10 @@ using JetQueries.Core.Queries;
 
 namespace JetQueries.Presentation.Tests;
 
+/// <summary>
+/// Paged results never leave anything open on the server: a single SELECT is closed right after its page and run
+/// again for more; anything else is read to its end.
+/// </summary>
 public sealed class PagingTests
 {
     public PagingTests()
@@ -14,7 +18,7 @@ public sealed class PagingTests
     private static CancellationToken Token => TestContext.Current.CancellationToken;
 
     [Fact]
-    public async Task The_first_page_is_fetched_and_the_cursor_stays_open_for_more()
+    public async Task A_select_is_closed_after_its_page_and_run_again_for_more()
     {
         await using var env = new TestEnvironment();
         await env.OpenAsync(TestEnvironment.Definition("Cards"));
@@ -26,31 +30,38 @@ public sealed class PagingTests
         await query.RunCommand.ExecuteAsync(null);
         var result = Assert.IsType<QueryResultSet>(query.Tabs[0]);
         await Until(() => result.RowCount == 50 && result.HasMore);
-        Assert.True(query.HasOpenCursor);
         Assert.False(query.IsRunning);
+        Assert.False(query.CancelCommand.CanExecute(null));
         Assert.Equal("50+", result.RowsText);
         Assert.StartsWith("50 rows fetched · ", result.FetchStatus, StringComparison.Ordinal);
-        Assert.True(query.CancelCommand.CanExecute(null));
         Assert.Equal(50, Assert.Single(env.Provider.Executed).BatchSize);
 
+        // The statement was closed (canceled) right after the page.
+        Assert.Equal(1, env.Provider.ClosedEarly);
+
+        // Next page: the query runs again, is read to row 100 and closed again; rows come from that one run.
         await query.FetchNextPageCommand.ExecuteAsync(result);
-        await Until(() => result.RowCount == 100);
+        Assert.Equal(2, env.Provider.Executed.Count);
+        Assert.Equal(100, result.RowCount);
         Assert.True(result.HasMore);
+        Assert.Equal(2, env.Provider.ClosedEarly);
 
+        // Fetch all: run again and read to the end.
         await query.FetchAllCommand.ExecuteAsync(result);
-        await Until(() => result.RowCount == 120 && !result.HasMore);
-        Assert.False(query.HasOpenCursor);
+        Assert.Equal(3, env.Provider.Executed.Count);
+        Assert.Equal(120, result.RowCount);
+        Assert.False(result.HasMore);
         Assert.Equal("120", result.RowsText);
+        Assert.Equal(2, env.Provider.ClosedEarly);
+        Assert.False(query.FetchNextPageCommand.CanExecute(result));
         Assert.Equal(Enumerable.Range(1, 120).Select(static n => n.ToString(CultureInfo.InvariantCulture)), Enumerable.Range(0, 120).Select(r => result.GetText(r, 0)));
-        Assert.Equal(0, env.Provider.ClosedEarly);
 
-        // One history entry for the whole run.
-        var entry = Assert.Single(await env.History.SearchAsync(null, 10, Token));
-        Assert.Equal(QueryOutcome.Succeeded, entry.Outcome);
+        // One history entry for the run.
+        Assert.Equal(QueryOutcome.Succeeded, Assert.Single(await env.History.SearchAsync(null, 10, Token)).Outcome);
     }
 
     [Fact]
-    public async Task A_result_that_fits_one_page_closes_its_cursor_at_once()
+    public async Task A_result_that_fits_one_page_is_read_to_its_end()
     {
         await using var env = new TestEnvironment();
         await env.OpenAsync(TestEnvironment.Definition("Cards"));
@@ -64,12 +75,31 @@ public sealed class PagingTests
         var result = Assert.IsType<QueryResultSet>(query.Tabs[0]);
         await Until(() => result.RowCount == 30);
         Assert.False(result.HasMore);
-        Assert.False(query.HasOpenCursor);
+        Assert.Equal(0, env.Provider.ClosedEarly);
         Assert.False(query.FetchNextPageCommand.CanExecute(result));
     }
 
     [Fact]
-    public async Task Cancel_a_new_run_or_closing_the_tab_closes_an_open_cursor_and_keeps_its_rows()
+    public async Task Text_that_must_not_run_twice_is_read_to_its_end_without_pages()
+    {
+        await using var env = new TestEnvironment();
+        await env.OpenAsync(TestEnvironment.Definition("Cards"));
+        env.Provider.ReturnRows(1000);
+        var query = env.Query();
+        query.FetchSize = 100;
+
+        // A procedure call cannot be run again for a second page: it is read like SSMS reads it.
+        query.Text = "EXEC dbo.Numbers";
+        await query.RunCommand.ExecuteAsync(null);
+        var result = Assert.IsType<QueryResultSet>(query.Tabs[0]);
+        await Until(() => result.RowCount == 1000);
+        Assert.False(result.HasMore);
+        Assert.Single(env.Provider.Executed);
+        Assert.Equal(0, env.Provider.ClosedEarly);
+    }
+
+    [Fact]
+    public async Task Refresh_runs_the_same_select_again_from_its_first_page()
     {
         await using var env = new TestEnvironment();
         await env.OpenAsync(TestEnvironment.Definition("Cards"));
@@ -77,27 +107,15 @@ public sealed class PagingTests
         var query = env.Query();
         query.FetchSize = 100;
         query.Text = "SELECT n FROM numbers";
-
         await query.RunCommand.ExecuteAsync(null);
-        var result = Assert.IsType<QueryResultSet>(query.Tabs[0]);
-        await Until(() => query.HasOpenCursor);
-        await query.CancelCommand.ExecuteAsync(null);
-        Assert.False(query.HasOpenCursor);
-        Assert.False(result.HasMore);
-        Assert.Equal(100, result.RowCount);
-        Assert.Equal(1, env.Provider.ClosedEarly);
+        query.Text = "something else being typed";
 
-        // Refresh runs the same SQL again; a new run closes the open cursor first.
         await query.RefreshCommand.ExecuteAsync(null);
-        await Until(() => query.HasOpenCursor);
-        Assert.Equal(2, env.Provider.Executed.Count);
-        query.Text = "SELECT n FROM other";
-        await query.RunCommand.ExecuteAsync(null);
-        await Until(() => query.HasOpenCursor);
-        Assert.Equal(2, env.Provider.ClosedEarly);
 
-        await query.CloseAsync();
-        Assert.Equal(3, env.Provider.ClosedEarly);
+        Assert.Equal(["SELECT n FROM numbers", "SELECT n FROM numbers"], env.Provider.Executed.Select(static r => r.Sql));
+        var result = Assert.IsType<QueryResultSet>(query.Tabs[0]);
+        await Until(() => result.RowCount == 100);
+        Assert.Equal(2, env.Provider.ClosedEarly);
     }
 
     [Fact]
@@ -111,14 +129,14 @@ public sealed class PagingTests
         query.Text = "SELECT n FROM numbers";
         await query.RunCommand.ExecuteAsync(null);
         var result = Assert.IsType<QueryResultSet>(query.Tabs[0]);
-        await Until(() => query.HasOpenCursor);
+        await Until(() => result.HasMore);
 
-        // The window's connection holds the open cursor: the count runs on a second connection.
+        // Nothing is open after the page: the count runs on the window's own connection.
         var opened = env.Provider.OpenCount;
         await query.CountRowsCommand.ExecuteAsync(result);
         Assert.Equal(12345, result.TotalRows);
         Assert.Equal("200 / 12,345", result.RowsText);
-        Assert.Equal(opened + 1, env.Provider.OpenCount);
+        Assert.Equal(opened, env.Provider.OpenCount);
         Assert.Equal("COUNT(SELECT n FROM numbers)", env.Provider.Executed[^1].Sql);
         Assert.Equal(200, result.RowCount);
 
