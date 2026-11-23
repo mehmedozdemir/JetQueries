@@ -1,0 +1,90 @@
+<Window x:Class="JetQueries.Wpf.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:c="clr-namespace:UiKit.Controls;assembly=UiKit.Wpf"
+        xmlns:res="clr-namespace:JetQueries.Presentation.Resources;assembly=JetQueries.Presentation"
+        xmlns:v="clr-namespace:JetQueries.Wpf.Views"
+        Title="JetQueries" Width="1360" Height="840" MinWidth="820" MinHeight="480"
+        WindowStartupLocation="CenterScreen"
+        Style="{StaticResource Window.App}">
+    <Window.InputBindings>
+        <KeyBinding Gesture="Ctrl+N" Command="{Binding Documents.NewQueryCommand}" />
+    </Window.InputBindings>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- ================= Toolbar ================= -->
+        <Border Style="{StaticResource Toolbar}">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Width="30" Height="30" CornerRadius="8" Margin="0,0,10,0">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#FF6E8BFF" Offset="0" />
+                                <GradientStop Color="#FF3F5BD8" Offset="1" />
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <TextBlock Text="{x:Static c:Icons.Database}" Style="{StaticResource Text.Icon}" Foreground="White" FontSize="15" />
+                    </Border>
+                    <TextBlock Text="JetQueries" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,14,0" />
+
+                    <Button Style="{StaticResource Btn.Toolbar}" c:Ui.Icon="{x:Static c:Icons.Plug}" Content="{x:Static res:Strings.ConnectionNewLong}"
+                            Command="{Binding Connections.NewCommand}" />
+                    <Button Style="{StaticResource Btn.Toolbar}" c:Ui.Icon="{x:Static c:Icons.Add}" Content="{x:Static res:Strings.QueryNew}"
+                            Command="{Binding Documents.NewQueryCommand}" ToolTip="{x:Static res:Strings.QueryNewTip}" />
+                    <Border Style="{StaticResource Separator.Vertical}" />
+                    <Button Style="{StaticResource Btn.Toolbar}" c:Ui.Icon="{x:Static c:Icons.Play}" Content="{x:Static res:Strings.QueryRun}"
+                            Command="{Binding Documents.Selected.RunCommand}" ToolTip="{x:Static res:Strings.QueryRunTip}" />
+                    <Button Style="{StaticResource Btn.Toolbar}" c:Ui.Icon="{x:Static c:Icons.Stop}" Content="{x:Static res:Strings.QueryCancel}"
+                            Command="{Binding Documents.Selected.CancelCommand}" ToolTip="{x:Static res:Strings.QueryCancelTip}" />
+                </StackPanel>
+
+                <Button x:Name="ThemeButton" DockPanel.Dock="Right" Style="{StaticResource Btn.Icon}"
+                        Command="{Binding ToggleThemeCommand}" ToolTip="{x:Static res:Strings.ToggleTheme}" Margin="8,0,0,0" />
+                <Grid />
+            </DockPanel>
+        </Border>
+
+        <!-- ================= Body ================= -->
+        <Grid Grid.Row="1" Margin="{StaticResource Space.Page}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="300" MinWidth="200" />
+                <ColumnDefinition Width="10" />
+                <ColumnDefinition Width="*" MinWidth="320" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Explorer and history -->
+            <Border Style="{StaticResource Card.Surface}">
+                <TabControl x:Name="SideTabs" Padding="0">
+                    <TabItem Header="{x:Static res:Strings.ExplorerTab}" c:Ui.Icon="{x:Static c:Icons.Database}">
+                        <v:ConnectionsView DataContext="{Binding Connections}" />
+                    </TabItem>
+                    <TabItem Header="{x:Static res:Strings.HistoryTab}" c:Ui.Icon="{x:Static c:Icons.History}">
+                        <v:HistoryView DataContext="{Binding History}" />
+                    </TabItem>
+                </TabControl>
+            </Border>
+
+            <GridSplitter Grid.Column="1" Width="10" HorizontalAlignment="Stretch" ResizeBehavior="PreviousAndNext" />
+
+            <!-- Query tabs -->
+            <v:DocumentsView Grid.Column="2" DataContext="{Binding Documents}" />
+        </Grid>
+
+        <!-- ================= Status bar ================= -->
+        <DockPanel Grid.Row="2" Height="{StaticResource Size.StatusBar}" Margin="14,0">
+            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                <TextBlock Text="{Binding Documents.Selected.Status}" Style="{StaticResource Text.Status}" Foreground="{DynamicResource Brush.Text}" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <TextBlock Text="{Binding Documents.Selected.SelectedSession.Name}" Style="{StaticResource Text.Status}" Margin="0,0,16,0" />
+                <TextBlock Text="{Binding ExtensionStatus}" Style="{StaticResource Text.Status}" Foreground="{DynamicResource Brush.TextMuted}" />
+            </StackPanel>
+        </DockPanel>
+    </Grid>
+</Window>

@@ -24,7 +24,7 @@ public partial class GridSpikeView : UserControl
     private const string BenchmarkSwitch = "--grid-benchmark=";
 
     private static readonly CompositeFormat RowCountFormat =
-        CompositeFormat.Parse(JetQueries.Desktop.Resources.Strings.GridSpikeRowCount);
+        CompositeFormat.Parse(JetQueries.Presentation.Resources.Strings.GridSpikeRowCount);
 
     private static readonly string[] PhaseNames = ["tiny redraw (one button)", "redraw (same cells)", "smooth", "page jumps", "horizontal"];
 

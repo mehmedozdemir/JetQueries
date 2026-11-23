@@ -1,8 +1,9 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
-using JetQueries.Desktop.Resources;
+using JetQueries.Presentation.Resources;
 using JetQueries.Desktop.ViewModels;
+using JetQueries.Presentation.ViewModels;
 
 namespace JetQueries.Desktop.Views;
 

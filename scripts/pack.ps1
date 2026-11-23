@@ -34,7 +34,8 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 $root = Split-Path -Parent $PSScriptRoot
-$project = Join-Path $root 'src/JetQueries.Desktop/JetQueries.Desktop.csproj'
+# The WPF application is the product (ADR 0007); the Avalonia one is paused and not packaged.
+$project = Join-Path $root 'src/JetQueries.Wpf/JetQueries.Wpf.csproj'
 $publishDir = Join-Path $root "artifacts/publish/$Runtime"
 $releaseDir = Join-Path $root "artifacts/releases/$Runtime"
 

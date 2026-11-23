@@ -22,6 +22,7 @@
     <PackageVersion Include="MinVer" Version="8.0.0" />
     <PackageVersion Include="Velopack" Version="1.2.158" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
+    <PackageVersion Include="AvalonEdit" Version="6.3.1.120" />
     <PackageVersion Include="Npgsql" Version="10.0.4" />
     <PackageVersion Include="Oracle.ManagedDataAccess.Core" Version="23.26.401" />
     <PackageVersion Include="Testcontainers.MsSql" Version="4.17.0" />

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    View models, their service contracts and the user-facing strings, shared by every user interface (WPF today,
+    Avalonia paused). No UI framework may be referenced here.
+  -->
+  <PropertyGroup>
+    <RootNamespace>JetQueries.Presentation</RootNamespace>
+    <NeutralLanguage>en</NeutralLanguage>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="JetQueries.Presentation.Tests" />
+    <InternalsVisibleTo Include="JetQueries.Desktop.Tests" />
+    <InternalsVisibleTo Include="JetQueries.Wpf.Tests" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\JetQueries.Core\JetQueries.Core.csproj" />
+    <ProjectReference Include="..\JetQueries.Sdk\JetQueries.Sdk.csproj" />
+  </ItemGroup>
+</Project>

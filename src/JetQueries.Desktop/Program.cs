@@ -1,7 +1,9 @@
 using Avalonia;
 using JetQueries.Core;
 using JetQueries.Desktop.Services;
+using JetQueries.Presentation.Services;
 using JetQueries.Desktop.ViewModels;
+using JetQueries.Presentation.ViewModels;
 using JetQueries.Desktop.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

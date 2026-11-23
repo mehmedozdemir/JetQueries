@@ -7,6 +7,7 @@ using Avalonia.Styling;
 using Avalonia.Threading;
 using JetQueries.Core.Connections;
 using JetQueries.Desktop.ViewModels;
+using JetQueries.Presentation.ViewModels;
 using JetQueries.Desktop.Views;
 
 namespace JetQueries.Desktop.Tests;
@@ -58,15 +59,15 @@ public sealed class ConnectionViewRenderTests
 
         // A second tree with the object explorer opened down to the columns of a table.
         await using var explorerEnvironment = new TestEnvironment();
-        var (explorer, connected) = await ObjectExplorerTests.ConnectAsync(explorerEnvironment);
+        var (explorer, connected) = await TestEnvironment.ConnectAsync(explorerEnvironment);
         var database = (DatabaseObjectNodeViewModel)connected.Children[0];
-        await ObjectExplorerTests.ExpandAsync(database);
+        await TestEnvironment.ExpandAsync(database);
         var schema = (DatabaseObjectNodeViewModel)database.Children[0];
-        await ObjectExplorerTests.ExpandAsync(schema);
+        await TestEnvironment.ExpandAsync(schema);
         var tables = (CategoryNodeViewModel)schema.Children[0];
-        await ObjectExplorerTests.ExpandAsync(tables);
-        await ObjectExplorerTests.ExpandAsync((DatabaseObjectNodeViewModel)tables.Children[0]);
-        await ObjectExplorerTests.ExpandAsync((CategoryNodeViewModel)schema.Children[^1]);
+        await TestEnvironment.ExpandAsync(tables);
+        await TestEnvironment.ExpandAsync((DatabaseObjectNodeViewModel)tables.Children[0]);
+        await TestEnvironment.ExpandAsync((CategoryNodeViewModel)schema.Children[^1]);
         explorer.Selected = tables.Children[1];
 
         // The whole window: explorer on the left, a query with its results on the right.
@@ -79,15 +80,15 @@ public sealed class ConnectionViewRenderTests
         documents.Selected = query;
 
         // The history panel: the run above plus a failed one, a canceled one and a long script.
-        await explorerEnvironment.History.AddAsync(HistoryTests.Entry("UPDATE dbo.Cards SET Balance = 0 WHERE Id = 42") with { RowCount = null, ConnectionName = "Cards — test" }, token);
+        await explorerEnvironment.History.AddAsync(TestEnvironment.HistoryEntry("UPDATE dbo.Cards SET Balance = 0 WHERE Id = 42") with { RowCount = null, ConnectionName = "Cards — test" }, token);
         await explorerEnvironment.History.AddAsync(
-            HistoryTests.Entry("SELECT * FROM dbo.Cardz") with { Outcome = Core.Queries.QueryOutcome.Failed, Error = "Invalid object name 'dbo.Cardz'.", RowCount = null },
+            TestEnvironment.HistoryEntry("SELECT * FROM dbo.Cardz") with { Outcome = Core.Queries.QueryOutcome.Failed, Error = "Invalid object name 'dbo.Cardz'.", RowCount = null },
             token);
         await explorerEnvironment.History.AddAsync(
-            HistoryTests.Entry("EXEC dbo.PurgeOldLogs @olderThanDays = 90") with { Outcome = Core.Queries.QueryOutcome.Canceled, RowCount = null },
+            TestEnvironment.HistoryEntry("EXEC dbo.PurgeOldLogs @olderThanDays = 90") with { Outcome = Core.Queries.QueryOutcome.Canceled, RowCount = null },
             token);
         await explorerEnvironment.History.AddAsync(
-            HistoryTests.Entry("-- monthly totals\nSELECT c.CardNo, SUM(t.Amount) AS Total FROM dbo.Cards c JOIN dbo.Transactions t ON t.CardId = c.Id GROUP BY c.CardNo") with
+            TestEnvironment.HistoryEntry("-- monthly totals\nSELECT c.CardNo, SUM(t.Amount) AS Total FROM dbo.Cards c JOIN dbo.Transactions t ON t.CardId = c.Id GROUP BY c.CardNo") with
             {
                 RowCount = 18_240,
                 Duration = TimeSpan.FromSeconds(2.37),

@@ -532,6 +532,14 @@
           "JetQueries.Sdk": "[1.0.0, )"
         }
       },
+      "jetqueries.presentation": {
+        "type": "Project",
+        "dependencies": {
+          "CommunityToolkit.Mvvm": "[8.4.2, )",
+          "JetQueries.Core": "[1.0.0, )",
+          "JetQueries.Sdk": "[1.0.0, )"
+        }
+      },
       "jetqueries.sdk": {
         "type": "Project"
       },

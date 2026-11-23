@@ -1,0 +1,152 @@
+using System.Globalization;
+using System.Resources;
+
+namespace JetQueries.Presentation.Resources;
+
+/// <summary>
+/// Typed access to the user-facing strings in <c>Strings.resx</c> (English) and <c>Strings.tr.resx</c> (Turkish).
+/// The language follows <see cref="CultureInfo.CurrentUICulture"/>.
+/// </summary>
+public static class Strings
+{
+    private static readonly ResourceManager Manager = new(typeof(Strings));
+
+    public static string ToggleTheme => Get(nameof(ToggleTheme));
+    public static string ExplorerTitle => Get(nameof(ExplorerTitle));
+    public static string ExplorerPlaceholder => Get(nameof(ExplorerPlaceholder));
+    public static string DocumentsTitle => Get(nameof(DocumentsTitle));
+    public static string DocumentsPlaceholder => Get(nameof(DocumentsPlaceholder));
+    public static string ResultsTitle => Get(nameof(ResultsTitle));
+    public static string ResultsPlaceholder => Get(nameof(ResultsPlaceholder));
+    public static string StatusReady => Get(nameof(StatusReady));
+    public static string ExtensionsLoaded => Get(nameof(ExtensionsLoaded));
+    public static string ExtensionsLoadedWithFailures => Get(nameof(ExtensionsLoadedWithFailures));
+    public static string GridSpikeStream => Get(nameof(GridSpikeStream));
+    public static string GridSpikeBenchmark => Get(nameof(GridSpikeBenchmark));
+    public static string GridSpikeRowCount => Get(nameof(GridSpikeRowCount));
+
+    public static string ConnectionNew => Get(nameof(ConnectionNew));
+    public static string ConnectionEdit => Get(nameof(ConnectionEdit));
+    public static string ConnectionDelete => Get(nameof(ConnectionDelete));
+    public static string ConnectionConnect => Get(nameof(ConnectionConnect));
+    public static string ConnectionDisconnect => Get(nameof(ConnectionDisconnect));
+    public static string ConnectionsEmpty => Get(nameof(ConnectionsEmpty));
+    public static string ConnectionReadOnlyBadge => Get(nameof(ConnectionReadOnlyBadge));
+    public static string ConnectionConnectedBadge => Get(nameof(ConnectionConnectedBadge));
+    public static string ConnectionDialogTitleNew => Get(nameof(ConnectionDialogTitleNew));
+    public static string ConnectionDialogTitleEdit => Get(nameof(ConnectionDialogTitleEdit));
+    public static string FieldName => Get(nameof(FieldName));
+    public static string FieldProvider => Get(nameof(FieldProvider));
+    public static string FieldFolder => Get(nameof(FieldFolder));
+    public static string FieldFolderHint => Get(nameof(FieldFolderHint));
+    public static string FieldEnvironment => Get(nameof(FieldEnvironment));
+    public static string FieldReadOnly => Get(nameof(FieldReadOnly));
+    public static string FieldUserName => Get(nameof(FieldUserName));
+    public static string FieldPassword => Get(nameof(FieldPassword));
+    public static string FieldSavePassword => Get(nameof(FieldSavePassword));
+    public static string PasswordUnchangedHint => Get(nameof(PasswordUnchangedHint));
+    public static string PasswordNotPersistentHint => Get(nameof(PasswordNotPersistentHint));
+    public static string EnvironmentUnspecified => Get(nameof(EnvironmentUnspecified));
+    public static string EnvironmentDevelopment => Get(nameof(EnvironmentDevelopment));
+    public static string EnvironmentTest => Get(nameof(EnvironmentTest));
+    public static string EnvironmentProduction => Get(nameof(EnvironmentProduction));
+    public static string ButtonTest => Get(nameof(ButtonTest));
+    public static string ButtonCancelTest => Get(nameof(ButtonCancelTest));
+    public static string ButtonSave => Get(nameof(ButtonSave));
+    public static string ButtonCancel => Get(nameof(ButtonCancel));
+    public static string ButtonOk => Get(nameof(ButtonOk));
+    public static string ConnectionTesting => Get(nameof(ConnectionTesting));
+    public static string OutcomeSucceeded => Get(nameof(OutcomeSucceeded));
+    public static string OutcomeProviderMissing => Get(nameof(OutcomeProviderMissing));
+    public static string OutcomePasswordRequired => Get(nameof(OutcomePasswordRequired));
+    public static string OutcomeUnreachable => Get(nameof(OutcomeUnreachable));
+    public static string OutcomeFailed => Get(nameof(OutcomeFailed));
+    public static string OutcomeCanceled => Get(nameof(OutcomeCanceled));
+    public static string ValidationNameRequired => Get(nameof(ValidationNameRequired));
+    public static string ValidationProviderRequired => Get(nameof(ValidationProviderRequired));
+    public static string ValidationSettingRequired => Get(nameof(ValidationSettingRequired));
+    public static string ValidationUserRequired => Get(nameof(ValidationUserRequired));
+    public static string PasswordPromptTitle => Get(nameof(PasswordPromptTitle));
+    public static string PasswordPromptMessage => Get(nameof(PasswordPromptMessage));
+    public static string DeleteConfirmTitle => Get(nameof(DeleteConfirmTitle));
+    public static string DeleteConfirmMessage => Get(nameof(DeleteConfirmMessage));
+    public static string ExplorerRefresh => Get(nameof(ExplorerRefresh));
+    public static string ExplorerLoading => Get(nameof(ExplorerLoading));
+    public static string ExplorerEmpty => Get(nameof(ExplorerEmpty));
+    public static string CategoryTables => Get(nameof(CategoryTables));
+    public static string CategoryViews => Get(nameof(CategoryViews));
+    public static string CategoryProcedures => Get(nameof(CategoryProcedures));
+    public static string CategoryFunctions => Get(nameof(CategoryFunctions));
+    public static string CategoryPackages => Get(nameof(CategoryPackages));
+    public static string CategorySequences => Get(nameof(CategorySequences));
+    public static string CategorySynonyms => Get(nameof(CategorySynonyms));
+    public static string CategoryTypes => Get(nameof(CategoryTypes));
+    public static string ColumnPrimaryKey => Get(nameof(ColumnPrimaryKey));
+    public static string ColumnNullable => Get(nameof(ColumnNullable));
+    public static string QueryRun => Get(nameof(QueryRun));
+    public static string QueryCancel => Get(nameof(QueryCancel));
+    public static string QueryNoConnection => Get(nameof(QueryNoConnection));
+    public static string QueryTitle => Get(nameof(QueryTitle));
+    public static string ResultTitle => Get(nameof(ResultTitle));
+    public static string MessagesTitle => Get(nameof(MessagesTitle));
+    public static string QueryRunning => Get(nameof(QueryRunning));
+    public static string QueryDone => Get(nameof(QueryDone));
+    public static string QueryDoneNoRows => Get(nameof(QueryDoneNoRows));
+    public static string QueryCanceled => Get(nameof(QueryCanceled));
+    public static string QueryFailed => Get(nameof(QueryFailed));
+    public static string QueryNotSent => Get(nameof(QueryNotSent));
+    public static string QueryCompleted => Get(nameof(QueryCompleted));
+    public static string QueryRowsAffected => Get(nameof(QueryRowsAffected));
+    public static string QueryTruncated => Get(nameof(QueryTruncated));
+    public static string QueryBlockedReadOnly => Get(nameof(QueryBlockedReadOnly));
+    public static string QueryConfirmTitle => Get(nameof(QueryConfirmTitle));
+    public static string QueryConfirmMessage => Get(nameof(QueryConfirmMessage));
+    public static string DefinitionNotFound => Get(nameof(DefinitionNotFound));
+    public static string DefinitionUnavailable => Get(nameof(DefinitionUnavailable));
+    public static string ExplorerTab => Get(nameof(ExplorerTab));
+    public static string HistoryTab => Get(nameof(HistoryTab));
+    public static string HistoryOpen => Get(nameof(HistoryOpen));
+    public static string HistoryClear => Get(nameof(HistoryClear));
+    public static string HistorySearch => Get(nameof(HistorySearch));
+    public static string HistoryEmpty => Get(nameof(HistoryEmpty));
+    public static string HistoryRows => Get(nameof(HistoryRows));
+    public static string HistoryFailed => Get(nameof(HistoryFailed));
+    public static string HistoryCanceled => Get(nameof(HistoryCanceled));
+    public static string HistoryClearConfirmTitle => Get(nameof(HistoryClearConfirmTitle));
+    public static string HistoryClearConfirmMessage => Get(nameof(HistoryClearConfirmMessage));
+    public static string Browse => Get(nameof(Browse));
+    public static string BrowseDatabaseFile => Get(nameof(BrowseDatabaseFile));
+    public static string DatabaseFiles => Get(nameof(DatabaseFiles));
+    public static string QueryNew => Get(nameof(QueryNew));
+    public static string QueryNewTip => Get(nameof(QueryNewTip));
+    public static string QueryRunTip => Get(nameof(QueryRunTip));
+    public static string QueryCancelTip => Get(nameof(QueryCancelTip));
+    public static string QueryClose => Get(nameof(QueryClose));
+    public static string DocumentsEmptyTitle => Get(nameof(DocumentsEmptyTitle));
+    public static string DocumentsEmptyMessage => Get(nameof(DocumentsEmptyMessage));
+    public static string ResultsEmptyTitle => Get(nameof(ResultsEmptyTitle));
+    public static string ResultsEmptyMessage => Get(nameof(ResultsEmptyMessage));
+    public static string SectionConnection => Get(nameof(SectionConnection));
+    public static string SectionCredential => Get(nameof(SectionCredential));
+    public static string SectionOrganisation => Get(nameof(SectionOrganisation));
+    public static string GridSortAscending => Get(nameof(GridSortAscending));
+    public static string GridSortDescending => Get(nameof(GridSortDescending));
+    public static string GridClearSort => Get(nameof(GridClearSort));
+    public static string GridFilter => Get(nameof(GridFilter));
+    public static string GridFitColumn => Get(nameof(GridFitColumn));
+    public static string GridFitAllColumns => Get(nameof(GridFitAllColumns));
+    public static string GridHideColumn => Get(nameof(GridHideColumn));
+    public static string GridCopyColumnName => Get(nameof(GridCopyColumnName));
+    public static string GridCopy => Get(nameof(GridCopy));
+    public static string GridCopyWithHeaders => Get(nameof(GridCopyWithHeaders));
+    public static string GridFilterByValue => Get(nameof(GridFilterByValue));
+    public static string GridExcludeValue => Get(nameof(GridExcludeValue));
+    public static string GridSelectAll => Get(nameof(GridSelectAll));
+    public static string GridNoRows => Get(nameof(GridNoRows));
+    public static string ConnectionNewLong => Get(nameof(ConnectionNewLong));
+
+    /// <summary>A string looked up by a computed name (for example <c>Setting_server</c>), or null if there is none.</summary>
+    public static string? Find(string name) => Manager.GetString(name, CultureInfo.CurrentUICulture);
+
+    private static string Get(string name) => Manager.GetString(name, CultureInfo.CurrentUICulture) ?? name;
+}

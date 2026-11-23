@@ -1,0 +1,108 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The WPF user interface (Windows), built on UiKit (ADR 0007). -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>JetQueries</AssemblyName>
+    <RootNamespace>JetQueries.Wpf</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <NeutralLanguage>en</NeutralLanguage>
+    <!-- Program.Main starts the application: Velopack must run before WPF. -->
+    <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
+    <StartupObject>JetQueries.Wpf.Program</StartupObject>
+    <!-- Version from the git tag (v1.2.3); never edited by hand. -->
+    <MinVerTagPrefix>v</MinVerTagPrefix>
+    <MinVerDefaultPreReleaseIdentifiers>alpha.0</MinVerDefaultPreReleaseIdentifiers>
+    <!-- 0.x until the MVP gate; Velopack also rejects versions below 0.0.1. -->
+    <MinVerMinimumMajorMinor>0.1</MinVerMinimumMajorMinor>
+    <!-- CA1515: XAML-backed types must stay public. -->
+    <NoWarn>$(NoWarn);CA1515</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="JetQueries.Wpf.Tests" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="AvalonEdit" />
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="MinVer" PrivateAssets="all" />
+    <PackageReference Include="Velopack" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Never reference a concrete provider here: providers are loaded by the extension host. -->
+    <ProjectReference Include="..\JetQueries.Presentation\JetQueries.Presentation.csproj" />
+    <ProjectReference Include="..\JetQueries.Core\JetQueries.Core.csproj" />
+    <ProjectReference Include="..\JetQueries.Sdk\JetQueries.Sdk.csproj" />
+    <ProjectReference Include="..\UiKit.Wpf\UiKit.Wpf.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="JetQueries.Presentation.ViewModels" />
+    <Using Include="JetQueries.Presentation.Services" />
+    <Using Include="JetQueries.Presentation.Resources" />
+  </ItemGroup>
+  <!--
+    Built-in extensions. They are built with the application but never referenced by it (hard rule 3): their
+    output is copied to extensions/<folder>/ next to the executable, where the extension host finds them like
+    any other extension.
+  -->
+  <!--
+    UndefineProperties: an extension is framework-dependent and runtime-neutral even when the application is
+    published self-contained for one runtime; it runs on the application's runtime and picks its native
+    libraries from its own runtimes/ folder.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\Providers\JetQueries.Provider.SqlServer\JetQueries.Provider.SqlServer.csproj" ReferenceOutputAssembly="false" Private="false"
+                      UndefineProperties="RuntimeIdentifier;SelfContained;PublishReadyToRun" />
+    <ProjectReference Include="..\Providers\JetQueries.Provider.Oracle\JetQueries.Provider.Oracle.csproj" ReferenceOutputAssembly="false" Private="false"
+                      UndefineProperties="RuntimeIdentifier;SelfContained;PublishReadyToRun" />
+    <ProjectReference Include="..\Providers\JetQueries.Provider.PostgreSql\JetQueries.Provider.PostgreSql.csproj" ReferenceOutputAssembly="false" Private="false"
+                      UndefineProperties="RuntimeIdentifier;SelfContained;PublishReadyToRun" />
+    <ProjectReference Include="..\Providers\JetQueries.Provider.Sqlite\JetQueries.Provider.Sqlite.csproj" ReferenceOutputAssembly="false" Private="false"
+                      UndefineProperties="RuntimeIdentifier;SelfContained;PublishReadyToRun" />
+  </ItemGroup>
+  <!-- Each extension's whole output folder, minus symbols and XML docs, goes to extensions/<folder>/. -->
+  <!-- Providers target net10.0; this application targets net10.0-windows, so their output folder is named explicitly. -->
+  <Target Name="CopyBuiltInExtensions" AfterTargets="Build">
+    <PropertyGroup>
+      <_ExtensionsRoot>$(OutDir)extensions\</_ExtensionsRoot>
+    </PropertyGroup>
+    <ItemGroup>
+      <_sqlserverExtensionFile Include="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.SqlServer\bin\$(Configuration)\net10.0\**\*" Exclude="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.SqlServer\bin\$(Configuration)\net10.0\**\*.pdb;$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.SqlServer\bin\$(Configuration)\net10.0\**\*.xml" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_sqlserverExtensionFile)" DestinationFolder="$(_ExtensionsRoot)sqlserver\%(RecursiveDir)" SkipUnchangedFiles="true" />
+    <ItemGroup>
+      <_oracleExtensionFile Include="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Oracle\bin\$(Configuration)\net10.0\**\*" Exclude="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Oracle\bin\$(Configuration)\net10.0\**\*.pdb;$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Oracle\bin\$(Configuration)\net10.0\**\*.xml" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_oracleExtensionFile)" DestinationFolder="$(_ExtensionsRoot)oracle\%(RecursiveDir)" SkipUnchangedFiles="true" />
+    <ItemGroup>
+      <_postgresqlExtensionFile Include="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.PostgreSql\bin\$(Configuration)\net10.0\**\*" Exclude="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.PostgreSql\bin\$(Configuration)\net10.0\**\*.pdb;$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.PostgreSql\bin\$(Configuration)\net10.0\**\*.xml" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_postgresqlExtensionFile)" DestinationFolder="$(_ExtensionsRoot)postgresql\%(RecursiveDir)" SkipUnchangedFiles="true" />
+    <ItemGroup>
+      <_sqliteExtensionFile Include="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Sqlite\bin\$(Configuration)\net10.0\**\*" Exclude="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Sqlite\bin\$(Configuration)\net10.0\**\*.pdb;$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Sqlite\bin\$(Configuration)\net10.0\**\*.xml" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_sqliteExtensionFile)" DestinationFolder="$(_ExtensionsRoot)sqlite\%(RecursiveDir)" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="PublishBuiltInExtensions" AfterTargets="Publish">
+    <PropertyGroup>
+      <_ExtensionsRoot>$(PublishDir)extensions\</_ExtensionsRoot>
+    </PropertyGroup>
+    <ItemGroup>
+      <_sqlserverPublishFile Include="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.SqlServer\bin\$(Configuration)\net10.0\**\*" Exclude="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.SqlServer\bin\$(Configuration)\net10.0\**\*.pdb;$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.SqlServer\bin\$(Configuration)\net10.0\**\*.xml" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_sqlserverPublishFile)" DestinationFolder="$(_ExtensionsRoot)sqlserver\%(RecursiveDir)" SkipUnchangedFiles="true" />
+    <ItemGroup>
+      <_oraclePublishFile Include="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Oracle\bin\$(Configuration)\net10.0\**\*" Exclude="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Oracle\bin\$(Configuration)\net10.0\**\*.pdb;$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Oracle\bin\$(Configuration)\net10.0\**\*.xml" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_oraclePublishFile)" DestinationFolder="$(_ExtensionsRoot)oracle\%(RecursiveDir)" SkipUnchangedFiles="true" />
+    <ItemGroup>
+      <_postgresqlPublishFile Include="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.PostgreSql\bin\$(Configuration)\net10.0\**\*" Exclude="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.PostgreSql\bin\$(Configuration)\net10.0\**\*.pdb;$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.PostgreSql\bin\$(Configuration)\net10.0\**\*.xml" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_postgresqlPublishFile)" DestinationFolder="$(_ExtensionsRoot)postgresql\%(RecursiveDir)" SkipUnchangedFiles="true" />
+    <ItemGroup>
+      <_sqlitePublishFile Include="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Sqlite\bin\$(Configuration)\net10.0\**\*" Exclude="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Sqlite\bin\$(Configuration)\net10.0\**\*.pdb;$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Sqlite\bin\$(Configuration)\net10.0\**\*.xml" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_sqlitePublishFile)" DestinationFolder="$(_ExtensionsRoot)sqlite\%(RecursiveDir)" SkipUnchangedFiles="true" />
+  </Target>
+</Project>

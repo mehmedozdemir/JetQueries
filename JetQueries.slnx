@@ -15,6 +15,9 @@
     <Project Path="src/JetQueries.Desktop/JetQueries.Desktop.csproj" />
     <Project Path="src/JetQueries.Editor/JetQueries.Editor.csproj" />
     <Project Path="src/JetQueries.Sdk/JetQueries.Sdk.csproj" />
+    <Project Path="src/JetQueries.Presentation/JetQueries.Presentation.csproj" />
+    <Project Path="src/JetQueries.Wpf/JetQueries.Wpf.csproj" />
+    <Project Path="src/UiKit.Wpf/UiKit.Wpf.csproj" />
   </Folder>
   <Folder Name="/src/Providers/">
     <Project Path="src/Providers/JetQueries.Provider.Oracle/JetQueries.Provider.Oracle.csproj" />
@@ -26,6 +29,8 @@
     <Project Path="tests/JetQueries.Core.Tests/JetQueries.Core.Tests.csproj" />
     <Project Path="tests/JetQueries.DataGrid.Tests/JetQueries.DataGrid.Tests.csproj" />
     <Project Path="tests/JetQueries.Desktop.Tests/JetQueries.Desktop.Tests.csproj" />
+    <Project Path="tests/JetQueries.Presentation.Tests/JetQueries.Presentation.Tests.csproj" />
+    <Project Path="tests/JetQueries.Wpf.Tests/JetQueries.Wpf.Tests.csproj" />
     <Project Path="tests/JetQueries.PlSql.ParseSpike.Grammar/JetQueries.PlSql.ParseSpike.Grammar.csproj" />
     <Project Path="tests/JetQueries.PlSql.ParseSpike/JetQueries.PlSql.ParseSpike.csproj" />
     <Project Path="tests/JetQueries.Provider.Oracle.Tests/JetQueries.Provider.Oracle.Tests.csproj" />

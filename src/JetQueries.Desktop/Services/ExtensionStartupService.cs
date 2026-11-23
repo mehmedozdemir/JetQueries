@@ -1,6 +1,7 @@
 using JetQueries.Core.Extensions;
 using JetQueries.Core.Jobs;
 using JetQueries.Desktop.ViewModels;
+using JetQueries.Presentation.ViewModels;
 using Microsoft.Extensions.Hosting;
 
 namespace JetQueries.Desktop.Services;
