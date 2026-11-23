@@ -142,6 +142,17 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] Ctrl+/ comments the selected lines (or the caret's line) with `-- `, again removes it; Ctrl+Shift+U /
       Ctrl+U upper / lower case the selection or the word at the caret (`id` → `ID`, never `İD`).
 
+## Snippets and column editing
+- [ ] Type `sel` then Tab: `SELECT *` / `FROM |` (caret after FROM); on an indented line every line keeps the
+      indent; Ctrl+Z restores `sel`. `t.sel` + Tab or `xsel` + Tab: a normal Tab. With the completion list open,
+      Tab picks from the list.
+- [ ] Right-click → Insert snippet → a list with each shortcut; choosing one writes it at the cursor (in place of
+      a selection).
+- [ ] Settings → Snippets: +, edit shortcut / description / text (coloured), remove; a repeated or empty shortcut
+      is refused on Save with a message on that page; saved snippets work at once in open tabs and after a restart;
+      Defaults brings the built-in ones back.
+- [ ] Column editing: Alt+drag, or Alt+Shift+arrows, selects a box; typing writes on every line of it.
+
 ## Result tools
 - [ ] Select several cells: under the grid at the right "12 cells · Sum … · Avg … · Min … · Max …" (numbers only;
       text and NULL count as cells). Select all on a large result: the window stays responsive.
@@ -241,6 +252,8 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
   are those of that execution (they may differ from the first page if the data changed meanwhile).
 - SQL Server: a query starting with WITH is not paged (SQL Server cannot count it) and is read to its end.
 - Filters on several columns are combined with AND; there is no OR (the SQL filter box takes any condition).
+- Multiple independent cursors (Ctrl+click carets) are not supported by the editor component (AvalonEdit); box
+  selection (Alt+drag) covers editing several lines at once.
 - Go to object searches what the explorer can list (all databases of a connection, loaded once and cached);
   favourites in the explorer are not there yet.
 - Disconnecting a connection from the explorer while a tab has an open transaction does not ask: the server

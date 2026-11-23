@@ -952,6 +952,9 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
         return formatted;
     }
 
+    /// <summary>The snippets the editor expands (shortcut + Tab) and lists; null for none.</summary>
+    public ISnippetService? Snippets { get; set; }
+
     /// <summary>How <see cref="FormatAsync"/> lays SQL out, unless <see cref="FormatOptionsSource"/> says.</summary>
     public SqlFormatOptions FormatOptions { get; set; } = SqlFormatOptions.Default;
 

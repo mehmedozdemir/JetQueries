@@ -247,6 +247,60 @@ public class SqlEditor : UserControl
     /// <summary>Moves keyboard focus into the text.</summary>
     public void FocusText() => _editor.TextArea.Focus();
 
+    /// <summary>
+    /// The snippet text (with <c>$0</c> for the caret) for a shortcut typed before Tab; null when the word is no
+    /// shortcut (Tab then indents as usual).
+    /// </summary>
+    public Func<string, string?>? SnippetLookup { get; set; }
+
+    /// <summary>Writes a snippet at the caret (in place of the selection), indented like its line; the caret goes to its $0.</summary>
+    public void InsertSnippet(string snippet)
+    {
+        ArgumentNullException.ThrowIfNull(snippet);
+        var start = _editor.SelectionLength > 0 ? _editor.SelectionStart : _editor.CaretOffset;
+        ReplaceWithSnippet(start, _editor.SelectionLength, snippet);
+    }
+
+    /// <summary>Expands the shortcut before the caret, if it is one; false when it is not.</summary>
+    public bool ExpandSnippetAtCaret()
+    {
+        if (SnippetLookup is not { } lookup || _editor.SelectionLength > 0)
+        {
+            return false;
+        }
+
+        var document = _editor.Document;
+        var end = _editor.CaretOffset;
+        var start = end;
+        while (start > 0 && (char.IsLetterOrDigit(document.GetCharAt(start - 1)) || document.GetCharAt(start - 1) == '_'))
+        {
+            start--;
+        }
+
+        // Only a whole word: "xsel" or "t.sel" are not the shortcut "sel".
+        if (start == end || (start > 0 && document.GetCharAt(start - 1) is '.' or '@' or '#' or '$') ||
+            lookup(document.GetText(start, end - start)) is not { } snippet)
+        {
+            return false;
+        }
+
+        ReplaceWithSnippet(start, end - start, snippet);
+        return true;
+    }
+
+    private void ReplaceWithSnippet(int start, int length, string snippet)
+    {
+        var document = _editor.Document;
+        var line = document.GetLineByOffset(start);
+        var lineText = document.GetText(line.Offset, line.Length);
+        var indent = lineText[..(lineText.Length - lineText.TrimStart().Length)];
+        var newLine = line.DelimiterLength == 2 || document.Text.Contains("\r\n", StringComparison.Ordinal) ? "\r\n" : "\n";
+        var (text, caret) = JetQueries.Presentation.ViewModels.SqlSnippets.Expand(snippet, indent, newLine);
+        document.Replace(start, length, text);
+        _editor.Select(start + caret, 0);
+        _editor.CaretOffset = start + caret;
+    }
+
     /// <summary>Highlights a range for a moment (the statement Ctrl+Enter runs).</summary>
     public void Flash(int start, int length)
     {
@@ -542,7 +596,11 @@ public class SqlEditor : UserControl
 
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key == Key.Space && Keyboard.Modifiers == ModifierKeys.Control)
+        if (e.Key == Key.Tab && Keyboard.Modifiers == ModifierKeys.None && _completionWindow is null && ExpandSnippetAtCaret())
+        {
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Space && Keyboard.Modifiers == ModifierKeys.Control)
         {
             _ = RequestCompletionAsync();
             e.Handled = true;

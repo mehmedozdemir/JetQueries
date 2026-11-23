@@ -182,7 +182,7 @@ public sealed class ShellRenderTests
             return results;
         });
 
-        Assert.Equal(20, colours.Count);
+        Assert.Equal(22, colours.Count);
         Assert.All(colours, static pair => Assert.True(pair.Value > 12, $"{pair.Key} rendered only {pair.Value} distinct colours."));
     }
 

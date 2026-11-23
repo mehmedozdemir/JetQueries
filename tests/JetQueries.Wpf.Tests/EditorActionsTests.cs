@@ -47,6 +47,45 @@ public sealed class EditorActionsTests
     }
 
     [Fact]
+    public async Task A_shortcut_and_tab_expand_a_snippet_in_the_editor()
+    {
+        await WpfTestHost.RunAsync(async () =>
+        {
+            var snippets = new SnippetService();
+            var editor = new JetQueries.Wpf.Editor.SqlEditor { Text = "WITH x AS (\n    sel", SnippetLookup = s => snippets.Find(s)?.Text };
+            var window = new Window { Content = editor, Width = 500, Height = 300, Left = -20000, ShowActivated = false, ShowInTaskbar = false };
+            window.Show();
+            await Idle();
+
+            // The snippet takes the line's indentation; the caret goes to its $0; one undo takes it back.
+            editor.CaretOffset = editor.Text.Length;
+            Assert.True(editor.ExpandSnippetAtCaret());
+            Assert.Equal("WITH x AS (\n    SELECT *\n    FROM ", editor.Text);
+            Assert.Equal(editor.Text.Length, editor.CaretOffset);
+            editor.Undo();
+            Assert.Equal("WITH x AS (\n    sel", editor.Text);
+
+            // Not a whole word, or not a shortcut: Tab stays a Tab.
+            editor.Text = "SELECT t.sel";
+            editor.CaretOffset = editor.Text.Length;
+            Assert.False(editor.ExpandSnippetAtCaret());
+            editor.Text = "xsel";
+            editor.CaretOffset = 4;
+            Assert.False(editor.ExpandSnippetAtCaret());
+
+            // From the menu, in place of the selection.
+            editor.Text = "-- here";
+            editor.SelectAll();
+            editor.InsertSnippet("ORDER BY $0 DESC");
+            Assert.Equal("ORDER BY  DESC", editor.Text);
+            Assert.Equal("ORDER BY ".Length, editor.CaretOffset);
+
+            window.Close();
+            return 0;
+        });
+    }
+
+    [Fact]
     public async Task The_editor_comments_changes_case_and_formats_as_single_undo_steps()
     {
         await WpfTestHost.RunAsync(async () =>
@@ -99,7 +138,7 @@ public sealed class EditorActionsTests
             var menu = Assert.IsType<ContextMenu>(editor.ContextMenu);
             var headers = menu.Items.OfType<MenuItem>().Select(static m => (string)m.Header).ToList();
             Assert.Equal(
-                ["Run statement", "Run", "Run in new tab", "Cut", "Copy", "Paste", "Select all", "Format SQL", "Comment / uncomment lines", "Upper case", "Lower case",
+                ["Run statement", "Run", "Run in new tab", "Cut", "Copy", "Paste", "Select all", "Insert snippet", "Format SQL", "Comment / uncomment lines", "Upper case", "Lower case",
                  "Go to definition", "Show completion", "Undo", "Redo"],
                 headers);
 

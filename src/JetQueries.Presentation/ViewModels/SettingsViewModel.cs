@@ -99,6 +99,23 @@ public interface IThemeService
 /// <summary>A choice in a list of the settings screen.</summary>
 public sealed record SettingChoice<T>(T Value, string Text);
 
+/// <summary>A snippet being edited on the settings screen.</summary>
+public sealed partial class SnippetItem : ObservableObject
+{
+    [ObservableProperty]
+    public partial string Shortcut { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string Description { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string Text { get; set; } = string.Empty;
+
+    public SqlSnippet ToSnippet() => new(Shortcut.Trim(), Description.Trim(), Text);
+
+    public static SnippetItem From(SqlSnippet snippet) => new() { Shortcut = snippet.Shortcut, Description = snippet.Description, Text = snippet.Text };
+}
+
 /// <summary>A page of the settings screen.</summary>
 /// <param name="Key">appearance, editor, results, query or format.</param>
 /// <param name="Title">The page's name in the list.</param>
@@ -119,6 +136,7 @@ public partial class SettingsViewModel : ObservableObject
     private readonly bool _originalDark;
     private bool _loading;
     private readonly ISqlFormatter? _formatter;
+    private readonly ISnippetService? _snippets;
     private int _previewVersion;
 
     /// <summary>The text of the editor preview: keywords, names, a string, a number and a comment.</summary>
@@ -140,9 +158,14 @@ public partial class SettingsViewModel : ObservableObject
     /// A SQL language for the editor and formatting previews (colouring, and its formatter if it has one); null
     /// shows them plain.
     /// </param>
+    /// <param name="snippets">The snippets to edit; the page is empty without.</param>
     public SettingsViewModel(
-        ISettingsStore store, IJobQueue jobs, IAppearanceService appearance, IThemeService theme, IEnumerable<string> fonts, ISqlLanguageService? previewLanguage = null)
+        ISettingsStore store, IJobQueue jobs, IAppearanceService appearance, IThemeService theme, IEnumerable<string> fonts, ISqlLanguageService? previewLanguage = null,
+        ISnippetService? snippets = null)
     {
+        _snippets = snippets;
+        SnippetItems = [.. (snippets?.Current ?? SqlSnippets.Defaults).Select(SnippetItem.From)];
+        SelectedSnippet = SnippetItems.FirstOrDefault();
         ArgumentNullException.ThrowIfNull(appearance);
         ArgumentNullException.ThrowIfNull(theme);
         ArgumentNullException.ThrowIfNull(fonts);
@@ -163,6 +186,7 @@ public partial class SettingsViewModel : ObservableObject
             new("results", Strings.SettingsPageResults, Strings.SettingsPageResultsInfo),
             new("query", Strings.SettingsPageQuery, Strings.SettingsPageQueryInfo),
             new("format", Strings.SettingsPageFormat, Strings.SettingsPageFormatInfo),
+            new("snippets", Strings.SettingsPageSnippets, Strings.SettingsPageSnippetsInfo),
         ];
         SelectedSection = Sections[0];
         FormatPreview = FormatSample;
@@ -217,6 +241,53 @@ public partial class SettingsViewModel : ObservableObject
     /// <summary>The page shown.</summary>
     [ObservableProperty]
     public partial SettingsSection SelectedSection { get; set; }
+
+    /// <summary>The snippets, as edited.</summary>
+    public System.Collections.ObjectModel.ObservableCollection<SnippetItem> SnippetItems { get; }
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(RemoveSnippetCommand))]
+    public partial SnippetItem? SelectedSnippet { get; set; }
+
+    /// <summary>Why the snippets cannot be saved; null when they can.</summary>
+    [ObservableProperty]
+    public partial string? SnippetError { get; set; }
+
+    [RelayCommand]
+    private void AddSnippet()
+    {
+        var number = 1;
+        while (SnippetItems.Any(s => s.Shortcut.Equals("snippet" + number.ToString(System.Globalization.CultureInfo.InvariantCulture), StringComparison.OrdinalIgnoreCase)))
+        {
+            number++;
+        }
+
+        var item = new SnippetItem { Shortcut = "snippet" + number.ToString(System.Globalization.CultureInfo.InvariantCulture), Text = "$0" };
+        SnippetItems.Add(item);
+        SelectedSnippet = item;
+    }
+
+    private bool HasSnippet() => SelectedSnippet is not null;
+
+    [RelayCommand(CanExecute = nameof(HasSnippet))]
+    private void RemoveSnippet()
+    {
+        if (SelectedSnippet is { } item)
+        {
+            var index = SnippetItems.IndexOf(item);
+            SnippetItems.Remove(item);
+            SelectedSnippet = SnippetItems.Count == 0 ? null : SnippetItems[Math.Min(index, SnippetItems.Count - 1)];
+        }
+    }
+
+    /// <summary>The snippets as edited when every shortcut is a word used once; null otherwise.</summary>
+    private List<SqlSnippet>? ValidSnippets()
+    {
+        var snippets = SnippetItems.Select(static s => s.ToSnippet()).ToList();
+        var valid = snippets.All(static s => SqlSnippets.IsValidShortcut(s.Shortcut)) &&
+            snippets.Select(static s => s.Shortcut).Distinct(StringComparer.OrdinalIgnoreCase).Count() == snippets.Count;
+        return valid ? snippets : null;
+    }
 
     /// <summary>Colours the previews; null shows them plain.</summary>
     public ISqlLanguageService? PreviewLanguage { get; }
@@ -313,9 +384,24 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private async Task SaveAsync()
     {
+        // Snippets with a missing or repeated shortcut are shown, not saved.
+        if (ValidSnippets() is not { } snippets)
+        {
+            SnippetError = Strings.SnippetInvalid;
+            SelectedSection = Sections.Single(static s => s.Key == "snippets");
+            return;
+        }
+
+        SnippetError = null;
         var settings = Chosen;
         _appearance.Apply(settings);
+        _snippets?.Apply(snippets);
         await _jobs.Enqueue("Save settings", context => _store.SaveAsync(AppearanceSettings.Section, settings, context.CancellationToken), JobPriority.High).Completion;
+        if (_snippets is not null)
+        {
+            var section = new SnippetSettings { Snippets = snippets };
+            await _jobs.Enqueue("Save snippets", context => _store.SaveAsync(SnippetSettings.Section, section, context.CancellationToken), JobPriority.High).Completion;
+        }
         CloseRequested?.Invoke(this, true);
     }
 
@@ -332,7 +418,17 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void ResetDefaults() => Show(new AppearanceSettings());
+    private void ResetDefaults()
+    {
+        Show(new AppearanceSettings());
+        SnippetItems.Clear();
+        foreach (var snippet in SqlSnippets.Defaults)
+        {
+            SnippetItems.Add(SnippetItem.From(snippet));
+        }
+
+        SelectedSnippet = SnippetItems.FirstOrDefault();
+    }
 
     private void Show(AppearanceSettings settings)
     {

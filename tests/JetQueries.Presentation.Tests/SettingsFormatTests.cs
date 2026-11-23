@@ -22,7 +22,7 @@ public sealed class SettingsFormatTests
         var appearance = new Appearance();
         var settings = new SettingsViewModel(store, env.Jobs, appearance, new Theme(), ["Consolas"], new OptionsEcho());
 
-        Assert.Equal(["appearance", "editor", "results", "query", "format"], settings.Sections.Select(static s => s.Key));
+        Assert.Equal(["appearance", "editor", "results", "query", "format", "snippets"], settings.Sections.Select(static s => s.Key));
         Assert.Equal("appearance", settings.SelectedSection.Key);
         Assert.True(settings.CanPreviewFormat);
         Assert.Equal(SqlKeywordCase.Upper, settings.FormatKeywordCase!.Value);
