@@ -219,4 +219,5 @@
   <data name="QueryButtonsInTab" xml:space="preserve"><value>Her sorgu sekmesinde (simge)</value></data>
   <data name="QueryButtonsInToolbar" xml:space="preserve"><value>Ana araç çubuğunda</value></data>
   <data name="FieldFetchSize" xml:space="preserve"><value>Sayfa başına satır</value></data>
+  <data name="ResultShapeChanged" xml:space="preserve"><value>Sorgu artık farklı sütunlar döndürüyor; yeniden çalıştırın.</value></data>
 </root>

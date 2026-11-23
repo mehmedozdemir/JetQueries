@@ -128,6 +128,16 @@ public sealed partial class QueryResultSet : ObservableObject, IResultTab
     /// <summary>A value as the grid shows it.</summary>
     internal static string? FormatValue(object? value) => Format(value);
 
+    /// <summary>Puts the rows of a new execution of the same query in place of those shown.</summary>
+    public void ReplaceRows(IReadOnlyList<object?[]> rows)
+    {
+        ArgumentNullException.ThrowIfNull(rows);
+        _rows.Clear();
+        _rows.AddRange(rows);
+        RowCountChanged?.Invoke(this, EventArgs.Empty);
+        OnPropertyChanged(nameof(RowsText));
+    }
+
     public void AddRows(IReadOnlyList<object?[]> rows)
     {
         ArgumentNullException.ThrowIfNull(rows);
@@ -621,10 +631,9 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
     [NotifyCanExecuteChangedFor(nameof(RefreshCommand), nameof(CountRowsCommand))]
     public partial string? LastSql { get; set; }
 
-    /// <summary>The last run stopped after a page: its cursor is open and its last result set may have more rows.</summary>
-    [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(CancelCommand), nameof(FetchNextPageCommand), nameof(FetchAllCommand))]
-    public partial bool HasOpenCursor { get; set; }
+    // The result of the last run when it is a single SELECT that stopped after a page: more rows can be fetched by
+    // running it again. Nothing stays open on the server between pages (no cursor, no locks, no snapshot).
+    private QueryResultSet? _pagedSet;
 
     partial void OnFetchSizeChanged(int value)
     {
@@ -638,7 +647,11 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
 
     private bool CanRun() => !IsRunning && SelectedSession is not null && !string.IsNullOrWhiteSpace(Text);
 
-    /// <summary>Runs the selection, or the whole text. The first page of each result set is fetched; the cursor stays open for more.</summary>
+    /// <summary>
+    /// Runs the selection, or the whole text. A single SELECT stops after its first page and is closed at once; any
+    /// other text (a script, a procedure call, DML) is read to its end, as SSMS does, because running it again
+    /// for more rows would repeat what it does.
+    /// </summary>
     [RelayCommand(CanExecute = nameof(CanRun))]
     private Task RunAsync() => RunSqlAsync(string.IsNullOrWhiteSpace(SelectedText) ? Text : SelectedText);
 
@@ -653,6 +666,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
         var session = SelectedSession!.Session;
         await CloseCursorAsync();
         ClearResults();
+        _pagedSet = null;
         var risk = StatementGuard.Analyze(sql);
         if (session.Definition.IsReadOnly && risk.WritesData)
         {
@@ -689,36 +703,108 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
 
         // Batches of one page (within reason), so that a page ends exactly at the fetch size.
         var request = new QueryRequest(sql) { BatchSize = Math.Min(fetchSize, 5000) };
-        _cursor = new QueryCursor(channel, request, session, fetchSize);
+        var pageable = !risk.WritesData && session.Provider is IRowCountQueryBuilder builder && builder.BuildCountQuery(sql) is not null;
+        _cursor = new QueryCursor(channel, request, session, pageable ? fetchSize : MaxRows);
         await ReadPageAsync(_cursor);
     }
 
-    private bool CanFetchMore(QueryResultSet? set) => !IsRunning && HasOpenCursor && set is { HasMore: true };
+    private bool CanFetchMore(QueryResultSet? set) =>
+        !IsRunning && set is { HasMore: true } && ReferenceEquals(set, _pagedSet) && LastSql is not null && SelectedSession is not null;
 
-    /// <summary>Fetches the next page of the result set whose cursor is open.</summary>
+    /// <summary>Fetches one more page: the query runs again and is read up to the next page's end, then closed.</summary>
     [RelayCommand(CanExecute = nameof(CanFetchMore))]
-    private Task FetchNextPageAsync(QueryResultSet? set)
+    private Task FetchNextPageAsync(QueryResultSet? set) =>
+        set is null ? Task.CompletedTask : RefetchAsync(set, (int)Math.Min(MaxRows, (long)set.RowCount + Math.Max(1, FetchSize)));
+
+    /// <summary>Fetches every row (up to <see cref="MaxRows"/>): the query runs again and is read to its end.</summary>
+    [RelayCommand(CanExecute = nameof(CanFetchMore))]
+    private Task FetchAllAsync(QueryResultSet? set) => set is null ? Task.CompletedTask : RefetchAsync(set, MaxRows);
+
+    /// <summary>
+    /// Runs the paged SELECT again and reads it up to <paramref name="target"/> rows, then closes it. The rows
+    /// replace those shown, so that all of them come from one execution: no row is skipped or shown twice when
+    /// the data changed in between, or when the query has no ORDER BY.
+    /// </summary>
+    private async Task RefetchAsync(QueryResultSet set, int target)
     {
-        if (_cursor is not { } cursor || set is null)
+        if (LastSql is not { } sql || SelectedSession?.Session is not { } session || await EnsureChannelAsync() is not { } channel)
         {
-            return Task.CompletedTask;
+            return;
         }
 
-        cursor.PageEnd = (int)Math.Min(MaxRows, (long)set.RowCount + Math.Max(1, FetchSize));
-        return ReadPageAsync(cursor);
-    }
-
-    /// <summary>Fetches every remaining row (up to <see cref="MaxRows"/>).</summary>
-    [RelayCommand(CanExecute = nameof(CanFetchMore))]
-    private Task FetchAllAsync(QueryResultSet? set)
-    {
-        if (_cursor is not { } cursor || set is null)
+        IsRunning = true;
+        Status = Format(Strings.QueryRunning, set.RowCount);
+        var started = Stopwatch.GetTimestamp();
+        var request = new QueryRequest(sql) { BatchSize = Math.Min(Math.Max(1, FetchSize), 5000) };
+        var cursor = new QueryCursor(channel, request, session, target);
+        var rows = new List<object?[]>(Math.Min(target, 100_000));
+        var resultSets = 0;
+        var columns = 0;
+        try
         {
-            return Task.CompletedTask;
-        }
+            var job = _jobs.Enqueue(
+                "Fetch rows",
+                context => cursor.ReadAsync(
+                    (_, item) =>
+                    {
+                        switch (item)
+                        {
+                            case ResultSetStarted startedSet:
+                                columns = startedSet.Columns.Count;
+                                return ++resultSets == 1;
+                            case RowBatch batch:
+                                rows.AddRange(batch.Rows);
+                                var count = rows.Count;
+                                _ui.Post(() => Status = Format(Strings.QueryRunning, count));
+                                return rows.Count < target;
+                            default:
+                                return true;
+                        }
+                    },
+                    context.CancellationToken));
+            _run = job;
+            var finished = await job.Completion;
+            await DisposeCursorAsync(cursor);
 
-        cursor.PageEnd = MaxRows;
-        return ReadPageAsync(cursor);
+            if (columns != set.Columns.Count)
+            {
+                // The table changed between the runs: the shown rows cannot take the new ones.
+                AddMessage(Strings.ResultShapeChanged, isError: true);
+                Status = Strings.ResultShapeChanged;
+                return;
+            }
+
+            var more = !finished && rows.Count >= target && target < MaxRows;
+            set.ReplaceRows(rows);
+            set.HasMore = more;
+            var elapsed = Stopwatch.GetElapsedTime(started);
+            set.FetchStatus = Format(Strings.ResultFetched, rows.Count, Seconds(elapsed), Seconds(elapsed), DateTime.Now.ToString("T", CultureInfo.CurrentCulture));
+            Status = more ? Format(Strings.QueryPaused, rows.Count) : Format(Strings.QueryDone, rows.Count, Elapsed(cursor.Watch));
+            if (!finished && target >= MaxRows)
+            {
+                AddMessage(Format(Strings.QueryTruncated, MaxRows), isError: false);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            await DisposeCursorAsync(cursor);
+            Status = Format(Strings.QueryCanceled, Elapsed(cursor.Watch));
+        }
+#pragma warning disable CA1031 // The server's reason is shown; the rows already shown stay.
+        catch (Exception ex)
+#pragma warning restore CA1031
+        {
+            await DisposeCursorAsync(cursor);
+            AddMessage(ex.Message, isError: true);
+            Status = Format(Strings.QueryFailed, Elapsed(cursor.Watch));
+        }
+        finally
+        {
+            _run = null;
+            IsRunning = false;
+            FetchNextPageCommand.NotifyCanExecuteChanged();
+            FetchAllCommand.NotifyCanExecuteChanged();
+        }
     }
 
     private bool CanCount(QueryResultSet? set) => set is { IsCounting: false } && LastSql is not null && SelectedSession is not null;
@@ -746,7 +832,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
         try
         {
             var database = SelectedDatabase;
-            var own = _cursor is null && !IsRunning ? _channel : null;
+            var own = !IsRunning ? _channel : null;
             set.TotalRows = await _jobs.Enqueue<long?>(
                 "Count rows",
                 async context =>
@@ -795,27 +881,14 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
         }
     }
 
-    private bool CanCancel() => IsRunning || HasOpenCursor;
-
-    /// <summary>Stops the running statement, or closes the open cursor of a paged result.</summary>
-    [RelayCommand(CanExecute = nameof(CanCancel))]
-    private async Task CancelAsync()
-    {
-        if (_run is { } run)
-        {
-            run.Cancel();
-        }
-        else
-        {
-            await CloseCursorAsync();
-        }
-    }
+    /// <summary>Stops the running statement.</summary>
+    [RelayCommand(CanExecute = nameof(IsRunning))]
+    private void Cancel() => _run?.Cancel();
 
     /// <summary>Reads events until the current result set has its page, or the run ends.</summary>
     private async Task ReadPageAsync(QueryCursor cursor)
     {
         IsRunning = true;
-        HasOpenCursor = false;
         cursor.PageStarted = Stopwatch.GetTimestamp();
         try
         {
@@ -824,8 +897,10 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
             var finished = await job.Completion;
             if (!finished)
             {
-                // A page is complete and more rows may follow: the cursor stays open (as DBeaver does).
-                HasOpenCursor = true;
+                // A page is complete and more rows may follow. The statement is closed at once: nothing waits on
+                // the server between pages; the next page runs the query again.
+                _pagedSet = cursor.Current;
+                await DisposeCursorAsync(cursor);
                 Status = Format(Strings.QueryPaused, cursor.CurrentRows);
                 await RecordOnceAsync(cursor, QueryOutcome.Succeeded, null);
                 return;
@@ -872,11 +947,8 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
             FetchAllCommand.NotifyCanExecuteChanged();
         }
 
-        // The script may have switched database (USE): the selector follows (the channel is free again).
-        if (!HasOpenCursor)
-        {
-            _ = RefreshDatabaseAsync(cursor.Channel, withList: false);
-        }
+        // The script may have switched database (USE): the selector follows.
+        _ = RefreshDatabaseAsync(cursor.Channel, withList: false);
     }
 
     /// <summary>Handles one event on the job's thread; false stops reading (a page is complete).</summary>
@@ -888,7 +960,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
                 cursor.PendingColumns = started.Columns;
                 cursor.Current = null;
                 cursor.CurrentRows = 0;
-                cursor.PageEnd = cursor.FetchSize;
+                cursor.PageEnd = cursor.FirstPageEnd;
                 cursor.ExecuteTime ??= Stopwatch.GetElapsedTime(cursor.PageStarted);
                 break;
             case RowBatch batch when cursor.Current is not null || cursor.PendingColumns is not null:
@@ -1001,8 +1073,6 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
             _cursor = null;
         }
 
-        HasOpenCursor = false;
-
         // Canceled first: closing a reader with rows left would otherwise read them all (SqlClient does).
         await _jobs.Enqueue("Close cursor", _ => cursor.DisposeAsync().AsTask(), JobPriority.High).Completion;
     }
@@ -1034,13 +1104,14 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
         private readonly IAsyncEnumerator<QueryEvent> _events;
         private bool _finished;
 
-        public QueryCursor(QueryChannel channel, QueryRequest request, ConnectionSession session, int fetchSize)
+        /// <param name="firstPageEnd">Rows after which a result set stops: the fetch size, or MaxRows to read it all.</param>
+        public QueryCursor(QueryChannel channel, QueryRequest request, ConnectionSession session, int firstPageEnd)
         {
             Channel = channel;
             Request = request;
             Session = session;
-            FetchSize = fetchSize;
-            PageEnd = fetchSize;
+            FirstPageEnd = firstPageEnd;
+            PageEnd = firstPageEnd;
             _events = channel.ExecuteAsync(request, _cancel.Token).GetAsyncEnumerator(_cancel.Token);
         }
 
@@ -1050,7 +1121,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
 
         public ConnectionSession Session { get; }
 
-        public int FetchSize { get; }
+        public int FirstPageEnd { get; }
 
         public DateTimeOffset StartedAt { get; } = DateTimeOffset.UtcNow;
 

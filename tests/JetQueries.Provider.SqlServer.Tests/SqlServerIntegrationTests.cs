@@ -262,6 +262,75 @@ public sealed class SqlServerIntegrationTests(SqlServerFixture fixture) : IClass
         await RunAsync(connection, "SELECT 1");
     }
 
+    /// <summary>
+    /// What the query window relies on: after a page is read and the statement is closed (canceled, then
+    /// disposed), the session holds nothing that blocks others — here, DDL on the same table. For contrast, a
+    /// reader left open blocks the same DDL (the schema-stability lock), which is why the window never leaves one.
+    /// </summary>
+    [Fact]
+    public async Task A_page_read_and_closed_leaves_no_lock_that_blocks_ddl()
+    {
+        await using var setup = await OpenAsync();
+        var table = "paging_" + Guid.NewGuid().ToString("N")[..8];
+        await RunAsync(setup, $"CREATE TABLE dbo.{table} (id int NOT NULL, pad char(200) NOT NULL DEFAULT 'x')");
+        await RunAsync(setup, $"INSERT INTO dbo.{table} (id) SELECT TOP (300000) ROW_NUMBER() OVER (ORDER BY (SELECT 1)) FROM sys.all_objects a CROSS JOIN sys.all_objects b");
+
+        // The window's way: first page, then cancel and close.
+        await using (var reader = await OpenAsync())
+        {
+            await ReadPageAsync(reader, $"SELECT * FROM dbo.{table}", close: true);
+            await RunAsync(setup, $"SET LOCK_TIMEOUT 2000; ALTER TABLE dbo.{table} ADD added1 int NULL");
+        }
+
+        // A reader left open after its page: the same DDL waits for it and times out.
+        await using (var reader = await OpenAsync())
+        {
+            var open = await ReadPageAsync(reader, $"SELECT * FROM dbo.{table}", close: false);
+            var error = await Assert.ThrowsAnyAsync<Exception>(() => RunAsync(setup, $"SET LOCK_TIMEOUT 2000; ALTER TABLE dbo.{table} ADD added2 int NULL"));
+            Assert.Contains("1222", error.ToString(), StringComparison.Ordinal);
+            await open.DisposeAsync();
+        }
+
+        await RunAsync(setup, $"DROP TABLE dbo.{table}");
+    }
+
+    private sealed class OpenReader(CancellationTokenSource cancel, IAsyncEnumerator<QueryEvent> events) : IAsyncDisposable
+    {
+        public async ValueTask DisposeAsync()
+        {
+            await cancel.CancelAsync();
+            try
+            {
+                await events.DisposeAsync();
+            }
+            catch (OperationCanceledException)
+            {
+            }
+
+            cancel.Dispose();
+        }
+    }
+
+    private static async Task<OpenReader> ReadPageAsync(IDatabaseConnection connection, string sql, bool close)
+    {
+        var cancel = new CancellationTokenSource();
+        var events = connection.Executor.ExecuteAsync(new QueryRequest(sql) { BatchSize = 200 }, cancel.Token).GetAsyncEnumerator(cancel.Token);
+        var rows = 0;
+        while (rows < 200 && await events.MoveNextAsync())
+        {
+            rows += events.Current is RowBatch batch ? batch.Rows.Count : 0;
+        }
+
+        Assert.Equal(200, rows);
+        var reader = new OpenReader(cancel, events);
+        if (close)
+        {
+            await reader.DisposeAsync();
+        }
+
+        return reader;
+    }
+
     [Theory]
     [InlineData("SELECT name FROM sys.databases ORDER BY name", true)]
     [InlineData("SELECT TOP (3) name FROM sys.databases ORDER BY name;", true)]

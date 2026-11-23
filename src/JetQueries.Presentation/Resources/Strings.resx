@@ -219,4 +219,5 @@
   <data name="QueryButtonsInTab" xml:space="preserve"><value>In each query tab (icons)</value></data>
   <data name="QueryButtonsInToolbar" xml:space="preserve"><value>In the main toolbar</value></data>
   <data name="FieldFetchSize" xml:space="preserve"><value>Rows per page</value></data>
+  <data name="ResultShapeChanged" xml:space="preserve"><value>The query returns different columns now; run it again.</value></data>
 </root>
