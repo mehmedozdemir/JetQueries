@@ -16,7 +16,7 @@ internal static partial class DdlText
     {
         ArgumentNullException.ThrowIfNull(definition);
         var match = LeadingCreate().Match(definition);
-        return match.Success ? match.Groups["lead"].Value + head + " " + definition[match.Length..].TrimStart(' ', '	') : null;
+        return match.Success ? match.Groups["lead"].Value + head + " " + definition[match.Length..].TrimStart(' ', '\t') : null;
     }
 
     /// <summary>The keyword of a kind in DROP statements (TABLE, VIEW, …); null for kinds that are not dropped by name.</summary>
