@@ -99,7 +99,7 @@ internal static class SqlCompletionEngine
 
             // Right after a closed string or a closed block comment the caret is outside it again.
             var closed = token.Kind == SqlTokenKind.StringLiteral
-                ? token.Length > 1 && text[token.End - 1] == '\''
+                ? token.Length > 1 && text[token.End - 1] is '\'' or '$'
                 : token.Length >= 4 && text.AsSpan(token.Start, 2) is "/*" && text.AsSpan(token.End - 2, 2) is "*/";
             if (offset < token.End || !closed)
             {
@@ -116,7 +116,7 @@ internal static class SqlCompletionEngine
         if (before >= 0 && tokens[before].End >= offset && IsWordKind(tokens[before].Kind))
         {
             replaceStart = tokens[before].Start;
-            prefixStart = text[replaceStart] is '[' or '"' ? replaceStart + 1 : replaceStart;
+            prefixStart = text[replaceStart] is '[' or '"' or '`' ? replaceStart + 1 : replaceStart;
             before--;
         }
 

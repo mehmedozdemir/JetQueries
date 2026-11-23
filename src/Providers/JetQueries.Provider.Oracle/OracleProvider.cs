@@ -31,7 +31,8 @@ public sealed class OracleProvider : IDatabaseProvider, IConnectionSettingsProvi
     /// <inheritdoc />
     public ProviderCapabilities Capabilities =>
         ProviderCapabilities.Schemas | ProviderCapabilities.Transactions | ProviderCapabilities.ServerSideCancel |
-        ProviderCapabilities.Routines | ProviderCapabilities.Packages | ProviderCapabilities.Sequences;
+        ProviderCapabilities.Routines | ProviderCapabilities.Packages | ProviderCapabilities.Sequences |
+        ProviderCapabilities.Synonyms | ProviderCapabilities.UserTypes;
 
     /// <inheritdoc />
     public ISqlLanguageService? LanguageService { get; } = new OracleLanguageService();

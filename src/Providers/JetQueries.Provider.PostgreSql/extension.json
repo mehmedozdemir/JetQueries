@@ -1,0 +1,7 @@
+{
+  "id": "jetqueries.postgresql",
+  "name": "PostgreSQL",
+  "version": "0.1.0",
+  "assembly": "JetQueries.Provider.PostgreSql.dll",
+  "sdk": 0
+}

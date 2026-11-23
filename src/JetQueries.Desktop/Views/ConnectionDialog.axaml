@@ -76,6 +76,10 @@
               <TextBlock Classes="label" Text="{Binding Label}" />
               <StackPanel Grid.Column="1" Spacing="2">
                 <TextBox Text="{Binding Value}" IsVisible="{Binding IsText}" />
+                <DockPanel IsVisible="{Binding IsFilePath}">
+                  <Button DockPanel.Dock="Right" Margin="6,0,0,0" Content="{x:Static res:Strings.Browse}" Click="OnBrowseClick" />
+                  <TextBox Text="{Binding Value}" />
+                </DockPanel>
                 <ComboBox ItemsSource="{Binding Options}" SelectedItem="{Binding SelectedOption}"
                           HorizontalAlignment="Stretch" IsVisible="{Binding IsChoice}">
                   <ComboBox.ItemTemplate>

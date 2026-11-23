@@ -1,0 +1,350 @@
+using System.Diagnostics;
+using System.Globalization;
+using JetQueries.Core.Connections;
+using JetQueries.Core.Extensions;
+using JetQueries.Sdk;
+using Microsoft.Extensions.Logging.Abstractions;
+using Npgsql;
+using Testcontainers.PostgreSql;
+
+namespace JetQueries.Provider.PostgreSql.Tests;
+
+/// <summary>
+/// Starts PostgreSQL in Docker once for all integration tests, from the image that is already on the
+/// developer's machine. Opt-in (<c>JETQUERIES_POSTGRES_TESTS=Y</c>), like the other database tests, so that a
+/// plain test run never downloads an image. Without it, or without Docker, the tests are skipped.
+/// </summary>
+public sealed class PostgreSqlFixture : IAsyncLifetime
+{
+    public const string OptInVariable = "JETQUERIES_POSTGRES_TESTS";
+    public const string Image = "postgres:16-alpine";
+
+    private PostgreSqlContainer? _container;
+
+    public string? SkipReason { get; private set; }
+
+    public ConnectionProfile Profile { get; private set; } = null!;
+
+    public ConnectionCredential Credential { get; private set; } = null!;
+
+    public async ValueTask InitializeAsync()
+    {
+        if (!string.Equals(Environment.GetEnvironmentVariable(OptInVariable), "Y", StringComparison.OrdinalIgnoreCase))
+        {
+            SkipReason = $"Set {OptInVariable}=Y to start a PostgreSQL container and run the integration tests.";
+            return;
+        }
+
+        try
+        {
+            _container = new PostgreSqlBuilder(Image).Build();
+            await _container.StartAsync();
+        }
+#pragma warning disable CA1031 // Any failure to start Docker means "skip", whatever the exception type.
+        catch (Exception ex)
+#pragma warning restore CA1031
+        {
+            SkipReason = $"Docker is not available: {ex.Message}";
+            return;
+        }
+
+        var builder = new NpgsqlConnectionStringBuilder(_container.GetConnectionString());
+        Credential = new ConnectionCredential(builder.Username, builder.Password);
+        Profile = new ConnectionProfile(Guid.NewGuid(), "container", PostgreSqlProvider.ProviderId, new Dictionary<string, string>
+        {
+            ["host"] = _container.Hostname,
+            ["port"] = _container.GetMappedPublicPort(5432).ToString(CultureInfo.InvariantCulture),
+            ["database"] = builder.Database!,
+            ["sslMode"] = "disable",
+        });
+
+        await using var connection = await new PostgreSqlProvider().OpenConnectionAsync(Profile, Credential, CancellationToken.None);
+        foreach (var batch in new PostgreSqlProvider().SplitBatches(Schema))
+        {
+            await foreach (var _ in connection.Executor.ExecuteAsync(new QueryRequest(batch.Text), CancellationToken.None))
+            {
+            }
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_container is not null)
+        {
+            await _container.DisposeAsync();
+        }
+    }
+
+    private const string Schema = """
+        CREATE SCHEMA kart;
+        CREATE TYPE kart.card_state AS ENUM ('active', 'blocked', 'it''s closed');
+        CREATE DOMAIN kart.amount AS numeric(12,2) CHECK (VALUE >= 0);
+        CREATE TABLE kart.cards (
+            id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+            card_no varchar(19) NOT NULL UNIQUE,
+            "Balance" kart.amount DEFAULT 0,
+            state kart.card_state NOT NULL DEFAULT 'active',
+            issued_at timestamptz,
+            tags text[]
+        );
+        CREATE INDEX ix_cards_issued ON kart.cards (issued_at DESC);
+        CREATE TABLE kart."Müşteri İşlemleri" (id int PRIMARY KEY, card_id bigint REFERENCES kart.cards (id), "Açıklama" text);
+        CREATE VIEW kart.card_summary AS SELECT card_no, "Balance" FROM kart.cards WHERE "Balance" > 0;
+        CREATE SEQUENCE kart.batch_no START 100 INCREMENT 5;
+        CREATE FUNCTION kart.balance_of(p_card bigint) RETURNS numeric LANGUAGE sql STABLE AS $$ SELECT "Balance" FROM kart.cards WHERE id = p_card $$;
+        CREATE FUNCTION kart.balance_of(p_card_no text) RETURNS numeric LANGUAGE sql STABLE AS $$ SELECT "Balance" FROM kart.cards WHERE card_no = p_card_no $$;
+        CREATE PROCEDURE kart.purge_old_logs(p_days int) LANGUAGE plpgsql AS $$
+        BEGIN
+            RAISE NOTICE 'purging older than % days', p_days;
+        END;
+        $$;
+        INSERT INTO kart.cards (card_no, "Balance", issued_at, tags) VALUES
+            ('5200 0001', 1250.50, '2026-01-15 10:30:00+03', ARRAY['gold', 'tr']),
+            ('5200 0002', 0, NULL, NULL),
+            ('Müşteri', 10, '2026-02-03 14:30:05.12+00', '{}');
+        """;
+}
+
+[Trait("Category", "Integration")]
+public sealed class PostgreSqlIntegrationTests(PostgreSqlFixture fixture) : IClassFixture<PostgreSqlFixture>
+{
+    private static CancellationToken Token => TestContext.Current.CancellationToken;
+
+    [Fact]
+    public async Task A_query_streams_postgresql_values_the_grid_can_show()
+    {
+        await using var connection = await OpenAsync();
+        const string Sql = """
+            SELECT id, card_no, "Balance", state, issued_at, tags,
+                   123456789012345678901234567890::numeric AS huge, interval '1 year 2 months 3 days 04:05:06' AS span,
+                   '{"a": 1}'::jsonb AS doc, gen_random_uuid() IS NOT NULL AS has_uuid, '\x0a0b'::bytea AS raw
+            FROM kart.cards ORDER BY id
+            """;
+
+        var events = await Collect(connection.Executor.ExecuteAsync(new QueryRequest(Sql), Token));
+
+        var columns = Assert.Single(events.OfType<ResultSetStarted>()).Columns;
+        Assert.Equal("timestamp with time zone", columns[4].DataType);
+        var rows = events.OfType<RowBatch>().SelectMany(static b => b.Rows).ToList();
+        Assert.Equal(3, rows.Count);
+        Assert.Equal(1250.50m, rows[0][2]);
+        Assert.Equal("active", rows[0][3]);
+        Assert.Equal(new DateTimeOffset(2026, 1, 15, 7, 30, 0, TimeSpan.Zero), rows[0][4]);
+        Assert.Equal("{gold,tr}", rows[0][5]);
+        Assert.Null(rows[1][5]);
+        Assert.Equal("{}", rows[2][5]);
+        Assert.Equal("Müşteri", rows[2][1]);
+        Assert.Equal("123456789012345678901234567890", rows[0][6]);
+        Assert.Equal("1 year 2 mons 3 days 04:05:06", rows[0][7]);
+        Assert.Equal("{\"a\": 1}", rows[0][8]);
+        Assert.Equal(true, rows[0][9]);
+        Assert.Equal(new byte[] { 10, 11 }, rows[0][10]);
+    }
+
+    [Fact]
+    public async Task Notices_arrive_as_messages_and_row_counts_only_for_data_changes()
+    {
+        await using var connection = await OpenAsync();
+
+        var call = await Collect(connection.Executor.ExecuteAsync(new QueryRequest("CALL kart.purge_old_logs(30)"), Token));
+        var notice = Assert.Single(call.OfType<QueryMessage>());
+        Assert.Equal("purging older than 30 days", notice.Text);
+        Assert.Equal(QueryMessageSeverity.Info, notice.Severity);
+
+        var warning = await Collect(connection.Executor.ExecuteAsync(new QueryRequest("DO $$ BEGIN RAISE WARNING 'careful' USING HINT = 'look'; END $$"), Token));
+        Assert.Equal("careful\nHint: look", Assert.Single(warning.OfType<QueryMessage>()).Text);
+        Assert.Equal(QueryMessageSeverity.Warning, warning.OfType<QueryMessage>().Single().Severity);
+        Assert.Null(Assert.Single(warning.OfType<StatementCompleted>()).RowsAffected);
+
+        var update = await Collect(connection.Executor.ExecuteAsync(new QueryRequest("UPDATE kart.cards SET tags = tags WHERE \"Balance\" >= 0"), Token));
+        Assert.Equal(3, Assert.Single(update.OfType<StatementCompleted>()).RowsAffected);
+    }
+
+    [Fact]
+    public async Task An_error_says_where_it_is_in_the_statement()
+    {
+        await using var connection = await OpenAsync();
+
+        var error = await Assert.ThrowsAnyAsync<Exception>(() => Collect(connection.Executor.ExecuteAsync(new QueryRequest("SELECT id\nFROM kart.cardz"), Token)));
+        Assert.Equal("ERROR 42P01: relation \"kart.cardz\" does not exist (statement line 2, column 6)", error.Message);
+
+        var check = await Assert.ThrowsAnyAsync<Exception>(() => Collect(connection.Executor.ExecuteAsync(new QueryRequest("INSERT INTO kart.cards (card_no, \"Balance\") VALUES ('x', -1)"), Token)));
+        Assert.StartsWith("ERROR 23514: value for domain kart.amount violates check constraint", check.Message, StringComparison.Ordinal);
+
+        // The session is usable after the error.
+        Assert.Single((await Collect(connection.Executor.ExecuteAsync(new QueryRequest("SELECT 1"), Token))).OfType<RowBatch>());
+    }
+
+    [Fact]
+    public async Task Cancel_stops_a_running_statement_on_the_server()
+    {
+        await using var connection = await OpenAsync();
+        using var cancel = new CancellationTokenSource(TimeSpan.FromMilliseconds(300));
+        var watch = Stopwatch.StartNew();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => Collect(connection.Executor.ExecuteAsync(new QueryRequest("SELECT pg_sleep(30)"), cancel.Token)));
+
+        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(5), $"cancel took {watch.Elapsed}");
+        Assert.Single((await Collect(connection.Executor.ExecuteAsync(new QueryRequest("SELECT 1"), Token))).OfType<RowBatch>());
+    }
+
+    [Fact]
+    public async Task The_explorer_sees_schemas_objects_and_columns()
+    {
+        await using var connection = await OpenAsync();
+        var metadata = connection.Metadata;
+
+        var schemas = await List(metadata.GetObjectsAsync(null, DatabaseObjectKinds.Schema, Token));
+        Assert.Equal(["kart", "public"], schemas.Select(static s => s.Name.Name));
+
+        var kart = schemas[0];
+        var all = DatabaseObjectKinds.Table | DatabaseObjectKinds.View | DatabaseObjectKinds.Function | DatabaseObjectKinds.Procedure |
+                  DatabaseObjectKinds.Sequence | DatabaseObjectKinds.Type;
+        var objects = await List(metadata.GetObjectsAsync(kart, all, Token));
+        Assert.Equal(
+            [
+                ("Müşteri İşlemleri", DatabaseObjectKinds.Table), ("batch_no", DatabaseObjectKinds.Sequence), ("card_summary", DatabaseObjectKinds.View),
+                ("cards", DatabaseObjectKinds.Table), ("cards_id_seq", DatabaseObjectKinds.Sequence), ("balance_of", DatabaseObjectKinds.Function),
+                ("purge_old_logs", DatabaseObjectKinds.Procedure), ("amount", DatabaseObjectKinds.Type), ("card_state", DatabaseObjectKinds.Type),
+            ],
+            objects.Select(static o => (o.Name.Name, o.Kind)));
+
+        var columns = await metadata.GetColumnsAsync(new DatabaseObjectName(null, "kart", "cards"), Token);
+        Assert.Equal(["id", "card_no", "Balance", "state", "issued_at", "tags"], columns.Select(static c => c.Name));
+        Assert.Equal(["bigint", "character varying(19)", "kart.amount", "kart.card_state", "timestamp with time zone", "text[]"], columns.Select(static c => c.DataType));
+        Assert.True(columns[0].IsPrimaryKey);
+        Assert.False(columns[1].IsNullable);
+        Assert.True(columns[4].IsNullable);
+
+        // Without a schema the search path decides; kart is not on it.
+        Assert.Empty(await metadata.GetColumnsAsync(new DatabaseObjectName(null, null, "cards"), Token));
+        await Collect(connection.Executor.ExecuteAsync(new QueryRequest("SET search_path = kart, public"), Token));
+        Assert.Equal(6, (await metadata.GetColumnsAsync(new DatabaseObjectName(null, null, "cards"), Token)).Count);
+    }
+
+    [Fact]
+    public async Task Definitions_are_written_from_the_catalog()
+    {
+        await using var connection = await OpenAsync();
+        var metadata = connection.Metadata;
+
+        var table = await metadata.GetDefinitionAsync(new DatabaseObject(new DatabaseObjectName(null, "kart", "cards"), DatabaseObjectKinds.Table), Token);
+        Assert.Equal(
+            """
+            CREATE TABLE "kart"."cards" (
+                "id" bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+                "card_no" character varying(19) NOT NULL,
+                "Balance" kart.amount DEFAULT 0,
+                "state" kart.card_state DEFAULT 'active'::kart.card_state NOT NULL,
+                "issued_at" timestamp with time zone,
+                "tags" text[],
+                CONSTRAINT "cards_pkey" PRIMARY KEY (id),
+                CONSTRAINT "cards_card_no_key" UNIQUE (card_no)
+            );
+
+            CREATE INDEX ix_cards_issued ON kart.cards USING btree (issued_at DESC);
+
+            """.ReplaceLineEndings("\n"),
+            table);
+
+        var view = await metadata.GetDefinitionAsync(new DatabaseObject(new DatabaseObjectName(null, "kart", "card_summary"), DatabaseObjectKinds.View), Token);
+        Assert.StartsWith("CREATE OR REPLACE VIEW \"kart\".\"card_summary\" AS\nSELECT card_no,", view, StringComparison.Ordinal);
+
+        var overloads = await metadata.GetDefinitionAsync(new DatabaseObject(new DatabaseObjectName(null, "kart", "balance_of"), DatabaseObjectKinds.Function), Token);
+        Assert.Equal(2, overloads!.Split("CREATE OR REPLACE FUNCTION kart.balance_of(").Length - 1);
+
+        Assert.Equal(
+            "CREATE SEQUENCE \"kart\".\"batch_no\" AS bigint\n    START WITH 100 INCREMENT BY 5\n    MINVALUE 1 MAXVALUE 9223372036854775807\n    CACHE 1 NO CYCLE;\n",
+            await metadata.GetDefinitionAsync(new DatabaseObject(new DatabaseObjectName(null, "kart", "batch_no"), DatabaseObjectKinds.Sequence), Token));
+        Assert.Equal(
+            "CREATE TYPE \"kart\".\"card_state\" AS ENUM ('active', 'blocked', 'it''s closed');\n",
+            await metadata.GetDefinitionAsync(new DatabaseObject(new DatabaseObjectName(null, "kart", "card_state"), DatabaseObjectKinds.Type), Token));
+        Assert.Equal(
+            "CREATE DOMAIN \"kart\".\"amount\" AS numeric(12,2)\n    CONSTRAINT \"amount_check\" CHECK (VALUE >= 0::numeric);\n",
+            await metadata.GetDefinitionAsync(new DatabaseObject(new DatabaseObjectName(null, "kart", "amount"), DatabaseObjectKinds.Type), Token));
+        Assert.Null(await metadata.GetDefinitionAsync(new DatabaseObject(new DatabaseObjectName(null, "kart", "nothing"), DatabaseObjectKinds.Table), Token));
+    }
+
+    [Fact]
+    public async Task A_script_runs_through_the_session_statement_by_statement()
+    {
+        if (fixture.SkipReason is { } reason)
+        {
+            Assert.Skip(reason);
+        }
+
+        var credentials = new SessionCredentialStore();
+        var definition = new ConnectionDefinition
+        {
+            Id = Guid.NewGuid(),
+            Name = "pg",
+            ProviderId = PostgreSqlProvider.ProviderId,
+            Settings = new Dictionary<string, string>(fixture.Profile.Settings),
+            UserName = fixture.Credential.UserName,
+        };
+        await using var manager = new ConnectionManager(new SingleProvider(new PostgreSqlProvider()), credentials, new NoProbe());
+        var attempt = await manager.OpenAsync(definition, fixture.Credential.Password, Token);
+        Assert.Equal(ConnectionOutcome.Succeeded, attempt.Outcome);
+        var session = attempt.Session!;
+
+        const string Script = """
+            CREATE TEMP TABLE t (id int);
+            INSERT INTO t VALUES (1), (2);
+            DO $$ BEGIN RAISE NOTICE 'two rows'; END $$;
+            SELECT count(*) AS n FROM t;
+            """;
+        var events = await Collect(session.ExecuteAsync(new QueryRequest(Script), Token));
+
+        Assert.Equal([null, 2L, null], events.OfType<StatementCompleted>().Select(static s => s.RowsAffected));
+        Assert.Equal("two rows", Assert.Single(events.OfType<QueryMessage>()).Text);
+        Assert.Equal(2L, events.OfType<RowBatch>().Single().Rows[0][0]);
+    }
+
+    private async Task<IDatabaseConnection> OpenAsync()
+    {
+        if (fixture.SkipReason is { } reason)
+        {
+            Assert.Skip(reason);
+        }
+
+        return await new PostgreSqlProvider().OpenConnectionAsync(fixture.Profile, fixture.Credential, Token);
+    }
+
+    private static async Task<List<QueryEvent>> Collect(IAsyncEnumerable<QueryEvent> events)
+    {
+        var list = new List<QueryEvent>();
+        await foreach (var item in events)
+        {
+            list.Add(item);
+        }
+
+        return list;
+    }
+
+    private static async Task<List<DatabaseObject>> List(IAsyncEnumerable<DatabaseObject> objects)
+    {
+        var list = new List<DatabaseObject>();
+        await foreach (var item in objects)
+        {
+            list.Add(item);
+        }
+
+        return list;
+    }
+
+    private sealed class SingleProvider(IDatabaseProvider provider) : IExtensionHost
+    {
+        public IReadOnlyList<ExtensionLoadResult> Extensions => [];
+
+        public IReadOnlyCollection<IDatabaseProvider> DatabaseProviders => [provider];
+
+        public Task<IReadOnlyList<ExtensionLoadResult>> LoadAsync(CancellationToken cancellationToken) => Task.FromResult(Extensions);
+
+        public IDatabaseProvider? FindDatabaseProvider(string id) => id == provider.Id ? provider : null;
+    }
+
+    private sealed class NoProbe : IReachabilityProbe
+    {
+        public Task<string?> ProbeAsync(NetworkEndpoint endpoint, TimeSpan timeout, CancellationToken cancellationToken) => Task.FromResult<string?>(null);
+    }
+}

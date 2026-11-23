@@ -49,6 +49,8 @@ public partial class SettingFieldViewModel : ObservableObject
 
     public bool IsChoice => Descriptor.Kind == ConnectionSettingKind.Choice;
 
+    public bool IsFilePath => Descriptor.Kind == ConnectionSettingKind.FilePath;
+
     public IReadOnlyList<ConnectionSettingOption> Options => Descriptor.Options;
 
     [ObservableProperty]

@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <OutputType>Exe</OutputType>
+    <!-- CA1707: test names use underscores. CA1515: xUnit needs public test classes. -->
+    <NoWarn>$(NoWarn);CA1707;CA1515</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <PackageReference Include="Microsoft.Data.Sqlite" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\JetQueries.Core\JetQueries.Core.csproj" />
+    <ProjectReference Include="..\..\src\JetQueries.Sdk\JetQueries.Sdk.csproj" />
+    <ProjectReference Include="..\..\src\Providers\JetQueries.Provider.Sqlite\JetQueries.Provider.Sqlite.csproj" />
+    <!-- Where the provider is built as an extension, for the test that loads it through the extension host. -->
+    <AssemblyMetadata Include="ProviderDirectory" Value="$(MSBuildThisFileDirectory)../../src/Providers/JetQueries.Provider.Sqlite/bin/$(Configuration)/$(TargetFramework)/" />
+  </ItemGroup>
+</Project>

@@ -49,6 +49,10 @@
                       UndefineProperties="RuntimeIdentifier;SelfContained;PublishReadyToRun" />
     <ProjectReference Include="..\Providers\JetQueries.Provider.Oracle\JetQueries.Provider.Oracle.csproj" ReferenceOutputAssembly="false" Private="false"
                       UndefineProperties="RuntimeIdentifier;SelfContained;PublishReadyToRun" />
+    <ProjectReference Include="..\Providers\JetQueries.Provider.PostgreSql\JetQueries.Provider.PostgreSql.csproj" ReferenceOutputAssembly="false" Private="false"
+                      UndefineProperties="RuntimeIdentifier;SelfContained;PublishReadyToRun" />
+    <ProjectReference Include="..\Providers\JetQueries.Provider.Sqlite\JetQueries.Provider.Sqlite.csproj" ReferenceOutputAssembly="false" Private="false"
+                      UndefineProperties="RuntimeIdentifier;SelfContained;PublishReadyToRun" />
   </ItemGroup>
   <!-- Each extension's whole output folder, minus symbols and XML docs, goes to extensions/<folder>/. -->
   <Target Name="CopyBuiltInExtensions" AfterTargets="Build">
@@ -63,6 +67,14 @@
       <_oracleExtensionFile Include="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Oracle\bin\$(Configuration)\$(TargetFramework)\**\*" Exclude="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Oracle\bin\$(Configuration)\$(TargetFramework)\**\*.pdb;$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Oracle\bin\$(Configuration)\$(TargetFramework)\**\*.xml" />
     </ItemGroup>
     <Copy SourceFiles="@(_oracleExtensionFile)" DestinationFolder="$(_ExtensionsRoot)oracle\%(RecursiveDir)" SkipUnchangedFiles="true" />
+    <ItemGroup>
+      <_postgresqlExtensionFile Include="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.PostgreSql\bin\$(Configuration)\$(TargetFramework)\**\*" Exclude="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.PostgreSql\bin\$(Configuration)\$(TargetFramework)\**\*.pdb;$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.PostgreSql\bin\$(Configuration)\$(TargetFramework)\**\*.xml" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_postgresqlExtensionFile)" DestinationFolder="$(_ExtensionsRoot)postgresql\%(RecursiveDir)" SkipUnchangedFiles="true" />
+    <ItemGroup>
+      <_sqliteExtensionFile Include="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Sqlite\bin\$(Configuration)\$(TargetFramework)\**\*" Exclude="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Sqlite\bin\$(Configuration)\$(TargetFramework)\**\*.pdb;$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Sqlite\bin\$(Configuration)\$(TargetFramework)\**\*.xml" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_sqliteExtensionFile)" DestinationFolder="$(_ExtensionsRoot)sqlite\%(RecursiveDir)" SkipUnchangedFiles="true" />
   </Target>
   <Target Name="PublishBuiltInExtensions" AfterTargets="Publish">
     <PropertyGroup>
@@ -76,5 +88,13 @@
       <_oraclePublishFile Include="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Oracle\bin\$(Configuration)\$(TargetFramework)\**\*" Exclude="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Oracle\bin\$(Configuration)\$(TargetFramework)\**\*.pdb;$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Oracle\bin\$(Configuration)\$(TargetFramework)\**\*.xml" />
     </ItemGroup>
     <Copy SourceFiles="@(_oraclePublishFile)" DestinationFolder="$(_ExtensionsRoot)oracle\%(RecursiveDir)" SkipUnchangedFiles="true" />
+    <ItemGroup>
+      <_postgresqlPublishFile Include="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.PostgreSql\bin\$(Configuration)\$(TargetFramework)\**\*" Exclude="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.PostgreSql\bin\$(Configuration)\$(TargetFramework)\**\*.pdb;$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.PostgreSql\bin\$(Configuration)\$(TargetFramework)\**\*.xml" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_postgresqlPublishFile)" DestinationFolder="$(_ExtensionsRoot)postgresql\%(RecursiveDir)" SkipUnchangedFiles="true" />
+    <ItemGroup>
+      <_sqlitePublishFile Include="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Sqlite\bin\$(Configuration)\$(TargetFramework)\**\*" Exclude="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Sqlite\bin\$(Configuration)\$(TargetFramework)\**\*.pdb;$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Sqlite\bin\$(Configuration)\$(TargetFramework)\**\*.xml" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_sqlitePublishFile)" DestinationFolder="$(_ExtensionsRoot)sqlite\%(RecursiveDir)" SkipUnchangedFiles="true" />
   </Target>
 </Project>

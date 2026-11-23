@@ -113,4 +113,13 @@
   <data name="HistoryCanceled" xml:space="preserve"><value>iptal edildi</value></data>
   <data name="HistoryClearConfirmTitle" xml:space="preserve"><value>Geçmişi temizle</value></data>
   <data name="HistoryClearConfirmMessage" xml:space="preserve"><value>Tüm sorgu geçmişi silinsin mi? Bu işlem geri alınamaz.</value></data>
+  <data name="Browse" xml:space="preserve"><value>Gözat…</value></data>
+  <data name="BrowseDatabaseFile" xml:space="preserve"><value>Veritabanı dosyası seçin</value></data>
+  <data name="DatabaseFiles" xml:space="preserve"><value>Veritabanı dosyaları</value></data>
+  <data name="Setting_host" xml:space="preserve"><value>Sunucu</value></data>
+  <data name="Setting_port" xml:space="preserve"><value>Port</value></data>
+  <data name="Setting_sslMode" xml:space="preserve"><value>SSL</value></data>
+  <data name="Setting_file" xml:space="preserve"><value>Veritabanı dosyası</value></data>
+  <data name="Setting_mode" xml:space="preserve"><value>Açılış</value></data>
+  <data name="Setting_foreignKeys" xml:space="preserve"><value>Yabancı anahtarları uygula</value></data>
 </root>

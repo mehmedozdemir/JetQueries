@@ -177,7 +177,8 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
     public string DisplayName => "SQL Server";
 
     public ProviderCapabilities Capabilities { get; set; } =
-        ProviderCapabilities.MultipleDatabases | ProviderCapabilities.Schemas | ProviderCapabilities.Routines | ProviderCapabilities.Sequences;
+        ProviderCapabilities.MultipleDatabases | ProviderCapabilities.Schemas | ProviderCapabilities.Routines | ProviderCapabilities.Sequences |
+        ProviderCapabilities.Synonyms | ProviderCapabilities.UserTypes;
 
     public ISqlLanguageService? LanguageService { get; set; }
 

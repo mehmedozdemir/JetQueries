@@ -1,0 +1,7 @@
+{
+  "id": "jetqueries.sqlite",
+  "name": "SQLite",
+  "version": "0.1.0",
+  "assembly": "JetQueries.Provider.Sqlite.dll",
+  "sdk": 0
+}
