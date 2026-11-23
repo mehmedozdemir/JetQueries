@@ -145,6 +145,9 @@ public sealed class VirtualGrid : FrameworkElement
 
     public event Action? SelectionChanged;
 
+    /// <summary>The cell menu is about to open (arguments: the menu, the row, the source column): add items to it.</summary>
+    public event Action<ContextMenu, int, int>? CellMenuOpening;
+
     public event Action? CurrentCellChanged;
 
     #endregion
@@ -1281,6 +1284,7 @@ public sealed class VirtualGrid : FrameworkElement
         }
         menu.Items.Add(new Separator());
         menu.Items.Add(Item(GridStrings.SelectAll, Icons.SelectAll, SelectAll, "Ctrl+A"));
+        CellMenuOpening?.Invoke(menu, row, column);
         menu.IsOpen = true;
     }
 

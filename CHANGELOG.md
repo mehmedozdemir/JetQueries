@@ -98,6 +98,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 - Go to object (Ctrl+Shift+N, or the search icon over the explorer): finds tables, views, routines and packages
   of the open connections by part of their name (Turkish letters in any case) and reveals the chosen one in the
   explorer; lists not loaded yet load in the background through the metadata cache.
+- Result tools: totals of the selected cells under the grid (count; for numbers sum, average, min, max, summed
+  exactly in decimal, in the background); cell menu "Copy as" CSV, JSON, Markdown table, SQL INSERT, SQL IN
+  list; a value panel beside the grid with the current cell in full (JSON and XML laid out, binary as a hex
+  dump, PNG / JPEG / GIF / BMP shown as images). UiKit: `VirtualGrid.CellMenuOpening`.
 
 ### Changed
 - A result set may hold up to 1,000,000 rows (was 100,000), fetched page by page.

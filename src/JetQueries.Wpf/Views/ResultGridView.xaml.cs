@@ -46,6 +46,9 @@ public partial class ResultGridView : UserControl
         Grid.FilterRequested += OpenFilter;
         Grid.FilterByValueRequested += (column, row, exclude) => _ = _set?.View.FilterByValueAsync(row, column, exclude);
         Grid.HideColumnRequested += HideColumn;
+        Grid.CellMenuOpening += AddCellMenuItems;
+        Grid.SelectionChanged += () => _ = ShowSelectionStatsAsync();
+        Grid.CurrentCellChanged += ShowValue;
 
         // Ctrl+wheel zooms the grid, Ctrl+0 goes back to 100 %; the base size comes from the settings.
         PreviewMouseWheel += (_, e) =>
@@ -136,6 +139,160 @@ public partial class ResultGridView : UserControl
             e.Handled = true;
         }
     }
+
+    private int _statsVersion;
+
+    /// <summary>Copy as (CSV, JSON, Markdown, INSERT, IN list) and Show value, under the grid's own copy items.</summary>
+    private void AddCellMenuItems(ContextMenu menu, int row, int column)
+    {
+        if (_set is null)
+        {
+            return;
+        }
+
+        var copyAs = new MenuItem { Header = Strings.CopyAs };
+        Ui.SetIcon(copyAs, Icons.Copy);
+        foreach (var (format, header) in new[]
+        {
+            (ResultCopyFormat.Csv, Strings.CopyAsCsv), (ResultCopyFormat.Json, Strings.CopyAsJson), (ResultCopyFormat.Markdown, Strings.CopyAsMarkdown),
+            (ResultCopyFormat.SqlInsert, Strings.CopyAsInsert), (ResultCopyFormat.SqlInList, Strings.CopyAsInList),
+        })
+        {
+            var item = new MenuItem { Header = header };
+            item.Click += (_, _) => CopyAs(format);
+            copyAs.Items.Add(item);
+        }
+
+        var show = new MenuItem { Header = Strings.ShowValue };
+        Ui.SetIcon(show, "\uE7B3");
+        show.Click += (_, _) => SetValuePanel(true);
+
+        // After "Copy" and "Copy with headers".
+        menu.Items.Insert(Math.Min(2, menu.Items.Count), copyAs);
+        menu.Items.Insert(Math.Min(3, menu.Items.Count), show);
+    }
+
+    /// <summary>The selected cells in a format, on the clipboard.</summary>
+    internal string? CopyAs(ResultCopyFormat format)
+    {
+        if (_set is null || Grid.Selection is not { } selection)
+        {
+            return null;
+        }
+
+        var text = ResultCopy.Format(format, _set.Columns, _set.ShownRows(selection.FirstRow, selection.LastRow), selection.Columns);
+        try
+        {
+            Clipboard.SetDataObject(text, true);
+        }
+        catch (System.Runtime.InteropServices.ExternalException)
+        {
+        }
+
+        return text;
+    }
+
+    /// <summary>Count, and for numbers sum, average, min and max of the selection, under the grid (computed in the background).</summary>
+    private async Task ShowSelectionStatsAsync()
+    {
+        var version = ++_statsVersion;
+        if (_set is not { } set || Grid.Selection is not { } selection || selection.RowCount * selection.Columns.Count < 2)
+        {
+            SelectionStatsText.Text = string.Empty;
+            return;
+        }
+
+        SelectionStats stats;
+        try
+        {
+            stats = await set.SelectionStatsAsync(selection.FirstRow, selection.LastRow, selection.Columns);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        if (version != _statsVersion)
+        {
+            return;
+        }
+
+        var culture = System.Globalization.CultureInfo.CurrentCulture;
+        SelectionStatsText.Text = stats.Numbers == 0
+            ? string.Format(culture, System.Text.CompositeFormat.Parse(Strings.SelectionCells), stats.Cells)
+            : string.Format(
+                culture, System.Text.CompositeFormat.Parse(Strings.SelectionNumbers), stats.Cells, Number(stats.Sum), Number(stats.Average), Number(stats.Min), Number(stats.Max));
+
+        string Number(decimal value) => Math.Round(value, 6).ToString("#,0.######", culture);
+    }
+
+    /// <summary>The selection totals as shown, for tests.</summary>
+    internal string SelectionStatsShown => SelectionStatsText.Text;
+
+    private void OnValuePanelToggle(object sender, RoutedEventArgs e) => SetValuePanel(ValuePanelToggle.IsChecked == true);
+
+    private void OnCloseValuePanel(object sender, RoutedEventArgs e) => SetValuePanel(false);
+
+    internal void SetValuePanel(bool shown)
+    {
+        ValuePanelHost.Visibility = shown ? Visibility.Visible : Visibility.Collapsed;
+        ValuePanelToggle.IsChecked = shown;
+        ShowValue();
+    }
+
+    /// <summary>Fills the value panel with the current cell (when it is open).</summary>
+    private void ShowValue()
+    {
+        if (ValuePanelHost.Visibility != Visibility.Visible || _set is null)
+        {
+            return;
+        }
+
+        var column = Grid.CurrentColumn;
+        var row = Grid.CurrentRow;
+        if (column < 0 || row < 0)
+        {
+            ValueColumn.Text = ValueInfo.Text = ValueText.Text = string.Empty;
+            return;
+        }
+
+        var preview = ValuePreview.Describe(_set.ShownValue(row, column));
+        ValueColumn.Text = _set.Columns[column].Header;
+        ValueInfo.Text = string.Join(" · ", new[] { _set.Columns[column].DataType, preview.Kind.ToString(), preview.Size }.Where(static t => !string.IsNullOrEmpty(t)));
+        ValueText.Text = preview.Text;
+        ValueText.Foreground = (Brush)FindResource(preview.Kind == ValuePreviewKind.Null ? "Brush.TextMuted" : "Brush.Text");
+        ValueText.TextWrapping = preview.Kind is ValuePreviewKind.Binary or ValuePreviewKind.Json or ValuePreviewKind.Xml ? TextWrapping.NoWrap : TextWrapping.Wrap;
+        ValueText.HorizontalScrollBarVisibility = ValueText.TextWrapping == TextWrapping.NoWrap ? ScrollBarVisibility.Auto : ScrollBarVisibility.Disabled;
+        var image = preview.Kind == ValuePreviewKind.Image ? Decode(preview.Bytes!) : null;
+        ValueImage.Source = image;
+        ValueImageHost.Visibility = image is null ? Visibility.Collapsed : Visibility.Visible;
+        ValueText.Visibility = image is null ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private static System.Windows.Media.Imaging.BitmapImage? Decode(byte[] bytes)
+    {
+        try
+        {
+            var image = new System.Windows.Media.Imaging.BitmapImage();
+            image.BeginInit();
+            image.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+            image.StreamSource = new System.IO.MemoryStream(bytes);
+            image.EndInit();
+            image.Freeze();
+            return image;
+        }
+        catch (NotSupportedException)
+        {
+            return null;
+        }
+        catch (System.IO.IOException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>What the value panel shows, for tests.</summary>
+    internal (string Column, string Info, string Text, bool Image) ValueShown => (ValueColumn.Text, ValueInfo.Text, ValueText.Text, ValueImage.Source is not null);
 
     /// <summary>The text view, for tests.</summary>
     internal string ShownText => TextView.Text;

@@ -323,4 +323,15 @@
   <data name="GoToObjectNoConnection" xml:space="preserve"><value>Önce bir bağlantı açın: açık bağlantıların nesneleri aranır.</value></data>
   <data name="GoToObjectIndexing" xml:space="preserve"><value>Listeler yükleniyor…</value></data>
   <data name="GoToObjectCount" xml:space="preserve"><value>{0:N0} nesne</value></data>
+  <data name="ValueCharacters" xml:space="preserve"><value>karakter</value></data>
+  <data name="CopyAs" xml:space="preserve"><value>Farklı kopyala</value></data>
+  <data name="CopyAsCsv" xml:space="preserve"><value>CSV</value></data>
+  <data name="CopyAsJson" xml:space="preserve"><value>JSON</value></data>
+  <data name="CopyAsMarkdown" xml:space="preserve"><value>Markdown tablosu</value></data>
+  <data name="CopyAsInsert" xml:space="preserve"><value>SQL INSERT</value></data>
+  <data name="CopyAsInList" xml:space="preserve"><value>SQL IN listesi</value></data>
+  <data name="ShowValue" xml:space="preserve"><value>Değeri göster</value></data>
+  <data name="ValuePanelTip" xml:space="preserve"><value>Değer paneli: geçerli hücrenin tamamı (JSON ve XML düzenli, ikili veri hex, resimler)</value></data>
+  <data name="SelectionCells" xml:space="preserve"><value>{0:N0} hücre</value></data>
+  <data name="SelectionNumbers" xml:space="preserve"><value>{0:N0} hücre · Toplam {1} · Ort. {2} · Min {3} · Maks {4}</value></data>
 </root>

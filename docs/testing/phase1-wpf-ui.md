@@ -142,6 +142,15 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] Ctrl+/ comments the selected lines (or the caret's line) with `-- `, again removes it; Ctrl+Shift+U /
       Ctrl+U upper / lower case the selection or the word at the caret (`id` → `ID`, never `İD`).
 
+## Result tools
+- [ ] Select several cells: under the grid at the right "12 cells · Sum … · Avg … · Min … · Max …" (numbers only;
+      text and NULL count as cells). Select all on a large result: the window stays responsive.
+- [ ] Cell right-click → Copy as → CSV / JSON / Markdown table / SQL INSERT / SQL IN list; paste into Notepad:
+      quotes doubled, NULL as NULL, numbers with a point.
+- [ ] The eye icon under the grid (or cell menu → Show value) opens the value panel; it follows the current cell.
+      A JSON or XML text is laid out; varbinary shows a hex dump with its size; an image column shows the image;
+      NULL shows NULL. The panel can be widened with its splitter and closed with ×.
+
 ## Explorer scripts and Go to object
 - [ ] Right-click a table: "Select first 1000 rows" opens a tab named after it, in its database, and runs it
       (SQL Server `TOP (1000)`, Oracle `FETCH FIRST`, PostgreSQL / SQLite `LIMIT`).
