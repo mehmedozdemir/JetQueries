@@ -181,6 +181,12 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
       `GO`, an Oracle `BEGIN … END;` block or package up to `/`, a script starting with DECLARE run whole.
 - [ ] Only comments at the cursor: "No statement at the cursor.", nothing is sent.
 
+## Cancel
+- [ ] Oracle over VPN: in tab A `UPDATE t SET … WHERE id = 1` in manual commit (keeps the row lock); in tab B
+      the same UPDATE waits. Stop in tab B: with ALTER SYSTEM it stops within ~2 s; without it the status says it
+      stops when its wait ends. Roll back tab A: tab B's update was not applied.
+- [ ] Any provider: a long query, Stop: "Canceling…", then "canceled".
+
 ## Transactions
 - [ ] A connected tab shows "Auto-commit" after the database selector. Click: "Manual commit" (amber), with
       Commit (✓) and Rollback (↶) next to it.

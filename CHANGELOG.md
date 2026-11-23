@@ -114,6 +114,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 - View models, their service contracts and strings moved to `JetQueries.Presentation`, shared by both interfaces.
 
 ### Fixed
+- Oracle: Cancel now stops a statement that is waiting (on a row lock, a sleep) also through Docker, NAT and VPN
+  tunnels, which drop the driver's out-of-band break: if the statement still runs 1.5 s later, a second
+  connection asks the server to cancel it (`ALTER SYSTEM CANCEL SQL`; needs that privilege). A canceled UPDATE
+  waiting on a lock never runs afterwards. A cancel that takes long says why in the status line.
 - History panel: two loads finishing together could fill the list twice.
 - The × of a query tab did nothing (its command binding did not resolve inside the tab header); closing the last
   tab now leaves the empty page with "New query" instead of opening a new tab at once.

@@ -119,6 +119,60 @@ public sealed class OracleIntegrationTests(OracleFixture fixture) : IClassFixtur
     }
 
     [Fact]
+    public async Task Cancel_interrupts_a_statement_that_is_waiting()
+    {
+        await using var connection = await OpenAsync();
+        var connectionString = OracleConnectionSettings.BuildConnectionString(fixture.Profile, fixture.Credential);
+
+        // Without ALTER SYSTEM the server cannot be asked: said, not thrown.
+        Assert.False(await OracleDatabaseConnection.CancelOnServerAsync(connectionString, "1", 1, Token));
+
+        // The user gets the privilege (from SYSTEM, whose password the container shares).
+        var system = new OracleConnection(OracleConnectionSettings.BuildConnectionString(fixture.Profile, new ConnectionCredential("SYSTEM", fixture.Credential.Password)));
+        await using (system)
+        {
+            await system.OpenAsync(Token);
+            var grant = system.CreateCommand();
+            grant.CommandText = "GRANT ALTER SYSTEM TO " + fixture.Credential.UserName;
+            await grant.ExecuteNonQueryAsync(Token);
+        }
+
+        using var cancel = CancellationTokenSource.CreateLinkedTokenSource(Token);
+        cancel.CancelAfter(TimeSpan.FromMilliseconds(500));
+        var started = DateTime.UtcNow;
+
+        // Waiting, not computing: as a row lock does. The break must reach the server through Docker's port
+        // forwarding (as through NAT and VPN tunnels), which drops TCP urgent data.
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest("BEGIN DBMS_SESSION.SLEEP(20); END;"), cancel.Token)));
+
+        Assert.True(DateTime.UtcNow - started < TimeSpan.FromSeconds(8), $"cancel took {(DateTime.UtcNow - started).TotalSeconds:N1} s");
+        var events = await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest("SELECT 1 FROM dual"), Token));
+        Assert.Single(events.OfType<RowBatch>());
+
+        // An UPDATE waiting on a row lock: canceled, and it never runs, also once the lock is released.
+        await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest("BEGIN EXECUTE IMMEDIATE 'DROP TABLE jq_lock'; EXCEPTION WHEN OTHERS THEN NULL; END;"), Token));
+        await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest("CREATE TABLE jq_lock (id NUMBER, v NUMBER)"), Token));
+        await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest("INSERT INTO jq_lock VALUES (1, 0)"), Token));
+        await using var holder = await OpenAsync();
+        var lockControl = (ITransactionControl)holder;
+        await lockControl.BeginAsync(Token);
+        await ToListAsync(holder.Executor.ExecuteAsync(new QueryRequest("UPDATE jq_lock SET v = 1 WHERE id = 1"), Token));
+
+        using var cancelUpdate = CancellationTokenSource.CreateLinkedTokenSource(Token);
+        cancelUpdate.CancelAfter(TimeSpan.FromMilliseconds(500));
+        started = DateTime.UtcNow;
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest("UPDATE jq_lock SET v = 99 WHERE id = 1"), cancelUpdate.Token)));
+        Assert.True(DateTime.UtcNow - started < TimeSpan.FromSeconds(8), "the update waiting on the lock was not canceled");
+
+        await lockControl.RollbackAsync(Token);
+        await Task.Delay(500, Token);
+        var value = await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest("SELECT v FROM jq_lock WHERE id = 1"), Token));
+        Assert.Equal(0m, Convert.ToDecimal(value.OfType<RowBatch>().Single().Rows[0][0], System.Globalization.CultureInfo.InvariantCulture));
+    }
+
+    [Fact]
     public async Task Cancel_stops_a_running_block_quickly()
     {
         await using var connection = await OpenAsync();
