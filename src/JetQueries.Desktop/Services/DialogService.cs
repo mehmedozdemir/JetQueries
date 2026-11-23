@@ -42,4 +42,11 @@ internal sealed class DialogService(IServiceProvider services) : IDialogService
 
     public async Task<bool> ConfirmAsync(string title, string message) =>
         await new PromptDialog(title, message, askForSecret: false).ShowDialog<string?>(Owner) is not null;
+
+    // The Avalonia interface is paused (ADR 0007): file dialogs exist only in the WPF interface.
+    public Task<string?> PickFileToOpenAsync() => Task.FromResult<string?>(null);
+
+    public Task<string?> PickFileToSaveAsync(string suggestedName, string? currentPath) => Task.FromResult<string?>(null);
+
+    public Task<SaveChangesChoice> AskSaveChangesAsync(string documentName) => Task.FromResult(SaveChangesChoice.Discard);
 }

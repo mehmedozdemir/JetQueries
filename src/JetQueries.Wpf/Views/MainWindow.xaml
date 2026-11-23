@@ -5,10 +5,13 @@
         xmlns:res="clr-namespace:JetQueries.Presentation.Resources;assembly=JetQueries.Presentation"
         xmlns:v="clr-namespace:JetQueries.Wpf.Views"
         Title="JetQueries" Width="1360" Height="840" MinWidth="820" MinHeight="480"
-        WindowStartupLocation="CenterScreen"
+        WindowStartupLocation="CenterScreen" AllowDrop="True" Drop="OnDrop" DragOver="OnDragOver"
         Style="{StaticResource Window.App}">
     <Window.InputBindings>
         <KeyBinding Gesture="Ctrl+N" Command="{Binding Documents.NewQueryCommand}" />
+        <KeyBinding Gesture="Ctrl+O" Command="{Binding Documents.OpenFileCommand}" />
+        <KeyBinding Gesture="Ctrl+S" Command="{Binding Documents.SaveCommand}" />
+        <KeyBinding Gesture="Ctrl+Shift+S" Command="{Binding Documents.SaveAsCommand}" />
     </Window.InputBindings>
 
     <Grid>
@@ -37,6 +40,10 @@
                             Command="{Binding Connections.NewCommand}" />
                     <Button Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.Add}" Content="{x:Static res:Strings.QueryNew}"
                             Command="{Binding Documents.NewQueryCommand}" ToolTip="{x:Static res:Strings.QueryNewTip}" />
+                    <Button Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.OpenFile}" Content="{x:Static res:Strings.FileOpen}"
+                            Command="{Binding Documents.OpenFileCommand}" ToolTip="{x:Static res:Strings.FileOpenTip}" />
+                    <Button Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.Save}" Content="{x:Static res:Strings.FileSave}"
+                            Command="{Binding Documents.SaveCommand}" ToolTip="{x:Static res:Strings.FileSaveTip}" />
                     <Border Style="{StaticResource Separator.Vertical}" />
                     <Button Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.Play}" Content="{x:Static res:Strings.QueryRun}"
                             Command="{Binding Documents.Selected.RunCommand}" ToolTip="{x:Static res:Strings.QueryRunTip}" />

@@ -23,12 +23,14 @@
             <TabControl.ItemContainerStyle>
                 <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
                     <Setter Property="c:Ui.Icon" Value="{x:Static c:Icons.Code}" />
+                    <!-- Middle click closes a tab, as in browsers and Visual Studio. -->
+                    <EventSetter Event="PreviewMouseUp" Handler="OnTabMouseUp" />
                 </Style>
             </TabControl.ItemContainerStyle>
             <TabControl.ItemTemplate>
                 <DataTemplate>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="{Binding Title}" VerticalAlignment="Center" />
+                    <StackPanel Orientation="Horizontal" ToolTip="{Binding ToolTip}">
+                        <TextBlock Text="{Binding HeaderText}" VerticalAlignment="Center" />
                         <Button Style="{StaticResource Btn.TabClose}" ToolTip="{x:Static res:Strings.QueryClose}"
                                 Command="{Binding DataContext.CloseCommand, ElementName=Root}" CommandParameter="{Binding}" />
                     </StackPanel>

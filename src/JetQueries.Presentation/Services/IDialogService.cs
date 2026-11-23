@@ -20,4 +20,31 @@ public interface IDialogService
     /// <param name="message">The question.</param>
     /// <returns><see langword="true"/> if the user confirmed.</returns>
     Task<bool> ConfirmAsync(string title, string message);
+
+    /// <summary>Asks for an SQL file to open.</summary>
+    /// <returns>The path, or <see langword="null"/> if the user canceled.</returns>
+    Task<string?> PickFileToOpenAsync();
+
+    /// <summary>Asks where to save a query.</summary>
+    /// <param name="suggestedName">The file name offered, such as "Query 1.sql".</param>
+    /// <param name="currentPath">The file the query came from, if any: its folder is offered.</param>
+    /// <returns>The path, or <see langword="null"/> if the user canceled.</returns>
+    Task<string?> PickFileToSaveAsync(string suggestedName, string? currentPath);
+
+    /// <summary>Asks what to do with a query's unsaved changes before its tab closes.</summary>
+    /// <param name="documentName">The tab's name.</param>
+    Task<SaveChangesChoice> AskSaveChangesAsync(string documentName);
+}
+
+/// <summary>The answer to "save changes?".</summary>
+public enum SaveChangesChoice
+{
+    /// <summary>Save, then go on.</summary>
+    Save,
+
+    /// <summary>Go on without saving.</summary>
+    Discard,
+
+    /// <summary>Do not go on.</summary>
+    Cancel,
 }

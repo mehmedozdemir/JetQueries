@@ -160,6 +160,30 @@ internal sealed class FakeDialogs : IDialogService
         Asked.Add("confirm:" + message);
         return Task.FromResult(Confirm);
     }
+
+    public string? OpenPath { get; set; }
+
+    public string? SavePath { get; set; }
+
+    public SaveChangesChoice SaveChoice { get; set; } = SaveChangesChoice.Cancel;
+
+    public Task<string?> PickFileToOpenAsync()
+    {
+        Asked.Add("open");
+        return Task.FromResult(OpenPath);
+    }
+
+    public Task<string?> PickFileToSaveAsync(string suggestedName, string? currentPath)
+    {
+        Asked.Add("save:" + suggestedName);
+        return Task.FromResult(SavePath);
+    }
+
+    public Task<SaveChangesChoice> AskSaveChangesAsync(string documentName)
+    {
+        Asked.Add("save-changes:" + documentName);
+        return Task.FromResult(SaveChoice);
+    }
 }
 
 internal sealed class FakeProbe : IReachabilityProbe

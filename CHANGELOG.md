@@ -43,6 +43,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
   schema), follows `USE`, switches on choice. SDK (preview): `IDatabaseContext`, `SqlDocument.DefaultDatabase`;
   Core: `QueryChannel`, `ISettingsStore`.
 - Explorer filter by name, and a context menu with New query (on that database), Connect/Disconnect, Refresh.
+- SQL files: open (Ctrl+O, drag and drop), save (Ctrl+S), save as (Ctrl+Shift+S), keeping the file's encoding
+  (UTF-8 with or without BOM, UTF-16, the ANSI code page such as Windows-1254); unsaved changes shown as "*" and
+  asked about when a tab closes; middle click closes a tab.
+- Workspace: open tabs (texts, files, connections, databases, selection) are saved while the application runs and
+  restored at the next start; restored tabs wait for their own connection.
 
 ### Changed
 - View models, their service contracts and strings moved to `JetQueries.Presentation`, shared by both interfaces.

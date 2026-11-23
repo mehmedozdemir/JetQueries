@@ -129,6 +129,35 @@ internal sealed class WpfDialogService(IServiceProvider services) : IDialogServi
 
     public Task<bool> ConfirmAsync(string title, string message) =>
         Task.FromResult(new PromptDialog(title, message, askForSecret: false) { Owner = Owner }.ShowDialog() == true);
+
+    private static string FileFilter => $"{Strings.SqlFiles} (*.sql)|*.sql|{Strings.AllFiles} (*.*)|*.*";
+
+    public Task<string?> PickFileToOpenAsync()
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog { Filter = FileFilter, CheckFileExists = true };
+        return Task.FromResult(dialog.ShowDialog(Owner) == true ? dialog.FileName : null);
+    }
+
+    public Task<string?> PickFileToSaveAsync(string suggestedName, string? currentPath)
+    {
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Filter = FileFilter,
+            FileName = suggestedName,
+            DefaultExt = ".sql",
+            AddExtension = true,
+            OverwritePrompt = true,
+            InitialDirectory = currentPath is null ? string.Empty : System.IO.Path.GetDirectoryName(currentPath) ?? string.Empty,
+        };
+        return Task.FromResult(dialog.ShowDialog(Owner) == true ? dialog.FileName : null);
+    }
+
+    public Task<SaveChangesChoice> AskSaveChangesAsync(string documentName)
+    {
+        var dialog = new SaveChangesDialog(documentName) { Owner = Owner };
+        dialog.ShowDialog();
+        return Task.FromResult(dialog.Choice);
+    }
 }
 
 /// <summary>

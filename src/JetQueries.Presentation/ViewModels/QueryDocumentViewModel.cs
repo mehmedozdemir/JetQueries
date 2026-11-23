@@ -162,6 +162,7 @@ public partial class QueryDocumentViewModel : ObservableObject
         string? database = null)
     {
         Title = title;
+        FilePath = null;
 
         // Set before a session is chosen below: choosing one starts opening the window's connection.
         PendingDatabase = database;
@@ -178,7 +179,40 @@ public partial class QueryDocumentViewModel : ObservableObject
         RefreshSessions();
     }
 
-    public string Title { get; }
+    /// <summary>The tab's name: the file name, or "Query N".</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HeaderText), nameof(ToolTip))]
+    public partial string Title { get; set; }
+
+    /// <summary>The file the query is saved in; null for a query never saved.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ToolTip))]
+    public partial string? FilePath { get; set; }
+
+    /// <summary>The text changed since it was opened or saved.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HeaderText))]
+    public partial bool IsDirty { get; set; }
+
+    /// <summary>The tab header: the name, with a star while there are unsaved changes (as in SSMS).</summary>
+    public string HeaderText => IsDirty ? Title + " *" : Title;
+
+    /// <summary>The tab's tool tip: the file's full path, or the name.</summary>
+    public string ToolTip => FilePath ?? Title;
+
+    /// <summary>The encoding of the file the query came from; new files are written as UTF-8.</summary>
+    public System.Text.Encoding FileEncoding { get; set; } = new System.Text.UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+
+    /// <summary>
+    /// The connection the query was on when the workspace was saved. When that connection is opened, the tab
+    /// goes back to it; until then no other connection is chosen for it (restored SQL must not run elsewhere).
+    /// </summary>
+    public Guid? PendingConnectionId { get; set; }
+
+    /// <summary>The text now counts as saved.</summary>
+    public void MarkClean() => IsDirty = false;
+
+    partial void OnTextChanged(string value) => IsDirty = true;
 
     public ObservableCollection<SessionOption> Sessions { get; } = [];
 
@@ -337,6 +371,18 @@ public partial class QueryDocumentViewModel : ObservableObject
         foreach (var session in open)
         {
             Sessions.Add(new SessionOption(session));
+        }
+
+        if (selected is null && PendingConnectionId is { } pending)
+        {
+            // A restored tab waits for its own connection.
+            SelectedSession = Sessions.FirstOrDefault(s => s.Session.Definition.Id == pending);
+            if (SelectedSession is not null)
+            {
+                PendingConnectionId = null;
+            }
+
+            return;
         }
 
         SelectedSession = Sessions.FirstOrDefault(s => ReferenceEquals(s.Session, selected)) ?? (Sessions.Count == 1 || selected is null ? Sessions.FirstOrDefault() : null);
@@ -720,99 +766,4 @@ public partial class QueryDocumentViewModel : ObservableObject
 
     private static string Format(string format, params object[] arguments) =>
         string.Format(CultureInfo.CurrentCulture, CompositeFormat.Parse(format), arguments);
-}
-
-/// <summary>View model of the document area: the open query tabs.</summary>
-public partial class DocumentsViewModel : ObservableObject
-{
-    private readonly IConnectionManager _manager;
-    private readonly IMetadataService _metadata;
-    private readonly IQueryHistory _history;
-    private readonly IJobQueue _jobs;
-    private readonly IDialogService _dialogs;
-    private readonly IUiDispatcher _ui;
-    private int _counter;
-
-    public DocumentsViewModel(
-        IConnectionManager manager, IMetadataService metadata, IQueryHistory history, IJobQueue jobs, IDialogService dialogs, IUiDispatcher ui)
-    {
-        _manager = manager;
-        _metadata = metadata;
-        _history = history;
-        _jobs = jobs;
-        _dialogs = dialogs;
-        _ui = ui;
-
-        // Raised on whatever thread opened or closed the session.
-        manager.SessionsChanged += (_, _) => ui.Post(RefreshSessions);
-        NewQuery();
-    }
-
-    public ObservableCollection<QueryDocumentViewModel> Documents { get; } = [];
-
-    [ObservableProperty]
-    public partial QueryDocumentViewModel? Selected { get; set; }
-
-    /// <summary>The connection a new query should start on, set by the explorer's selection.</summary>
-    public Guid? PreferredConnectionId { get; set; }
-
-    [RelayCommand]
-    private void NewQuery()
-    {
-        var title = string.Format(CultureInfo.CurrentCulture, CompositeFormat.Parse(Strings.QueryTitle), ++_counter);
-        Open(title, string.Empty, PreferredConnectionId);
-    }
-
-    /// <summary>Opens an empty query tab on a connection and, if given, a database of it (the explorer's New query).</summary>
-    public QueryDocumentViewModel OpenEmpty(Guid? connectionId, string? database)
-    {
-        var title = string.Format(CultureInfo.CurrentCulture, CompositeFormat.Parse(Strings.QueryTitle), ++_counter);
-        return Open(title, string.Empty, connectionId, database);
-    }
-
-    /// <summary>Opens a tab with the given text, on the given connection if it is open, and on a database of it if given.</summary>
-    public QueryDocumentViewModel Open(string title, string text, Guid? connectionId, string? database = null)
-    {
-        var document = new QueryDocumentViewModel(title, _manager, _metadata, _history, _jobs, _dialogs, _ui, database) { Text = text };
-        if (connectionId is { } id)
-        {
-            document.SelectSession(id);
-        }
-
-        // "Go to definition" in any tab opens the source in a new tab next to it.
-        document.DefinitionOpened += (_, definition) => Open(definition.Title, definition.Text, definition.ConnectionId);
-        Documents.Add(document);
-        Selected = document;
-        return document;
-    }
-
-    [RelayCommand]
-    private void Close(QueryDocumentViewModel? document)
-    {
-        if (document is null)
-        {
-            return;
-        }
-
-        document.CancelCommand.Execute(null);
-        _ = document.CloseAsync();
-        var index = Documents.IndexOf(document);
-        Documents.Remove(document);
-        if (Documents.Count == 0)
-        {
-            NewQuery();
-        }
-        else if (Selected is null || ReferenceEquals(Selected, document))
-        {
-            Selected = Documents[Math.Clamp(index, 0, Documents.Count - 1)];
-        }
-    }
-
-    private void RefreshSessions()
-    {
-        foreach (var document in Documents)
-        {
-            document.RefreshSessions();
-        }
-    }
 }
