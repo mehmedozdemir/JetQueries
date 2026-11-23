@@ -1,5 +1,6 @@
 using JetQueries.Provider.Sqlite.Language;
 using JetQueries.Providers.Language;
+using JetQueries.Providers.Metadata;
 using JetQueries.Sdk;
 using Microsoft.Data.Sqlite;
 
@@ -18,7 +19,7 @@ public sealed class SqliteExtension : IExtension
 
 /// <summary>Database provider for SQLite database files, on Microsoft.Data.Sqlite.</summary>
 public sealed class SqliteProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport,
-    IConnectionStringImport, IProviderAppearance
+    IConnectionStringImport, IProviderAppearance, IObjectScripting
 {
     /// <summary>The provider identifier stored in connection profiles.</summary>
     public const string ProviderId = "sqlite";
@@ -107,6 +108,28 @@ public sealed class SqliteProvider : IDatabaseProvider, IConnectionSettingsProvi
 
     /// <inheritdoc />
     public string QuoteIdentifier(string identifier) => SqliteNames.Quote(identifier);
+
+
+    /// <inheritdoc />
+    public string? ScriptDrop(DatabaseObject target)
+    {
+        ArgumentNullException.ThrowIfNull(target);
+        if (target.Kind is not (DatabaseObjectKinds.Table or DatabaseObjectKinds.View or DatabaseObjectKinds.Trigger) || DdlText.DropKeyword(target.Kind) is not { } keyword)
+        {
+            return null;
+        }
+
+        // main is what an unqualified name means; temp and attached databases are named.
+        var name = target.Name.Schema is { Length: > 0 } schema && !schema.Equals("main", StringComparison.OrdinalIgnoreCase)
+            ? SqliteNames.Quote(schema) + "." + SqliteNames.Quote(target.Name.Name)
+            : SqliteNames.Quote(target.Name.Name);
+        return $"DROP {keyword} {name};";
+    }
+
+    /// <summary>SQLite cannot change a view or trigger in place: always null.</summary>
+    /// <param name="target">The object.</param>
+    /// <param name="definition">Its definition.</param>
+    public string? ScriptAlter(DatabaseObject target, string definition) => null;
 
     /// <inheritdoc />
     public async Task<IDatabaseConnection> OpenConnectionAsync(

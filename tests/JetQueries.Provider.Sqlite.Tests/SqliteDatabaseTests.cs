@@ -292,6 +292,67 @@ public sealed class SqliteDatabaseTests : IAsyncLifetime
         Assert.Contains("readonly", error.Message, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact]
+    public async Task Details_show_columns_keys_indexes_references_and_triggers()
+    {
+        var details = Assert.IsAssignableFrom<IObjectDetailsProvider>(_connection.Metadata);
+
+        var cards = await details.GetDetailsAsync(new DatabaseObject(new DatabaseObjectName(null, null, "CARDS"), DatabaseObjectKinds.Table), Token);
+        Assert.NotNull(cards);
+        Assert.Equal(new DatabaseObject(new DatabaseObjectName(null, "main", "cards"), DatabaseObjectKinds.Table), cards.Target);
+        Assert.Contains(cards.Properties, static p => p is { Key: ObjectDetailKeys.ObjectType, Value: "TABLE" });
+        Assert.Equal(
+            [ObjectDetailKeys.Columns, ObjectDetailKeys.Constraints, ObjectDetailKeys.References, ObjectDetailKeys.Indexes, ObjectDetailKeys.Triggers],
+            cards.Sections.Select(static s => s.Key));
+
+        var columns = Section(cards, ObjectDetailKeys.Columns);
+        Assert.Equal(["1", "id", "INTEGER", null, null, "ROWID", "PK"], columns.Rows[0].Cells);
+        Assert.Equal(["2", "card_no", "TEXT", null, null, null, null], columns.Rows[1].Cells);
+        Assert.Equal("NUMERIC(12,2)", Cell(columns, 2, ObjectDetailKeys.DataType));
+        Assert.NotNull(Cell(columns, 2, ObjectDetailKeys.Nullable));
+
+        var constraints = Section(cards, ObjectDetailKeys.Constraints);
+        Assert.Equal([null, "PRIMARY KEY", "id"], constraints.Rows[0].Cells);
+        Assert.Equal(["UNIQUE", "card_no"], constraints.Rows[1].Cells.Skip(1));
+
+        var reference = Assert.Single(Section(cards, ObjectDetailKeys.References).Rows);
+        Assert.Equal(["Müşteri İşlemleri", "card_id", "id", "NO ACTION", "NO ACTION"], reference.Cells);
+        Assert.Equal(new DatabaseObject(new DatabaseObjectName(null, "main", "Müşteri İşlemleri"), DatabaseObjectKinds.Table), reference.Target);
+
+        var indexes = Section(cards, ObjectDetailKeys.Indexes);
+        Assert.Equal(["ix_cards_issued", "INDEX", null, "issued_at", null], indexes.Rows[0].Cells);
+        Assert.Equal(["UNIQUE CONSTRAINT", "✓", "card_no"], indexes.Rows[1].Cells.Skip(1).Take(3));
+
+        var trigger = Assert.Single(Section(cards, ObjectDetailKeys.Triggers).Rows);
+        Assert.Equal(["trg_cards", "INSERT", "AFTER"], trigger.Cells);
+        Assert.Contains("UPDATE cards SET balance", trigger.Source, StringComparison.Ordinal);
+
+        var operations = await details.GetDetailsAsync(new DatabaseObject(new DatabaseObjectName(null, "main", "Müşteri İşlemleri"), DatabaseObjectKinds.Table), Token);
+        Assert.NotNull(operations);
+        var foreignKey = Assert.Single(Section(operations, ObjectDetailKeys.ForeignKeys).Rows);
+        Assert.Equal(["card_id", "cards", "id", "NO ACTION", "NO ACTION"], foreignKey.Cells);
+        Assert.Equal(new DatabaseObject(new DatabaseObjectName(null, "main", "cards"), DatabaseObjectKinds.Table), foreignKey.Target);
+        var operationColumns = Section(operations, ObjectDetailKeys.Columns);
+        Assert.Equal("FK", Cell(operationColumns, 1, ObjectDetailKeys.Key));
+        Assert.Equal("GENERATED (VIRTUAL)", Cell(operationColumns, 3, ObjectDetailKeys.Identity));
+
+        var view = await details.GetDetailsAsync(new DatabaseObject(new DatabaseObjectName(null, "main", "card_summary"), DatabaseObjectKinds.View), Token);
+        Assert.NotNull(view);
+        Assert.Equal(["card_no", "balance"], Section(view, ObjectDetailKeys.Columns).Rows.Select(static r => r.Cells[1]));
+
+        var triggerDetails = await details.GetDetailsAsync(new DatabaseObject(new DatabaseObjectName(null, null, "trg_cards"), DatabaseObjectKinds.Trigger), Token);
+        Assert.Contains(triggerDetails!.Properties, static p => p is { Key: ObjectDetailKeys.Table, Value: "cards" });
+
+        Assert.Null(await details.GetDetailsAsync(new DatabaseObject(new DatabaseObjectName(null, "main", "nothing"), DatabaseObjectKinds.Table), Token));
+        Assert.Null(await details.GetDetailsAsync(new DatabaseObject(new DatabaseObjectName(null, "main", "card_summary"), DatabaseObjectKinds.Table), Token));
+        Assert.Null(await details.GetDetailsAsync(new DatabaseObject(new DatabaseObjectName(null, "nowhere", "cards"), DatabaseObjectKinds.Table), Token));
+    }
+
+    private static ObjectDetailSection Section(ObjectDetails details, string key) => Assert.Single(details.Sections, s => s.Key == key);
+
+    private static string? Cell(ObjectDetailSection section, int row, string key) =>
+        section.Rows[row].Cells[section.Columns.Select(static c => c.Key).ToList().IndexOf(key)];
+
     private async Task<List<CompletionItem>> CompleteAsync(ISqlLanguageService service, string sqlWithCaret)
     {
         var offset = sqlWithCaret.IndexOf('|', StringComparison.Ordinal);
