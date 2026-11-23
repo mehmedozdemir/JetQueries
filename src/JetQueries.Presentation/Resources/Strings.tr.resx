@@ -170,4 +170,22 @@
   <data name="FilterRemove" xml:space="preserve"><value>Filtreyi kaldır</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} / {1:N0} satır</value></data>
   <data name="HiddenColumns" xml:space="preserve"><value>{0} gizli sütun · göster</value></data>
+  <data name="Settings" xml:space="preserve"><value>Ayarlar</value></data>
+  <data name="SettingsTip" xml:space="preserve"><value>Yazı tipleri, boyutlar ve tema</value></data>
+  <data name="SectionAppearance" xml:space="preserve"><value>GÖRÜNÜM</value></data>
+  <data name="SectionEditor" xml:space="preserve"><value>SQL EDİTÖRÜ</value></data>
+  <data name="SectionGrid" xml:space="preserve"><value>SONUÇ TABLOSU</value></data>
+  <data name="FieldTheme" xml:space="preserve"><value>Tema</value></data>
+  <data name="ThemeDark" xml:space="preserve"><value>Koyu</value></data>
+  <data name="ThemeLight" xml:space="preserve"><value>Açık</value></data>
+  <data name="FieldFontFamily" xml:space="preserve"><value>Yazı tipi</value></data>
+  <data name="FieldFontSize" xml:space="preserve"><value>Yazı boyutu</value></data>
+  <data name="ButtonResetDefaults" xml:space="preserve"><value>Varsayılanlar</value></data>
+  <data name="SettingsZoomHint" xml:space="preserve"><value>Ctrl+fare tekerleği editörü ve tabloyu yakınlaştırır; Ctrl+0 %100'e döndürür.</value></data>
+  <data name="ZoomPercent" xml:space="preserve"><value>%{0}</value></data>
+  <data name="ZoomReset" xml:space="preserve"><value>%100'e dön (Ctrl+0)</value></data>
+  <data name="QueryDatabase" xml:space="preserve"><value>Veritabanı</value></data>
+  <data name="QuerySchema" xml:space="preserve"><value>Şema</value></data>
+  <data name="QueryConnection" xml:space="preserve"><value>Bağlantı</value></data>
+  <data name="ExplorerFilter" xml:space="preserve"><value>Ada göre filtrele…</value></data>
 </root>

@@ -1,6 +1,8 @@
 using Avalonia;
 using Avalonia.Styling;
 
+using IThemeService = JetQueries.Desktop.Services.IThemeService;
+
 namespace JetQueries.Desktop.Services;
 
 internal sealed class ThemeService : IThemeService

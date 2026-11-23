@@ -5,7 +5,7 @@
              xmlns:res="clr-namespace:JetQueries.Presentation.Resources;assembly=JetQueries.Presentation"
              xmlns:v="clr-namespace:JetQueries.Wpf.Views">
     <DockPanel>
-        <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,0,1" Padding="8,8,8,6">
+        <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,0,1" Padding="6,6,6,4">
             <StackPanel>
                 <c:SearchBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=250}"
                              c:Ui.Placeholder="{x:Static res:Strings.HistorySearch}" />
@@ -13,9 +13,9 @@
                     <Button DockPanel.Dock="Right" Style="{StaticResource Btn.Link}" Content="{x:Static res:Strings.HistoryClear}"
                             Command="{Binding ClearCommand}" />
                     <StackPanel Orientation="Horizontal">
-                        <Button Style="{StaticResource Btn.Toolbar}" Height="28" Padding="8,0" c:Ui.Icon="{x:Static c:Icons.OpenFile}"
+                        <Button Style="{StaticResource Btn.Toolbar}" Height="26" Padding="8,0" c:Ui.Icon="{x:Static c:Icons.OpenFile}"
                                 Content="{x:Static res:Strings.HistoryOpen}" Command="{Binding OpenSelectedCommand}" />
-                        <Button Style="{StaticResource Btn.Icon}" Width="28" Height="28" c:Ui.Icon="{x:Static c:Icons.Delete}"
+                        <Button Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="{x:Static c:Icons.Delete}"
                                 Command="{Binding DeleteSelectedCommand}" ToolTip="{x:Static res:Strings.ConnectionDelete}" />
                     </StackPanel>
                 </DockPanel>
@@ -39,8 +39,8 @@
                      MouseDoubleClick="OnListDoubleClick">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <StackPanel Margin="2,3" ToolTip="{Binding ToolTip}">
-                            <TextBlock x:Name="Sql" Text="{Binding Summary}" FontFamily="{StaticResource Font.Code}" FontSize="12.5"
+                        <StackPanel Margin="2,1" ToolTip="{Binding ToolTip}">
+                            <TextBlock x:Name="Sql" Text="{Binding Summary}" FontFamily="{DynamicResource Font.Code}" FontSize="{DynamicResource FontSize.Small}"
                                        TextTrimming="CharacterEllipsis" />
                             <DockPanel Margin="0,2,0,0">
                                 <TextBlock DockPanel.Dock="Right" Text="{Binding When}" Style="{StaticResource Text.Caption}" Margin="8,0,0,0" />

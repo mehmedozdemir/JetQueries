@@ -16,12 +16,15 @@ namespace JetQueries.Provider.PostgreSql;
 /// Runs one statement (the script splitter cuts scripts up, so each reports on its own) and streams what
 /// happens: rows in batches, and the NOTICE / WARNING messages the server sends while it runs.
 /// </summary>
-internal sealed class PostgreSqlQueryExecutor(NpgsqlConnection connection) : IQueryExecutor
+internal sealed class PostgreSqlQueryExecutor(Func<NpgsqlConnection> currentConnection) : IQueryExecutor
 {
     public async IAsyncEnumerable<QueryEvent> ExecuteAsync(QueryRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
         var batchSize = Math.Max(1, request.BatchSize);
+
+        // The window may have switched database since the last statement: use the connection of now throughout.
+        var connection = currentConnection();
 
         // Npgsql raises notices on the thread that is reading, between our awaits; the queue carries them to
         // the next point where this iterator may yield.

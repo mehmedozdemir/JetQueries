@@ -50,7 +50,11 @@ public interface ISqlLanguageService
 /// when the document has no connection; the service then offers keyword- and document-based results only.
 /// </param>
 /// <param name="DefaultSchema">Schema used to resolve unqualified names, if known.</param>
-public sealed record SqlDocument(string Text, IMetadataProvider? Metadata = null, string? DefaultSchema = null);
+public sealed record SqlDocument(string Text, IMetadataProvider? Metadata = null, string? DefaultSchema = null)
+{
+    /// <summary>Database used to resolve names without a database part, if known (the query window's current database).</summary>
+    public string? DefaultDatabase { get; init; }
+}
 
 /// <summary>A range of characters in a document or line.</summary>
 /// <param name="Start">Zero-based offset of the first character.</param>

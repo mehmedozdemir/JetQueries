@@ -232,6 +232,29 @@ public sealed class SqlServerIntegrationTests(SqlServerFixture fixture) : IClass
         Assert.Contains("    PRIMARY KEY ([Id])", script, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task The_current_database_can_be_read_listed_and_switched()
+    {
+        await using var connection = await OpenAsync();
+        var context = Assert.IsAssignableFrom<IDatabaseContext>(connection);
+        Assert.Equal(DatabaseContextKind.Database, context.Kind);
+
+        var start = await context.GetCurrentAsync(Token);
+        Assert.False(string.IsNullOrEmpty(start));
+        var databases = await context.GetAvailableAsync(Token);
+        Assert.Contains("master", databases);
+        Assert.Contains("tempdb", databases);
+
+        await context.ChangeAsync("tempdb", Token);
+        Assert.Equal("tempdb", await context.GetCurrentAsync(Token));
+
+        // A USE in a script is seen too.
+        await RunAsync(connection, "USE master");
+        Assert.Equal("master", await context.GetCurrentAsync(Token));
+        await Assert.ThrowsAnyAsync<Exception>(() => context.ChangeAsync("no_such_database_here", Token));
+        Assert.Equal("master", await context.GetCurrentAsync(Token));
+    }
+
     private async Task<IDatabaseConnection> OpenAsync()
     {
         Assert.SkipWhen(fixture.SkipReason is not null, fixture.SkipReason ?? string.Empty);

@@ -7,6 +7,8 @@ using JetQueries.Presentation.Resources;
 using JetQueries.Desktop.Services;
 using JetQueries.Presentation.Services;
 
+using IThemeService = JetQueries.Desktop.Services.IThemeService;
+
 namespace JetQueries.Desktop.ViewModels;
 
 /// <summary>View model of the shell window.</summary>

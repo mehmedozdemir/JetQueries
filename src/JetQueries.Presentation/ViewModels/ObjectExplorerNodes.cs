@@ -48,6 +48,9 @@ public abstract partial class LazyNodeViewModel : ExplorerNodeViewModel
     [ObservableProperty]
     public partial bool IsLoading { get; set; }
 
+    /// <summary>Raised after the children were loaded or reloaded.</summary>
+    public event EventHandler? ChildrenLoaded;
+
     /// <summary>Whether there is anything to load right now.</summary>
     public virtual bool CanLoad => true;
 
@@ -75,6 +78,7 @@ public abstract partial class LazyNodeViewModel : ExplorerNodeViewModel
             }
 
             _loaded = true;
+            ChildrenLoaded?.Invoke(this, EventArgs.Empty);
         }
         catch (OperationCanceledException)
         {
@@ -122,6 +126,9 @@ public sealed class DatabaseObjectNodeViewModel(ExplorerContext context, Databas
 {
     public DatabaseObject Target { get; } = databaseObject;
 
+    /// <summary>The open connection the object belongs to.</summary>
+    public ConnectionSession Session => context.Session;
+
     public bool IsContainer => Target.Kind is DatabaseObjectKinds.Database or DatabaseObjectKinds.Schema;
 
     protected override Task<IReadOnlyList<ExplorerNodeViewModel>> LoadChildrenAsync(bool refresh) => Target.Kind switch
@@ -140,6 +147,12 @@ public sealed class CategoryNodeViewModel(ExplorerContext context, string title,
     : LazyNodeViewModel(title, expandable: true)
 {
     public DatabaseObjectKinds Kind { get; } = kind;
+
+    /// <summary>The database or schema the group is under; null at the top of a connection.</summary>
+    public DatabaseObject? Parent => parent;
+
+    /// <summary>The open connection the group belongs to.</summary>
+    public ConnectionSession Session => context.Session;
 
     protected override Task<IReadOnlyList<ExplorerNodeViewModel>> LoadChildrenAsync(bool refresh) =>
         ExplorerTree.LoadObjectsAsync(context, parent, Kind, refresh);

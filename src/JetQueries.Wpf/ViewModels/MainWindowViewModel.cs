@@ -11,9 +11,11 @@ public partial class MainWindowViewModel : ObservableObject
 {
     private readonly IThemeService _themeService;
     private readonly IUiDispatcher _ui;
+    private readonly ISettingsDialog? _settings;
 
     public MainWindowViewModel(
-        IThemeService themeService, IUiDispatcher ui, ConnectionsViewModel connections, DocumentsViewModel documents, HistoryViewModel history)
+        IThemeService themeService, IUiDispatcher ui, ConnectionsViewModel connections, DocumentsViewModel documents, HistoryViewModel history,
+        ISettingsDialog? settings = null)
     {
         ArgumentNullException.ThrowIfNull(themeService);
         ArgumentNullException.ThrowIfNull(connections);
@@ -23,7 +25,11 @@ public partial class MainWindowViewModel : ObservableObject
         Connections = connections;
         Documents = documents;
         History = history;
+        _settings = settings;
         themeService.Changed += (_, _) => OnPropertyChanged(nameof(IsDark));
+
+        // "New query" on an explorer node opens a tab on its connection and database.
+        connections.NewQueryRequested += (_, request) => documents.OpenEmpty(request.ConnectionId, request.Database);
 
         // A new query starts on the connection that is selected in the explorer.
         connections.PropertyChanged += (_, e) =>
@@ -64,4 +70,7 @@ public partial class MainWindowViewModel : ObservableObject
 
     [RelayCommand]
     private void ToggleTheme() => _themeService.Toggle();
+
+    [RelayCommand]
+    private void OpenSettings() => _settings?.Show();
 }

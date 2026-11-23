@@ -10,14 +10,23 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" MinHeight="80" />
-            <RowDefinition Height="10" />
+            <RowDefinition Height="8" />
             <RowDefinition Height="*" MinHeight="80" />
         </Grid.RowDefinitions>
 
         <!-- Connection of this query and what the last run did -->
-        <DockPanel Margin="0,0,0,8">
+        <DockPanel Margin="0,0,0,6">
+            <!-- The window's connection, then its current database (schema for Oracle), as SSMS shows it -->
             <ComboBox DockPanel.Dock="Left" ItemsSource="{Binding Sessions}" SelectedItem="{Binding SelectedSession}"
-                      DisplayMemberPath="Name" MinWidth="240" c:Ui.Placeholder="{x:Static res:Strings.QueryNoConnection}" />
+                      DisplayMemberPath="Name" MinWidth="170" MaxWidth="260" ToolTip="{x:Static res:Strings.QueryConnection}"
+                      c:Ui.Placeholder="{x:Static res:Strings.QueryNoConnection}" />
+            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Margin="10,0,0,0"
+                        Visibility="{Binding CanChangeDatabase, Converter={StaticResource BoolToVisibility}}">
+                <TextBlock Text="{x:Static c:Icons.Database}" Style="{StaticResource Text.Icon}" FontSize="13" Margin="0,0,6,0"
+                           Foreground="{DynamicResource Brush.Accent}" />
+                <ComboBox x:Name="DatabaseBox" ItemsSource="{Binding Databases}" SelectedItem="{Binding SelectedDatabase}" MinWidth="200" MaxWidth="320"
+                          ToolTip="{x:Static res:Strings.QueryDatabase}" />
+            </StackPanel>
             <ProgressBar DockPanel.Dock="Left" IsIndeterminate="{Binding IsRunning}" Width="80" Margin="12,0,0,0" VerticalAlignment="Center"
                          Visibility="{Binding IsRunning, Converter={StaticResource BoolToVisibility}}" />
             <TextBlock Text="{Binding Status}" Style="{StaticResource Text.Status}" HorizontalAlignment="Right" />
@@ -25,10 +34,16 @@
 
         <!-- Editor -->
         <Border Grid.Row="1" Style="{StaticResource Card.Surface}">
-            <e:SqlEditor x:Name="Editor" Margin="0,6,0,2" Text="{Binding Text}" LanguageService="{Binding LanguageService}" />
+            <Grid>
+                <e:SqlEditor x:Name="Editor" Margin="0,6,0,2" Text="{Binding Text}" LanguageService="{Binding LanguageService}" />
+                <!-- Zoom of the text; a click goes back to 100 % -->
+                <Button x:Name="ZoomBadge" Style="{StaticResource Btn.Link}" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                        Margin="0,0,18,6" Padding="6,2" FontSize="{DynamicResource FontSize.Caption}" ToolTip="{x:Static res:Strings.ZoomReset}"
+                        Content="{Binding Zoom, ElementName=Editor, Converter={x:Static v:ZoomTextConverter.Instance}}" Click="OnZoomReset" />
+            </Grid>
         </Border>
 
-        <GridSplitter Grid.Row="2" Height="10" HorizontalAlignment="Stretch" ResizeDirection="Rows" ResizeBehavior="PreviousAndNext" />
+        <GridSplitter Grid.Row="2" Height="8" HorizontalAlignment="Stretch" ResizeDirection="Rows" ResizeBehavior="PreviousAndNext" />
 
         <!-- Results -->
         <Border Grid.Row="3" Style="{StaticResource Card.Surface}">
@@ -59,7 +74,7 @@
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <TextBox x:Name="Line" Style="{StaticResource TextBox.ReadOnly}" Text="{Binding Text, Mode=OneWay}"
-                                                     FontFamily="{StaticResource Font.Code}" FontSize="12.5" Foreground="{DynamicResource Brush.Text}" />
+                                                     FontFamily="{DynamicResource Font.Code}" FontSize="{DynamicResource FontSize.Small}" Foreground="{DynamicResource Brush.Text}" />
                                             <DataTemplate.Triggers>
                                                 <DataTrigger Binding="{Binding IsError}" Value="True">
                                                     <Setter TargetName="Line" Property="Foreground" Value="{DynamicResource Brush.Danger}" />

@@ -22,7 +22,9 @@ implemented the Avalonia grid's row source.
   the Avalonia editor), results in UiKit's `VirtualGrid`, built-in extensions copied as before.
 - **`UiKit.Wpf`** is copied from the UiKit repository into `src/UiKit.Wpf` so this repository builds on its own;
   the repository's analyzer rules are not applied to it. Changes made here are taken back to UiKit
-  (so far: the ComboBox selection box honours `DisplayMemberPath`). Application additions live in
+  (so far: the ComboBox selection box honours `DisplayMemberPath`; control text sizes are DynamicResource
+  tokens — `FontSize.Body`, `.Small`, `.Caption`, `.Section`, `.Subtitle`, `.Title` — so that an application can
+  change them at run time). Application additions live in
   `JetQueries.Wpf/Styles/JetQueries.xaml` and use UiKit tokens only.
 - **Avalonia** (`JetQueries.Desktop`, now `JetQueries.Avalonia.exe`, `JetQueries.Editor`, `JetQueries.DataGrid`)
   stays in the solution, keeps building and keeps its tests, but gets no new features and is not packaged.

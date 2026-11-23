@@ -13,6 +13,8 @@
 
     <!-- ========== Tokens: typography, radius, spacing ========== -->
     <sys:Double x:Key="FontSize.Caption">11.5</sys:Double>
+    <sys:Double x:Key="FontSize.Small">12</sys:Double>
+    <sys:Double x:Key="FontSize.Section">11</sys:Double>
     <sys:Double x:Key="FontSize.Body">13</sys:Double>
     <sys:Double x:Key="FontSize.Subtitle">15</sys:Double>
     <sys:Double x:Key="FontSize.Title">22</sys:Double>
@@ -36,12 +38,12 @@
     </Style>
 
     <Style x:Key="Text.Caption" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="11.5" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSize.Caption}" />
         <Setter Property="Foreground" Value="{DynamicResource Brush.TextMuted}" />
     </Style>
 
     <Style x:Key="Text.Section" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="11" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSize.Section}" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Foreground" Value="{DynamicResource Brush.TextMuted}" />
         <Setter Property="Margin" Value="0,0,0,6" />
@@ -65,7 +67,7 @@
         <Setter Property="BorderBrush" Value="Transparent" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="10,6" />
-        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual.Rounded}" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
@@ -141,7 +143,7 @@
     <Style x:Key="Btn.Link" TargetType="ButtonBase" BasedOn="{StaticResource Btn.Base}">
         <Setter Property="Foreground" Value="{DynamicResource Brush.Accent}" />
         <Setter Property="Padding" Value="6,3" />
-        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSize.Small}" />
     </Style>
 
     <Style TargetType="Button" BasedOn="{StaticResource Btn.Secondary}" />
@@ -155,7 +157,7 @@
         <Setter Property="SelectionBrush" Value="{DynamicResource Brush.Accent}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="8,6" />
-        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
@@ -200,7 +202,7 @@
     <!-- ========== CheckBox ========== -->
     <Style TargetType="CheckBox">
         <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
-        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
@@ -349,7 +351,7 @@
         <Setter Property="Background" Value="{DynamicResource Brush.Input}" />
         <Setter Property="BorderBrush" Value="{DynamicResource Brush.BorderStrong}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}" />
         <Setter Property="Height" Value="32" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="ScrollViewer.CanContentScroll" Value="True" />
@@ -492,7 +494,7 @@
     <!-- ========== ToolTip ========== -->
     <Style TargetType="ToolTip">
         <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
-        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSize.Small}" />
         <Setter Property="HasDropShadow" Value="False" />
         <Setter Property="Template">
             <Setter.Value>
@@ -515,7 +517,7 @@
     <!-- ========== ContextMenu / MenuItem ========== -->
     <Style TargetType="ContextMenu">
         <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
-        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}" />
         <Setter Property="HasDropShadow" Value="False" />
         <Setter Property="Template">
             <Setter.Value>
@@ -636,7 +638,7 @@
     </Style>
 
     <Style x:Key="Text.Status" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSize.Small}" />
         <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
         <Setter Property="VerticalAlignment" Value="Center" />
         <Style.Triggers>
@@ -647,12 +649,12 @@
     </Style>
 
     <Style x:Key="Text.Title" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="{StaticResource FontSize.Title}" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSize.Title}" />
         <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
 
     <Style x:Key="Text.Subtitle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="{StaticResource FontSize.Subtitle}" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSize.Subtitle}" />
         <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
 
@@ -665,7 +667,7 @@
         <Setter Property="SelectionBrush" Value="{DynamicResource Brush.Accent}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Height" Value="34" />
-        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="Template">
@@ -726,7 +728,7 @@
     <Style TargetType="TabItem">
         <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
         <Setter Property="Padding" Value="12,9" />
-        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="Template">
@@ -807,7 +809,7 @@
     <Style TargetType="TreeViewItem">
         <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
         <Setter Property="Padding" Value="2,4,8,4" />
-        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="Template">
             <Setter.Value>

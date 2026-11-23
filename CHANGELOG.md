@@ -36,6 +36,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 - Result grid sorting and filtering (WPF): header click and Shift+click sort, a filter panel per column, filter and
   exclude by a cell's value, active filter chips, hidden columns; computed on the client in the background, by
   value and by Turkish text rules.
+- Settings screen (WPF): theme, user interface font and text size, SQL editor font and size, result grid text
+  size; previewed live, saved to `%AppData%\JetQueries\appearance.json`. A tighter layout.
+- Ctrl+mouse wheel zoom in the SQL editor (zoom shown, click or Ctrl+0 for 100 %) and in result grids.
+- SSMS-style database selector per query tab: each tab has its own connection and current database (Oracle:
+  schema), follows `USE`, switches on choice. SDK (preview): `IDatabaseContext`, `SqlDocument.DefaultDatabase`;
+  Core: `QueryChannel`, `ISettingsStore`.
+- Explorer filter by name, and a context menu with New query (on that database), Connect/Disconnect, Refresh.
 
 ### Changed
 - View models, their service contracts and strings moved to `JetQueries.Presentation`, shared by both interfaces.

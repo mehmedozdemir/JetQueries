@@ -170,4 +170,22 @@
   <data name="FilterRemove" xml:space="preserve"><value>Remove filter</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} of {1:N0} rows</value></data>
   <data name="HiddenColumns" xml:space="preserve"><value>{0} hidden columns · show</value></data>
+  <data name="Settings" xml:space="preserve"><value>Settings</value></data>
+  <data name="SettingsTip" xml:space="preserve"><value>Fonts, text sizes and theme</value></data>
+  <data name="SectionAppearance" xml:space="preserve"><value>APPEARANCE</value></data>
+  <data name="SectionEditor" xml:space="preserve"><value>SQL EDITOR</value></data>
+  <data name="SectionGrid" xml:space="preserve"><value>RESULT GRID</value></data>
+  <data name="FieldTheme" xml:space="preserve"><value>Theme</value></data>
+  <data name="ThemeDark" xml:space="preserve"><value>Dark</value></data>
+  <data name="ThemeLight" xml:space="preserve"><value>Light</value></data>
+  <data name="FieldFontFamily" xml:space="preserve"><value>Font</value></data>
+  <data name="FieldFontSize" xml:space="preserve"><value>Text size</value></data>
+  <data name="ButtonResetDefaults" xml:space="preserve"><value>Defaults</value></data>
+  <data name="SettingsZoomHint" xml:space="preserve"><value>Ctrl+mouse wheel zooms the editor and the grid; Ctrl+0 goes back to 100%.</value></data>
+  <data name="ZoomPercent" xml:space="preserve"><value>{0}%</value></data>
+  <data name="ZoomReset" xml:space="preserve"><value>Back to 100% (Ctrl+0)</value></data>
+  <data name="QueryDatabase" xml:space="preserve"><value>Database</value></data>
+  <data name="QuerySchema" xml:space="preserve"><value>Schema</value></data>
+  <data name="QueryConnection" xml:space="preserve"><value>Connection</value></data>
+  <data name="ExplorerFilter" xml:space="preserve"><value>Filter by name…</value></data>
 </root>

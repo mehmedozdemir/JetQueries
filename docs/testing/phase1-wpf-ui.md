@@ -18,6 +18,29 @@ dotnet run --project src/JetQueries.Wpf
 - [ ] Ctrl+N opens a new query tab; closing every tab shows the "No open queries" state with a button.
 - [ ] Turkish and English UI texts, including the grid's own menus (right-click a header or a cell).
 
+## Settings, density and zoom
+- [ ] The layout is tighter than before (toolbar, margins, tabs, tree rows) and nothing is clipped.
+- [ ] Toolbar → Settings: theme; UI font and text size (11–16); SQL editor font and size (9–24) with a sample
+      line; result grid text size (11–18). Every change shows at once in the window behind; Cancel or the
+      title bar's × puts everything back; Save keeps it and it is there after a restart
+      (`%AppData%\JetQueries\appearance.json`); Defaults fills in the original values.
+- [ ] Editor: Ctrl+mouse wheel and Ctrl+plus/minus zoom in 10 % steps (50–400 %); the zoom shows bottom
+      right ("%110"); a click on it or Ctrl+0 goes back to 100 %.
+- [ ] Result grid: Ctrl+mouse wheel zooms, a "%120" badge appears bottom right while zoomed; a click on it or
+      Ctrl+0 goes back to 100 % (100 % = the grid text size of the settings).
+
+## Active database (SSMS-style)
+- [ ] A query tab shows its connection and, next to it, its current database (Oracle: current schema). The list
+      offers the databases the login can enter; choosing one switches only this tab.
+- [ ] Run `USE master` (SQL Server): the selector follows. Choose a database and press F5 at once: the query runs
+      in the database just chosen.
+- [ ] Two tabs on the same connection can be in different databases at the same time; a long query in one does
+      not block the other.
+- [ ] A database that cannot be entered: the server's message in the status bar, the selector goes back.
+- [ ] PostgreSQL: choosing another database reconnects the tab to it (`SELECT current_database()`).
+      SQLite: no database selector.
+- [ ] Completion after switching database (SQL Server) offers the tables of the new database.
+
 ## Connections and explorer
 - [ ] New connection opens the dialog; the provider list shows names (not type names); provider settings,
       sign-in, folder, environment and read-only fields work; Browse picks an SQLite file.
@@ -26,6 +49,12 @@ dotnet run --project src/JetQueries.Wpf
 - [ ] The explorer shows folders, environment dots (green / amber / red), the "connected" and "read-only"
       badges; double-click connects; expanding shows databases/schemas/groups/tables/columns with icons.
 - [ ] A connection error is shown in red with the message as a tool tip.
+- [ ] The filter box under the explorer's buttons hides what does not match, ignoring case (Turkish rules);
+      parents of matches stay, everything under a match stays; nodes expanded later are filtered too; Esc or ×
+      clears it.
+- [ ] Right-click on a connected connection, a database, a schema, a group or an object: "New query" opens a tab
+      on that connection, in that database (Oracle: that schema); the menu also has Connect/Disconnect and
+      Refresh. Right-click selects the node first.
 
 ## Editor and results
 - [ ] Syntax colours follow UiKit's tokens (keywords blue, strings green, numbers orange, comments italic).
@@ -63,4 +92,9 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - Sorting and filtering apply to the rows received, not to the database query (no ORDER BY / WHERE is added).
 - Filters on several columns are combined with AND; there is no OR.
 - Idle memory of the WPF application is about 370 MB (budget: 200 MB); not investigated yet.
+- The editor's zoom is shared by the query tabs (one editor view shows the selected tab).
+- The explorer filter searches what has been loaded (expanded) so far, not the whole catalog.
+- PostgreSQL: after switching a tab's database, completion and the explorer still read the connection's own
+  database (their metadata connection is not switched).
+- Each query tab after the first holds its own server connection while it is open (as in SSMS).
 - The Avalonia application still builds (`JetQueries.Avalonia.exe`) but is no longer packaged or developed.

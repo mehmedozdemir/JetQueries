@@ -10,6 +10,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Velopack;
 
+using IThemeService = JetQueries.Desktop.Services.IThemeService;
+
 namespace JetQueries.Desktop;
 
 internal static class Program

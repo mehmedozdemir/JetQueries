@@ -68,6 +68,17 @@ public class SqlEditor : UserControl
         nameof(SelectionBrush), typeof(Brush), typeof(SqlEditor),
         new PropertyMetadata(null, static (d, e) => ((SqlEditor)d)._editor.TextArea.SelectionBrush = e.NewValue as Brush));
 
+    /// <summary>Zoom factor of the text: 1 is the editor font size; Ctrl+wheel and Ctrl+0 change it.</summary>
+    public static readonly DependencyProperty ZoomProperty = DependencyProperty.Register(
+        nameof(Zoom), typeof(double), typeof(SqlEditor),
+        new FrameworkPropertyMetadata(1.0, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, static (d, _) => ((SqlEditor)d).UpdateFont(), static (_, v) => ClampZoom((double)v)));
+
+    /// <summary>Smallest and largest zoom.</summary>
+    public const double MinZoom = 0.5;
+
+    /// <inheritdoc cref="MinZoom" />
+    public const double MaxZoom = 4;
+
     private readonly TextEditor _editor;
     private readonly SqlColorizer _colorizer;
     private readonly DispatcherTimer _diagnosticTimer;
@@ -84,8 +95,6 @@ public class SqlEditor : UserControl
         _editor = new TextEditor
         {
             ShowLineNumbers = true,
-            FontFamily = new FontFamily("Cascadia Mono, Consolas"),
-            FontSize = 13,
             Background = Brushes.Transparent,
             HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
@@ -99,6 +108,9 @@ public class SqlEditor : UserControl
         _editor.TextArea.SelectionCornerRadius = 2;
         _editor.TextArea.SelectionBorder = null;
         _editor.SetBinding(ForegroundProperty, new System.Windows.Data.Binding(nameof(Foreground)) { Source = this });
+        _editor.SetBinding(FontFamilyProperty, new System.Windows.Data.Binding(nameof(FontFamily)) { Source = this });
+        UpdateFont();
+        PreviewMouseWheel += OnPreviewMouseWheel;
 
         _colorizer = new SqlColorizer(this);
         _editor.TextArea.TextView.LineTransformers.Add(_colorizer);
@@ -152,6 +164,16 @@ public class SqlEditor : UserControl
     /// <summary>The labels in the completion list, in order; empty when it is not showing.</summary>
     public IReadOnlyList<string> CompletionLabels =>
         _completionWindow is null ? [] : [.. _completionWindow.CompletionList.CompletionData.Select(static d => d.Text)];
+
+    /// <summary>Zoom factor of the text (1 = 100 %).</summary>
+    public double Zoom
+    {
+        get => (double)GetValue(ZoomProperty);
+        set => SetValue(ZoomProperty, value);
+    }
+
+    /// <summary>One zoom step in or out from <paramref name="zoom"/>: 10 % steps, as in Visual Studio.</summary>
+    public static double StepZoom(double zoom, bool zoomIn) => ClampZoom(Math.Round((zoom + (zoomIn ? 0.1 : -0.1)) * 10) / 10);
 
     /// <summary>The text.</summary>
     public string Text
@@ -263,6 +285,29 @@ public class SqlEditor : UserControl
 
     internal void Redraw() => _editor.TextArea.TextView.Redraw();
 
+    private static double ClampZoom(double zoom) => double.IsFinite(zoom) ? Math.Clamp(zoom, MinZoom, MaxZoom) : 1;
+
+    /// <inheritdoc />
+    protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+    {
+        base.OnPropertyChanged(e);
+        if (e.Property == FontSizeProperty && _editor is not null)
+        {
+            UpdateFont();
+        }
+    }
+
+    private void UpdateFont() => _editor.FontSize = FontSize * Zoom;
+
+    private void OnPreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        if (Keyboard.Modifiers == ModifierKeys.Control)
+        {
+            Zoom = StepZoom(Zoom, e.Delta > 0);
+            e.Handled = true;
+        }
+    }
+
     private static DependencyProperty BrushProperty(string name) => DependencyProperty.Register(
         name, typeof(Brush), typeof(SqlEditor), new PropertyMetadata(null, static (d, _) => ((SqlEditor)d).Redraw()));
 
@@ -310,6 +355,16 @@ public class SqlEditor : UserControl
         else if (e.Key == Key.F12 && Keyboard.Modifiers == ModifierKeys.None)
         {
             NavigationRequested?.Invoke(this, _editor.CaretOffset);
+            e.Handled = true;
+        }
+        else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key is Key.D0 or Key.NumPad0)
+        {
+            Zoom = 1;
+            e.Handled = true;
+        }
+        else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key is Key.OemPlus or Key.Add or Key.OemMinus or Key.Subtract)
+        {
+            Zoom = StepZoom(Zoom, e.Key is Key.OemPlus or Key.Add);
             e.Handled = true;
         }
     }

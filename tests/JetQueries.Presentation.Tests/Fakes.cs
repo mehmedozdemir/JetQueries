@@ -195,6 +195,14 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
     /// <summary>Every request that reached the "database".</summary>
     public List<QueryRequest> Executed { get; } = [];
 
+    /// <summary>How many driver connections were opened.</summary>
+    public int OpenCount => _openCount;
+
+    private int _openCount;
+
+    /// <summary>Whether connections can switch database (SQL Server-like) or not (SQLite-like).</summary>
+    public bool SupportsDatabaseContext { get; set; } = true;
+
     /// <summary>What running SQL does; by default one result set with three rows and a message.</summary>
     public Func<QueryRequest, CancellationToken, IAsyncEnumerable<QueryEvent>> Execute { get; set; } = DefaultResult;
 
@@ -230,16 +238,55 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
     public Task<IDatabaseConnection> OpenConnectionAsync(ConnectionProfile profile, ConnectionCredential? credential, CancellationToken cancellationToken)
     {
         LastCredential = credential is null ? null : (credential.UserName, credential.Password);
-        return OpenError is null
-            ? Task.FromResult<IDatabaseConnection>(new FakeConnection(this))
-            : Task.FromException<IDatabaseConnection>(new InvalidOperationException(OpenError));
+        if (OpenError is not null)
+        {
+            return Task.FromException<IDatabaseConnection>(new InvalidOperationException(OpenError));
+        }
+
+        Interlocked.Increment(ref _openCount);
+        return Task.FromResult<IDatabaseConnection>(SupportsDatabaseContext ? new FakeContextConnection(this) : new FakeConnection(this));
     }
 
     private sealed class FakeConnection(FakeProvider owner) : IDatabaseConnection
     {
-        public IQueryExecutor Executor { get; } = new FakeExecutor(owner);
+        public IQueryExecutor Executor { get; } = new FakeExecutor(owner, null);
 
         public IMetadataProvider Metadata { get; } = new FakeMetadata(owner);
+
+        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+    }
+
+    /// <summary>A connection with a current database that starts at "Cards" and follows USE.</summary>
+    internal sealed class FakeContextConnection : IDatabaseConnection, IDatabaseContext
+    {
+        public FakeContextConnection(FakeProvider owner)
+        {
+            Executor = new FakeExecutor(owner, this);
+            Metadata = new FakeMetadata(owner);
+        }
+
+        public string Current { get; set; } = "Cards";
+
+        public IQueryExecutor Executor { get; }
+
+        public IMetadataProvider Metadata { get; }
+
+        public DatabaseContextKind Kind => DatabaseContextKind.Database;
+
+        public Task<string?> GetCurrentAsync(CancellationToken cancellationToken) => Task.FromResult<string?>(Current);
+
+        public Task<IReadOnlyList<string>> GetAvailableAsync(CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<string>>(["Cards", "master"]);
+
+        public Task ChangeAsync(string name, CancellationToken cancellationToken)
+        {
+            if (name is not ("Cards" or "master"))
+            {
+                throw new InvalidOperationException($"Database '{name}' does not exist.");
+            }
+
+            Current = name;
+            return Task.CompletedTask;
+        }
 
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     }
@@ -264,11 +311,16 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
         yield return new ResultSetCompleted(3, false);
     }
 
-    private sealed class FakeExecutor(FakeProvider owner) : IQueryExecutor
+    private sealed class FakeExecutor(FakeProvider owner, FakeContextConnection? context) : IQueryExecutor
     {
         public IAsyncEnumerable<QueryEvent> ExecuteAsync(QueryRequest request, CancellationToken cancellationToken)
         {
             owner.Executed.Add(request);
+            if (context is not null && request.Sql.StartsWith("USE ", StringComparison.OrdinalIgnoreCase))
+            {
+                context.Current = request.Sql[4..].Trim().Trim(';', '[', ']');
+            }
+
             return owner.Execute(request, cancellationToken);
         }
     }

@@ -10,6 +10,8 @@ using JetQueries.Desktop.ViewModels;
 using JetQueries.Presentation.ViewModels;
 using JetQueries.Desktop.Views;
 
+using IThemeService = JetQueries.Desktop.Services.IThemeService;
+
 namespace JetQueries.Desktop.Tests;
 
 /// <summary>

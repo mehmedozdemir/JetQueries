@@ -3,6 +3,7 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
 using UiKit.Controls;
 
@@ -26,6 +27,7 @@ public partial class ResultGridView : UserControl
     private QueryResultSet? _set;
     private bool _pending;
     private int _filterColumn = -1;
+    private double _zoom = 1;
 
     public ResultGridView()
     {
@@ -44,7 +46,54 @@ public partial class ResultGridView : UserControl
         Grid.FilterRequested += OpenFilter;
         Grid.FilterByValueRequested += (column, row, exclude) => _ = _set?.View.FilterByValueAsync(row, column, exclude);
         Grid.HideColumnRequested += HideColumn;
+
+        // Ctrl+wheel zooms the grid, Ctrl+0 goes back to 100 %; the base size comes from the settings.
+        PreviewMouseWheel += (_, e) =>
+        {
+            if (Keyboard.Modifiers == ModifierKeys.Control)
+            {
+                Zoom = Editor.SqlEditor.StepZoom(Zoom, e.Delta > 0);
+                e.Handled = true;
+            }
+        };
+        PreviewKeyDown += (_, e) =>
+        {
+            if (Keyboard.Modifiers == ModifierKeys.Control && e.Key is Key.D0 or Key.NumPad0)
+            {
+                Zoom = 1;
+                e.Handled = true;
+            }
+        };
+        Loaded += (_, _) =>
+        {
+            Services.AppearanceService.Changed += OnAppearanceChanged;
+            ApplyScale();
+        };
+        Unloaded += (_, _) => Services.AppearanceService.Changed -= OnAppearanceChanged;
     }
+
+    /// <summary>Zoom of the grid on top of the grid text size setting (1 = 100 %).</summary>
+    public double Zoom
+    {
+        get => _zoom;
+        set
+        {
+            _zoom = Math.Clamp(value, Editor.SqlEditor.MinZoom, Editor.SqlEditor.MaxZoom);
+            ApplyScale();
+        }
+    }
+
+    private void OnAppearanceChanged(object? sender, EventArgs e) => ApplyScale();
+
+    private void ApplyScale()
+    {
+        var scale = Services.AppearanceService.GridScale * _zoom;
+        Grid.LayoutTransform = Math.Abs(scale - 1) < 0.001 ? Transform.Identity : new ScaleTransform(scale, scale);
+        ZoomBadge.Content = ZoomTextConverter.Text(_zoom);
+        ZoomBadge.Visibility = Math.Abs(_zoom - 1) < 0.001 ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private void OnZoomReset(object sender, RoutedEventArgs e) => Zoom = 1;
 
     /// <summary>The grid, for tests.</summary>
     internal VirtualGrid VirtualGrid => Grid;

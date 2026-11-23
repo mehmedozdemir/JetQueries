@@ -7,20 +7,26 @@
              xmlns:v="clr-namespace:JetQueries.Wpf.Views">
     <DockPanel>
         <!-- Actions on the selected node -->
-        <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,0,1" Padding="8,6">
+        <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,0,1" Padding="6,4">
+          <StackPanel>
             <StackPanel Orientation="Horizontal">
-                <Button Style="{StaticResource Btn.Icon}" Width="28" Height="28" c:Ui.Icon="{x:Static c:Icons.Add}"
+                <Button Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="{x:Static c:Icons.Add}"
                         Command="{Binding NewCommand}" ToolTip="{x:Static res:Strings.ConnectionNew}" />
-                <Button Style="{StaticResource Btn.Icon}" Width="28" Height="28" c:Ui.Icon="{x:Static c:Icons.Edit}"
+                <Button Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="{x:Static c:Icons.Edit}"
                         Command="{Binding EditCommand}" ToolTip="{x:Static res:Strings.ConnectionEdit}" />
-                <Button Style="{StaticResource Btn.Icon}" Width="28" Height="28" c:Ui.Icon="{x:Static c:Icons.Delete}"
+                <Button Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="{x:Static c:Icons.Delete}"
                         Command="{Binding DeleteCommand}" ToolTip="{x:Static res:Strings.ConnectionDelete}" />
                 <Border Style="{StaticResource Separator.Vertical}" Height="16" Margin="4,0" />
-                <Button Style="{StaticResource Btn.Toolbar}" Height="28" c:Ui.Icon="{x:Static c:Icons.Plug}" Padding="8,0"
+                <Button Style="{StaticResource Btn.Toolbar}" Height="26" c:Ui.Icon="{x:Static c:Icons.Plug}" Padding="8,0"
                         Content="{Binding ToggleConnectionText}" Command="{Binding ToggleConnectionCommand}" />
-                <Button Style="{StaticResource Btn.Icon}" Width="28" Height="28" c:Ui.Icon="{x:Static c:Icons.Refresh}"
+                <Button Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="{x:Static c:Icons.Refresh}"
                         Command="{Binding ReloadSelectedCommand}" ToolTip="{x:Static res:Strings.ExplorerRefresh}" />
             </StackPanel>
+            <!-- Filter by name over what is loaded (Esc clears) -->
+            <c:SearchBox x:Name="Filter" Margin="0,4,0,2" Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged, Delay=200}"
+                         c:Ui.Placeholder="{x:Static res:Strings.ExplorerFilter}"
+                         Visibility="{Binding IsEmpty, Converter={x:Static v:InverseBoolToVisibilityConverter.Instance}}" />
+          </StackPanel>
         </Border>
 
         <Grid>
@@ -43,6 +49,24 @@
                     <Style TargetType="TreeViewItem" BasedOn="{StaticResource {x:Type TreeViewItem}}">
                         <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
                         <Setter Property="c:Ui.Icon" Value="{Binding Converter={x:Static v:ExplorerIconConverter.Instance}}" />
+                        <Setter Property="Visibility" Value="{Binding IsVisible, Converter={StaticResource BoolToVisibility}}" />
+                        <!-- The tree's view model, for the context menu (which is not in the visual tree). -->
+                        <Setter Property="Tag" Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=TreeView}}" />
+                        <EventSetter Event="PreviewMouseRightButtonDown" Handler="OnItemRightButtonDown" />
+                        <Setter Property="ContextMenu">
+                            <Setter.Value>
+                                <ContextMenu>
+                                    <MenuItem Header="{x:Static res:Strings.QueryNew}" c:Ui.Icon="{x:Static c:Icons.Add}"
+                                              Command="{Binding PlacementTarget.Tag.NewQueryCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                              CommandParameter="{Binding}" />
+                                    <MenuItem Header="{Binding PlacementTarget.Tag.ToggleConnectionText, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                              c:Ui.Icon="{x:Static c:Icons.Plug}"
+                                              Command="{Binding PlacementTarget.Tag.ToggleConnectionCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                    <MenuItem Header="{x:Static res:Strings.ExplorerRefresh}" c:Ui.Icon="{x:Static c:Icons.Refresh}"
+                                              Command="{Binding PlacementTarget.Tag.ReloadSelectedCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                </ContextMenu>
+                            </Setter.Value>
+                        </Setter>
                     </Style>
                 </TreeView.ItemContainerStyle>
                 <TreeView.Resources>

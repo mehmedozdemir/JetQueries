@@ -3,24 +3,48 @@
 -->
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime"
                     xmlns:c="clr-namespace:UiKit.Controls;assembly=UiKit.Wpf"
                     xmlns:v="clr-namespace:JetQueries.Wpf.Views"
                     xmlns:e="clr-namespace:JetQueries.Wpf.Editor">
 
     <FontFamily x:Key="Font.Code">Cascadia Mono, Consolas</FontFamily>
+    <sys:Double x:Key="FontSize.Code">13</sys:Double>
+
+    <!-- Tighter than UiKit's defaults: more room for data. -->
+    <Thickness x:Key="Space.Page.Compact">8,6,8,0</Thickness>
+    <Style x:Key="Toolbar.Compact" TargetType="Border" BasedOn="{StaticResource Toolbar}">
+        <Setter Property="Padding" Value="10,5" />
+    </Style>
+    <Style x:Key="Btn.Toolbar.Compact" TargetType="ButtonBase" BasedOn="{StaticResource Btn.Toolbar}">
+        <Setter Property="Height" Value="30" />
+        <Setter Property="Padding" Value="8,0" />
+    </Style>
+    <Style x:Key="Btn.Icon.Compact" TargetType="ButtonBase" BasedOn="{StaticResource Btn.Icon}">
+        <Setter Property="Width" Value="30" />
+        <Setter Property="Height" Value="30" />
+    </Style>
+    <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
+        <Setter Property="Padding" Value="10,6" />
+    </Style>
+    <Style TargetType="TreeViewItem" BasedOn="{StaticResource {x:Type TreeViewItem}}">
+        <Setter Property="Padding" Value="2,2,8,2" />
+    </Style>
 
     <!-- Windows of the application. -->
     <Style x:Key="Window.App" TargetType="Window">
         <Setter Property="Background" Value="{DynamicResource Brush.Window}" />
         <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
-        <Setter Property="FontFamily" Value="{StaticResource Font.UI}" />
-        <Setter Property="FontSize" Value="{StaticResource FontSize.Body}" />
+        <Setter Property="FontFamily" Value="{DynamicResource Font.UI}" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}" />
         <Setter Property="UseLayoutRounding" Value="True" />
         <Setter Property="TextOptions.TextFormattingMode" Value="Display" />
     </Style>
 
     <!-- The SQL editor takes its colours from UiKit's syntax tokens. -->
     <Style TargetType="e:SqlEditor">
+        <Setter Property="FontFamily" Value="{DynamicResource Font.Code}" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSize.Code}" />
         <Setter Property="Foreground" Value="{DynamicResource Brush.Syntax.Identifier}" />
         <Setter Property="KeywordBrush" Value="{DynamicResource Brush.Syntax.Keyword}" />
         <Setter Property="StringBrush" Value="{DynamicResource Brush.Syntax.String}" />
@@ -37,7 +61,7 @@
 
     <!-- Explorer and history rows: secondary text next to a name. -->
     <Style x:Key="Text.Badge" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="11" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSize.Section}" />
         <Setter Property="Foreground" Value="{DynamicResource Brush.TextMuted}" />
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="Margin" Value="8,0,0,0" />

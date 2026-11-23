@@ -93,7 +93,7 @@ public sealed class PostgreSqlProvider : IDatabaseProvider, IConnectionSettingsP
         try
         {
             var connection = await dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
-            return new PostgreSqlDatabaseConnection(dataSource, connection);
+            return new PostgreSqlDatabaseConnection(profile, credential, dataSource, connection);
         }
         catch
         {
@@ -103,16 +103,95 @@ public sealed class PostgreSqlProvider : IDatabaseProvider, IConnectionSettingsP
     }
 }
 
-internal sealed class PostgreSqlDatabaseConnection(NpgsqlDataSource dataSource, NpgsqlConnection connection) : IDatabaseConnection
+/// <summary>
+/// A session connection. A PostgreSQL connection is to one database; switching database (the query window's
+/// selector) opens a connection to the other database and replaces this one's.
+/// </summary>
+internal sealed class PostgreSqlDatabaseConnection : IDatabaseConnection, IDatabaseContext
 {
-    public IQueryExecutor Executor { get; } = new PostgreSqlQueryExecutor(connection);
+    private readonly ConnectionProfile _profile;
 
-    public IMetadataProvider Metadata { get; } = new PostgreSqlMetadataProvider(connection);
+    // Kept in memory only, for as long as the connection, to connect to another database.
+    private readonly ConnectionCredential? _credential;
+    private NpgsqlDataSource _dataSource;
+    private NpgsqlConnection _connection;
+
+    public PostgreSqlDatabaseConnection(ConnectionProfile profile, ConnectionCredential? credential, NpgsqlDataSource dataSource, NpgsqlConnection connection)
+    {
+        _profile = profile;
+        _credential = credential;
+        _dataSource = dataSource;
+        _connection = connection;
+        Executor = new PostgreSqlQueryExecutor(() => _connection);
+        Metadata = new PostgreSqlMetadataProvider(() => _connection);
+    }
+
+    public IQueryExecutor Executor { get; }
+
+    public IMetadataProvider Metadata { get; }
+
+    public DatabaseContextKind Kind => DatabaseContextKind.Database;
+
+    public Task<string?> GetCurrentAsync(CancellationToken cancellationToken) => Task.FromResult<string?>(_connection.Database);
+
+    public async Task<IReadOnlyList<string>> GetAvailableAsync(CancellationToken cancellationToken)
+    {
+        var command = _connection.CreateCommand();
+        await using (command.ConfigureAwait(false))
+        {
+            command.CommandText = """
+                SELECT d.datname FROM pg_database d
+                WHERE d.datallowconn AND NOT d.datistemplate AND has_database_privilege(d.datname, 'CONNECT')
+                ORDER BY d.datname
+                """;
+            command.CommandTimeout = 30;
+            var names = new List<string>();
+            var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+            await using (reader.ConfigureAwait(false))
+            {
+                while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+                {
+                    names.Add(reader.GetString(0));
+                }
+            }
+
+            return names;
+        }
+    }
+
+    public async Task ChangeAsync(string name, CancellationToken cancellationToken)
+    {
+        if (string.Equals(name, _connection.Database, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        // The new connection is opened first: if it fails, the window stays where it was.
+        var settings = new Dictionary<string, string>(_profile.Settings, StringComparer.OrdinalIgnoreCase) { [PostgreSqlConnectionSettings.Database] = name };
+        var dataSource = new NpgsqlDataSourceBuilder(PostgreSqlConnectionSettings.BuildConnectionString(_profile with { Settings = settings }, _credential))
+            .EnableUnmappedTypes()
+            .Build();
+        NpgsqlConnection connection;
+        try
+        {
+            connection = await dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            await dataSource.DisposeAsync().ConfigureAwait(false);
+            throw;
+        }
+
+        var (oldSource, oldConnection) = (_dataSource, _connection);
+        (_dataSource, _connection) = (dataSource, connection);
+        await oldConnection.DisposeAsync().ConfigureAwait(false);
+        await oldSource.DisposeAsync().ConfigureAwait(false);
+    }
 
     public async ValueTask DisposeAsync()
     {
-        await connection.DisposeAsync().ConfigureAwait(false);
-        await dataSource.DisposeAsync().ConfigureAwait(false);
+        await _connection.DisposeAsync().ConfigureAwait(false);
+        await _dataSource.DisposeAsync().ConfigureAwait(false);
     }
 }
 

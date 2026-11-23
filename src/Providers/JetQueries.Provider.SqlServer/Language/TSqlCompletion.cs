@@ -45,12 +45,12 @@ internal sealed class TSqlDialect : SqlDialect
     }
 
     public override DatabaseObject SchemaParent(SqlDocument document, string? database, string? schema) =>
-        new(new DatabaseObjectName(database, null, schema ?? DefaultSchema(document)), DatabaseObjectKinds.Schema);
+        new(new DatabaseObjectName(database ?? document.DefaultDatabase, null, schema ?? DefaultSchema(document)), DatabaseObjectKinds.Schema);
 
     public override DatabaseObjectName ToName(SqlDocument document, IReadOnlyList<string> parts) => parts.Count switch
     {
-        1 => new DatabaseObjectName(null, DefaultSchema(document), parts[0]),
-        2 => new DatabaseObjectName(null, parts[0], parts[1]),
+        1 => new DatabaseObjectName(document.DefaultDatabase, DefaultSchema(document), parts[0]),
+        2 => new DatabaseObjectName(document.DefaultDatabase, parts[0], parts[1]),
         _ => new DatabaseObjectName(parts[^3], parts[^2], parts[^1]),
     };
 

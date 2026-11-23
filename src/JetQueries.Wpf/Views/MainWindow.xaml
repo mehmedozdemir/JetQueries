@@ -19,10 +19,10 @@
         </Grid.RowDefinitions>
 
         <!-- ================= Toolbar ================= -->
-        <Border Style="{StaticResource Toolbar}">
+        <Border Style="{StaticResource Toolbar.Compact}">
             <DockPanel>
                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border Width="30" Height="30" CornerRadius="8" Margin="0,0,10,0">
+                    <Border Width="26" Height="26" CornerRadius="7" Margin="0,0,8,0">
                         <Border.Background>
                             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                                 <GradientStop Color="#FF6E8BFF" Offset="0" />
@@ -31,30 +31,32 @@
                         </Border.Background>
                         <TextBlock Text="{x:Static c:Icons.Database}" Style="{StaticResource Text.Icon}" Foreground="White" FontSize="15" />
                     </Border>
-                    <TextBlock Text="JetQueries" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,14,0" />
+                    <TextBlock Text="JetQueries" FontSize="{DynamicResource FontSize.Subtitle}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,10,0" />
 
-                    <Button Style="{StaticResource Btn.Toolbar}" c:Ui.Icon="{x:Static c:Icons.Plug}" Content="{x:Static res:Strings.ConnectionNewLong}"
+                    <Button Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.Plug}" Content="{x:Static res:Strings.ConnectionNewLong}"
                             Command="{Binding Connections.NewCommand}" />
-                    <Button Style="{StaticResource Btn.Toolbar}" c:Ui.Icon="{x:Static c:Icons.Add}" Content="{x:Static res:Strings.QueryNew}"
+                    <Button Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.Add}" Content="{x:Static res:Strings.QueryNew}"
                             Command="{Binding Documents.NewQueryCommand}" ToolTip="{x:Static res:Strings.QueryNewTip}" />
                     <Border Style="{StaticResource Separator.Vertical}" />
-                    <Button Style="{StaticResource Btn.Toolbar}" c:Ui.Icon="{x:Static c:Icons.Play}" Content="{x:Static res:Strings.QueryRun}"
+                    <Button Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.Play}" Content="{x:Static res:Strings.QueryRun}"
                             Command="{Binding Documents.Selected.RunCommand}" ToolTip="{x:Static res:Strings.QueryRunTip}" />
-                    <Button Style="{StaticResource Btn.Toolbar}" c:Ui.Icon="{x:Static c:Icons.Stop}" Content="{x:Static res:Strings.QueryCancel}"
+                    <Button Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.Stop}" Content="{x:Static res:Strings.QueryCancel}"
                             Command="{Binding Documents.Selected.CancelCommand}" ToolTip="{x:Static res:Strings.QueryCancelTip}" />
                 </StackPanel>
 
-                <Button x:Name="ThemeButton" DockPanel.Dock="Right" Style="{StaticResource Btn.Icon}"
-                        Command="{Binding ToggleThemeCommand}" ToolTip="{x:Static res:Strings.ToggleTheme}" Margin="8,0,0,0" />
+                <Button x:Name="ThemeButton" DockPanel.Dock="Right" Style="{StaticResource Btn.Icon.Compact}"
+                        Command="{Binding ToggleThemeCommand}" ToolTip="{x:Static res:Strings.ToggleTheme}" Margin="4,0,0,0" />
+                <Button DockPanel.Dock="Right" Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.Settings}"
+                        Content="{x:Static res:Strings.Settings}" Command="{Binding OpenSettingsCommand}" ToolTip="{x:Static res:Strings.SettingsTip}" />
                 <Grid />
             </DockPanel>
         </Border>
 
         <!-- ================= Body ================= -->
-        <Grid Grid.Row="1" Margin="{StaticResource Space.Page}">
+        <Grid Grid.Row="1" Margin="{StaticResource Space.Page.Compact}">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="300" MinWidth="200" />
-                <ColumnDefinition Width="10" />
+                <ColumnDefinition Width="280" MinWidth="200" />
+                <ColumnDefinition Width="8" />
                 <ColumnDefinition Width="*" MinWidth="320" />
             </Grid.ColumnDefinitions>
 
@@ -70,14 +72,14 @@
                 </TabControl>
             </Border>
 
-            <GridSplitter Grid.Column="1" Width="10" HorizontalAlignment="Stretch" ResizeBehavior="PreviousAndNext" />
+            <GridSplitter Grid.Column="1" Width="8" HorizontalAlignment="Stretch" ResizeBehavior="PreviousAndNext" />
 
             <!-- Query tabs -->
             <v:DocumentsView Grid.Column="2" DataContext="{Binding Documents}" />
         </Grid>
 
         <!-- ================= Status bar ================= -->
-        <DockPanel Grid.Row="2" Height="{StaticResource Size.StatusBar}" Margin="14,0">
+        <DockPanel Grid.Row="2" Height="26" Margin="10,0">
             <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
                 <TextBlock Text="{Binding Documents.Selected.Status}" Style="{StaticResource Text.Status}" Foreground="{DynamicResource Brush.Text}" />
             </StackPanel>

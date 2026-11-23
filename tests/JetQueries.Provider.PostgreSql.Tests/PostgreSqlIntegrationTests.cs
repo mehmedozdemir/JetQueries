@@ -300,6 +300,27 @@ public sealed class PostgreSqlIntegrationTests(PostgreSqlFixture fixture) : ICla
         Assert.Equal(2L, events.OfType<RowBatch>().Single().Rows[0][0]);
     }
 
+    [Fact]
+    public async Task Switching_database_reconnects_the_window_to_the_other_database()
+    {
+        await using var connection = await OpenAsync();
+        var context = Assert.IsAssignableFrom<IDatabaseContext>(connection);
+        var start = await context.GetCurrentAsync(Token);
+        var databases = await context.GetAvailableAsync(Token);
+        Assert.Contains("postgres", databases);
+        Assert.Contains(start!, databases);
+
+        await context.ChangeAsync("postgres", Token);
+        Assert.Equal("postgres", await context.GetCurrentAsync(Token));
+        var rows = (await Collect(connection.Executor.ExecuteAsync(new QueryRequest("SELECT current_database()"), Token))).OfType<RowBatch>().Single();
+        Assert.Equal("postgres", rows.Rows[0][0]);
+
+        // A database that does not exist: the window stays where it was.
+        await Assert.ThrowsAnyAsync<Exception>(() => context.ChangeAsync("no_such_database_here", Token));
+        Assert.Equal("postgres", await context.GetCurrentAsync(Token));
+        Assert.Single((await Collect(connection.Executor.ExecuteAsync(new QueryRequest("SELECT 1"), Token))).OfType<RowBatch>());
+    }
+
     private async Task<IDatabaseConnection> OpenAsync()
     {
         if (fixture.SkipReason is { } reason)
