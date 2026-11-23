@@ -125,7 +125,8 @@ public sealed class ObjectExplorerTests
     public async Task The_tree_follows_the_providers_capabilities()
     {
         await using var env = new TestEnvironment();
-        env.Provider.Capabilities = ProviderCapabilities.Schemas | ProviderCapabilities.Routines | ProviderCapabilities.Packages;
+        env.Provider.Capabilities = ProviderCapabilities.Schemas | ProviderCapabilities.Routines | ProviderCapabilities.Packages |
+            ProviderCapabilities.Synonyms | ProviderCapabilities.UserTypes;
         var (_, oracleLike) = await ConnectAsync(env);
 
         // No database level: schemas come first, and packages appear instead of sequences.
@@ -137,7 +138,7 @@ public sealed class ObjectExplorerTests
         await using var flat = new TestEnvironment();
         flat.Provider.Capabilities = ProviderCapabilities.None;
         var (_, sqliteLike) = await ConnectAsync(flat);
-        Assert.Equal(["Tables", "Views", "Synonyms", "Types"], sqliteLike.Children.Select(static c => c.Name));
+        Assert.Equal(["Tables", "Views"], sqliteLike.Children.Select(static c => c.Name));
         var tables = (CategoryNodeViewModel)sqliteLike.Children[0];
         await ExpandAsync(tables);
         Assert.Equal(3, tables.Children.Count);

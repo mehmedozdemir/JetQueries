@@ -1,0 +1,212 @@
+using System.Globalization;
+using JetQueries.Provider.PostgreSql.Language;
+using JetQueries.Providers.Language;
+using JetQueries.Sdk;
+using Npgsql;
+
+namespace JetQueries.Provider.PostgreSql;
+
+/// <summary>Entry point of the PostgreSQL extension.</summary>
+public sealed class PostgreSqlExtension : IExtension
+{
+    /// <inheritdoc />
+    public void Initialize(IExtensionContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        context.RegisterDatabaseProvider(new PostgreSqlProvider());
+    }
+}
+
+/// <summary>Database provider for PostgreSQL, on the Npgsql driver.</summary>
+public sealed class PostgreSqlProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter
+{
+    /// <summary>The provider identifier stored in connection profiles.</summary>
+    public const string ProviderId = "postgresql";
+
+    /// <inheritdoc />
+    public string Id => ProviderId;
+
+    /// <inheritdoc />
+    public string DisplayName => "PostgreSQL";
+
+    /// <inheritdoc />
+    public ProviderCapabilities Capabilities =>
+        ProviderCapabilities.Schemas | ProviderCapabilities.MultipleResultSets | ProviderCapabilities.Transactions |
+        ProviderCapabilities.ServerSideCancel | ProviderCapabilities.Routines | ProviderCapabilities.Sequences | ProviderCapabilities.UserTypes;
+
+    /// <inheritdoc />
+    public ISqlLanguageService? LanguageService { get; } = new GenericLanguageService(PostgreSqlDialect.Instance);
+
+    /// <inheritdoc />
+    public IReadOnlyList<ConnectionSettingDescriptor> ConnectionSettings { get; } =
+    [
+        new(PostgreSqlConnectionSettings.Host, "Host", ConnectionSettingKind.Text) { IsRequired = true },
+        new(PostgreSqlConnectionSettings.Port, "Port", ConnectionSettingKind.Number) { DefaultValue = "5432" },
+        new(PostgreSqlConnectionSettings.Database, "Database", ConnectionSettingKind.Text) { DefaultValue = "postgres" },
+        new(PostgreSqlConnectionSettings.SslMode, "SSL", ConnectionSettingKind.Choice)
+        {
+            DefaultValue = "prefer",
+            Options =
+            [
+                new("prefer", "Prefer"), new("disable", "Disable"), new("require", "Require"), new("verify-ca", "Verify CA"),
+                new("verify-full", "Verify full"),
+            ],
+        },
+        new(PostgreSqlConnectionSettings.ConnectTimeoutSeconds, "Connect timeout (s)", ConnectionSettingKind.Number) { DefaultValue = "15" },
+    ];
+
+    /// <inheritdoc />
+    public bool RequiresCredential(IReadOnlyDictionary<string, string> settings) => true;
+
+    /// <inheritdoc />
+    public NetworkEndpoint? GetEndpoint(IReadOnlyDictionary<string, string> settings)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+
+        // Several hosts (failover) or a Unix socket directory cannot be probed as one TCP endpoint.
+        return settings.TryGetValue(PostgreSqlConnectionSettings.Host, out var host) && !string.IsNullOrWhiteSpace(host) &&
+               !host.Contains(',', StringComparison.Ordinal) && !host.TrimStart().StartsWith('/') &&
+               PostgreSqlConnectionSettings.TryGetPort(settings, out var port)
+            ? new NetworkEndpoint(host.Trim(), port)
+            : null;
+    }
+
+    /// <inheritdoc />
+    public IReadOnlyList<ScriptBatch> SplitBatches(string script) =>
+        SqlStatementSplitter.Split(script, PostgreSqlSyntax.Tokenizer.Tokenize(script), StatementBlockRule.BeginAtomic);
+
+    /// <inheritdoc />
+    public string QuoteIdentifier(string identifier) => PostgreSqlNames.Quote(identifier);
+
+    /// <inheritdoc />
+    public async Task<IDatabaseConnection> OpenConnectionAsync(
+        ConnectionProfile profile,
+        ConnectionCredential? credential,
+        CancellationToken cancellationToken)
+    {
+        // The connection string holds the password: it lives only in this local and inside the driver.
+        var connection = new NpgsqlConnection(PostgreSqlConnectionSettings.BuildConnectionString(profile, credential));
+        try
+        {
+            await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            await connection.DisposeAsync().ConfigureAwait(false);
+            throw;
+        }
+
+        return new PostgreSqlDatabaseConnection(connection);
+    }
+}
+
+internal sealed class PostgreSqlDatabaseConnection(NpgsqlConnection connection) : IDatabaseConnection
+{
+    public IQueryExecutor Executor { get; } = new PostgreSqlQueryExecutor(connection);
+
+    public IMetadataProvider Metadata { get; } = new PostgreSqlMetadataProvider(connection);
+
+    public ValueTask DisposeAsync() => connection.DisposeAsync();
+}
+
+internal static class PostgreSqlNames
+{
+    /// <summary>Double-quotes one identifier part, doubling any double quote inside it.</summary>
+    public static string Quote(string identifier)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(identifier);
+        if (identifier.Contains('\0', StringComparison.Ordinal))
+        {
+            throw new ArgumentException("A PostgreSQL identifier cannot contain a NUL character.", nameof(identifier));
+        }
+
+        return "\"" + identifier.Replace("\"", "\"\"", StringComparison.Ordinal) + "\"";
+    }
+
+    /// <summary>Quoted <c>"schema"."name"</c>.</summary>
+    public static string Quote(string? schema, string name) => string.IsNullOrEmpty(schema) ? Quote(name) : Quote(schema) + "." + Quote(name);
+
+    /// <summary>A string literal, for DDL text the provider writes itself (never for executing values).</summary>
+    public static string Literal(string value) => "'" + value.Replace("'", "''", StringComparison.Ordinal) + "'";
+}
+
+/// <summary>
+/// Turns a connection profile into an Npgsql connection string. Settings: <c>host</c> (required), <c>port</c>
+/// (default 5432), <c>database</c> (default postgres), <c>sslMode</c> (<c>prefer</c>, <c>disable</c>,
+/// <c>require</c>, <c>verify-ca</c>, <c>verify-full</c>), <c>connectTimeoutSeconds</c> (default 15).
+/// </summary>
+internal static class PostgreSqlConnectionSettings
+{
+    public const string Host = "host";
+    public const string Port = "port";
+    public const string Database = "database";
+    public const string SslMode = "sslMode";
+    public const string ConnectTimeoutSeconds = "connectTimeoutSeconds";
+
+    public static bool TryGetPort(IReadOnlyDictionary<string, string> settings, out int port)
+    {
+        port = 5432;
+        return !settings.TryGetValue(Port, out var text) || string.IsNullOrWhiteSpace(text) ||
+               (int.TryParse(text.Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out port) && port is >= 1 and <= 65535);
+    }
+
+    /// <summary>Builds the connection string. The result contains the password and must never be logged or stored.</summary>
+    /// <exception cref="ArgumentException">A setting is missing or has a value that is not understood.</exception>
+    public static string BuildConnectionString(ConnectionProfile profile, ConnectionCredential? credential)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+        var settings = profile.Settings;
+        if (!settings.TryGetValue(Host, out var host) || string.IsNullOrWhiteSpace(host))
+        {
+            throw new ArgumentException("The connection has no host.", nameof(profile));
+        }
+
+        if (!TryGetPort(settings, out var port))
+        {
+            throw new ArgumentException($"'{Port}' must be a whole number from 1 to 65535.", nameof(profile));
+        }
+
+        if (string.IsNullOrEmpty(credential?.UserName))
+        {
+            throw new ArgumentException("A PostgreSQL connection needs a user name.", nameof(credential));
+        }
+
+        var database = settings.GetValueOrDefault(Database)?.Trim();
+        var builder = new NpgsqlConnectionStringBuilder
+        {
+            Host = host.Trim(),
+            Port = port,
+            Database = string.IsNullOrEmpty(database) ? "postgres" : database,
+            Username = credential.UserName,
+            Password = credential.Password ?? string.Empty,
+            PersistSecurityInfo = false,
+            ApplicationName = "JetQueries",
+            Timeout = 15,
+
+            // Disconnecting in the explorer closes the server session instead of parking it in a pool.
+            Pooling = false,
+        };
+
+        builder.SslMode = settings.GetValueOrDefault(SslMode, "prefer").Trim().ToUpperInvariant() switch
+        {
+            "" or "PREFER" => Npgsql.SslMode.Prefer,
+            "DISABLE" => Npgsql.SslMode.Disable,
+            "REQUIRE" => Npgsql.SslMode.Require,
+            "VERIFY-CA" => Npgsql.SslMode.VerifyCA,
+            "VERIFY-FULL" => Npgsql.SslMode.VerifyFull,
+            _ => throw new ArgumentException($"Unknown SSL mode '{settings[SslMode]}'.", nameof(profile)),
+        };
+
+        if (settings.TryGetValue(ConnectTimeoutSeconds, out var timeout) && !string.IsNullOrWhiteSpace(timeout))
+        {
+            if (!int.TryParse(timeout.Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out var seconds) || seconds is < 1 or > 600)
+            {
+                throw new ArgumentException($"'{ConnectTimeoutSeconds}' must be a whole number from 1 to 600.", nameof(profile));
+            }
+
+            builder.Timeout = seconds;
+        }
+
+        return builder.ConnectionString;
+    }
+}

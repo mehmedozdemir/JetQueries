@@ -57,6 +57,9 @@ public enum ConnectionSettingKind
 
     /// <summary>One of <see cref="ConnectionSettingDescriptor.Options"/>.</summary>
     Choice,
+
+    /// <summary>A path to a local file; the host offers to browse for it.</summary>
+    FilePath,
 }
 
 /// <summary>An allowed value of a choice setting.</summary>

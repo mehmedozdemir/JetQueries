@@ -114,6 +114,9 @@ public static class Strings
     public static string HistoryCanceled => Get(nameof(HistoryCanceled));
     public static string HistoryClearConfirmTitle => Get(nameof(HistoryClearConfirmTitle));
     public static string HistoryClearConfirmMessage => Get(nameof(HistoryClearConfirmMessage));
+    public static string Browse => Get(nameof(Browse));
+    public static string BrowseDatabaseFile => Get(nameof(BrowseDatabaseFile));
+    public static string DatabaseFiles => Get(nameof(DatabaseFiles));
 
     /// <summary>A string looked up by a computed name (for example <c>Setting_server</c>), or null if there is none.</summary>
     public static string? Find(string name) => Manager.GetString(name, CultureInfo.CurrentUICulture);

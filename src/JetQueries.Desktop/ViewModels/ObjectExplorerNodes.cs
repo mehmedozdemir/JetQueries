@@ -189,8 +189,16 @@ internal static class ExplorerTree
             categories.Add(new CategoryNodeViewModel(context, Strings.CategorySequences, parent, DatabaseObjectKinds.Sequence));
         }
 
-        categories.Add(new CategoryNodeViewModel(context, Strings.CategorySynonyms, parent, DatabaseObjectKinds.Synonym));
-        categories.Add(new CategoryNodeViewModel(context, Strings.CategoryTypes, parent, DatabaseObjectKinds.Type));
+        if (capabilities.HasFlag(ProviderCapabilities.Synonyms))
+        {
+            categories.Add(new CategoryNodeViewModel(context, Strings.CategorySynonyms, parent, DatabaseObjectKinds.Synonym));
+        }
+
+        if (capabilities.HasFlag(ProviderCapabilities.UserTypes))
+        {
+            categories.Add(new CategoryNodeViewModel(context, Strings.CategoryTypes, parent, DatabaseObjectKinds.Type));
+        }
+
         return categories;
     }
 

@@ -22,9 +22,11 @@
     <PackageVersion Include="MinVer" Version="8.0.0" />
     <PackageVersion Include="Velopack" Version="1.2.158" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
+    <PackageVersion Include="Npgsql" Version="10.0.4" />
     <PackageVersion Include="Oracle.ManagedDataAccess.Core" Version="23.26.401" />
     <PackageVersion Include="Testcontainers.MsSql" Version="4.17.0" />
     <PackageVersion Include="Testcontainers.Oracle" Version="4.17.0" />
+    <PackageVersion Include="Testcontainers.PostgreSql" Version="4.17.0" />
     <PackageVersion Include="xunit.v3" Version="3.2.2" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
   </ItemGroup>

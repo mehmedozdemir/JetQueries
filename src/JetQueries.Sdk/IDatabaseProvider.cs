@@ -95,6 +95,12 @@ public enum ProviderCapabilities
 
     /// <summary>Sequences exist.</summary>
     Sequences = 1 << 7,
+
+    /// <summary>Synonyms (alternative names for objects) exist.</summary>
+    Synonyms = 1 << 8,
+
+    /// <summary>User-defined types exist.</summary>
+    UserTypes = 1 << 9,
 }
 
 /// <summary>

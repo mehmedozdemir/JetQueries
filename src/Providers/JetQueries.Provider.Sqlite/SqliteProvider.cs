@@ -1,0 +1,167 @@
+using JetQueries.Provider.Sqlite.Language;
+using JetQueries.Providers.Language;
+using JetQueries.Sdk;
+using Microsoft.Data.Sqlite;
+
+namespace JetQueries.Provider.Sqlite;
+
+/// <summary>Entry point of the SQLite extension.</summary>
+public sealed class SqliteExtension : IExtension
+{
+    /// <inheritdoc />
+    public void Initialize(IExtensionContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        context.RegisterDatabaseProvider(new SqliteProvider());
+    }
+}
+
+/// <summary>Database provider for SQLite database files, on Microsoft.Data.Sqlite.</summary>
+public sealed class SqliteProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter
+{
+    /// <summary>The provider identifier stored in connection profiles.</summary>
+    public const string ProviderId = "sqlite";
+
+    /// <inheritdoc />
+    public string Id => ProviderId;
+
+    /// <inheritdoc />
+    public string DisplayName => "SQLite";
+
+    /// <inheritdoc />
+    public ProviderCapabilities Capabilities => ProviderCapabilities.MultipleResultSets | ProviderCapabilities.Transactions | ProviderCapabilities.ServerSideCancel;
+
+    /// <inheritdoc />
+    public ISqlLanguageService? LanguageService { get; } = new GenericLanguageService(SqliteDialect.Instance);
+
+    /// <inheritdoc />
+    public IReadOnlyList<ConnectionSettingDescriptor> ConnectionSettings { get; } =
+    [
+        new(SqliteConnectionSettings.File, "Database file", ConnectionSettingKind.FilePath) { IsRequired = true, Hint = "a .db, .sqlite or .sqlite3 file" },
+        new(SqliteConnectionSettings.Mode, "Open", ConnectionSettingKind.Choice)
+        {
+            DefaultValue = "readWrite",
+            Options = [new("readWrite", "Read and write"), new("readOnly", "Read only"), new("create", "Create the file if it does not exist")],
+        },
+        new(SqliteConnectionSettings.ForeignKeys, "Enforce foreign keys", ConnectionSettingKind.Boolean) { DefaultValue = "true" },
+    ];
+
+    /// <inheritdoc />
+    public bool RequiresCredential(IReadOnlyDictionary<string, string> settings) => false;
+
+    /// <inheritdoc />
+    public NetworkEndpoint? GetEndpoint(IReadOnlyDictionary<string, string> settings) => null;
+
+    /// <inheritdoc />
+    public IReadOnlyList<ScriptBatch> SplitBatches(string script) =>
+        SqlStatementSplitter.Split(script, SqliteSyntax.Tokenizer.Tokenize(script), StatementBlockRule.TriggerBody);
+
+    /// <inheritdoc />
+    public string QuoteIdentifier(string identifier) => SqliteNames.Quote(identifier);
+
+    /// <inheritdoc />
+    public async Task<IDatabaseConnection> OpenConnectionAsync(
+        ConnectionProfile profile,
+        ConnectionCredential? credential,
+        CancellationToken cancellationToken)
+    {
+        var connectionString = SqliteConnectionSettings.BuildConnectionString(profile, out var path, out var mustExist);
+        if (mustExist && !File.Exists(path))
+        {
+            throw new FileNotFoundException($"The database file '{path}' does not exist.", path);
+        }
+
+        var connection = new SqliteConnection(connectionString);
+        try
+        {
+            await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            await connection.DisposeAsync().ConfigureAwait(false);
+            throw;
+        }
+
+        return new SqliteDatabaseConnection(connection);
+    }
+}
+
+internal sealed class SqliteDatabaseConnection(SqliteConnection connection) : IDatabaseConnection
+{
+    public IQueryExecutor Executor { get; } = new SqliteQueryExecutor(connection);
+
+    public IMetadataProvider Metadata { get; } = new SqliteMetadataProvider(connection);
+
+    public ValueTask DisposeAsync() => connection.DisposeAsync();
+}
+
+internal static class SqliteNames
+{
+    /// <summary>Double-quotes one identifier part, doubling any double quote inside it.</summary>
+    public static string Quote(string identifier)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(identifier);
+        if (identifier.Contains('\0', StringComparison.Ordinal))
+        {
+            throw new ArgumentException("An SQLite identifier cannot contain a NUL character.", nameof(identifier));
+        }
+
+        return "\"" + identifier.Replace("\"", "\"\"", StringComparison.Ordinal) + "\"";
+    }
+}
+
+/// <summary>
+/// Turns a connection profile into a Microsoft.Data.Sqlite connection string. Settings: <c>file</c> (required;
+/// environment variables are expanded), <c>mode</c> (<c>readWrite</c>, <c>readOnly</c>, <c>create</c>),
+/// <c>foreignKeys</c> (default true).
+/// </summary>
+internal static class SqliteConnectionSettings
+{
+    public const string File = "file";
+    public const string Mode = "mode";
+    public const string ForeignKeys = "foreignKeys";
+
+    /// <exception cref="ArgumentException">A setting is missing or has a value that is not understood.</exception>
+    public static string BuildConnectionString(ConnectionProfile profile, out string path, out bool mustExist)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+        var settings = profile.Settings;
+        if (!settings.TryGetValue(File, out var file) || string.IsNullOrWhiteSpace(file))
+        {
+            throw new ArgumentException("The connection has no database file.", nameof(profile));
+        }
+
+        file = file.Trim().Trim('"');
+        if (file.Equals(":memory:", StringComparison.OrdinalIgnoreCase) || file.StartsWith("file:", StringComparison.OrdinalIgnoreCase))
+        {
+            // Each connection of a session (queries, metadata) would get its own empty database.
+            throw new ArgumentException("Give the path of a database file; in-memory databases and URIs are not supported.", nameof(profile));
+        }
+
+        path = Path.GetFullPath(Environment.ExpandEnvironmentVariables(file));
+        var mode = settings.GetValueOrDefault(Mode, "readWrite").Trim().ToUpperInvariant() switch
+        {
+            "" or "READWRITE" => SqliteOpenMode.ReadWrite,
+            "READONLY" => SqliteOpenMode.ReadOnly,
+            "CREATE" => SqliteOpenMode.ReadWriteCreate,
+            _ => throw new ArgumentException($"Unknown mode '{settings[Mode]}'. Use 'readWrite', 'readOnly' or 'create'.", nameof(profile)),
+        };
+        mustExist = mode != SqliteOpenMode.ReadWriteCreate;
+
+        var foreignKeys = settings.GetValueOrDefault(ForeignKeys, "true").Trim();
+        var builder = new SqliteConnectionStringBuilder
+        {
+            DataSource = path,
+            Mode = mode,
+            ForeignKeys = !foreignKeys.Equals("false", StringComparison.OrdinalIgnoreCase),
+
+            // A pooled connection keeps the file open after a disconnect, so it could not be moved or deleted.
+            Pooling = false,
+
+            // Seconds to wait for a lock held by another connection (another program, or this session's
+            // other connection inside an open transaction) before reporting "database is locked".
+            DefaultTimeout = 10,
+        };
+        return builder.ConnectionString;
+    }
+}

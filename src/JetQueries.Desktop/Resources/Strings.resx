@@ -113,4 +113,13 @@
   <data name="HistoryCanceled" xml:space="preserve"><value>canceled</value></data>
   <data name="HistoryClearConfirmTitle" xml:space="preserve"><value>Clear history</value></data>
   <data name="HistoryClearConfirmMessage" xml:space="preserve"><value>Delete the whole query history? This cannot be undone.</value></data>
+  <data name="Browse" xml:space="preserve"><value>Browse…</value></data>
+  <data name="BrowseDatabaseFile" xml:space="preserve"><value>Choose a database file</value></data>
+  <data name="DatabaseFiles" xml:space="preserve"><value>Database files</value></data>
+  <data name="Setting_host" xml:space="preserve"><value>Host</value></data>
+  <data name="Setting_port" xml:space="preserve"><value>Port</value></data>
+  <data name="Setting_sslMode" xml:space="preserve"><value>SSL</value></data>
+  <data name="Setting_file" xml:space="preserve"><value>Database file</value></data>
+  <data name="Setting_mode" xml:space="preserve"><value>Open</value></data>
+  <data name="Setting_foreignKeys" xml:space="preserve"><value>Enforce foreign keys</value></data>
 </root>

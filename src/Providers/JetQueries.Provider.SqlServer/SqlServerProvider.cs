@@ -31,7 +31,7 @@ public sealed class SqlServerProvider : IDatabaseProvider, IConnectionSettingsPr
     public ProviderCapabilities Capabilities =>
         ProviderCapabilities.MultipleDatabases | ProviderCapabilities.Schemas | ProviderCapabilities.MultipleResultSets |
         ProviderCapabilities.Transactions | ProviderCapabilities.ServerSideCancel | ProviderCapabilities.Routines |
-        ProviderCapabilities.Sequences;
+        ProviderCapabilities.Sequences | ProviderCapabilities.Synonyms | ProviderCapabilities.UserTypes;
 
     /// <inheritdoc />
     public ISqlLanguageService? LanguageService { get; } = new TSqlLanguageService();
