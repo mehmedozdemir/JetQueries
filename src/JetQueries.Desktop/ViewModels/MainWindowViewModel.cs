@@ -3,8 +3,9 @@ using System.Text;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using JetQueries.Desktop.Resources;
+using JetQueries.Presentation.Resources;
 using JetQueries.Desktop.Services;
+using JetQueries.Presentation.Services;
 
 namespace JetQueries.Desktop.ViewModels;
 

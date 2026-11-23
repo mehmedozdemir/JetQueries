@@ -1,8 +1,9 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="using:JetQueries.Desktop.ViewModels"
+             xmlns:vm="using:JetQueries.Presentation.ViewModels"
+             xmlns:shell="using:JetQueries.Desktop.ViewModels"
              xmlns:views="using:JetQueries.Desktop.Views"
-             xmlns:res="using:JetQueries.Desktop.Resources"
+             xmlns:res="using:JetQueries.Presentation.Resources"
              x:Class="JetQueries.Desktop.Views.DocumentsView"
              x:DataType="vm:DocumentsViewModel"
              x:Name="Root">

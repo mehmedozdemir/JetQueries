@@ -29,6 +29,7 @@
   </ItemGroup>
   <ItemGroup>
     <!-- Never reference a concrete provider here: providers are loaded by the extension host. -->
+    <ProjectReference Include="..\JetQueries.Presentation\JetQueries.Presentation.csproj" />
     <ProjectReference Include="..\JetQueries.Core\JetQueries.Core.csproj" />
     <ProjectReference Include="..\JetQueries.Sdk\JetQueries.Sdk.csproj" />
     <ProjectReference Include="..\JetQueries.Editor\JetQueries.Editor.csproj" />
@@ -97,4 +98,10 @@
     </ItemGroup>
     <Copy SourceFiles="@(_sqlitePublishFile)" DestinationFolder="$(_ExtensionsRoot)sqlite\%(RecursiveDir)" SkipUnchangedFiles="true" />
   </Target>
+  <ItemGroup>
+    <!-- View models, services and strings shared with the WPF user interface. -->
+    <Using Include="JetQueries.Presentation.ViewModels" />
+    <Using Include="JetQueries.Presentation.Services" />
+    <Using Include="JetQueries.Presentation.Resources" />
+  </ItemGroup>
 </Project>

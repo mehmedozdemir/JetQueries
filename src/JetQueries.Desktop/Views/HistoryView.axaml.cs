@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using JetQueries.Desktop.ViewModels;
+using JetQueries.Presentation.ViewModels;
 
 namespace JetQueries.Desktop.Views;
 

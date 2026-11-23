@@ -1,10 +1,10 @@
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using JetQueries.Core.Connections;
-using JetQueries.Desktop.ViewModels;
+using JetQueries.Presentation.ViewModels;
 using JetQueries.Sdk;
 
-namespace JetQueries.Desktop.Tests;
+namespace JetQueries.Presentation.Tests;
 
 public sealed class QueryDocumentTests
 {
@@ -55,8 +55,8 @@ public sealed class QueryDocumentTests
         Assert.Equal("2026-01-15", result.GetText(0, 3));
         Assert.Equal("2026-02-03 14:30:05.120", result.GetText(1, 3));
         Assert.Equal("Müşteri İşlemleri", result.GetText(2, 1));
-        Assert.Equal(DataGrid.GridTextAlignment.Right, result.Columns[0].Alignment);
-        Assert.Equal(DataGrid.GridTextAlignment.Left, result.Columns[1].Alignment);
+        Assert.True(result.Columns[0].IsNumeric);
+        Assert.False(result.Columns[1].IsNumeric);
 
         Assert.Same(query.Messages, query.Tabs[^1]);
         Assert.Equal("starting", Assert.Single(query.Messages.Lines).Text);

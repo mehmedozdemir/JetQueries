@@ -1,8 +1,8 @@
 using System.Globalization;
 using JetQueries.Core.Connections;
-using JetQueries.Desktop.ViewModels;
+using JetQueries.Presentation.ViewModels;
 
-namespace JetQueries.Desktop.Tests;
+namespace JetQueries.Presentation.Tests;
 
 public sealed class ConnectionEditorViewModelTests
 {

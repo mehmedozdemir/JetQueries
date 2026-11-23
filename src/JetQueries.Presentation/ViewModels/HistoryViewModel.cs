@@ -5,10 +5,10 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using JetQueries.Core.Jobs;
 using JetQueries.Core.Queries;
-using JetQueries.Desktop.Resources;
-using JetQueries.Desktop.Services;
+using JetQueries.Presentation.Resources;
+using JetQueries.Presentation.Services;
 
-namespace JetQueries.Desktop.ViewModels;
+namespace JetQueries.Presentation.ViewModels;
 
 /// <summary>One run in the history list.</summary>
 public sealed class HistoryEntryViewModel(QueryHistoryEntry entry)
@@ -65,6 +65,7 @@ public partial class HistoryViewModel : ObservableObject
     private readonly IJobQueue _jobs;
     private readonly IDialogService _dialogs;
     private readonly DocumentsViewModel _documents;
+    private readonly IUiDispatcher _ui;
     private int _version;
 
     public HistoryViewModel(IQueryHistory history, IJobQueue jobs, IDialogService dialogs, IUiDispatcher ui, DocumentsViewModel documents)
@@ -75,6 +76,7 @@ public partial class HistoryViewModel : ObservableObject
         _jobs = jobs;
         _dialogs = dialogs;
         _documents = documents;
+        _ui = ui;
         SearchText = string.Empty;
 
         // Raised on whatever thread recorded the run.
@@ -98,7 +100,7 @@ public partial class HistoryViewModel : ObservableObject
     public async Task LoadAsync()
     {
         // Typing fires a load per key; only the answer to the latest request is shown.
-        var version = ++_version;
+        var version = Interlocked.Increment(ref _version);
         var search = SearchText;
         IReadOnlyList<QueryHistoryEntry> entries;
         try
@@ -110,20 +112,24 @@ public partial class HistoryViewModel : ObservableObject
             return;
         }
 
-        if (version != _version)
+        // Applied on the UI thread, one answer at a time; an answer overtaken by a newer request is dropped.
+        _ui.Post(() =>
         {
-            return;
-        }
+            if (version != Volatile.Read(ref _version))
+            {
+                return;
+            }
 
-        var selectedId = Selected?.Entry.Id;
-        Entries.Clear();
-        foreach (var entry in entries)
-        {
-            Entries.Add(new HistoryEntryViewModel(entry));
-        }
+            var selectedId = Selected?.Entry.Id;
+            Entries.Clear();
+            foreach (var entry in entries)
+            {
+                Entries.Add(new HistoryEntryViewModel(entry));
+            }
 
-        Selected = Entries.FirstOrDefault(e => e.Entry.Id == selectedId);
-        IsEmpty = Entries.Count == 0 && search.Length == 0;
+            Selected = Entries.FirstOrDefault(e => e.Entry.Id == selectedId);
+            IsEmpty = Entries.Count == 0 && search.Length == 0;
+        });
     }
 
     partial void OnSearchTextChanged(string value) => _ = LoadAsync();

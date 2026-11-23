@@ -1,8 +1,8 @@
 using System.Globalization;
-using JetQueries.Desktop.ViewModels;
+using JetQueries.Presentation.ViewModels;
 using JetQueries.Sdk;
 
-namespace JetQueries.Desktop.Tests;
+namespace JetQueries.Presentation.Tests;
 
 public sealed class ObjectExplorerTests
 {
@@ -17,7 +17,7 @@ public sealed class ObjectExplorerTests
     public async Task Connecting_shows_databases_and_each_level_loads_when_expanded()
     {
         await using var env = new TestEnvironment();
-        var (connections, node) = await ConnectAsync(env);
+        var (connections, node) = await TestEnvironment.ConnectAsync(env);
 
         Assert.True(node.IsExpanded);
         Assert.Equal(["Cards", "master"], node.Children.Select(static c => c.Name));
@@ -28,20 +28,20 @@ public sealed class ObjectExplorerTests
         Assert.False(cards.IsExpanded);
         Assert.IsType<MessageNodeViewModel>(Assert.Single(cards.Children));
 
-        await ExpandAsync(cards);
+        await TestEnvironment.ExpandAsync(cards);
         Assert.Equal(["dbo", "kart"], cards.Children.Select(static c => c.Name));
 
         var dbo = (DatabaseObjectNodeViewModel)cards.Children[0];
-        await ExpandAsync(dbo);
+        await TestEnvironment.ExpandAsync(dbo);
         Assert.Equal(["Tables", "Views", "Procedures", "Functions", "Sequences", "Synonyms", "Types"], dbo.Children.Select(static c => c.Name));
 
         var tables = (CategoryNodeViewModel)dbo.Children[0];
-        await ExpandAsync(tables);
+        await TestEnvironment.ExpandAsync(tables);
         Assert.Equal(["Cards", "Müşteri İşlemleri", "Transactions"], tables.Children.Select(static c => c.Name));
 
         var table = (DatabaseObjectNodeViewModel)tables.Children[0];
         Assert.Equal(new DatabaseObjectName("Cards", "dbo", "Cards"), table.Target.Name);
-        await ExpandAsync(table);
+        await TestEnvironment.ExpandAsync(table);
         var columns = table.Children.Cast<ColumnNodeViewModel>().ToList();
         Assert.Equal(["Id", "CardNo", "Balance"], columns.Select(static c => c.Name));
         Assert.True(columns[0].IsPrimaryKey);
@@ -58,16 +58,16 @@ public sealed class ObjectExplorerTests
     public async Task Leaves_and_empty_groups_are_shown_as_such()
     {
         await using var env = new TestEnvironment();
-        var (_, node) = await ConnectAsync(env);
+        var (_, node) = await TestEnvironment.ConnectAsync(env);
         var dbo = await OpenSchemaAsync(node);
 
         var procedures = (CategoryNodeViewModel)dbo.Children[2];
-        await ExpandAsync(procedures);
+        await TestEnvironment.ExpandAsync(procedures);
         var procedure = (DatabaseObjectNodeViewModel)Assert.Single(procedures.Children);
         Assert.Empty(procedure.Children);
 
         var types = (CategoryNodeViewModel)dbo.Children[^1];
-        await ExpandAsync(types);
+        await TestEnvironment.ExpandAsync(types);
         Assert.Equal("(empty)", Assert.IsType<MessageNodeViewModel>(Assert.Single(types.Children)).Name);
     }
 
@@ -75,9 +75,9 @@ public sealed class ObjectExplorerTests
     public async Task Expanding_again_or_reconnecting_answers_from_the_cache_and_refresh_asks_the_database()
     {
         await using var env = new TestEnvironment();
-        var (connections, node) = await ConnectAsync(env);
+        var (connections, node) = await TestEnvironment.ConnectAsync(env);
         var cards = (DatabaseObjectNodeViewModel)node.Children[0];
-        await ExpandAsync(cards);
+        await TestEnvironment.ExpandAsync(cards);
         cards.IsExpanded = false;
         cards.IsExpanded = true;
         await TestEnvironment.LoadedAsync(cards);
@@ -90,7 +90,7 @@ public sealed class ObjectExplorerTests
         await connections.ToggleConnectionCommand.ExecuteAsync(null);
         await TestEnvironment.LoadedAsync(node);
         cards = (DatabaseObjectNodeViewModel)node.Children[0];
-        await ExpandAsync(cards);
+        await TestEnvironment.ExpandAsync(cards);
         Assert.Equal(["dbo", "kart"], cards.Children.Select(static c => c.Name));
         Assert.Equal(2, env.Provider.MetadataCalls.Count);
 
@@ -104,11 +104,11 @@ public sealed class ObjectExplorerTests
     public async Task A_failed_load_is_shown_in_the_tree_and_can_be_retried()
     {
         await using var env = new TestEnvironment();
-        var (connections, node) = await ConnectAsync(env);
+        var (connections, node) = await TestEnvironment.ConnectAsync(env);
         var cards = (DatabaseObjectNodeViewModel)node.Children[0];
         env.Provider.MetadataError = "The server principal is not able to access the database.";
 
-        await ExpandAsync(cards);
+        await TestEnvironment.ExpandAsync(cards);
 
         var message = Assert.IsType<MessageNodeViewModel>(Assert.Single(cards.Children));
         Assert.True(message.IsError);
@@ -127,20 +127,20 @@ public sealed class ObjectExplorerTests
         await using var env = new TestEnvironment();
         env.Provider.Capabilities = ProviderCapabilities.Schemas | ProviderCapabilities.Routines | ProviderCapabilities.Packages |
             ProviderCapabilities.Synonyms | ProviderCapabilities.UserTypes;
-        var (_, oracleLike) = await ConnectAsync(env);
+        var (_, oracleLike) = await TestEnvironment.ConnectAsync(env);
 
         // No database level: schemas come first, and packages appear instead of sequences.
         Assert.Equal(["dbo", "kart"], oracleLike.Children.Select(static c => c.Name));
         var schema = (DatabaseObjectNodeViewModel)oracleLike.Children[0];
-        await ExpandAsync(schema);
+        await TestEnvironment.ExpandAsync(schema);
         Assert.Equal(["Tables", "Views", "Procedures", "Functions", "Packages", "Synonyms", "Types"], schema.Children.Select(static c => c.Name));
 
         await using var flat = new TestEnvironment();
         flat.Provider.Capabilities = ProviderCapabilities.None;
-        var (_, sqliteLike) = await ConnectAsync(flat);
+        var (_, sqliteLike) = await TestEnvironment.ConnectAsync(flat);
         Assert.Equal(["Tables", "Views"], sqliteLike.Children.Select(static c => c.Name));
         var tables = (CategoryNodeViewModel)sqliteLike.Children[0];
-        await ExpandAsync(tables);
+        await TestEnvironment.ExpandAsync(tables);
         Assert.Equal(3, tables.Children.Count);
     }
 
@@ -158,33 +158,12 @@ public sealed class ObjectExplorerTests
         Assert.False(connections.ReloadSelectedCommand.CanExecute(null));
     }
 
-    internal static async Task<(ConnectionsViewModel Connections, ConnectionNodeViewModel Node)> ConnectAsync(TestEnvironment env)
-    {
-        var definition = TestEnvironment.Definition("Cards");
-        await env.Store.SaveAsync(definition, Token);
-        await env.Credentials.SetPasswordAsync(definition.Id, "stored", Token);
-        var connections = env.Connections();
-        await connections.LoadAsync();
-        var node = (ConnectionNodeViewModel)connections.Roots[0];
-        connections.Selected = node;
-        await connections.ToggleConnectionCommand.ExecuteAsync(null);
-        await TestEnvironment.LoadedAsync(node);
-        Assert.True(node.IsConnected, node.Error);
-        return (connections, node);
-    }
-
-    internal static async Task ExpandAsync(LazyNodeViewModel node)
-    {
-        node.IsExpanded = true;
-        await TestEnvironment.LoadedAsync(node);
-    }
-
     private static async Task<DatabaseObjectNodeViewModel> OpenSchemaAsync(ConnectionNodeViewModel node)
     {
         var cards = (DatabaseObjectNodeViewModel)node.Children[0];
-        await ExpandAsync(cards);
+        await TestEnvironment.ExpandAsync(cards);
         var dbo = (DatabaseObjectNodeViewModel)cards.Children[0];
-        await ExpandAsync(dbo);
+        await TestEnvironment.ExpandAsync(dbo);
         return dbo;
     }
 }

@@ -9,12 +9,25 @@ using JetQueries.Core.Jobs;
 using JetQueries.Core.Metadata;
 using JetQueries.Core.Queries;
 using JetQueries.Core.Sql;
-using JetQueries.DataGrid;
-using JetQueries.Desktop.Resources;
-using JetQueries.Desktop.Services;
+using JetQueries.Presentation.Resources;
+using JetQueries.Presentation.Services;
 using JetQueries.Sdk;
 
-namespace JetQueries.Desktop.ViewModels;
+namespace JetQueries.Presentation.ViewModels;
+
+/// <summary>A tab in a query's results area.</summary>
+public interface IResultTab
+{
+    /// <summary>Caption of the tab.</summary>
+    string Title { get; }
+}
+
+/// <summary>A column of a result set as a grid shows it.</summary>
+/// <param name="Header">The column name.</param>
+/// <param name="Width">A starting width in device-independent pixels, from the header and the first rows.</param>
+/// <param name="IsNumeric">Numbers are aligned to the right.</param>
+/// <param name="ClrType">The .NET type of the values.</param>
+public sealed record ResultGridColumn(string Header, double Width, bool IsNumeric, Type ClrType);
 
 /// <summary>An open connection a query can run on.</summary>
 public sealed record SessionOption(ConnectionSession Session)
@@ -37,7 +50,7 @@ public sealed class QueryMessagesTab : IResultTab
 /// One result set, filled while the query runs. It is the row source of the results grid: rows are appended
 /// on the UI thread in the batches the provider delivers, and the grid only ever asks for the cells it shows.
 /// </summary>
-public sealed class QueryResultSet : IGridRowSource, IResultTab
+public sealed class QueryResultSet : IResultTab
 {
     private readonly List<object?[]> _rows = [];
 
@@ -48,7 +61,7 @@ public sealed class QueryResultSet : IGridRowSource, IResultTab
     {
         ArgumentNullException.ThrowIfNull(columns);
         Title = title;
-        var gridColumns = new GridColumn[columns.Count];
+        var gridColumns = new ResultGridColumn[columns.Count];
         for (var i = 0; i < gridColumns.Length; i++)
         {
             var name = columns[i].Name.Length == 0 ? "(no name)" : columns[i].Name;
@@ -61,10 +74,7 @@ public sealed class QueryResultSet : IGridRowSource, IResultTab
                 longest = Math.Max(longest, Format(row[i])?.Length ?? 4);
             }
 
-            gridColumns[i] = new GridColumn(
-                name,
-                Math.Clamp((longest * 7.4) + 24, 64, 420),
-                IsNumeric(columns[i].ClrType) ? GridTextAlignment.Right : GridTextAlignment.Left);
+            gridColumns[i] = new ResultGridColumn(name, Math.Clamp((longest * 7.4) + 24, 64, 420), IsNumeric(columns[i].ClrType), columns[i].ClrType);
         }
 
         Columns = gridColumns;
@@ -74,7 +84,7 @@ public sealed class QueryResultSet : IGridRowSource, IResultTab
 
     public string Title { get; }
 
-    public IReadOnlyList<GridColumn> Columns { get; }
+    public IReadOnlyList<ResultGridColumn> Columns { get; }
 
     public int RowCount => _rows.Count;
 

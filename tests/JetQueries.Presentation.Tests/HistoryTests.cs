@@ -1,10 +1,10 @@
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using JetQueries.Core.Queries;
-using JetQueries.Desktop.ViewModels;
+using JetQueries.Presentation.ViewModels;
 using JetQueries.Sdk;
 
-namespace JetQueries.Desktop.Tests;
+namespace JetQueries.Presentation.Tests;
 
 public sealed class HistoryTests
 {
@@ -135,8 +135,8 @@ public sealed class HistoryTests
         await using var env = new TestEnvironment();
         await env.OpenAsync(TestEnvironment.Definition("Logs"));
         var cards = await env.OpenAsync(TestEnvironment.Definition("Cards"));
-        await env.History.AddAsync(Entry("SELECT * FROM cards\nWHERE id = 1") with { ConnectionId = cards.Id }, Token);
-        await env.History.AddAsync(Entry("SELECT 1") with { ConnectionId = Guid.NewGuid() }, Token);
+        await env.History.AddAsync(TestEnvironment.HistoryEntry("SELECT * FROM cards\nWHERE id = 1") with { ConnectionId = cards.Id }, Token);
+        await env.History.AddAsync(TestEnvironment.HistoryEntry("SELECT 1") with { ConnectionId = Guid.NewGuid() }, Token);
         var documents = env.Documents();
         var panel = env.HistoryPanel(documents);
         await panel.LoadAsync();
@@ -181,14 +181,12 @@ public sealed class HistoryTests
         Assert.Empty(await env.History.SearchAsync(null, 10, Token));
     }
 
-    internal static QueryHistoryEntry Entry(string sql) => new(
-        0, DateTimeOffset.UtcNow, Guid.NewGuid(), "Cards", "fake", sql, TimeSpan.FromMilliseconds(42), QueryOutcome.Succeeded, 3);
 
     private static async Task Seed(TestEnvironment env, params string[] statements)
     {
         foreach (var sql in statements)
         {
-            await env.History.AddAsync(Entry(sql), Token);
+            await env.History.AddAsync(TestEnvironment.HistoryEntry(sql), Token);
         }
     }
 

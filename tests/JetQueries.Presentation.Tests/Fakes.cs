@@ -4,12 +4,14 @@ using System.Runtime.CompilerServices;
 using JetQueries.Core.Jobs;
 using JetQueries.Core.Metadata;
 using JetQueries.Core.Queries;
-using JetQueries.Desktop.Services;
-using JetQueries.Desktop.ViewModels;
+using JetQueries.Presentation.Services;
+using JetQueries.Presentation.ViewModels;
 using JetQueries.Sdk;
 using Microsoft.Extensions.Logging.Abstractions;
 
-namespace JetQueries.Desktop.Tests;
+namespace JetQueries.Presentation.Tests;
+
+// Also compiled into the Avalonia and WPF test projects.
 
 /// <summary>Real Core services around a scripted provider: everything the connection view models talk to.</summary>
 internal sealed class TestEnvironment : IAsyncDisposable
@@ -69,6 +71,30 @@ internal sealed class TestEnvironment : IAsyncDisposable
             await Task.Delay(10);
         }
     }
+
+    public static async Task<(ConnectionsViewModel Connections, ConnectionNodeViewModel Node)> ConnectAsync(TestEnvironment env)
+    {
+        var definition = TestEnvironment.Definition("Cards");
+        await env.Store.SaveAsync(definition, CancellationToken.None);
+        await env.Credentials.SetPasswordAsync(definition.Id, "stored", CancellationToken.None);
+        var connections = env.Connections();
+        await connections.LoadAsync();
+        var node = (ConnectionNodeViewModel)connections.Roots[0];
+        connections.Selected = node;
+        await connections.ToggleConnectionCommand.ExecuteAsync(null);
+        await LoadedAsync(node);
+        Assert.True(node.IsConnected, node.Error);
+        return (connections, node);
+    }
+
+    public static async Task ExpandAsync(LazyNodeViewModel node)
+    {
+        node.IsExpanded = true;
+        await LoadedAsync(node);
+    }
+
+    public static QueryHistoryEntry HistoryEntry(string sql) => new(
+        0, DateTimeOffset.UtcNow, Guid.NewGuid(), "Cards", "fake", sql, TimeSpan.FromMilliseconds(42), QueryOutcome.Succeeded, 3);
 
     public static ConnectionDefinition Definition(string name, string folder = "", ConnectionEnvironment environment = ConnectionEnvironment.Unspecified) => new()
     {

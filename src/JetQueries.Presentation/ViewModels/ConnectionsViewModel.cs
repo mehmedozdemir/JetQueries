@@ -6,10 +6,10 @@ using CommunityToolkit.Mvvm.Input;
 using JetQueries.Core.Connections;
 using JetQueries.Core.Jobs;
 using JetQueries.Core.Metadata;
-using JetQueries.Desktop.Resources;
-using JetQueries.Desktop.Services;
+using JetQueries.Presentation.Resources;
+using JetQueries.Presentation.Services;
 
-namespace JetQueries.Desktop.ViewModels;
+namespace JetQueries.Presentation.ViewModels;
 
 /// <summary>A row of the connection tree: a folder or a connection.</summary>
 public abstract partial class ExplorerNodeViewModel(string name) : ObservableObject

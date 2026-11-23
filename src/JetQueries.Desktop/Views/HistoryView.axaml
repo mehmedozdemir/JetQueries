@@ -1,7 +1,8 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="using:JetQueries.Desktop.ViewModels"
-             xmlns:res="using:JetQueries.Desktop.Resources"
+             xmlns:vm="using:JetQueries.Presentation.ViewModels"
+             xmlns:shell="using:JetQueries.Desktop.ViewModels"
+             xmlns:res="using:JetQueries.Presentation.Resources"
              x:Class="JetQueries.Desktop.Views.HistoryView"
              x:DataType="vm:HistoryViewModel">
   <DockPanel>

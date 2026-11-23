@@ -2,10 +2,10 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using JetQueries.Core.Connections;
 using JetQueries.Core.Jobs;
 using JetQueries.Core.Metadata;
-using JetQueries.Desktop.Resources;
+using JetQueries.Presentation.Resources;
 using JetQueries.Sdk;
 
-namespace JetQueries.Desktop.ViewModels;
+namespace JetQueries.Presentation.ViewModels;
 
 /// <summary>What the nodes under an open connection need to load their children.</summary>
 public sealed record ExplorerContext(ConnectionSession Session, IMetadataService Metadata, IJobQueue Jobs);

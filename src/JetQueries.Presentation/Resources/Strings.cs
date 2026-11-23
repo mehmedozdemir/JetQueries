@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Resources;
 
-namespace JetQueries.Desktop.Resources;
+namespace JetQueries.Presentation.Resources;
 
 /// <summary>
 /// Typed access to the user-facing strings in <c>Strings.resx</c> (English) and <c>Strings.tr.resx</c> (Turkish).

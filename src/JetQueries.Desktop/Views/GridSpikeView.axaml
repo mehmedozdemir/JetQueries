@@ -1,7 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:grid="clr-namespace:JetQueries.DataGrid;assembly=JetQueries.DataGrid"
-             xmlns:res="using:JetQueries.Desktop.Resources"
+             xmlns:res="using:JetQueries.Presentation.Resources"
              x:Class="JetQueries.Desktop.Views.GridSpikeView">
   <!-- Phase 0 spike harness for the virtualized grid. Replaced by the real results panel in Phase 1. -->
   <DockPanel>

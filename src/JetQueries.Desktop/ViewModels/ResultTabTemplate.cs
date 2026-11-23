@@ -1,15 +1,9 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Avalonia.Metadata;
+using JetQueries.Presentation.ViewModels;
 
 namespace JetQueries.Desktop.ViewModels;
-
-/// <summary>A tab in a query's results area.</summary>
-public interface IResultTab
-{
-    /// <summary>Caption of the tab.</summary>
-    string Title { get; }
-}
 
 /// <summary>
 /// Chooses the content of a results tab by the kind of tab: the template keyed <c>grid</c> for a result set,

@@ -4,8 +4,9 @@ using Avalonia.Controls;
 using JetQueries.Core.Connections;
 using JetQueries.Core.Extensions;
 using JetQueries.Core.Jobs;
-using JetQueries.Desktop.Resources;
+using JetQueries.Presentation.Resources;
 using JetQueries.Desktop.ViewModels;
+using JetQueries.Presentation.ViewModels;
 using JetQueries.Desktop.Views;
 using Microsoft.Extensions.DependencyInjection;
 

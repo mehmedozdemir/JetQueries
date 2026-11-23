@@ -5,10 +5,10 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using JetQueries.Core.Connections;
 using JetQueries.Core.Jobs;
-using JetQueries.Desktop.Resources;
+using JetQueries.Presentation.Resources;
 using JetQueries.Sdk;
 
-namespace JetQueries.Desktop.ViewModels;
+namespace JetQueries.Presentation.ViewModels;
 
 /// <summary>A database type the user can choose in the connection editor.</summary>
 public sealed record ProviderOption(IDatabaseProvider Provider)

@@ -1,6 +1,6 @@
 using JetQueries.Core.Connections;
 
-namespace JetQueries.Desktop.Services;
+namespace JetQueries.Presentation.Services;
 
 /// <summary>Opens modal dialogs for view models, which must not know about windows.</summary>
 public interface IDialogService
