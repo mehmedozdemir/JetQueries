@@ -1364,7 +1364,30 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
 
     /// <summary>Stops the running statement.</summary>
     [RelayCommand(CanExecute = nameof(IsRunning))]
-    private void Cancel() => _run?.Cancel();
+    private void Cancel()
+    {
+        if (_run is not { } run)
+        {
+            return;
+        }
+
+        run.Cancel();
+        Status = Strings.QueryCanceling;
+        _ = WarnIfCancelIsSlowAsync(run);
+    }
+
+    /// <summary>How long a cancel may take before the status says why it has not stopped yet.</summary>
+    internal static TimeSpan SlowCancel { get; set; } = TimeSpan.FromSeconds(4);
+
+    // A statement waiting on a lock stops only when the server gets the cancel; say so instead of seeming stuck.
+    private async Task WarnIfCancelIsSlowAsync(object run)
+    {
+        await Task.Delay(SlowCancel);
+        if (IsRunning && ReferenceEquals(run, _run))
+        {
+            Status = Strings.QueryCancelSlow;
+        }
+    }
 
     /// <summary>Reads events until the current result set has its page, or the run ends.</summary>
     private async Task ReadPageAsync(QueryCursor cursor)

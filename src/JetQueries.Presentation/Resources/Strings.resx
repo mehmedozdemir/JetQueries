@@ -342,4 +342,6 @@
   <data name="FieldShortcut" xml:space="preserve"><value>Shortcut</value></data>
   <data name="FieldDescription" xml:space="preserve"><value>Description</value></data>
   <data name="SnippetInvalid" xml:space="preserve"><value>Each snippet needs a shortcut of letters, digits and _ (starting with a letter), used only once.</value></data>
+  <data name="QueryCanceling" xml:space="preserve"><value>Canceling…</value></data>
+  <data name="QueryCancelSlow" xml:space="preserve"><value>Still canceling: a statement waiting on a lock stops when the server takes the cancel. Oracle: with the ALTER SYSTEM privilege it is canceled at once; without it, when its wait ends.</value></data>
 </root>

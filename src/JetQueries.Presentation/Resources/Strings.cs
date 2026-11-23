@@ -325,6 +325,8 @@ public static class Strings
     public static string FieldShortcut => Get(nameof(FieldShortcut));
     public static string FieldDescription => Get(nameof(FieldDescription));
     public static string SnippetInvalid => Get(nameof(SnippetInvalid));
+    public static string QueryCanceling => Get(nameof(QueryCanceling));
+    public static string QueryCancelSlow => Get(nameof(QueryCancelSlow));
 
     /// <summary>A string looked up by a computed name (for example <c>Setting_server</c>), or null if there is none.</summary>
     public static string? Find(string name) => Manager.GetString(name, CultureInfo.CurrentUICulture);

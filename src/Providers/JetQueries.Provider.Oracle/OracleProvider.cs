@@ -102,8 +102,12 @@ public sealed class OracleProvider : IDatabaseProvider, IConnectionSettingsProvi
         ConnectionCredential? credential,
         CancellationToken cancellationToken)
     {
-        // The connection string holds the password: it lives only in this local and inside the driver.
-        var connection = new OracleConnection(OracleConnectionSettings.BuildConnectionString(profile, credential));
+        // The connection string holds the password: it lives only in memory, here and in the connection object
+        // (which needs it to open a second connection that cancels a waiting statement on the server).
+        var connectionString = OracleConnectionSettings.BuildConnectionString(profile, credential);
+        var connection = new OracleConnection(connectionString);
+        string? sid = null;
+        long? serial = null;
         try
         {
             await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
@@ -115,6 +119,24 @@ public sealed class OracleProvider : IDatabaseProvider, IConnectionSettingsProvi
                 enable.CommandText = "BEGIN DBMS_OUTPUT.ENABLE(NULL); END;";
                 await enable.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
             }
+
+            // Who this session is, for a server-side cancel later (best effort: the serial number needs a
+            // package that is not granted everywhere; it is then looked up when needed).
+            var identity = connection.CreateCommand();
+            await using (identity.ConfigureAwait(false))
+            {
+                identity.CommandText = "SELECT SYS_CONTEXT('USERENV', 'SID') FROM dual";
+                sid = Convert.ToString(await identity.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false), System.Globalization.CultureInfo.InvariantCulture);
+                try
+                {
+                    identity.CommandText = "SELECT dbms_debug_jdwp.current_session_serial FROM dual";
+                    serial = Convert.ToInt64(await identity.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false), System.Globalization.CultureInfo.InvariantCulture);
+                }
+                catch (OracleException)
+                {
+                    serial = null;
+                }
+            }
         }
         catch
         {
@@ -122,11 +144,12 @@ public sealed class OracleProvider : IDatabaseProvider, IConnectionSettingsProvi
             throw;
         }
 
-        return new OracleDatabaseConnection(connection);
+        return new OracleDatabaseConnection(connection, connectionString, sid, serial);
     }
 }
 
-internal sealed class OracleDatabaseConnection(OracleConnection connection) : IDatabaseConnection, IDatabaseContext, ITransactionControl
+internal sealed class OracleDatabaseConnection(OracleConnection connection, string? connectionString = null, string? sid = null, long? serial = null)
+    : IDatabaseConnection, IDatabaseContext, ITransactionControl
 {
     // ODP.NET commits each command on its own unless a transaction object is open on the connection.
     private OracleTransaction? _transaction;
@@ -187,7 +210,56 @@ internal sealed class OracleDatabaseConnection(OracleConnection connection) : ID
         }
     }
 
-    public IQueryExecutor Executor { get; } = new OracleQueryExecutor(connection);
+    public IQueryExecutor Executor { get; } = new OracleQueryExecutor(connection, token => CancelOnServerAsync(connectionString, sid, serial, token));
+
+    /// <summary>
+    /// Asks the server, from a second connection, to cancel what this session is running (ALTER SYSTEM CANCEL SQL,
+    /// Oracle 18c and later). False when it could not: no such privilege, or the session could not be named.
+    /// </summary>
+    internal static async Task<bool> CancelOnServerAsync(string? connectionString, string? sid, long? serial, CancellationToken cancellationToken)
+    {
+        if (connectionString is null || !int.TryParse(sid, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var sessionId))
+        {
+            return false;
+        }
+
+        try
+        {
+            var second = new OracleConnection(connectionString);
+            await using (second.ConfigureAwait(false))
+            {
+                await second.OpenAsync(cancellationToken).ConfigureAwait(false);
+                var command = second.CreateCommand();
+                await using (command.ConfigureAwait(false))
+                {
+                    var serialNumber = serial;
+                    if (serialNumber is null)
+                    {
+                        command.CommandText = "SELECT serial# FROM v$session WHERE sid = :sid";
+                        command.Parameters.Add(new OracleParameter("sid", sessionId));
+                        serialNumber = Convert.ToInt64(await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false), System.Globalization.CultureInfo.InvariantCulture);
+                        command.Parameters.Clear();
+                    }
+
+                    // ALTER SYSTEM takes no bind variables: the only variable parts are two integers.
+#pragma warning disable CA2100 // Integers formatted invariantly; nothing typed by a user.
+                    command.CommandText = string.Create(
+                        System.Globalization.CultureInfo.InvariantCulture, $"ALTER SYSTEM CANCEL SQL '{sessionId}, {serialNumber}'");
+#pragma warning restore CA2100
+                    await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                    return true;
+                }
+            }
+        }
+        catch (OracleException)
+        {
+            return false;
+        }
+        catch (InvalidCastException)
+        {
+            return false;
+        }
+    }
 
     public IMetadataProvider Metadata { get; } = new OracleMetadataProvider(connection);
 

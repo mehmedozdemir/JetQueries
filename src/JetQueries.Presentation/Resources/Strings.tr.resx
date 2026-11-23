@@ -342,4 +342,6 @@
   <data name="FieldShortcut" xml:space="preserve"><value>Kısayol</value></data>
   <data name="FieldDescription" xml:space="preserve"><value>Açıklama</value></data>
   <data name="SnippetInvalid" xml:space="preserve"><value>Her parçacığın harf, rakam ve _ içeren (harfle başlayan) ve yalnızca bir kez kullanılan bir kısayolu olmalı.</value></data>
+  <data name="QueryCanceling" xml:space="preserve"><value>İptal ediliyor…</value></data>
+  <data name="QueryCancelSlow" xml:space="preserve"><value>İptal sürüyor: kilit bekleyen bir deyim, sunucu iptali alınca durur. Oracle: ALTER SYSTEM yetkisiyle hemen iptal edilir; yetki yoksa beklemesi bitince.</value></data>
 </root>

@@ -11,8 +11,11 @@ namespace JetQueries.Provider.Oracle;
 /// streams what happens: rows in batches, then whatever the code printed through DBMS_OUTPUT, then — after a
 /// CREATE of stored code — the compiler's errors, which Oracle keeps in the catalog instead of returning.
 /// </summary>
-internal sealed class OracleQueryExecutor(OracleConnection connection) : IQueryExecutor
+internal sealed class OracleQueryExecutor(OracleConnection connection, Func<CancellationToken, Task<bool>>? serverCancel = null) : IQueryExecutor
 {
+    /// <summary>How long a break may take before the server is asked to cancel from a second connection.</summary>
+    internal static TimeSpan BreakGrace { get; set; } = TimeSpan.FromSeconds(1.5);
+
     private const int MaxOutputLines = 5_000;
 
     public async IAsyncEnumerable<QueryEvent> ExecuteAsync(QueryRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
@@ -40,71 +43,97 @@ internal sealed class OracleQueryExecutor(OracleConnection connection) : IQueryE
             // Cancel sends a "break" to the server. Measured on Oracle 23 in Docker: a statement that is
             // computing or returning rows stops within a fraction of a second; one that is waiting (for a row
             // lock, in DBMS_SESSION.SLEEP) is only interrupted when the break arrives as TCP urgent data, which
-            // Docker's port forwarding, and often NAT and VPN tunnels, drop — it then ends when the wait does.
-            var registration = cancellationToken.Register(static state => ((OracleCommand)state!).Cancel(), command);
-            await using (registration.ConfigureAwait(false))
+            // Docker's port forwarding, and often NAT and VPN tunnels, drop (an in-band break is not read during a
+            // wait either). So when the statement is still running a moment later, the server is asked to cancel
+            // it from a second connection (ALTER SYSTEM CANCEL SQL, which needs that privilege). Simply dropping
+            // the connection would not do: a waiting UPDATE would still run, and commit, once the lock is free.
+            var running = new StrongBox<bool>(true);
+            var registration = cancellationToken.Register(() =>
             {
-                var reader = (OracleDataReader)await Translate(command.ExecuteReaderAsync(CommandBehavior.Default, cancellationToken), cancellationToken).ConfigureAwait(false);
-                await using (reader.ConfigureAwait(false))
+                command.Cancel();
+                if (serverCancel is { } cancelOnServer)
                 {
-                    var any = false;
-                    do
+                    _ = Task.Run(async () =>
                     {
-                        if (reader.FieldCount == 0)
+                        await Task.Delay(BreakGrace).ConfigureAwait(false);
+                        if (running.Value)
                         {
-                            continue;
+                            await cancelOnServer(CancellationToken.None).ConfigureAwait(false);
                         }
-
-                        any = true;
-                        var columns = new ResultColumn[reader.FieldCount];
-                        for (var i = 0; i < columns.Length; i++)
+                    });
+                }
+            });
+            try
+            {
+                await using (registration.ConfigureAwait(false))
+                {
+                    var reader = (OracleDataReader)await Translate(command.ExecuteReaderAsync(CommandBehavior.Default, cancellationToken), cancellationToken).ConfigureAwait(false);
+                    await using (reader.ConfigureAwait(false))
+                    {
+                        var any = false;
+                        do
                         {
-                            columns[i] = new ResultColumn(reader.GetName(i), reader.GetDataTypeName(i), reader.GetFieldType(i));
-                        }
-
-                        yield return new ResultSetStarted(columns);
-
-                        long rowCount = 0;
-                        var truncated = false;
-                        var rows = new List<object?[]>(batchSize);
-                        while (await Translate(reader.ReadAsync(cancellationToken), cancellationToken).ConfigureAwait(false))
-                        {
-                            if (request.MaxRows is { } max && rowCount >= max)
+                            if (reader.FieldCount == 0)
                             {
-                                truncated = true;
-                                break;
+                                continue;
                             }
 
-                            var values = new object?[columns.Length];
-                            for (var i = 0; i < values.Length; i++)
+                            any = true;
+                            var columns = new ResultColumn[reader.FieldCount];
+                            for (var i = 0; i < columns.Length; i++)
                             {
-                                values[i] = Read(reader, i);
+                                columns[i] = new ResultColumn(reader.GetName(i), reader.GetDataTypeName(i), reader.GetFieldType(i));
                             }
 
-                            rows.Add(values);
-                            rowCount++;
-                            if (rows.Count == batchSize)
+                            yield return new ResultSetStarted(columns);
+
+                            long rowCount = 0;
+                            var truncated = false;
+                            var rows = new List<object?[]>(batchSize);
+                            while (await Translate(reader.ReadAsync(cancellationToken), cancellationToken).ConfigureAwait(false))
+                            {
+                                if (request.MaxRows is { } max && rowCount >= max)
+                                {
+                                    truncated = true;
+                                    break;
+                                }
+
+                                var values = new object?[columns.Length];
+                                for (var i = 0; i < values.Length; i++)
+                                {
+                                    values[i] = Read(reader, i);
+                                }
+
+                                rows.Add(values);
+                                rowCount++;
+                                if (rows.Count == batchSize)
+                                {
+                                    yield return new RowBatch(rows);
+                                    rows = new List<object?[]>(batchSize);
+                                }
+                            }
+
+                            if (rows.Count > 0)
                             {
                                 yield return new RowBatch(rows);
-                                rows = new List<object?[]>(batchSize);
                             }
-                        }
 
-                        if (rows.Count > 0)
+                            yield return new ResultSetCompleted(rowCount, truncated);
+                        }
+                        while (await Translate(reader.NextResultAsync(cancellationToken), cancellationToken).ConfigureAwait(false));
+
+                        if (!any)
                         {
-                            yield return new RowBatch(rows);
+                            // Only DML has a meaningful count; for DDL and PL/SQL the driver's number means nothing.
+                            yield return new StatementCompleted(IsDml(request.Sql) && reader.RecordsAffected >= 0 ? reader.RecordsAffected : null);
                         }
-
-                        yield return new ResultSetCompleted(rowCount, truncated);
-                    }
-                    while (await Translate(reader.NextResultAsync(cancellationToken), cancellationToken).ConfigureAwait(false));
-
-                    if (!any)
-                    {
-                        // Only DML has a meaningful count; for DDL and PL/SQL the driver's number means nothing.
-                        yield return new StatementCompleted(IsDml(request.Sql) && reader.RecordsAffected >= 0 ? reader.RecordsAffected : null);
                     }
                 }
+            }
+            finally
+            {
+                // The statement has ended (or failed): no server cancel after this.
+                running.Value = false;
             }
         }
 
