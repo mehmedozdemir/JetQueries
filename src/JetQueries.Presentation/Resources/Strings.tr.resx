@@ -149,4 +149,25 @@
   <data name="GridSelectAll" xml:space="preserve"><value>Tümünü seç</value></data>
   <data name="GridNoRows" xml:space="preserve"><value>Gösterilecek kayıt yok</value></data>
   <data name="ConnectionNewLong" xml:space="preserve"><value>Yeni bağlantı</value></data>
+  <data name="FilterOp_Equals" xml:space="preserve"><value>eşittir</value></data>
+  <data name="FilterOp_NotEquals" xml:space="preserve"><value>eşit değil</value></data>
+  <data name="FilterOp_Contains" xml:space="preserve"><value>içerir</value></data>
+  <data name="FilterOp_NotContains" xml:space="preserve"><value>içermez</value></data>
+  <data name="FilterOp_StartsWith" xml:space="preserve"><value>ile başlar</value></data>
+  <data name="FilterOp_EndsWith" xml:space="preserve"><value>ile biter</value></data>
+  <data name="FilterOp_GreaterThan" xml:space="preserve"><value>büyüktür</value></data>
+  <data name="FilterOp_GreaterOrEqual" xml:space="preserve"><value>büyük veya eşit</value></data>
+  <data name="FilterOp_LessThan" xml:space="preserve"><value>küçüktür</value></data>
+  <data name="FilterOp_LessOrEqual" xml:space="preserve"><value>küçük veya eşit</value></data>
+  <data name="FilterOp_IsNull" xml:space="preserve"><value>NULL</value></data>
+  <data name="FilterOp_IsNotNull" xml:space="preserve"><value>NULL değil</value></data>
+  <data name="FilterCondition" xml:space="preserve"><value>KOŞUL</value></data>
+  <data name="FilterValue" xml:space="preserve"><value>Değer</value></data>
+  <data name="FilterApply" xml:space="preserve"><value>Uygula</value></data>
+  <data name="FilterClear" xml:space="preserve"><value>Temizle</value></data>
+  <data name="FilterValueRequired" xml:space="preserve"><value>Bir değer girin.</value></data>
+  <data name="FilterClearAll" xml:space="preserve"><value>Tümünü temizle</value></data>
+  <data name="FilterRemove" xml:space="preserve"><value>Filtreyi kaldır</value></data>
+  <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} / {1:N0} satır</value></data>
+  <data name="HiddenColumns" xml:space="preserve"><value>{0} gizli sütun · göster</value></data>
 </root>

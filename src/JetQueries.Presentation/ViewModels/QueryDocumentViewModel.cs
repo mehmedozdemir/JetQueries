@@ -27,7 +27,8 @@ public interface IResultTab
 /// <param name="Width">A starting width in device-independent pixels, from the header and the first rows.</param>
 /// <param name="IsNumeric">Numbers are aligned to the right.</param>
 /// <param name="ClrType">The .NET type of the values.</param>
-public sealed record ResultGridColumn(string Header, double Width, bool IsNumeric, Type ClrType);
+/// <param name="DataType">The database's name of the type.</param>
+public sealed record ResultGridColumn(string Header, double Width, bool IsNumeric, Type ClrType, string DataType = "");
 
 /// <summary>An open connection a query can run on.</summary>
 public sealed record SessionOption(ConnectionSession Session)
@@ -57,8 +58,12 @@ public sealed class QueryResultSet : IResultTab
     /// <param name="title">Caption of the tab.</param>
     /// <param name="columns">The columns of the result set.</param>
     /// <param name="sample">The first rows, used only to choose column widths; they are not added.</param>
-    public QueryResultSet(string title, IReadOnlyList<ResultColumn> columns, IReadOnlyList<object?[]>? sample = null)
+    /// <param name="jobs">Where sorting and filtering run; without one they run on the calling thread.</param>
+    /// <param name="ui">Where their results are applied.</param>
+    public QueryResultSet(
+        string title, IReadOnlyList<ResultColumn> columns, IReadOnlyList<object?[]>? sample = null, IJobQueue? jobs = null, IUiDispatcher? ui = null)
     {
+        View = new ResultSetView(this, jobs, ui);
         ArgumentNullException.ThrowIfNull(columns);
         Title = title;
         var gridColumns = new ResultGridColumn[columns.Count];
@@ -74,7 +79,7 @@ public sealed class QueryResultSet : IResultTab
                 longest = Math.Max(longest, Format(row[i])?.Length ?? 4);
             }
 
-            gridColumns[i] = new ResultGridColumn(name, Math.Clamp((longest * 7.4) + 24, 64, 420), IsNumeric(columns[i].ClrType), columns[i].ClrType);
+            gridColumns[i] = new ResultGridColumn(name, Math.Clamp((longest * 7.4) + 24, 64, 420), IsNumeric(columns[i].ClrType), columns[i].ClrType, columns[i].DataType);
         }
 
         Columns = gridColumns;
@@ -87,6 +92,18 @@ public sealed class QueryResultSet : IResultTab
     public IReadOnlyList<ResultGridColumn> Columns { get; }
 
     public int RowCount => _rows.Count;
+
+    /// <summary>The order and filters the grid shows the rows in.</summary>
+    public ResultSetView View { get; }
+
+    /// <summary>The value of a cell as the provider returned it.</summary>
+    public object? GetValue(int row, int column) => _rows[row][column];
+
+    /// <summary>The rows received so far, as a list that later rows do not change.</summary>
+    internal object?[][] SnapshotRows() => [.. _rows];
+
+    /// <summary>A value as the grid shows it.</summary>
+    internal static string? FormatValue(object? value) => Format(value);
 
     public void AddRows(IReadOnlyList<object?[]> rows)
     {
@@ -337,7 +354,7 @@ public partial class QueryDocumentViewModel : ObservableObject
                     // column widths can fit the data.
                     QueryResultSet Open(IReadOnlyList<object?[]>? sample)
                     {
-                        var created = new QueryResultSet(Format(Strings.ResultTitle, ++resultNumber), pending!, sample);
+                        var created = new QueryResultSet(Format(Strings.ResultTitle, ++resultNumber), pending!, sample, _jobs, _ui);
                         pending = null;
                         _ui.Post(() =>
                         {

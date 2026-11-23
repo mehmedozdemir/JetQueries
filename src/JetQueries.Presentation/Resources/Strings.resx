@@ -149,4 +149,25 @@
   <data name="GridSelectAll" xml:space="preserve"><value>Select all</value></data>
   <data name="GridNoRows" xml:space="preserve"><value>No rows to show</value></data>
   <data name="ConnectionNewLong" xml:space="preserve"><value>New connection</value></data>
+  <data name="FilterOp_Equals" xml:space="preserve"><value>equals</value></data>
+  <data name="FilterOp_NotEquals" xml:space="preserve"><value>is not</value></data>
+  <data name="FilterOp_Contains" xml:space="preserve"><value>contains</value></data>
+  <data name="FilterOp_NotContains" xml:space="preserve"><value>does not contain</value></data>
+  <data name="FilterOp_StartsWith" xml:space="preserve"><value>starts with</value></data>
+  <data name="FilterOp_EndsWith" xml:space="preserve"><value>ends with</value></data>
+  <data name="FilterOp_GreaterThan" xml:space="preserve"><value>greater than</value></data>
+  <data name="FilterOp_GreaterOrEqual" xml:space="preserve"><value>at least</value></data>
+  <data name="FilterOp_LessThan" xml:space="preserve"><value>less than</value></data>
+  <data name="FilterOp_LessOrEqual" xml:space="preserve"><value>at most</value></data>
+  <data name="FilterOp_IsNull" xml:space="preserve"><value>is NULL</value></data>
+  <data name="FilterOp_IsNotNull" xml:space="preserve"><value>is not NULL</value></data>
+  <data name="FilterCondition" xml:space="preserve"><value>CONDITION</value></data>
+  <data name="FilterValue" xml:space="preserve"><value>Value</value></data>
+  <data name="FilterApply" xml:space="preserve"><value>Apply</value></data>
+  <data name="FilterClear" xml:space="preserve"><value>Clear</value></data>
+  <data name="FilterValueRequired" xml:space="preserve"><value>Enter a value.</value></data>
+  <data name="FilterClearAll" xml:space="preserve"><value>Clear all</value></data>
+  <data name="FilterRemove" xml:space="preserve"><value>Remove filter</value></data>
+  <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} of {1:N0} rows</value></data>
+  <data name="HiddenColumns" xml:space="preserve"><value>{0} hidden columns · show</value></data>
 </root>
