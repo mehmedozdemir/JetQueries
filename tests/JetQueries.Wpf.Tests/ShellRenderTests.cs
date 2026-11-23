@@ -131,6 +131,12 @@ public sealed class ShellRenderTests
             }
 
             settingsWindow.Close();
+
+            var saveChanges = new SaveChangesDialog("Sorgu 1") { Left = -20000, Top = 0, ShowActivated = false };
+            saveChanges.Show();
+            await Idle();
+            results["save-changes"] = Capture(saveChanges, Path.Combine(directory, "wpf-save-changes-dark.png"));
+            saveChanges.Close();
             Assert.Equal(15d, (double)Application.Current.Resources["FontSize.Body"]);
             appearance.Apply(new AppearanceSettings());
             connections.FilterText = string.Empty;
@@ -139,7 +145,7 @@ public sealed class ShellRenderTests
             return results;
         });
 
-        Assert.Equal(9, colours.Count);
+        Assert.Equal(10, colours.Count);
         Assert.All(colours, static pair => Assert.True(pair.Value > 12, $"{pair.Key} rendered only {pair.Value} distinct colours."));
     }
 

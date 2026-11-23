@@ -76,6 +76,9 @@ public partial class App : Application
         MainWindow = window;
         window.Closing += OnMainWindowClosing;
         window.Show();
+
+        // The tabs of the last run come back (they reconnect when their connections are opened).
+        await services.GetRequiredService<DocumentsViewModel>().RestoreAsync();
         await StartHostAsync();
     }
 
@@ -111,7 +114,9 @@ public partial class App : Application
         _hostStopped = true;
         try
         {
-            await Host!.StopAsync(TimeSpan.FromSeconds(5));
+            // Unsaved texts are kept in the workspace, not asked about: they are back at the next start.
+            await Host!.Services.GetRequiredService<DocumentsViewModel>().SaveWorkspaceAsync();
+            await Host.StopAsync(TimeSpan.FromSeconds(5));
         }
 #pragma warning disable CA1031 // Shutting down: a failure to stop cleanly is logged, never shown.
         catch (Exception ex)

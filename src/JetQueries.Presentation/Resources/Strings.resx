@@ -188,4 +188,18 @@
   <data name="QuerySchema" xml:space="preserve"><value>Schema</value></data>
   <data name="QueryConnection" xml:space="preserve"><value>Connection</value></data>
   <data name="ExplorerFilter" xml:space="preserve"><value>Filter by name…</value></data>
+  <data name="FileOpen" xml:space="preserve"><value>Open</value></data>
+  <data name="FileOpenTip" xml:space="preserve"><value>Open an SQL file (Ctrl+O)</value></data>
+  <data name="FileSave" xml:space="preserve"><value>Save</value></data>
+  <data name="FileSaveTip" xml:space="preserve"><value>Save (Ctrl+S) · Save as (Ctrl+Shift+S)</value></data>
+  <data name="FileSaveAs" xml:space="preserve"><value>Save as…</value></data>
+  <data name="FileOpenFailed" xml:space="preserve"><value>{0} could not be opened: {1}</value></data>
+  <data name="FileSaveFailed" xml:space="preserve"><value>{0} could not be saved: {1}</value></data>
+  <data name="FileSaved" xml:space="preserve"><value>Saved: {0}</value></data>
+  <data name="FileTooLarge" xml:space="preserve"><value>The file is larger than {0} MB.</value></data>
+  <data name="SaveChangesTitle" xml:space="preserve"><value>Unsaved changes</value></data>
+  <data name="SaveChangesMessage" xml:space="preserve"><value>Save the changes to {0}?</value></data>
+  <data name="ButtonDontSave" xml:space="preserve"><value>Don't save</value></data>
+  <data name="SqlFiles" xml:space="preserve"><value>SQL files</value></data>
+  <data name="AllFiles" xml:space="preserve"><value>All files</value></data>
 </root>

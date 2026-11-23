@@ -18,6 +18,22 @@ dotnet run --project src/JetQueries.Wpf
 - [ ] Ctrl+N opens a new query tab; closing every tab shows the "No open queries" state with a button.
 - [ ] Turkish and English UI texts, including the grid's own menus (right-click a header or a cell).
 
+## SQL files and the workspace
+- [ ] Toolbar Open / Ctrl+O opens an `.sql` file in a tab named after the file (tool tip: full path); the
+      untouched empty tab of the start makes way for it; opening the same file again selects its tab.
+- [ ] Dropping `.sql` files on the window opens them.
+- [ ] Turkish text survives a round trip in UTF-8 (with and without BOM), UTF-16 and old Windows-1254 files:
+      open, edit, save, open in Notepad/SSMS — the encoding of the file is kept.
+- [ ] Typing marks the tab "Sorgu 1 *"; Ctrl+S saves (a new query asks where, offering "Sorgu 1.sql");
+      Ctrl+Shift+S saves as; the star goes away; the status bar says where it was saved.
+- [ ] Closing a changed tab (× or middle click) asks Save / Don't save / Cancel; Cancel keeps it; Save on a new
+      query asks for a file and keeps the tab if that is canceled. An empty new query closes without asking.
+- [ ] Close the application with unsaved and saved tabs, open it again: the same tabs, texts, selected tab,
+      stars. A saved file changed in the meantime shows its new content; a deleted file keeps its text as unsaved.
+- [ ] Restored tabs are on no connection until their connection is opened in the explorer; then they go back to
+      it and to their database. They never fall back to another connection by themselves.
+- [ ] New tabs continue the numbering of restored ones (Sorgu 3 after Sorgu 1, 2).
+
 ## Settings, density and zoom
 - [ ] The layout is tighter than before (toolbar, margins, tabs, tree rows) and nothing is clipped.
 - [ ] Toolbar → Settings: theme; UI font and text size (11–16); SQL editor font and size (9–24) with a sample
@@ -97,4 +113,8 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - PostgreSQL: after switching a tab's database, completion and the explorer still read the connection's own
   database (their metadata connection is not switched).
 - Each query tab after the first holds its own server connection while it is open (as in SSMS).
+- The workspace (`%AppData%\JetQueries\workspace.json`) holds the open tabs' texts as typed, like an editor's
+  recovery file: anything typed into a query (including a password) is stored there in plain text until the tab
+  is closed. Query history masks password literals; the workspace does not change the user's text.
+- Files larger than 50 MB are not opened in an editor tab.
 - The Avalonia application still builds (`JetQueries.Avalonia.exe`) but is no longer packaged or developed.

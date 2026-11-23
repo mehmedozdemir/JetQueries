@@ -8,6 +8,16 @@ namespace JetQueries.Wpf.Views;
 public partial class DocumentsView : UserControl
 {
     public DocumentsView() => InitializeComponent();
+
+    private void OnTabMouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton == System.Windows.Input.MouseButton.Middle && sender is TabItem { DataContext: QueryDocumentViewModel document } &&
+            DataContext is DocumentsViewModel documents)
+        {
+            documents.CloseCommand.Execute(document);
+            e.Handled = true;
+        }
+    }
 }
 
 /// <summary>0 → Visible (an empty state), anything else → Collapsed.</summary>

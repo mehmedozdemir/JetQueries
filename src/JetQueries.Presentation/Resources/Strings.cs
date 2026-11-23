@@ -171,6 +171,20 @@ public static class Strings
     public static string QuerySchema => Get(nameof(QuerySchema));
     public static string QueryConnection => Get(nameof(QueryConnection));
     public static string ExplorerFilter => Get(nameof(ExplorerFilter));
+    public static string FileOpen => Get(nameof(FileOpen));
+    public static string FileOpenTip => Get(nameof(FileOpenTip));
+    public static string FileSave => Get(nameof(FileSave));
+    public static string FileSaveTip => Get(nameof(FileSaveTip));
+    public static string FileSaveAs => Get(nameof(FileSaveAs));
+    public static string FileOpenFailed => Get(nameof(FileOpenFailed));
+    public static string FileSaveFailed => Get(nameof(FileSaveFailed));
+    public static string FileSaved => Get(nameof(FileSaved));
+    public static string FileTooLarge => Get(nameof(FileTooLarge));
+    public static string SaveChangesTitle => Get(nameof(SaveChangesTitle));
+    public static string SaveChangesMessage => Get(nameof(SaveChangesMessage));
+    public static string ButtonDontSave => Get(nameof(ButtonDontSave));
+    public static string SqlFiles => Get(nameof(SqlFiles));
+    public static string AllFiles => Get(nameof(AllFiles));
 
     /// <summary>A string looked up by a computed name (for example <c>Setting_server</c>), or null if there is none.</summary>
     public static string? Find(string name) => Manager.GetString(name, CultureInfo.CurrentUICulture);
