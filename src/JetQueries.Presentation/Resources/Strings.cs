@@ -203,6 +203,17 @@ public static class Strings
     public static string QueryButtonsInToolbar => Get(nameof(QueryButtonsInToolbar));
     public static string FieldFetchSize => Get(nameof(FieldFetchSize));
     public static string ResultShapeChanged => Get(nameof(ResultShapeChanged));
+    public static string RecordPosition => Get(nameof(RecordPosition));
+    public static string ViewGrid => Get(nameof(ViewGrid));
+    public static string ViewText => Get(nameof(ViewText));
+    public static string ViewRecord => Get(nameof(ViewRecord));
+    public static string RecordFirst => Get(nameof(RecordFirst));
+    public static string RecordPrevious => Get(nameof(RecordPrevious));
+    public static string RecordNext => Get(nameof(RecordNext));
+    public static string RecordLast => Get(nameof(RecordLast));
+    public static string RecordColumn => Get(nameof(RecordColumn));
+    public static string RecordValue => Get(nameof(RecordValue));
+    public static string RecordType => Get(nameof(RecordType));
 
     /// <summary>A string looked up by a computed name (for example <c>Setting_server</c>), or null if there is none.</summary>
     public static string? Find(string name) => Manager.GetString(name, CultureInfo.CurrentUICulture);
