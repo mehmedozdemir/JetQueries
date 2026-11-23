@@ -220,4 +220,15 @@
   <data name="QueryButtonsInToolbar" xml:space="preserve"><value>In the main toolbar</value></data>
   <data name="FieldFetchSize" xml:space="preserve"><value>Rows per page</value></data>
   <data name="ResultShapeChanged" xml:space="preserve"><value>The query returns different columns now; run it again.</value></data>
+  <data name="RecordPosition" xml:space="preserve"><value>Record {0:N0} / {1:N0}</value></data>
+  <data name="ViewGrid" xml:space="preserve"><value>Grid</value></data>
+  <data name="ViewText" xml:space="preserve"><value>Text</value></data>
+  <data name="ViewRecord" xml:space="preserve"><value>Record</value></data>
+  <data name="RecordFirst" xml:space="preserve"><value>First record</value></data>
+  <data name="RecordPrevious" xml:space="preserve"><value>Previous record</value></data>
+  <data name="RecordNext" xml:space="preserve"><value>Next record</value></data>
+  <data name="RecordLast" xml:space="preserve"><value>Last record</value></data>
+  <data name="RecordColumn" xml:space="preserve"><value>Column</value></data>
+  <data name="RecordValue" xml:space="preserve"><value>Value</value></data>
+  <data name="RecordType" xml:space="preserve"><value>Type</value></data>
 </root>

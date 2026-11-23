@@ -282,6 +282,9 @@ public sealed class VirtualGrid : FrameworkElement
         }
     }
 
+    /// <summary>Makes a row current, keeping the current column, and scrolls it into view.</summary>
+    public void SelectRow(int row) => SetCurrent(row, Math.Max(0, _curCol), keepAnchor: false);
+
     public void SelectAll()
     {
         if (_source.RowCount == 0 || _display.Length == 0) return;

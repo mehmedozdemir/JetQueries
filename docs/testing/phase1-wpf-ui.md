@@ -121,6 +121,17 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] Sort or filter while a long query is still returning rows: the new rows follow the order and the filters.
 - [ ] On 100,000 rows a sort or filter takes well under a second and the window never freezes.
 
+## Grid, Text and Record views
+- [ ] The strip left of the grid has Grid, Text and Record; the current one is highlighted.
+- [ ] Text shows the rows as a plain-text table: header, a dashed line, numbers aligned right, NULL as
+      `[NULL]`, line breaks inside a value as a space, values longer than 80 characters cut with "…". It follows
+      the grid's sort, filters and hidden columns, and can be selected and copied. More than 100,000 rows end
+      with a "… N" line.
+- [ ] Record starts on the grid's current row ("Record 5 / 40"); the arrows move to first / previous / next /
+      last; NULL shows as a muted NULL; hidden columns are left out; long values can be selected.
+- [ ] Back to Grid: the grid's current row is the record shown last.
+- [ ] New rows (Next page, Fetch all), sorting and filtering update the text and the record view.
+
 ## History
 - [ ] The History tab lists runs; search filters after a short pause; double-click or Open reopens a run;
       Clear all asks first.

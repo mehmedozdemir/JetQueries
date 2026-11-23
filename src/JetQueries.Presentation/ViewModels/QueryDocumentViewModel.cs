@@ -54,6 +54,7 @@ public sealed class QueryMessagesTab : IResultTab
 public sealed partial class QueryResultSet : ObservableObject, IResultTab
 {
     private readonly List<object?[]> _rows = [];
+    private readonly IJobQueue? _jobs;
 
     /// <param name="title">Caption of the tab.</param>
     /// <param name="columns">The columns of the result set.</param>
@@ -63,7 +64,10 @@ public sealed partial class QueryResultSet : ObservableObject, IResultTab
     public QueryResultSet(
         string title, IReadOnlyList<ResultColumn> columns, IReadOnlyList<object?[]>? sample = null, IJobQueue? jobs = null, IUiDispatcher? ui = null)
     {
+        _jobs = jobs;
         View = new ResultSetView(this, jobs, ui);
+        View.Changed += (_, _) => RefreshRecord();
+        RowCountChanged += (_, _) => RefreshRecord();
         ArgumentNullException.ThrowIfNull(columns);
         Title = title;
         var gridColumns = new ResultGridColumn[columns.Count];
@@ -104,6 +108,95 @@ public sealed partial class QueryResultSet : ObservableObject, IResultTab
     /// <summary>The row count is being computed.</summary>
     [ObservableProperty]
     public partial bool IsCounting { get; set; }
+
+    /// <summary>Grid, text or record view.</summary>
+    [ObservableProperty]
+    public partial ResultViewMode ViewMode { get; set; }
+
+    /// <summary>The shown row (in the view's order) the record view shows.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(RecordFields), nameof(RecordPosition))]
+    [NotifyCanExecuteChangedFor(nameof(FirstRecordCommand), nameof(PreviousRecordCommand), nameof(NextRecordCommand), nameof(LastRecordCommand))]
+    public partial int RecordIndex { get; set; }
+
+    /// <summary>The columns the record view lists, in order; null for all (the grid's hidden columns are left out).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(RecordFields))]
+    public partial IReadOnlyList<int>? RecordColumns { get; set; }
+
+    /// <summary>The columns of the record view's row.</summary>
+    public IReadOnlyList<ResultRecordField> RecordFields
+    {
+        get
+        {
+            if (View.RowCount == 0)
+            {
+                return [];
+            }
+
+            var row = View.SourceRow(Math.Clamp(RecordIndex, 0, View.RowCount - 1));
+            return [.. (RecordColumns ?? [.. Enumerable.Range(0, Columns.Count)]).Select(c =>
+            {
+                var text = GetText(row, c);
+                return new ResultRecordField(Columns[c].Header, text ?? string.Empty, Columns[c].DataType, text is null);
+            })];
+        }
+    }
+
+    /// <summary>"Record 5 / 200" (one-based).</summary>
+    public string RecordPosition => View.RowCount == 0
+        ? string.Empty
+        : string.Format(CultureInfo.CurrentCulture, CompositeFormat.Parse(Strings.RecordPosition), Math.Clamp(RecordIndex, 0, View.RowCount - 1) + 1, View.RowCount);
+
+    partial void OnRecordIndexChanged(int value)
+    {
+        var clamped = Math.Clamp(value, 0, Math.Max(0, View.RowCount - 1));
+        if (clamped != value)
+        {
+            RecordIndex = clamped;
+        }
+    }
+
+    private bool CanGoBack() => RecordIndex > 0;
+
+    private bool CanGoOn() => RecordIndex < View.RowCount - 1;
+
+    [RelayCommand(CanExecute = nameof(CanGoBack))]
+    private void FirstRecord() => RecordIndex = 0;
+
+    [RelayCommand(CanExecute = nameof(CanGoBack))]
+    private void PreviousRecord() => RecordIndex--;
+
+    [RelayCommand(CanExecute = nameof(CanGoOn))]
+    private void NextRecord() => RecordIndex++;
+
+    [RelayCommand(CanExecute = nameof(CanGoOn))]
+    private void LastRecord() => RecordIndex = View.RowCount - 1;
+
+    /// <summary>The rows as the text view shows them (in the view's order), built as a background job.</summary>
+    /// <param name="visible">The columns to write; null for all.</param>
+    public Task<string> BuildTextAsync(IReadOnlyList<int>? visible)
+    {
+        // Read on the UI thread (rows arrive there); written off it.
+        var rows = SnapshotRows();
+        var map = View.RowMap;
+        IReadOnlyList<object?[]> ordered = map is null ? rows : [.. map.Select(i => rows[i])];
+        var columns = Columns;
+        return _jobs is null
+            ? Task.FromResult(ResultTextFormatter.Format(columns, ordered, visible, CancellationToken.None))
+            : _jobs.Enqueue("Format results as text", context => Task.FromResult(ResultTextFormatter.Format(columns, ordered, visible, context.CancellationToken)), JobPriority.High).Completion;
+    }
+
+    /// <summary>The record view follows new rows, sorting and filtering.</summary>
+    private void RefreshRecord()
+    {
+        OnPropertyChanged(nameof(RecordFields));
+        OnPropertyChanged(nameof(RecordPosition));
+        FirstRecordCommand.NotifyCanExecuteChanged();
+        PreviousRecordCommand.NotifyCanExecuteChanged();
+        NextRecordCommand.NotifyCanExecuteChanged();
+        LastRecordCommand.NotifyCanExecuteChanged();
+    }
 
     /// <summary>"200+" while more may follow, "200 / 12,345" once counted, "200" otherwise (DBeaver's row counter).</summary>
     public string RowsText => TotalRows is { } total

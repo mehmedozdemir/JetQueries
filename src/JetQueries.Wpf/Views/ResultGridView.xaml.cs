@@ -116,6 +116,9 @@ public partial class ResultGridView : UserControl
         UpdateChips();
     }
 
+    /// <summary>The text view, for tests.</summary>
+    internal string ShownText => TextView.Text;
+
     /// <summary>Opens the filter panel of a column, as the header's filter button does.</summary>
     internal void OpenFilter(int column) => OpenFilter(column, new Rect(0, 0, 160, 36));
 
@@ -130,6 +133,7 @@ public partial class ResultGridView : UserControl
         {
             _set.RowCountChanged -= OnRowCountChanged;
             _set.View.Changed -= OnViewChanged;
+            _set.PropertyChanged -= OnSetPropertyChanged;
         }
 
         _set = set;
@@ -143,8 +147,10 @@ public partial class ResultGridView : UserControl
 
         set.RowCountChanged += OnRowCountChanged;
         set.View.Changed += OnViewChanged;
+        set.PropertyChanged += OnSetPropertyChanged;
         ApplyVisibleColumns();
         ShowView();
+        ApplyMode(previous: ResultViewMode.Grid);
     }
 
     private void OnRowCountChanged(object? sender, EventArgs e)
@@ -200,6 +206,103 @@ public partial class ResultGridView : UserControl
         Grid.Sorts = [.. view.Sorts.Select(static s => new GridSort(s.Column, s.Descending ? GridSortDirection.Descending : GridSortDirection.Ascending))];
         Grid.FilteredColumns = view.Filters.Select(static f => f.Column).ToHashSet();
         UpdateChips();
+        if (_set.ViewMode == ResultViewMode.Text)
+        {
+            _ = ShowTextAsync();
+        }
+    }
+
+    private ResultViewMode _mode = ResultViewMode.Grid;
+    private int _textVersion;
+
+    private void OnModeClick(object sender, RoutedEventArgs e)
+    {
+        if (_set is not null && sender is FrameworkElement { Tag: string tag } && Enum.TryParse<ResultViewMode>(tag, out var mode))
+        {
+            _set.ViewMode = mode;
+        }
+
+        // The toggles show the mode, not their own clicks.
+        ApplyToggles();
+    }
+
+    private void OnSetPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(QueryResultSet.ViewMode))
+        {
+            ApplyMode(_mode);
+        }
+    }
+
+    /// <summary>Shows the grid, the text or the record view; the record view starts at the grid's current row and the grid comes back on the record's row.</summary>
+    private void ApplyMode(ResultViewMode previous)
+    {
+        if (_set is null)
+        {
+            return;
+        }
+
+        var mode = _set.ViewMode;
+        _mode = mode;
+        Grid.Visibility = mode == ResultViewMode.Grid ? Visibility.Visible : Visibility.Collapsed;
+        TextView.Visibility = mode == ResultViewMode.Text ? Visibility.Visible : Visibility.Collapsed;
+        RecordView.Visibility = mode == ResultViewMode.Record ? Visibility.Visible : Visibility.Collapsed;
+        ApplyToggles();
+
+        // The grid's current row is the one place the row is kept: leaving the record view moves it there.
+        if (previous == ResultViewMode.Record && mode != ResultViewMode.Record)
+        {
+            var row = _set.RecordIndex;
+            Dispatcher.BeginInvoke(() => Grid.SelectRow(row), DispatcherPriority.Loaded);
+        }
+
+        switch (mode)
+        {
+            case ResultViewMode.Text:
+                _ = ShowTextAsync();
+                break;
+            case ResultViewMode.Record:
+                _set.RecordColumns = Grid.VisibleColumns;
+                if (previous != ResultViewMode.Record && Grid.CurrentRow >= 0)
+                {
+                    _set.RecordIndex = Grid.CurrentRow;
+                }
+
+                break;
+        }
+    }
+
+    private void ApplyToggles()
+    {
+        var mode = _set?.ViewMode ?? ResultViewMode.Grid;
+        GridMode.IsChecked = mode == ResultViewMode.Grid;
+        TextMode.IsChecked = mode == ResultViewMode.Text;
+        RecordMode.IsChecked = mode == ResultViewMode.Record;
+    }
+
+    /// <summary>Builds the text table in the background; only the newest build is shown.</summary>
+    private async Task ShowTextAsync()
+    {
+        if (_set is not { } set)
+        {
+            return;
+        }
+
+        var version = ++_textVersion;
+        string text;
+        try
+        {
+            text = await set.BuildTextAsync(Grid.VisibleColumns);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        if (version == _textVersion && ReferenceEquals(set, _set))
+        {
+            TextView.Text = text;
+        }
     }
 
     private void UpdateChips()
@@ -218,8 +321,18 @@ public partial class ResultGridView : UserControl
         ChipBar.Visibility = view.Filters.Count > 0 || _hidden.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    private void ApplyVisibleColumns() =>
+    private void ApplyVisibleColumns()
+    {
         Grid.VisibleColumns = _set is null || _hidden.Count == 0 ? null : Enumerable.Range(0, _set.Columns.Count).Where(c => !_hidden.Contains(c)).ToList();
+        if (_set is not null)
+        {
+            _set.RecordColumns = Grid.VisibleColumns;
+            if (_set.ViewMode == ResultViewMode.Text)
+            {
+                _ = ShowTextAsync();
+            }
+        }
+    }
 
     internal static string OperatorText(ResultFilterOperator op) => Strings.Find("FilterOp_" + op) ?? op.ToString();
 

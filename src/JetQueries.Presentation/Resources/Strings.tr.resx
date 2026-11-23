@@ -220,4 +220,15 @@
   <data name="QueryButtonsInToolbar" xml:space="preserve"><value>Ana araç çubuğunda</value></data>
   <data name="FieldFetchSize" xml:space="preserve"><value>Sayfa başına satır</value></data>
   <data name="ResultShapeChanged" xml:space="preserve"><value>Sorgu artık farklı sütunlar döndürüyor; yeniden çalıştırın.</value></data>
+  <data name="RecordPosition" xml:space="preserve"><value>Kayıt {0:N0} / {1:N0}</value></data>
+  <data name="ViewGrid" xml:space="preserve"><value>Tablo</value></data>
+  <data name="ViewText" xml:space="preserve"><value>Metin</value></data>
+  <data name="ViewRecord" xml:space="preserve"><value>Kayıt</value></data>
+  <data name="RecordFirst" xml:space="preserve"><value>İlk kayıt</value></data>
+  <data name="RecordPrevious" xml:space="preserve"><value>Önceki kayıt</value></data>
+  <data name="RecordNext" xml:space="preserve"><value>Sonraki kayıt</value></data>
+  <data name="RecordLast" xml:space="preserve"><value>Son kayıt</value></data>
+  <data name="RecordColumn" xml:space="preserve"><value>Sütun</value></data>
+  <data name="RecordValue" xml:space="preserve"><value>Değer</value></data>
+  <data name="RecordType" xml:space="preserve"><value>Tip</value></data>
 </root>

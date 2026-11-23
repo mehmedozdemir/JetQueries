@@ -98,6 +98,90 @@ public sealed class ResultGridViewTests
         Assert.All(colours, static pair => Assert.True(pair.Value > 12, $"{pair.Key} rendered only {pair.Value} distinct colours."));
     }
 
+    [Fact]
+    public async Task Text_and_record_views_show_the_rows_as_the_grid_orders_them()
+    {
+        var directory = Path.Combine(AppContext.BaseDirectory, "screenshots");
+        Directory.CreateDirectory(directory);
+
+        var colours = await WpfTestHost.RunAsync(async () =>
+        {
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("tr");
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("tr-TR");
+            var results = new Dictionary<string, int>();
+            string[] cities = ["İstanbul", "Ankara", "İzmir", "Bursa", "Antalya"];
+            var set = new QueryResultSet(
+                "Sonuç 1",
+                [
+                    new ResultColumn("Id", "bigint", typeof(long)), new ResultColumn("City", "nvarchar(40)", typeof(string)),
+                    new ResultColumn("Balance", "decimal(12,2)", typeof(decimal)), new ResultColumn("IssuedAt", "date", typeof(DateTime)),
+                    new ResultColumn("Note", "nvarchar(max)", typeof(string)),
+                ],
+                null,
+                null,
+                new ImmediateDispatcher());
+            set.AddRows([.. Enumerable.Range(1, 40).Select(i => new object?[]
+            {
+                (long)i, cities[i % cities.Length], i % 7 == 0 ? null : i * 37.5m, new DateTime(2026, 1, 1).AddDays(i),
+                i % 3 == 0 ? "Teslimat adresi güncellendi, müşteri bilgilendirildi" : null,
+            })]);
+            await set.View.SetSortAsync(2, descending: true);
+
+            var view = new ResultGridView { DataContext = set };
+            var window = new Window
+            {
+                Content = new Border { Style = (Style)Application.Current.FindResource("Card.Surface"), Child = view },
+                Width = 900,
+                Height = 440,
+                Left = -20000,
+                ShowActivated = false,
+                ShowInTaskbar = false,
+                Style = (Style)Application.Current.FindResource("Window.App"),
+            };
+            window.Show();
+            await Idle();
+
+            view.VirtualGrid.SelectRow(4);
+            set.ViewMode = ResultViewMode.Text;
+            await Idle();
+            var lines = view.ShownText.Split('\n');
+            Assert.StartsWith("Id | City", lines[0], StringComparison.Ordinal);
+            Assert.StartsWith("40 | İstanbul", lines[2], StringComparison.Ordinal);
+            Assert.Contains("[NULL]", view.ShownText, StringComparison.Ordinal);
+
+            // The record view starts on the grid's current row, in the grid's order.
+            set.ViewMode = ResultViewMode.Record;
+            await Idle();
+            Assert.Equal(4, set.RecordIndex);
+            Assert.Equal("Kayıt 5 / 40", set.RecordPosition);
+
+            foreach (var theme in new[] { AppTheme.Dark, AppTheme.Light })
+            {
+                ThemeManager.Apply(theme, save: false);
+                var suffix = theme == AppTheme.Dark ? "dark" : "light";
+                set.ViewMode = ResultViewMode.Text;
+                await Idle();
+                results[$"text-{suffix}"] = Capture((FrameworkElement)window.Content, Path.Combine(directory, $"wpf-results-text-{suffix}.png"));
+                set.ViewMode = ResultViewMode.Record;
+                await Idle();
+                results[$"record-{suffix}"] = Capture((FrameworkElement)window.Content, Path.Combine(directory, $"wpf-results-record-{suffix}.png"));
+            }
+
+            // Back in the grid on the record's row.
+            set.NextRecordCommand.Execute(null);
+            set.ViewMode = ResultViewMode.Grid;
+            await Idle();
+            Assert.Equal(5, view.VirtualGrid.CurrentRow);
+
+            window.Close();
+            ThemeManager.Apply(AppTheme.Dark, save: false);
+            return results;
+        });
+
+        Assert.Equal(4, colours.Count);
+        Assert.All(colours, static pair => Assert.True(pair.Value > 12, $"{pair.Key} rendered only {pair.Value} distinct colours."));
+    }
+
     private static async Task Idle()
     {
         for (var i = 0; i < 3; i++)
