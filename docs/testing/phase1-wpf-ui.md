@@ -121,6 +121,20 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] Sort or filter while a long query is still returning rows: the new rows follow the order and the filters.
 - [ ] On 100,000 rows a sort or filter takes well under a second and the window never freezes.
 
+## SQL filter over the grid (server side)
+- [ ] Run a single SELECT: the box above the grid says "Enter a SQL expression to filter results"; for a script,
+      a procedure call or DML it is disabled and its tool tip says only a single SELECT can be filtered.
+- [ ] Type a condition over the result's columns (`balance > 100 AND city LIKE 'İ%'`) and press Enter or the
+      funnel: the query runs again with the condition, the first page shows, the box gets an accent border.
+      The filter covers every row of the table, not only those fetched.
+- [ ] The query's ORDER BY is kept (also `ORDER BY t.col`, `TOP`, `OFFSET … FETCH`, `LIMIT`).
+- [ ] Next page, Fetch all, Count and Refresh use the filter; running the editor again (F5) removes it.
+- [ ] Esc in the box puts back the applied filter; × removes the filter and shows the plain first page.
+- [ ] `1 = 1; DROP TABLE x`, a `--` comment, an open parenthesis or an unclosed string is refused with
+      "The filter must be one SQL condition…", nothing is sent and the rows stay.
+- [ ] A wrong column name shows the server's error under Messages; the rows shown stay.
+- [ ] After a filtered page nothing is left open on the server (session idle, no locks).
+
 ## Grid, Text and Record views
 - [ ] The strip left of the grid has Grid, Text and Record; the current one is highlighted.
 - [ ] Text shows the rows as a plain-text table: header, a dashed line, numbers aligned right, NULL as
@@ -137,13 +151,18 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
       Clear all asks first.
 
 ## Known limits
-- Sorting and filtering apply to the rows received, not to the database query (no ORDER BY / WHERE is added).
+- Header sorting and column filters apply to the rows received; the SQL filter box above the grid is the one
+  that filters on the server.
 - Nothing stays open on the server between pages (checked on SQL Server and PostgreSQL: DDL on the table is not
   blocked, no snapshot is held). While a page is being read the statement takes the usual short-lived read locks
   of any SELECT. "Next page" and "Fetch all" run the query again: each costs a new execution, and the rows shown
   are those of that execution (they may differ from the first page if the data changed meanwhile).
 - SQL Server: a query starting with WITH is not paged (SQL Server cannot count it) and is read to its end.
-- Filters on several columns are combined with AND; there is no OR.
+- Filters on several columns are combined with AND; there is no OR (the SQL filter box takes any condition).
+- SQL filter: no completion in the box yet. SQL Server cannot wrap a query starting with WITH, nor one whose
+  columns repeat a name (`SELECT a.id, b.id …`): the server's error is shown. A query ordered by an expression
+  is wrapped with its ORDER BY inside (SQL Server: `OFFSET 0 ROWS`), where the order is kept in practice but not
+  guaranteed by the SQL standard.
 - Idle memory of the WPF application is about 370 MB (budget: 200 MB); not investigated yet.
 - The editor's zoom is shared by the query tabs (one editor view shows the selected tab).
 - The explorer filter searches what has been loaded (expanded) so far, not the whole catalog.

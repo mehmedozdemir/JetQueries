@@ -355,6 +355,34 @@ public sealed class SqlServerIntegrationTests(SqlServerFixture fixture) : IClass
         Assert.True(Convert.ToInt64(rows.OfType<RowBatch>().Single().Rows[0][0], System.Globalization.CultureInfo.InvariantCulture) > 0);
     }
 
+    private const string Numbers = "SELECT v.n, v.n % 3 AS m FROM (VALUES (1),(2),(3),(4),(5),(6),(7),(8),(9)) v(n)";
+
+    [Theory]
+    [InlineData(Numbers + " ORDER BY n DESC", "m = 0", "9,6,3")]
+    [InlineData(Numbers + " ORDER BY v.n DESC;", "m = 0", "9,6,3")]
+    [InlineData(Numbers + " ORDER BY m, n DESC", "n > 6", "9,7,8")]
+    [InlineData("SELECT TOP (4) v.n FROM (VALUES (1),(2),(3),(4),(5),(6)) v(n) ORDER BY v.n", "n % 2 = 0", "2,4")]
+    [InlineData(Numbers + " ORDER BY v.n OFFSET 2 ROWS FETCH NEXT 3 ROWS ONLY", "n <> 4", "3,5")]
+    [InlineData("-- numbers\n" + Numbers, "n IN (SELECT 2 UNION SELECT 8) AND CAST(m AS nvarchar(5)) <> N'İ'", "2,8")]
+    [InlineData(Numbers + " ORDER BY n", "m = 0; DROP TABLE x", null)]
+    [InlineData(Numbers + " ORDER BY n", "m = 0 -- the rest", null)]
+    [InlineData(Numbers + " ORDER BY n", "(m = 0", null)]
+    [InlineData(Numbers + " ORDER BY n", "m = 'never ends", null)]
+    public async Task A_sql_filter_narrows_the_query_on_the_server_and_keeps_its_order(string sql, string condition, string? expected)
+    {
+        var filtered = new SqlServerProvider().BuildFilterQuery(sql.Replace("\\n", "\n", StringComparison.Ordinal), condition);
+        if (expected is null)
+        {
+            Assert.Null(filtered);
+            return;
+        }
+
+        Assert.NotNull(filtered);
+        await using var connection = await OpenAsync();
+        var events = await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest(filtered), Token));
+        Assert.Equal(expected, string.Join(",", events.OfType<RowBatch>().SelectMany(static b => b.Rows).Select(static r => Convert.ToInt64(r[0], System.Globalization.CultureInfo.InvariantCulture))));
+    }
+
     [Fact]
     public async Task The_current_database_can_be_read_listed_and_switched()
     {

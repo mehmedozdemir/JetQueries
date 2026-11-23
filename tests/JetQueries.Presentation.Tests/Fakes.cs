@@ -205,7 +205,7 @@ internal sealed class FakeExtensions(IDatabaseProvider provider) : IExtensionHos
 }
 
 /// <summary>A provider with SQL Server-like settings that connects to nothing.</summary>
-internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvider, IRowCountQueryBuilder
+internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvider, IRowCountQueryBuilder, IResultFilterQueryBuilder
 {
     public string? OpenError { get; set; }
 
@@ -257,6 +257,9 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
 
     /// <summary>"COUNT(" + the query + ")" for a SELECT; null otherwise.</summary>
     public string? BuildCountQuery(string sql) => sql.StartsWith("SELECT", StringComparison.OrdinalIgnoreCase) ? "COUNT(" + sql + ")" : null;
+
+    public string? BuildFilterQuery(string sql, string condition) =>
+        BuildCountQuery(sql) is null || condition.Contains(';', StringComparison.Ordinal) ? null : "SELECT * FILTER(" + sql + " WHERE " + condition + ")";
 
     /// <summary>How many result enumerations were disposed before they ended (open cursors closed early).</summary>
     public int ClosedEarly => _closedEarly;

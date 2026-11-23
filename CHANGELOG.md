@@ -59,6 +59,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 - Text and Record views of a result (DBeaver-style strip left of the grid): the text view is an aligned
   plain-text table of the rows in the grid's order and columns, built in the background; the record view
   lists one row's columns with value and type, with first / previous / next / last, and keeps the grid's row.
+- SQL filter over the grid ("Enter a SQL expression to filter results"): the query runs again on the server
+  wrapped as `SELECT * FROM (query) jq_filter WHERE (condition)`, keeping its order, and pages, counts and
+  refreshes with the filter; nothing stays open between pages. The condition must be one expression (no `;`,
+  no comments, closed parentheses and strings). SDK preview: `IResultFilterQueryBuilder`, for SQL Server,
+  Oracle, PostgreSQL and SQLite.
 
 ### Changed
 - A result set may hold up to 1,000,000 rows (was 100,000), fetched page by page.

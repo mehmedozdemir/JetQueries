@@ -18,7 +18,7 @@ public sealed class OracleExtension : IExtension
 }
 
 /// <summary>Database provider for Oracle Database, on the managed ODP.NET driver (no Oracle client installation needed).</summary>
-public sealed class OracleProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder
+public sealed class OracleProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder
 {
     /// <summary>The provider identifier stored in connection profiles.</summary>
     public const string ProviderId = "oracle";
@@ -72,6 +72,15 @@ public sealed class OracleProvider : IDatabaseProvider, IConnectionSettingsProvi
     /// <inheritdoc />
     public string? BuildCountQuery(string sql) =>
         CountQueryBuilder.Build(sql.TrimEnd().TrimEnd('/').TrimEnd(), PlSqlTokenizer.Tokenize(sql.TrimEnd().TrimEnd('/').TrimEnd()), withAllowedInside: true, orderByNeedsPaging: false);
+
+    /// <inheritdoc />
+    public string? BuildFilterQuery(string sql, string condition)
+    {
+        ArgumentNullException.ThrowIfNull(sql);
+        ArgumentNullException.ThrowIfNull(condition);
+        var query = sql.TrimEnd().TrimEnd('/').TrimEnd();
+        return CountQueryBuilder.BuildFilter(query, PlSqlTokenizer.Tokenize(query), condition, PlSqlTokenizer.Tokenize(condition), withAllowedInside: true, orderByNeedsPaging: false);
+    }
 
     /// <inheritdoc />
     public string QuoteIdentifier(string identifier) => OracleNames.Quote(identifier);

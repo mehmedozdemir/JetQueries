@@ -300,6 +300,33 @@ public sealed class PostgreSqlIntegrationTests(PostgreSqlFixture fixture) : ICla
         Assert.Equal(2L, events.OfType<RowBatch>().Single().Rows[0][0]);
     }
 
+    private const string Numbers = "SELECT v.n, v.n % 3 AS m FROM (VALUES (1),(2),(3),(4),(5),(6),(7),(8),(9)) v(n)";
+
+    [Theory]
+    [InlineData(Numbers + " ORDER BY n DESC", "m = 0", "9,6,3")]
+    [InlineData(Numbers + " ORDER BY v.n DESC;", "m = 0", "9,6,3")]
+    [InlineData(Numbers + " ORDER BY m, n DESC", "n > 6", "9,7,8")]
+    [InlineData(Numbers + " ORDER BY n LIMIT 4", "n % 2 = 0", "2,4")]
+    [InlineData("WITH RECURSIVE s(n) AS (SELECT 1 UNION ALL SELECT n + 1 FROM s WHERE n < 9) SELECT n, n % 3 AS m FROM s ORDER BY n DESC", "m = 0 AND 'İ' <> 'i'", "9,6,3")]
+    [InlineData(Numbers + " ORDER BY n", "m = 0; DROP TABLE x", null)]
+    [InlineData(Numbers + " ORDER BY n", "m = 0 -- the rest", null)]
+    [InlineData(Numbers + " ORDER BY n", "(m = 0", null)]
+    [InlineData(Numbers + " ORDER BY n", "m = 'never ends", null)]
+    public async Task A_sql_filter_narrows_the_query_on_the_server_and_keeps_its_order(string sql, string condition, string? expected)
+    {
+        var filtered = new PostgreSqlProvider().BuildFilterQuery(sql, condition);
+        if (expected is null)
+        {
+            Assert.Null(filtered);
+            return;
+        }
+
+        Assert.NotNull(filtered);
+        await using var connection = await OpenAsync();
+        var events = await Collect(connection.Executor.ExecuteAsync(new QueryRequest(filtered), Token));
+        Assert.Equal(expected, string.Join(",", events.OfType<RowBatch>().SelectMany(static b => b.Rows).Select(static r => Convert.ToInt64(r[0], System.Globalization.CultureInfo.InvariantCulture))));
+    }
+
     [Fact]
     public async Task Row_counts_and_an_early_closed_cursor_work_on_the_server()
     {
