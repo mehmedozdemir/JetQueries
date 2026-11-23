@@ -85,28 +85,35 @@ public sealed class PostgreSqlProvider : IDatabaseProvider, IConnectionSettingsP
         CancellationToken cancellationToken)
     {
         // The connection string holds the password: it lives only in this local and inside the driver.
-        var connection = new NpgsqlConnection(PostgreSqlConnectionSettings.BuildConnectionString(profile, credential));
+        // Unmapped types (the user's enums, ranges, composites) are read as text instead of failing; that is
+        // opt-in on a data source, so each session connection gets its own small one.
+        var dataSource = new NpgsqlDataSourceBuilder(PostgreSqlConnectionSettings.BuildConnectionString(profile, credential))
+            .EnableUnmappedTypes()
+            .Build();
         try
         {
-            await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+            var connection = await dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+            return new PostgreSqlDatabaseConnection(dataSource, connection);
         }
         catch
         {
-            await connection.DisposeAsync().ConfigureAwait(false);
+            await dataSource.DisposeAsync().ConfigureAwait(false);
             throw;
         }
-
-        return new PostgreSqlDatabaseConnection(connection);
     }
 }
 
-internal sealed class PostgreSqlDatabaseConnection(NpgsqlConnection connection) : IDatabaseConnection
+internal sealed class PostgreSqlDatabaseConnection(NpgsqlDataSource dataSource, NpgsqlConnection connection) : IDatabaseConnection
 {
     public IQueryExecutor Executor { get; } = new PostgreSqlQueryExecutor(connection);
 
     public IMetadataProvider Metadata { get; } = new PostgreSqlMetadataProvider(connection);
 
-    public ValueTask DisposeAsync() => connection.DisposeAsync();
+    public async ValueTask DisposeAsync()
+    {
+        await connection.DisposeAsync().ConfigureAwait(false);
+        await dataSource.DisposeAsync().ConfigureAwait(false);
+    }
 }
 
 internal static class PostgreSqlNames

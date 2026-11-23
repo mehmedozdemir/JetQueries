@@ -43,7 +43,7 @@ internal sealed class PostgreSqlQueryExecutor(NpgsqlConnection connection) : IQu
                     command.Parameters.Add(new NpgsqlParameter(parameter.Name, parameter.Value ?? DBNull.Value));
                 }
 
-                var reader = await Translate(() => command.ExecuteReaderAsync(CommandBehavior.Default, cancellationToken), cancellationToken).ConfigureAwait(false);
+                var reader = await Translate(() => command.ExecuteReaderAsync(CommandBehavior.Default, cancellationToken), request.Sql, cancellationToken).ConfigureAwait(false);
                 await using (reader.ConfigureAwait(false))
                 {
                     var any = false;
@@ -71,7 +71,7 @@ internal sealed class PostgreSqlQueryExecutor(NpgsqlConnection connection) : IQu
                         long rowCount = 0;
                         var truncated = false;
                         var rows = new List<object?[]>(batchSize);
-                        while (await Translate(() => reader.ReadAsync(cancellationToken), cancellationToken).ConfigureAwait(false))
+                        while (await Translate(() => reader.ReadAsync(cancellationToken), request.Sql, cancellationToken).ConfigureAwait(false))
                         {
                             if (request.MaxRows is { } max && rowCount >= max)
                             {
@@ -105,7 +105,7 @@ internal sealed class PostgreSqlQueryExecutor(NpgsqlConnection connection) : IQu
 
                         yield return new ResultSetCompleted(rowCount, truncated);
                     }
-                    while (await Translate(() => reader.NextResultAsync(cancellationToken), cancellationToken).ConfigureAwait(false));
+                    while (await Translate(() => reader.NextResultAsync(cancellationToken), request.Sql, cancellationToken).ConfigureAwait(false));
 
                     while (pending.TryDequeue(out var message))
                     {
@@ -183,7 +183,9 @@ internal sealed class PostgreSqlQueryExecutor(NpgsqlConnection connection) : IQu
                 {
                     "interval" => FormatInterval(reader.GetFieldValue<NpgsqlInterval>(ordinal)),
                     "numeric" => reader.GetFieldValue<BigInteger>(ordinal).ToString(CultureInfo.InvariantCulture),
-                    _ => $"({dataType})",
+
+                    // Enums and other types without a .NET mapping still have a text form.
+                    _ => reader.GetFieldValue<string>(ordinal),
                 };
             }
             catch (Exception inner) when (inner is InvalidCastException or OverflowException or NotSupportedException or ArgumentException)
@@ -271,7 +273,7 @@ internal sealed class PostgreSqlQueryExecutor(NpgsqlConnection connection) : IQu
     /// The SDK contract promises <see cref="OperationCanceledException"/> for a canceled query; a server error
     /// becomes one exception whose message carries the detail, hint and position the server sent.
     /// </summary>
-    private static async Task<T> Translate<T>(Func<Task<T>> operation, CancellationToken cancellationToken)
+    private static async Task<T> Translate<T>(Func<Task<T>> operation, string sql, CancellationToken cancellationToken)
     {
         try
         {
@@ -287,23 +289,23 @@ internal sealed class PostgreSqlQueryExecutor(NpgsqlConnection connection) : IQu
         }
         catch (PostgresException ex)
         {
-            throw new PostgreSqlQueryException(ex);
+            throw new PostgreSqlQueryException(ex, sql);
         }
     }
 }
 
 /// <summary>A server error, with what the server said about it in the message.</summary>
 #pragma warning disable CA1032 // Created only from a server error; the standard constructors would make an empty one.
-internal sealed class PostgreSqlQueryException(PostgresException error) : DbException(Describe(error), error)
+internal sealed class PostgreSqlQueryException(PostgresException error, string sql) : DbException(Describe(error, sql), error)
 #pragma warning restore CA1032
 {
     public override string? SqlState => error.SqlState;
 
-    internal static string Describe(PostgresException error)
+    internal static string Describe(PostgresException error, string sql)
     {
         var text = new StringBuilder();
         text.Append(error.InvariantSeverity).Append(' ').Append(error.SqlState).Append(": ").Append(error.MessageText);
-        if (error.Position > 0 && error.BatchCommand?.CommandText is { Length: > 0 } sql)
+        if (error.Position > 0 && sql.Length > 0)
         {
             var offset = Math.Min(error.Position - 1, sql.Length);
             var line = sql.AsSpan(0, offset).Count('\n') + 1;
