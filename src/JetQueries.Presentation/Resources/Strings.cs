@@ -356,4 +356,7 @@ public static class Strings
     public static string? Find(string name) => Manager.GetString(name, CultureInfo.CurrentUICulture);
 
     private static string Get(string name) => Manager.GetString(name, CultureInfo.CurrentUICulture) ?? name;
+    public static string ExplorerDetails => Get(nameof(ExplorerDetails));
+    public static string ExplorerScriptAlter => Get(nameof(ExplorerScriptAlter));
+    public static string ExplorerScriptDrop => Get(nameof(ExplorerScriptDrop));
 }

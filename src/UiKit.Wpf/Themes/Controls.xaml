@@ -534,6 +534,60 @@
         </Setter>
     </Style>
 
+    <!-- Menu bar: flat, compact headers that open the same card as context menus. -->
+    <Style TargetType="Menu">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSize.Body}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Menu">
+                    <Border Background="{TemplateBinding Background}">
+                        <StackPanel IsItemsHost="True" Orientation="Horizontal" KeyboardNavigation.DirectionalNavigation="Cycle" />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- The card a submenu (or a menu bar header) opens. -->
+    <ControlTemplate x:Key="MenuItem.SubmenuCard" TargetType="ContentControl">
+        <Border Background="{DynamicResource Brush.Card}" BorderBrush="{DynamicResource Brush.BorderStrong}" BorderThickness="1"
+                CornerRadius="8" Padding="4" Margin="0,0,10,10" MinWidth="200">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="18" ShadowDepth="3" Opacity="0.28" />
+            </Border.Effect>
+            <ContentPresenter />
+        </Border>
+    </ControlTemplate>
+
+    <!-- A menu bar header: text only, its card opens below. -->
+    <ControlTemplate x:Key="MenuItem.TopLevel" TargetType="MenuItem">
+        <Border x:Name="Root" Background="Transparent" CornerRadius="5" Padding="9,4" Margin="1,0">
+            <Grid>
+                <ContentPresenter ContentSource="Header" RecognizesAccessKey="True" VerticalAlignment="Center" />
+                <Popup x:Name="PART_Popup" Placement="Bottom" VerticalOffset="4" HorizontalOffset="-4" AllowsTransparency="True" Focusable="False"
+                       IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}" PopupAnimation="Fade">
+                    <ContentControl Template="{StaticResource MenuItem.SubmenuCard}" Focusable="False">
+                        <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle" />
+                    </ContentControl>
+                </Popup>
+            </Grid>
+        </Border>
+        <ControlTemplate.Triggers>
+            <Trigger Property="IsHighlighted" Value="True">
+                <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Hover}" />
+            </Trigger>
+            <Trigger Property="IsSubmenuOpen" Value="True">
+                <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Hover}" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter TargetName="Root" Property="Opacity" Value="0.4" />
+            </Trigger>
+        </ControlTemplate.Triggers>
+    </ControlTemplate>
+
+    <!-- An item, and a submenu header (an arrow; its card opens to the right). -->
     <Style TargetType="MenuItem">
         <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
         <Setter Property="Cursor" Value="Hand" />
@@ -546,16 +600,37 @@
                                 <ColumnDefinition Width="26" />
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="{TemplateBinding c:Ui.Icon}" Style="{StaticResource Text.Icon}" FontSize="13" HorizontalAlignment="Left"
+                            <TextBlock x:Name="Icon" Text="{TemplateBinding c:Ui.Icon}" Style="{StaticResource Text.Icon}" FontSize="13" HorizontalAlignment="Left"
                                        Foreground="{DynamicResource Brush.TextSecondary}" />
+                            <TextBlock x:Name="Check" Text="{x:Static c:Icons.Check}" Style="{StaticResource Text.Icon}" FontSize="12" HorizontalAlignment="Left"
+                                       Foreground="{DynamicResource Brush.Accent}" Visibility="Collapsed" />
                             <ContentPresenter Grid.Column="1" ContentSource="Header" RecognizesAccessKey="True" VerticalAlignment="Center" />
                             <TextBlock Grid.Column="2" Text="{TemplateBinding InputGestureText}" Margin="24,0,4,0" FontSize="11.5"
                                        Foreground="{DynamicResource Brush.TextMuted}" VerticalAlignment="Center" />
+                            <TextBlock x:Name="Arrow" Grid.Column="3" Text="{x:Static c:Icons.ChevronRight}" Style="{StaticResource Text.Icon}" FontSize="10"
+                                       Margin="12,0,0,0" Foreground="{DynamicResource Brush.TextSecondary}" Visibility="Collapsed" />
+                            <Popup x:Name="PART_Popup" Grid.ColumnSpan="4" Placement="Right" HorizontalOffset="6" VerticalOffset="-11" AllowsTransparency="True"
+                                   Focusable="False" IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}" PopupAnimation="Fade">
+                                <ContentControl Template="{StaticResource MenuItem.SubmenuCard}" Focusable="False">
+                                    <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle" />
+                                </ContentControl>
+                            </Popup>
                         </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
+                        <Trigger Property="Role" Value="SubmenuHeader">
+                            <Setter TargetName="Arrow" Property="Visibility" Value="Visible" />
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Check" Property="Visibility" Value="Visible" />
+                            <Setter TargetName="Icon" Property="Visibility" Value="Collapsed" />
+                        </Trigger>
                         <Trigger Property="IsHighlighted" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Hover}" />
+                        </Trigger>
+                        <Trigger Property="IsSubmenuOpen" Value="True">
                             <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Hover}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
@@ -565,6 +640,14 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+        <Style.Triggers>
+            <Trigger Property="Role" Value="TopLevelHeader">
+                <Setter Property="Template" Value="{StaticResource MenuItem.TopLevel}" />
+            </Trigger>
+            <Trigger Property="Role" Value="TopLevelItem">
+                <Setter Property="Template" Value="{StaticResource MenuItem.TopLevel}" />
+            </Trigger>
+        </Style.Triggers>
     </Style>
 
     <Style TargetType="Separator">

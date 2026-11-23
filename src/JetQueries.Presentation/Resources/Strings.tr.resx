@@ -372,4 +372,7 @@
   <data name="ProviderDescription_oracle" xml:space="preserve"><value>Oracle Database, istemci kurulumu gerekmez</value></data>
   <data name="ProviderDescription_postgresql" xml:space="preserve"><value>PostgreSQL ve uyumlu sunucular</value></data>
   <data name="ProviderDescription_sqlite" xml:space="preserve"><value>Yerel veritabanı dosyası</value></data>
+  <data name="ExplorerDetails" xml:space="preserve"><value>Ayrıntılar</value></data>
+  <data name="ExplorerScriptAlter" xml:space="preserve"><value>ALTER (nesneyi değiştir)</value></data>
+  <data name="ExplorerScriptDrop" xml:space="preserve"><value>DROP</value></data>
 </root>

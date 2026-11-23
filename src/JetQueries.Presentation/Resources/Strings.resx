@@ -372,4 +372,7 @@
   <data name="ProviderDescription_oracle" xml:space="preserve"><value>Oracle Database, no client installation needed</value></data>
   <data name="ProviderDescription_postgresql" xml:space="preserve"><value>PostgreSQL and compatible servers</value></data>
   <data name="ProviderDescription_sqlite" xml:space="preserve"><value>A local database file</value></data>
+  <data name="ExplorerDetails" xml:space="preserve"><value>Details</value></data>
+  <data name="ExplorerScriptAlter" xml:space="preserve"><value>ALTER (change the object)</value></data>
+  <data name="ExplorerScriptDrop" xml:space="preserve"><value>DROP</value></data>
 </root>
