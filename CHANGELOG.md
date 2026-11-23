@@ -80,6 +80,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
   8 spaces or a tab), clause content on its own lines, AND / OR on new lines, with a live preview. Query tabs
   format with the options in effect. SDK preview: `SqlFormatOptions` gains `SqlKeywordCase`, `UseTabs`,
   `ContentOnNewLine`, `ConditionsOnNewLine` (`UppercaseKeywords`, never released, is replaced by `KeywordCase`).
+- Object details window (Ctrl+Click / F12 in the editor, F4 and "Details" in the explorer): properties, columns, constraints, foreign keys, references, indexes, triggers, parameters, dependencies and DDL, for SQL Server, Oracle, PostgreSQL and SQLite. SDK (preview) gains `IObjectDetailsProvider`.
+- Explorer Script menu: CREATE, ALTER (CREATE OR REPLACE on Oracle and PostgreSQL) and DROP next to the DML templates. SDK (preview) gains `IObjectScripting`.
+- Main menu (File, Connection, Query, View, Tools); the query history moved from the explorer panel into its own window (Tools → Query history, Ctrl+Shift+H) with a full-text preview.
+- Result grid headers show each column's data type under its name (UiKit `IGridColumnCaptions`).
+- Connection editor redesigned as a compact two-column form with an "Advanced" section.
+- `docs/ux-review.md`: a UX review of the whole application with prioritised findings.
 
 - Transactions: each query tab has auto-commit (default) or manual commit. In manual mode text that can change
   data starts a transaction that waits for Commit or Rollback (a single SELECT never opens one); an "Open
@@ -127,6 +133,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 - View models, their service contracts and strings moved to `JetQueries.Presentation`, shared by both interfaces.
 
 ### Fixed
+- Submenus did not open (UiKit menu item had no submenu popup): the explorer's Script, the grid's Copy as and the editor's Insert snippet now work.
+- The result column filter panel closed when the mouse button was released; it now opens on release and stays.
 - Oracle: Cancel now stops a statement that is waiting (on a row lock, a sleep) also through Docker, NAT and VPN
   tunnels, which drop the driver's out-of-band break: if the statement still runs 1.5 s later, a second
   connection asks the server to cancel it (`ALTER SYSTEM CANCEL SQL`; needs that privilege). A canceled UPDATE

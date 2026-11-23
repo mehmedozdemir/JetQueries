@@ -7,7 +7,7 @@ namespace JetQueries.Wpf.Views;
 /// filters. A snapshot has a fixed row count; the grid gets a new one as rows stream in or the view changes,
 /// with the same schema key so column widths and scroll position stay.
 /// </summary>
-public sealed class ResultGridSource : IGridDataSource
+public sealed class ResultGridSource : IGridDataSource, IGridColumnCaptions
 {
     private readonly QueryResultSet _set;
     private readonly GridColumnKind[] _kinds;
@@ -44,6 +44,9 @@ public sealed class ResultGridSource : IGridDataSource
         : GridColumnKind.Text;
 
     public string GetColumnName(int column) => _set.Columns[column].Header;
+
+    /// <summary>The database type under the column name (nvarchar(50), NUMBER, …).</summary>
+    public string? GetColumnCaption(int column) => _set.Columns[column].DataType;
 
     public GridColumnKind GetColumnKind(int column) => _kinds[column];
 

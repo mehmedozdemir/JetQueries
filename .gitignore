@@ -490,3 +490,6 @@ $RECYCLE.BIN/
 *.p12
 *.pfx
 secrets.json
+
+# Worktrees of helper agents
+.claude/worktrees/

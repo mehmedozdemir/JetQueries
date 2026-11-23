@@ -85,6 +85,9 @@ public partial class DocumentsViewModel : ObservableObject
 
     public ObservableCollection<QueryDocumentViewModel> Documents { get; } = [];
 
+    /// <summary>Raised when a tab asks for an object's details view (Ctrl+Click).</summary>
+    public event EventHandler<ObjectDetailsRequest>? DetailsRequested;
+
     [ObservableProperty]
     public partial QueryDocumentViewModel? Selected { get; set; }
 
@@ -143,6 +146,7 @@ public partial class DocumentsViewModel : ObservableObject
 
         // "Go to definition" in any tab opens the source in a new tab next to it.
         document.DefinitionOpened += (_, definition) => Open(definition.Title, definition.Text, definition.ConnectionId);
+        document.DetailsRequested += (_, request) => DetailsRequested?.Invoke(this, request);
         document.PropertyChanged += OnDocumentChanged;
         Documents.Add(document);
         Selected = document;

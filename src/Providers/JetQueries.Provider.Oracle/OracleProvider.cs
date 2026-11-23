@@ -1,6 +1,7 @@
 using System.Globalization;
 using JetQueries.Provider.Oracle.Language;
 using JetQueries.Providers.Language;
+using JetQueries.Providers.Metadata;
 using JetQueries.Sdk;
 using Oracle.ManagedDataAccess.Client;
 
@@ -19,7 +20,7 @@ public sealed class OracleExtension : IExtension
 
 /// <summary>Database provider for Oracle Database, on the managed ODP.NET driver (no Oracle client installation needed).</summary>
 public sealed class OracleProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport,
-    IConnectionStringImport, IProviderAppearance
+    IConnectionStringImport, IProviderAppearance, IObjectScripting
 {
     /// <summary>The provider identifier stored in connection profiles.</summary>
     public const string ProviderId = "oracle";
@@ -135,6 +136,29 @@ public sealed class OracleProvider : IDatabaseProvider, IConnectionSettingsProvi
 
     /// <inheritdoc />
     public string QuoteIdentifier(string identifier) => OracleNames.Quote(identifier);
+
+
+    /// <inheritdoc />
+    public string? ScriptDrop(DatabaseObject target)
+    {
+        ArgumentNullException.ThrowIfNull(target);
+        return target.Kind is DatabaseObjectKinds.Database or DatabaseObjectKinds.Schema || DdlText.DropKeyword(target.Kind) is not { } keyword
+            ? null
+            : $"DROP {keyword} {OracleNames.Quote(target.Name)};";
+    }
+
+    /// <inheritdoc />
+    public string? ScriptAlter(DatabaseObject target, string definition)
+    {
+        ArgumentNullException.ThrowIfNull(target);
+        ArgumentNullException.ThrowIfNull(definition);
+
+        // Tables, sequences and synonyms are changed by ALTER statements written for the change, not by their DDL.
+        return target.Kind is DatabaseObjectKinds.View or DatabaseObjectKinds.Procedure or DatabaseObjectKinds.Function or DatabaseObjectKinds.Package
+            or DatabaseObjectKinds.PackageBody or DatabaseObjectKinds.Trigger or DatabaseObjectKinds.Type
+            ? DdlText.ReplaceCreate(definition, "CREATE OR REPLACE")
+            : null;
+    }
 
     /// <inheritdoc />
     public async Task<IDatabaseConnection> OpenConnectionAsync(

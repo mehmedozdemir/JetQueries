@@ -99,7 +99,8 @@
                             <MenuItem Header="{x:Static res:Strings.EditorUpperCase}" InputGestureText="Ctrl+Shift+U" Click="OnMenuEdit" Tag="Upper" />
                             <MenuItem Header="{x:Static res:Strings.EditorLowerCase}" InputGestureText="Ctrl+U" Click="OnMenuEdit" Tag="Lower" />
                             <Separator />
-                            <MenuItem Header="{x:Static res:Strings.EditorGoToDefinition}" InputGestureText="F12" Click="OnMenuEdit" Tag="Definition" />
+                            <MenuItem Header="{x:Static res:Strings.EditorShowDetails}" c:Ui.Icon="{x:Static c:Icons.Info}" InputGestureText="Ctrl+Click, F12" Click="OnMenuEdit" Tag="Details" />
+                            <MenuItem Header="{x:Static res:Strings.EditorGoToDefinition}" Click="OnMenuEdit" Tag="Definition" />
                             <MenuItem Header="{x:Static res:Strings.EditorCompletion}" InputGestureText="Ctrl+Space" Click="OnMenuEdit" Tag="Completion" />
                             <Separator />
                             <MenuItem x:Name="UndoItem" Header="{x:Static res:Strings.EditorUndo}" c:Ui.Icon="&#xE7A7;" InputGestureText="Ctrl+Z" Click="OnMenuEdit" Tag="Undo" />

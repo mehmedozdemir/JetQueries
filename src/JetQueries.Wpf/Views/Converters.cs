@@ -108,3 +108,24 @@ public sealed class EnvironmentBrushConverter : IValueConverter
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
 }
+
+/// <summary>Visible when every value is true.</summary>
+public sealed class AllTrueToVisibilityConverter : IMultiValueConverter
+{
+    public static readonly AllTrueToVisibilityConverter Instance = new();
+
+    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture) =>
+        values.All(static v => v is true) ? Visibility.Visible : Visibility.Collapsed;
+
+    public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) => throw new NotSupportedException();
+}
+
+/// <summary>The opposite of a boolean.</summary>
+public sealed class NotConverter : IValueConverter
+{
+    public static readonly NotConverter Instance = new();
+
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => value is not true;
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => value is not true;
+}

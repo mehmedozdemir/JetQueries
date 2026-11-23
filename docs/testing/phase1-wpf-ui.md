@@ -10,8 +10,11 @@ dotnet run --project src/JetQueries.Wpf
 ```
 
 ## Shell
-- [ ] The window opens with the UiKit look: toolbar (New connection, New query, Run, Cancel, theme button on
-      the right), Explorer/History card on the left, query tabs on the right, status bar at the bottom.
+- [ ] The window opens with the UiKit look: menu bar (File, Connection, Query, View, Tools) and toolbar, the
+      explorer card on the left, query tabs on the right, status bar at the bottom.
+- [ ] Every menu opens with a click and with Alt (Alt+D Dosya…); items show their shortcuts; disabled items
+      are dimmed (Query → Run with no connection). View → Explorer hides and shows the explorer with its width.
+      View → Dark theme switches the theme and shows a check in the dark theme.
 - [ ] The theme button switches dark/light at once, including the title bar; the choice is remembered at the
       next start (`%AppData%\JetQueries\theme.json`). With nothing saved the Windows setting is followed.
 - [ ] The left card can be resized with the splitter; the editor/results split too.
@@ -264,10 +267,57 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] New rows (Next page, Fetch all), sorting and filtering update the text and the record view.
 
 ## History
-- [ ] The History tab lists runs; search filters after a short pause; double-click or Open reopens a run;
-      Clear all asks first.
+- [ ] Tools → Query history (Ctrl+Shift+H) opens the history window; a second time brings the same window
+      forward. Runs are listed newest first; the selected run's full text is shown on the right with how it
+      ended (a failure in red with its message). Search filters after a short pause; Enter, double-click or
+      "Open in new tab" reopens a run; Delete removes it; Copy copies its text; Clear all asks first; Esc closes.
+
+## Submenus, Script menu, Copy as
+- [ ] Right-click a table: Script opens a submenu (CREATE, DROP, SELECT, INSERT, UPDATE, DELETE); a view or
+      routine also has ALTER. Each opens a new tab and runs nothing.
+- [ ] ALTER of a SQL Server view/procedure/function/trigger starts with ALTER; Oracle and PostgreSQL views and
+      routines start with CREATE OR REPLACE; run as written it succeeds. DROP is schema-qualified and quoted
+      (SQL Server adds GO). Tables have no ALTER; SQLite has none.
+- [ ] Right-click a grid cell: Copy as opens its submenu; CSV, JSON, Markdown, INSERT and IN list each put the
+      selection on the clipboard. The editor's "Insert snippet" submenu opens too.
+
+## Grid headers and column filter
+- [ ] Every result column shows its data type under its name (int, nvarchar(50), NUMBER(10,2)…); long types
+      are cut with an ellipsis; widths fit the type line.
+- [ ] A click on a header's filter icon opens the filter panel and it stays open after the mouse is released;
+      a click outside closes it.
+
+## Object details (Ctrl+Click, F12, F4, explorer "Details")
+- [ ] Ctrl+Click (or F12) on a table name in the editor opens a details window: header with the type mark,
+      schema.name and "Table · connection · database"; tabs Properties, Columns, Constraints, Foreign keys,
+      References, Indexes, Triggers, Dependencies (as far as the database has them; empty ones are left out),
+      DDL. Counts are shown in the tab titles.
+- [ ] The same from the explorer: right-click → Details, or select and press F4. Opening the same object again
+      brings its window forward instead of a second one.
+- [ ] Double-clicking a row in Foreign keys, References or Dependencies opens that object's details.
+- [ ] Triggers: the selected trigger's source is shown under the list.
+- [ ] A procedure/function shows Parameters (with RETURN for a function's result, OUT for output parameters);
+      an Oracle package lists its routines' parameters with an extra Routine column; a sequence shows start,
+      increment, limits, cache and current value in Properties.
+- [ ] "Open data" runs the first 1000 rows in a new query tab; "Open in editor" opens the DDL in a tab; F5 or
+      the refresh icon reads everything again; Esc closes.
+- [ ] Each database: SQL Server (rows and size from sys.partitions, filegroup), Oracle (NUM_ROWS statistics,
+      tablespace, status, ALL_DEPENDENCIES), PostgreSQL (reltuples estimate, pg_size_pretty, views through
+      pg_rewrite), SQLite (no row count; foreign keys and indexes from PRAGMAs).
+- [ ] "Open source in a new tab" in the editor menu still opens the source text in a query tab.
+
+## Connection editor (compact)
+- [ ] The form is two columns: Name + Environment (with its colour) on top, the type's main settings two to a
+      row, user and password side by side, "Save password" and "Read-only" switches, then "Advanced" (folder,
+      timeouts, certificate trust, other switches) closed by default.
+- [ ] Advanced opens by itself when a saved connection or a pasted connection string sets one of its fields.
+- [ ] SQLite's file field takes the full width with Browse. Inputs and combo boxes line up at one height.
+- [ ] Test connection: the result appears in a card above the footer, green on success, red on failure.
 
 ## Known limits
+- Object details open in their own window, not in a document tab. SQLite shows no CHECK constraints; Oracle
+  parameter defaults show only whether there is one; routines declared inside an Oracle package have no details
+  of their own (open the package). PostgreSQL keeps no created/modified dates.
 - Header sorting and column filters apply to the rows received; the SQL filter box above the grid is the one
   that filters on the server.
 - Nothing stays open on the server between pages (checked on SQL Server and PostgreSQL: DDL on the table is not

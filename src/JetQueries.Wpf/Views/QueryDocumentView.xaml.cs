@@ -29,7 +29,7 @@ public partial class QueryDocumentView : UserControl
         {
             if (DataContext is QueryDocumentViewModel viewModel)
             {
-                _ = viewModel.GoToDefinitionAsync(Editor.Text, offset);
+                _ = viewModel.ShowDetailsAsync(Editor.Text, offset);
             }
         };
 
@@ -151,6 +151,13 @@ public partial class QueryDocumentView : UserControl
                 break;
             case "Lower":
                 Editor.ChangeCase(upper: false);
+                break;
+            case "Details":
+                if (DataContext is QueryDocumentViewModel detailsOf)
+                {
+                    _ = detailsOf.ShowDetailsAsync(Editor.Text, Editor.CaretOffset);
+                }
+
                 break;
             case "Definition":
                 if (DataContext is QueryDocumentViewModel viewModel)

@@ -23,6 +23,9 @@ public abstract partial class ExplorerNodeViewModel(string name) : ObservableObj
     /// <summary>The object's definition (CREATE …) can be scripted.</summary>
     public virtual bool HasDefinition => false;
 
+    /// <summary>Whether an ALTER / CREATE OR REPLACE script can be written for the node.</summary>
+    public virtual bool CanAlter => false;
+
     public ObservableCollection<ExplorerNodeViewModel> Children { get; } = [];
 
     [ObservableProperty]
@@ -258,12 +261,34 @@ public partial class ConnectionsViewModel(
     [RelayCommand]
     private Task ScriptCreateAsync(ExplorerNodeViewModel? node) => ScriptAsync(node, ObjectScriptKind.Create);
 
+    /// <summary>Opens a tab with the definition in its ALTER / CREATE OR REPLACE form.</summary>
+    [RelayCommand]
+    private Task ScriptAlterAsync(ExplorerNodeViewModel? node) => ScriptAsync(node, ObjectScriptKind.Alter);
+
+    /// <summary>Opens a tab with a DROP of the object (not run).</summary>
+    [RelayCommand]
+    private Task ScriptDropAsync(ExplorerNodeViewModel? node) => ScriptAsync(node, ObjectScriptKind.Drop);
+
+    /// <summary>Asks for the details view of an object (columns, keys, indexes, DDL…).</summary>
+    [RelayCommand]
+    private void OpenDetails(ExplorerNodeViewModel? node)
+    {
+        if ((node ?? Selected) is DatabaseObjectNodeViewModel { Target: var target, Session: var session } && ObjectScripts.HasDefinition(target.Kind))
+        {
+            DetailsRequested?.Invoke(this, new ObjectDetailsRequest(session.Definition.Id, target));
+        }
+    }
+
+    /// <summary>Raised when an object's details view should open.</summary>
+    public event EventHandler<ObjectDetailsRequest>? DetailsRequested;
+
     /// <summary>The last problem writing a script (shown under the explorer); null when none.</summary>
     [ObservableProperty]
     public partial string? ScriptError { get; set; }
 
     private async Task ScriptAsync(ExplorerNodeViewModel? node, ObjectScriptKind kind)
     {
+        node ??= Selected;
         if (node is not DatabaseObjectNodeViewModel { Target: var target, Session: var session })
         {
             return;

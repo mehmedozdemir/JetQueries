@@ -22,6 +22,9 @@ public partial class MainWindow : Window
         // Go to object opens over the window; the chosen object is revealed in the explorer.
         viewModel.GoToObjectRequested += (_, goTo) => new GoToObjectWindow(goTo) { Owner = this }.ShowDialog();
 
+        viewModel.HistoryRequested += (_, _) => ShowHistory(viewModel);
+        viewModel.DetailsRequested += (_, details) => ShowDetails(details);
+
         Loaded += (_, _) =>
         {
             viewModel.Connections.RefreshCommand.Execute(null);
@@ -48,6 +51,68 @@ public partial class MainWindow : Window
         {
             await viewModel.Documents.OpenFileAsync(file);
         }
+    }
+
+    private HistoryWindow? _history;
+    private GridLength _explorerWidth = new(280);
+
+    /// <summary>The history window; one, brought forward when it is open already.</summary>
+    internal HistoryWindow ShowHistory(MainWindowViewModel viewModel)
+    {
+        if (_history is null)
+        {
+            _history = new HistoryWindow(viewModel.History) { Owner = this };
+            _history.Closed += (_, _) => _history = null;
+            _history.Show();
+        }
+        else
+        {
+            if (_history.WindowState == WindowState.Minimized)
+            {
+                _history.WindowState = WindowState.Normal;
+            }
+
+            _history.Activate();
+        }
+
+        return _history;
+    }
+
+    /// <summary>An object's details window; the open one for the same object is brought forward instead.</summary>
+    private void ShowDetails(ObjectDetailsViewModel details)
+    {
+        var open = OwnedWindows.OfType<ObjectDetailsWindow>().FirstOrDefault(w =>
+            w.ViewModel.ConnectionId == details.ConnectionId && w.ViewModel.Target.Name.Equals(details.Target.Name) && w.ViewModel.Target.Kind == details.Target.Kind);
+        if (open is not null)
+        {
+            if (open.WindowState == WindowState.Minimized)
+            {
+                open.WindowState = WindowState.Normal;
+            }
+
+            open.Activate();
+            return;
+        }
+
+        var window = new ObjectDetailsWindow(details) { Owner = this };
+        window.Show();
+        _ = details.LoadAsync();
+    }
+
+    private void OnExit(object sender, RoutedEventArgs e) => Close();
+
+    // View, Explorer: hides the explorer panel and its splitter; showing it again restores its width.
+    private void OnToggleExplorer(object sender, RoutedEventArgs e)
+    {
+        var shown = ExplorerMenuItem.IsChecked;
+        if (!shown)
+        {
+            _explorerWidth = ExplorerColumn.Width;
+        }
+
+        ExplorerPanel.Visibility = ExplorerSplitter.Visibility = shown ? Visibility.Visible : Visibility.Collapsed;
+        ExplorerColumn.MinWidth = shown ? 200 : 0;
+        ExplorerColumn.Width = shown ? _explorerWidth : new GridLength(0);
     }
 
     private void UpdateThemeIcon() => Ui.SetIcon(ThemeButton, ThemeManager.Current == AppTheme.Dark ? Icons.Sun : Icons.Moon);

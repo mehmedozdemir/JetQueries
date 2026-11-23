@@ -132,6 +132,9 @@ public sealed class DatabaseObjectNodeViewModel(ExplorerContext context, Databas
     /// <inheritdoc />
     public override bool HasDefinition => ObjectScripts.HasDefinition(Target.Kind);
 
+    /// <inheritdoc />
+    public override bool CanAlter => ObjectScripts.CanAlter(Target.Kind);
+
     /// <summary>The open connection the object belongs to.</summary>
     public ConnectionSession Session => context.Session;
 

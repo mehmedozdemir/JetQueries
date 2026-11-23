@@ -554,6 +554,32 @@ public partial class ResultGridView : UserControl
 
         FilterPopup.HorizontalOffset = Math.Max(0, Math.Min(header.Left, Grid.ActualWidth - 344));
         FilterPopup.VerticalOffset = header.Bottom + 2;
+
+        // The header's filter button acts on mouse down. A popup that closes on outside clicks, opened while the
+        // button is still down, would close again on its release; it opens once the button is up.
+        var window = Window.GetWindow(this);
+        if (Mouse.LeftButton == MouseButtonState.Pressed && window is not null)
+        {
+            void OnReleased(object sender, MouseButtonEventArgs e)
+            {
+                window.PreviewMouseLeftButtonUp -= OnReleased;
+                Dispatcher.BeginInvoke(ShowFilterPopup, DispatcherPriority.Input);
+            }
+
+            window.PreviewMouseLeftButtonUp += OnReleased;
+            return;
+        }
+
+        ShowFilterPopup();
+    }
+
+    private void ShowFilterPopup()
+    {
+        if (_filterColumn < 0 || _set is null)
+        {
+            return;
+        }
+
         FilterPopup.IsOpen = true;
         Dispatcher.BeginInvoke(() =>
         {

@@ -18,7 +18,7 @@ public sealed class SqlServerExtension : IExtension
 
 /// <summary>Database provider for Microsoft SQL Server and Azure SQL, on Microsoft.Data.SqlClient.</summary>
 public sealed class SqlServerProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport,
-    IConnectionStringImport, IProviderAppearance
+    IConnectionStringImport, IProviderAppearance, IObjectScripting
 {
     /// <summary>The provider identifier stored in connection profiles.</summary>
     public const string ProviderId = "sqlserver";
@@ -46,6 +46,29 @@ public sealed class SqlServerProvider : IDatabaseProvider, IConnectionSettingsPr
 
     /// <inheritdoc />
     public ParsedConnectionString ParseConnectionString(string connectionString) => SqlServerConnectionStringParser.Parse(connectionString);
+
+    /// <inheritdoc />
+    public string? ScriptDrop(DatabaseObject target)
+    {
+        ArgumentNullException.ThrowIfNull(target);
+        if (target.Kind is DatabaseObjectKinds.Package or DatabaseObjectKinds.PackageBody || JetQueries.Providers.Metadata.DdlText.DropKeyword(target.Kind) is not { } keyword)
+        {
+            return null;
+        }
+
+        // The query tab's database is the object's own; the name is schema-qualified only.
+        return "DROP " + keyword + " " + SqlServerNames.Quote(target.Name with { Database = null }) + ";\nGO\n";
+    }
+
+    /// <inheritdoc />
+    public string? ScriptAlter(DatabaseObject target, string definition)
+    {
+        ArgumentNullException.ThrowIfNull(target);
+        ArgumentNullException.ThrowIfNull(definition);
+        return target.Kind is DatabaseObjectKinds.View or DatabaseObjectKinds.Procedure or DatabaseObjectKinds.Function or DatabaseObjectKinds.Trigger
+            ? JetQueries.Providers.Metadata.DdlText.ReplaceCreate(definition, "ALTER")
+            : null;
+    }
 
     /// <inheritdoc />
     public ISqlLanguageService? LanguageService { get; } = new TSqlLanguageService();

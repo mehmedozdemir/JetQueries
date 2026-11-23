@@ -255,7 +255,7 @@
   <data name="EditorToggleComment" xml:space="preserve"><value>Comment / uncomment lines</value></data>
   <data name="EditorUpperCase" xml:space="preserve"><value>Upper case</value></data>
   <data name="EditorLowerCase" xml:space="preserve"><value>Lower case</value></data>
-  <data name="EditorGoToDefinition" xml:space="preserve"><value>Go to definition</value></data>
+  <data name="EditorGoToDefinition" xml:space="preserve"><value>Open source in a new tab</value></data>
   <data name="EditorCompletion" xml:space="preserve"><value>Show completion</value></data>
   <data name="TabClose" xml:space="preserve"><value>Close</value></data>
   <data name="TabCloseOthers" xml:space="preserve"><value>Close others</value></data>
@@ -372,4 +372,81 @@
   <data name="ProviderDescription_oracle" xml:space="preserve"><value>Oracle Database, no client installation needed</value></data>
   <data name="ProviderDescription_postgresql" xml:space="preserve"><value>PostgreSQL and compatible servers</value></data>
   <data name="ProviderDescription_sqlite" xml:space="preserve"><value>A local database file</value></data>
+  <data name="ExplorerDetails" xml:space="preserve"><value>Details</value></data>
+  <data name="ExplorerScriptAlter" xml:space="preserve"><value>ALTER (change the object)</value></data>
+  <data name="ExplorerScriptDrop" xml:space="preserve"><value>DROP</value></data>
+  <data name="DetailsNotFound" xml:space="preserve"><value>{0} was not found, or you may not see it.</value></data>
+  <data name="DetailsProperties" xml:space="preserve"><value>Properties</value></data>
+  <data name="DetailsDdl" xml:space="preserve"><value>DDL</value></data>
+  <data name="DetailsOpenData" xml:space="preserve"><value>Open data</value></data>
+  <data name="DetailsOpenDdl" xml:space="preserve"><value>Open in editor</value></data>
+  <data name="DetailsRefresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="DetailsRowHint" xml:space="preserve"><value>Double-click a row to open its object.</value></data>
+  <data name="DetailsSource" xml:space="preserve"><value>Source</value></data>
+  <data name="DetailsLoading" xml:space="preserve"><value>Reading the catalog…</value></data>
+  <data name="Detail_columns" xml:space="preserve"><value>Columns</value></data>
+  <data name="Detail_constraints" xml:space="preserve"><value>Constraints</value></data>
+  <data name="Detail_foreignKeys" xml:space="preserve"><value>Foreign keys</value></data>
+  <data name="Detail_references" xml:space="preserve"><value>References</value></data>
+  <data name="Detail_indexes" xml:space="preserve"><value>Indexes</value></data>
+  <data name="Detail_triggers" xml:space="preserve"><value>Triggers</value></data>
+  <data name="Detail_dependencies" xml:space="preserve"><value>Dependencies</value></data>
+  <data name="Detail_parameters" xml:space="preserve"><value>Parameters</value></data>
+  <data name="Detail_name" xml:space="preserve"><value>Name</value></data>
+  <data name="Detail_position" xml:space="preserve"><value>#</value></data>
+  <data name="Detail_dataType" xml:space="preserve"><value>Data type</value></data>
+  <data name="Detail_nullable" xml:space="preserve"><value>Nullable</value></data>
+  <data name="Detail_default" xml:space="preserve"><value>Default</value></data>
+  <data name="Detail_identity" xml:space="preserve"><value>Identity / computed</value></data>
+  <data name="Detail_key" xml:space="preserve"><value>Key</value></data>
+  <data name="Detail_collation" xml:space="preserve"><value>Collation</value></data>
+  <data name="Detail_comment" xml:space="preserve"><value>Comment</value></data>
+  <data name="Detail_kind" xml:space="preserve"><value>Type</value></data>
+  <data name="Detail_columnList" xml:space="preserve"><value>Columns</value></data>
+  <data name="Detail_definition" xml:space="preserve"><value>Definition</value></data>
+  <data name="Detail_table" xml:space="preserve"><value>Table</value></data>
+  <data name="Detail_referencedColumns" xml:space="preserve"><value>Referenced columns</value></data>
+  <data name="Detail_onDelete" xml:space="preserve"><value>On delete</value></data>
+  <data name="Detail_onUpdate" xml:space="preserve"><value>On update</value></data>
+  <data name="Detail_unique" xml:space="preserve"><value>Unique</value></data>
+  <data name="Detail_included" xml:space="preserve"><value>Included</value></data>
+  <data name="Detail_filter" xml:space="preserve"><value>Filter</value></data>
+  <data name="Detail_status" xml:space="preserve"><value>Status</value></data>
+  <data name="Detail_events" xml:space="preserve"><value>Events</value></data>
+  <data name="Detail_direction" xml:space="preserve"><value>Direction</value></data>
+  <data name="Detail_objectType" xml:space="preserve"><value>Type</value></data>
+  <data name="Detail_schema" xml:space="preserve"><value>Schema</value></data>
+  <data name="Detail_database" xml:space="preserve"><value>Database</value></data>
+  <data name="Detail_created" xml:space="preserve"><value>Created</value></data>
+  <data name="Detail_modified" xml:space="preserve"><value>Modified</value></data>
+  <data name="Detail_rows" xml:space="preserve"><value>Rows (estimate)</value></data>
+  <data name="Detail_size" xml:space="preserve"><value>Size</value></data>
+  <data name="Detail_tablespace" xml:space="preserve"><value>Tablespace / filegroup</value></data>
+  <data name="Kind_Table" xml:space="preserve"><value>Table</value></data>
+  <data name="Kind_View" xml:space="preserve"><value>View</value></data>
+  <data name="Kind_Procedure" xml:space="preserve"><value>Procedure</value></data>
+  <data name="Kind_Function" xml:space="preserve"><value>Function</value></data>
+  <data name="Kind_Package" xml:space="preserve"><value>Package</value></data>
+  <data name="Kind_PackageBody" xml:space="preserve"><value>Package body</value></data>
+  <data name="Kind_Sequence" xml:space="preserve"><value>Sequence</value></data>
+  <data name="Kind_Synonym" xml:space="preserve"><value>Synonym</value></data>
+  <data name="Kind_Trigger" xml:space="preserve"><value>Trigger</value></data>
+  <data name="Kind_Type" xml:space="preserve"><value>Type</value></data>
+  <data name="EditorShowDetails" xml:space="preserve"><value>Object details</value></data>
+  <data name="MenuFile" xml:space="preserve"><value>_File</value></data>
+  <data name="MenuConnection" xml:space="preserve"><value>_Connection</value></data>
+  <data name="MenuQuery" xml:space="preserve"><value>_Query</value></data>
+  <data name="MenuView" xml:space="preserve"><value>_View</value></data>
+  <data name="MenuTools" xml:space="preserve"><value>_Tools</value></data>
+  <data name="MenuExit" xml:space="preserve"><value>Exit</value></data>
+  <data name="MenuSaveAs" xml:space="preserve"><value>Save as…</value></data>
+  <data name="MenuHistory" xml:space="preserve"><value>Query history</value></data>
+  <data name="MenuExplorer" xml:space="preserve"><value>Explorer</value></data>
+  <data name="MenuImportConnections" xml:space="preserve"><value>Import connections…</value></data>
+  <data name="MenuGoToObject" xml:space="preserve"><value>Go to object…</value></data>
+  <data name="MenuTheme" xml:space="preserve"><value>Dark theme</value></data>
+  <data name="MenuSettings" xml:space="preserve"><value>Settings…</value></data>
+  <data name="HistoryWindowTitle" xml:space="preserve"><value>Query history</value></data>
+  <data name="HistoryCopy" xml:space="preserve"><value>Copy</value></data>
+  <data name="ConnectionAdvanced" xml:space="preserve"><value>Advanced</value></data>
 </root>

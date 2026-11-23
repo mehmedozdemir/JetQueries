@@ -25,6 +25,12 @@ public enum ObjectScriptKind
 
     /// <summary>The object's definition (CREATE …), as the server or the catalog gives it.</summary>
     Create,
+
+    /// <summary>The definition in the form that changes the object (ALTER …, CREATE OR REPLACE …).</summary>
+    Alter,
+
+    /// <summary>DROP of the object.</summary>
+    Drop,
 }
 
 /// <summary>
@@ -50,9 +56,23 @@ public static class ObjectScripts
         ArgumentNullException.ThrowIfNull(metadata);
         ArgumentNullException.ThrowIfNull(target);
         var provider = session.Provider;
-        if (kind == ObjectScriptKind.Create)
+        switch (kind)
         {
-            return await new SessionMetadataProvider(session, metadata).GetDefinitionAsync(target, cancellationToken).ConfigureAwait(false);
+            case ObjectScriptKind.Create:
+                return await new SessionMetadataProvider(session, metadata).GetDefinitionAsync(target, cancellationToken).ConfigureAwait(false);
+            case ObjectScriptKind.Alter:
+            {
+                if (provider is not IObjectScripting alterScripting ||
+                    await new SessionMetadataProvider(session, metadata).GetDefinitionAsync(target, cancellationToken).ConfigureAwait(false) is not { } definition)
+                {
+                    return null;
+                }
+
+                return alterScripting.ScriptAlter(target, definition);
+            }
+
+            case ObjectScriptKind.Drop:
+                return provider is IObjectScripting dropScripting ? dropScripting.ScriptDrop(target) : null;
         }
 
         var name = Qualified(provider, target.Name);
@@ -109,10 +129,16 @@ public static class ObjectScripts
     /// <summary>Which scripts make sense for an object kind.</summary>
     public static bool HasData(DatabaseObjectKinds kind) => kind is DatabaseObjectKinds.Table or DatabaseObjectKinds.View;
 
+    /// <summary>Whether ALTER can be written for a kind (programmable objects; tables are changed column by column).</summary>
+    public static bool CanAlter(DatabaseObjectKinds kind) =>
+        kind is DatabaseObjectKinds.View or DatabaseObjectKinds.Procedure or DatabaseObjectKinds.Function or DatabaseObjectKinds.Package
+            or DatabaseObjectKinds.PackageBody or DatabaseObjectKinds.Trigger;
+
     /// <summary>Whether a definition can be asked for.</summary>
     public static bool HasDefinition(DatabaseObjectKinds kind) =>
         kind is DatabaseObjectKinds.Table or DatabaseObjectKinds.View or DatabaseObjectKinds.Procedure or DatabaseObjectKinds.Function
-            or DatabaseObjectKinds.Package or DatabaseObjectKinds.PackageBody or DatabaseObjectKinds.Sequence;
+            or DatabaseObjectKinds.Package or DatabaseObjectKinds.PackageBody or DatabaseObjectKinds.Sequence or DatabaseObjectKinds.Trigger
+            or DatabaseObjectKinds.Type;
 
     /// <summary>schema.name (or name alone), each part quoted; the database is the query tab's own.</summary>
     public static string Qualified(IDatabaseProvider provider, DatabaseObjectName name)

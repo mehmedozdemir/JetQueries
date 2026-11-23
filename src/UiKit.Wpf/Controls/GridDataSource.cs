@@ -45,6 +45,16 @@ public interface IGridDataSource
     bool IsNull(int row, int column);
 }
 
+/// <summary>
+/// Optional for a <see cref="IGridDataSource"/>: a short second line under a column's name in the header
+/// (for example the column's data type). When any column has one, the header is taller.
+/// </summary>
+public interface IGridColumnCaptions
+{
+    /// <summary>The caption, or null/empty for none. Called on the UI thread; must be fast.</summary>
+    string? GetColumnCaption(int column);
+}
+
 /// <summary>Simple delegate based source; also handy for samples and tests.</summary>
 public sealed class ArrayGridDataSource : IGridDataSource
 {

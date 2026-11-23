@@ -356,4 +356,33 @@ public static class Strings
     public static string? Find(string name) => Manager.GetString(name, CultureInfo.CurrentUICulture);
 
     private static string Get(string name) => Manager.GetString(name, CultureInfo.CurrentUICulture) ?? name;
+    public static string ExplorerDetails => Get(nameof(ExplorerDetails));
+    public static string ExplorerScriptAlter => Get(nameof(ExplorerScriptAlter));
+    public static string ExplorerScriptDrop => Get(nameof(ExplorerScriptDrop));
+    public static string DetailsNotFound => Get(nameof(DetailsNotFound));
+    public static string DetailsProperties => Get(nameof(DetailsProperties));
+    public static string DetailsDdl => Get(nameof(DetailsDdl));
+    public static string DetailsOpenData => Get(nameof(DetailsOpenData));
+    public static string DetailsOpenDdl => Get(nameof(DetailsOpenDdl));
+    public static string DetailsRefresh => Get(nameof(DetailsRefresh));
+    public static string DetailsRowHint => Get(nameof(DetailsRowHint));
+    public static string DetailsSource => Get(nameof(DetailsSource));
+    public static string DetailsLoading => Get(nameof(DetailsLoading));
+    public static string EditorShowDetails => Get(nameof(EditorShowDetails));
+    public static string MenuFile => Get(nameof(MenuFile));
+    public static string MenuConnection => Get(nameof(MenuConnection));
+    public static string MenuQuery => Get(nameof(MenuQuery));
+    public static string MenuView => Get(nameof(MenuView));
+    public static string MenuTools => Get(nameof(MenuTools));
+    public static string MenuExit => Get(nameof(MenuExit));
+    public static string MenuSaveAs => Get(nameof(MenuSaveAs));
+    public static string MenuHistory => Get(nameof(MenuHistory));
+    public static string MenuExplorer => Get(nameof(MenuExplorer));
+    public static string MenuImportConnections => Get(nameof(MenuImportConnections));
+    public static string MenuGoToObject => Get(nameof(MenuGoToObject));
+    public static string MenuTheme => Get(nameof(MenuTheme));
+    public static string MenuSettings => Get(nameof(MenuSettings));
+    public static string HistoryWindowTitle => Get(nameof(HistoryWindowTitle));
+    public static string HistoryCopy => Get(nameof(HistoryCopy));
+    public static string ConnectionAdvanced => Get(nameof(ConnectionAdvanced));
 }

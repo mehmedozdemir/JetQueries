@@ -54,6 +54,9 @@
             <TreeView x:Name="Tree" ItemsSource="{Binding Roots}" BorderThickness="0" Background="Transparent" Padding="4,6"
                       Visibility="{Binding IsEmpty, Converter={x:Static v:InverseBoolToVisibilityConverter.Instance}}"
                       SelectedItemChanged="OnSelectedItemChanged" MouseDoubleClick="OnTreeDoubleClick">
+                <TreeView.InputBindings>
+                    <KeyBinding Key="F4" Command="{Binding OpenDetailsCommand}" />
+                </TreeView.InputBindings>
                 <TreeView.ItemContainerStyle>
                     <Style TargetType="TreeViewItem" BasedOn="{StaticResource {x:Type TreeViewItem}}">
                         <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
@@ -62,33 +65,38 @@
                         <!-- The tree's view model, for the context menu (which is not in the visual tree). -->
                         <Setter Property="Tag" Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=TreeView}}" />
                         <EventSetter Event="PreviewMouseRightButtonDown" Handler="OnItemRightButtonDown" />
+                        <!-- The menu's data context is the explorer (Tag); the node is its Selected (a right-click selects first).
+                             Submenus inherit it, which RelativeSource bindings across popups would not reliably do. -->
                         <Setter Property="ContextMenu">
                             <Setter.Value>
-                                <ContextMenu>
+                                <ContextMenu DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
                                     <MenuItem Header="{x:Static res:Strings.QueryNew}" c:Ui.Icon="{x:Static c:Icons.Add}"
-                                              Command="{Binding PlacementTarget.Tag.NewQueryCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                                              CommandParameter="{Binding}" />
-                                    <MenuItem Header="{Binding PlacementTarget.Tag.ToggleConnectionText, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                                              c:Ui.Icon="{x:Static c:Icons.Plug}"
-                                              Command="{Binding PlacementTarget.Tag.ToggleConnectionCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
-                                    <MenuItem Header="{x:Static res:Strings.ExplorerRefresh}" c:Ui.Icon="{x:Static c:Icons.Refresh}"
-                                              Command="{Binding PlacementTarget.Tag.ReloadSelectedCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
-                                    <!-- Tables and views: their data; anything with a definition: its CREATE -->
-                                    <Separator Visibility="{Binding HasDefinition, Converter={StaticResource BoolToVisibility}}" />
+                                              Command="{Binding NewQueryCommand}" CommandParameter="{Binding Selected}" />
+                                    <MenuItem Header="{Binding ToggleConnectionText}" c:Ui.Icon="{x:Static c:Icons.Plug}" Command="{Binding ToggleConnectionCommand}" />
+                                    <MenuItem Header="{x:Static res:Strings.ExplorerRefresh}" c:Ui.Icon="{x:Static c:Icons.Refresh}" Command="{Binding ReloadSelectedCommand}" />
+                                    <!-- Tables and views: their data; anything with a definition: details and scripts -->
+                                    <Separator Visibility="{Binding Selected.HasDefinition, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
                                     <MenuItem Header="{x:Static res:Strings.ExplorerSelectRows}" c:Ui.Icon="{x:Static c:Icons.Table}"
-                                              Command="{Binding PlacementTarget.Tag.SelectRowsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"
-                                              Visibility="{Binding HasData, Converter={StaticResource BoolToVisibility}}" />
+                                              Command="{Binding SelectRowsCommand}" CommandParameter="{Binding Selected}"
+                                              Visibility="{Binding Selected.HasData, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
+                                    <MenuItem Header="{x:Static res:Strings.ExplorerDetails}" c:Ui.Icon="{x:Static c:Icons.Info}" InputGestureText="F4"
+                                              Command="{Binding OpenDetailsCommand}" CommandParameter="{Binding Selected}"
+                                              Visibility="{Binding Selected.HasDefinition, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
                                     <MenuItem Header="{x:Static res:Strings.ExplorerScript}" c:Ui.Icon="{x:Static c:Icons.Code}"
-                                              Visibility="{Binding HasDefinition, Converter={StaticResource BoolToVisibility}}">
-                                        <MenuItem Header="{x:Static res:Strings.ExplorerScriptSelect}" Command="{Binding PlacementTarget.Tag.ScriptSelectCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"
-                                                  Visibility="{Binding HasData, Converter={StaticResource BoolToVisibility}}" />
-                                        <MenuItem Header="{x:Static res:Strings.ExplorerScriptInsert}" Command="{Binding PlacementTarget.Tag.ScriptInsertCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"
-                                                  Visibility="{Binding HasData, Converter={StaticResource BoolToVisibility}}" />
-                                        <MenuItem Header="{x:Static res:Strings.ExplorerScriptUpdate}" Command="{Binding PlacementTarget.Tag.ScriptUpdateCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"
-                                                  Visibility="{Binding HasData, Converter={StaticResource BoolToVisibility}}" />
-                                        <MenuItem Header="{x:Static res:Strings.ExplorerScriptDelete}" Command="{Binding PlacementTarget.Tag.ScriptDeleteCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"
-                                                  Visibility="{Binding HasData, Converter={StaticResource BoolToVisibility}}" />
-                                        <MenuItem Header="{x:Static res:Strings.ExplorerScriptCreate}" Command="{Binding PlacementTarget.Tag.ScriptCreateCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                              Visibility="{Binding Selected.HasDefinition, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}">
+                                        <MenuItem Header="{x:Static res:Strings.ExplorerScriptCreate}" Command="{Binding ScriptCreateCommand}" CommandParameter="{Binding Selected}" />
+                                        <MenuItem Header="{x:Static res:Strings.ExplorerScriptAlter}" Command="{Binding ScriptAlterCommand}" CommandParameter="{Binding Selected}"
+                                                  Visibility="{Binding Selected.CanAlter, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
+                                        <MenuItem Header="{x:Static res:Strings.ExplorerScriptDrop}" Command="{Binding ScriptDropCommand}" CommandParameter="{Binding Selected}" />
+                                        <Separator Visibility="{Binding Selected.HasData, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
+                                        <MenuItem Header="{x:Static res:Strings.ExplorerScriptSelect}" Command="{Binding ScriptSelectCommand}" CommandParameter="{Binding Selected}"
+                                                  Visibility="{Binding Selected.HasData, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
+                                        <MenuItem Header="{x:Static res:Strings.ExplorerScriptInsert}" Command="{Binding ScriptInsertCommand}" CommandParameter="{Binding Selected}"
+                                                  Visibility="{Binding Selected.HasData, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
+                                        <MenuItem Header="{x:Static res:Strings.ExplorerScriptUpdate}" Command="{Binding ScriptUpdateCommand}" CommandParameter="{Binding Selected}"
+                                                  Visibility="{Binding Selected.HasData, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
+                                        <MenuItem Header="{x:Static res:Strings.ExplorerScriptDelete}" Command="{Binding ScriptDeleteCommand}" CommandParameter="{Binding Selected}"
+                                                  Visibility="{Binding Selected.HasData, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
                                     </MenuItem>
                                 </ContextMenu>
                             </Setter.Value>

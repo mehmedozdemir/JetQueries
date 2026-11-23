@@ -39,7 +39,8 @@ public static class GridStrings
 /// </summary>
 public sealed class VirtualGrid : FrameworkElement
 {
-    private const double HeaderHeight = 36;
+    // Taller when the source gives captions (a second, smaller line under the names).
+    private double HeaderHeight => _captions is null ? 36 : 46;
     private const double CellPadding = 10;
     private const double MinColumnWidth = 40;
     private const double ResizeGrip = 4;
@@ -57,6 +58,7 @@ public sealed class VirtualGrid : FrameworkElement
     private readonly ToolTip _tip;
 
     private IGridDataSource _source = ArrayGridDataSource.Empty;
+    private IGridColumnCaptions? _captions;
     private int[] _display = [];
     private double[] _widths = [];
     private double[] _lefts = [0];
@@ -221,6 +223,16 @@ public sealed class VirtualGrid : FrameworkElement
         set => SetValue(ShowFilterButtonsProperty, value);
     }
 
+    /// <summary>The small kind marks (#, 1.2, Aa, date, check) before header names; off for plain tables of text.</summary>
+    public static readonly DependencyProperty ShowTypeTagsProperty = DependencyProperty.Register(nameof(ShowTypeTags), typeof(bool), typeof(VirtualGrid),
+        new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsRender | FrameworkPropertyMetadataOptions.AffectsArrange));
+
+    public bool ShowTypeTags
+    {
+        get => (bool)GetValue(ShowTypeTagsProperty);
+        set => SetValue(ShowTypeTagsProperty, value);
+    }
+
     public static readonly DependencyProperty ShowRowNumbersProperty = DependencyProperty.Register(nameof(ShowRowNumbers), typeof(bool), typeof(VirtualGrid),
         new FrameworkPropertyMetadata(true, (d, _) => ((VirtualGrid)d).RecomputeLayout()));
 
@@ -335,6 +347,7 @@ public sealed class VirtualGrid : FrameworkElement
         newSource ??= ArrayGridDataSource.Empty;
         bool sameSchema = oldSource is not null && Equals(oldSource.SchemaKey, newSource.SchemaKey) && oldSource.ColumnCount == newSource.ColumnCount;
         _source = newSource;
+        _captions = HasCaptions(newSource) ? (IGridColumnCaptions)newSource : null;
 
         if (!sameSchema)
         {
@@ -404,6 +417,18 @@ public sealed class VirtualGrid : FrameworkElement
         InvalidateVisual();
     }
 
+    private static bool HasCaptions(IGridDataSource source)
+    {
+        if (source is not IGridColumnCaptions captions)
+            return false;
+        for (int c = 0; c < source.ColumnCount; c++)
+        {
+            if (!string.IsNullOrEmpty(captions.GetColumnCaption(c)))
+                return true;
+        }
+        return false;
+    }
+
     private static bool IsNumeric(GridColumnKind kind) => kind is GridColumnKind.Integer or GridColumnKind.Number;
 
     private double FilterIconWidth => ShowFilterButtons ? 22 : 0;
@@ -412,7 +437,10 @@ public sealed class VirtualGrid : FrameworkElement
     {
         if (_cellText is null || _headerText is null)
             return 120;
-        double header = _headerText.Measure(_source.GetColumnName(column), _pixelsPerDip) + CellPadding + TypeTagWidth(column) + 6
+        double title = _headerText.Measure(_source.GetColumnName(column), _pixelsPerDip);
+        if (_captions?.GetColumnCaption(column) is { Length: > 0 } caption && _smallText is not null)
+            title = Math.Max(title, _smallText.Measure(caption, _pixelsPerDip));
+        double header = title + CellPadding + TypeTagWidth(column) + 6
                         + SortIconWidth + 4 + FilterIconWidth + 10;
 
         double content = 0;
@@ -732,6 +760,14 @@ public sealed class VirtualGrid : FrameworkElement
         var sorts = Sorts ?? [];
         var filtered = FilteredColumns;
         double headerBaseline = (HeaderHeight - header.LineHeight) / 2 + header.Ascent;
+        double captionBaseline = 0;
+        if (_captions is not null)
+        {
+            // Name and caption as one block, centred.
+            double top = (HeaderHeight - header.LineHeight - small.LineHeight) / 2;
+            headerBaseline = top + header.Ascent;
+            captionBaseline = top + header.LineHeight + small.Ascent;
+        }
         double iconBaseline = (HeaderHeight - icon.LineHeight) / 2 + icon.Ascent;
         double smallBaseline = (HeaderHeight - small.LineHeight) / 2 + small.Ascent;
 
@@ -784,6 +820,8 @@ public sealed class VirtualGrid : FrameworkElement
 
             header.Draw(dc, _source.GetColumnName(column), sortIndex >= 0 || isFiltered ? TextBrush : SecondaryTextBrush, tx, headerBaseline,
                 Math.Max(0, rightEdge - tx - 2), false, ppd);
+            if (_captions?.GetColumnCaption(column) is { Length: > 0 } caption)
+                small.Draw(dc, caption, MutedTextBrush, tx, captionBaseline, Math.Max(0, rightEdge - tx - 2), false, ppd);
 
             double lineX = Snap(x + w) - line / 2;
             dc.DrawLine(borderPen, new Point(lineX, 8), new Point(lineX, HeaderHeight - 8));
@@ -799,7 +837,7 @@ public sealed class VirtualGrid : FrameworkElement
         }
     }
 
-    private double TypeTagWidth(int column) => _source.GetColumnKind(column) switch
+    private double TypeTagWidth(int column) => !ShowTypeTags ? -6 : _source.GetColumnKind(column) switch
     {
         GridColumnKind.DateTime or GridColumnKind.Boolean => 13,
         var kind => _smallText?.Measure(TypeTag(kind), _pixelsPerDip) ?? 14,
@@ -814,6 +852,8 @@ public sealed class VirtualGrid : FrameworkElement
 
     private void DrawTypeTag(DrawingContext dc, int column, double x, double smallBaseline, double iconBaseline)
     {
+        if (!ShowTypeTags)
+            return;
         switch (_source.GetColumnKind(column))
         {
             case GridColumnKind.DateTime:

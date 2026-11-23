@@ -13,6 +13,7 @@
     <!-- Completion engine shared between providers as source: a provider may reference nothing but the SDK. -->
     <Compile Include="..\Shared\Language\*.cs" LinkBase="Language\Shared" />
     <Compile Include="..\Shared\Connections\*.cs" LinkBase="Connections\Shared" />
+    <Compile Include="..\Shared\Metadata\*.cs" LinkBase="Metadata\Shared" />
   </ItemGroup>
   <ItemGroup>
     <!-- The SDK is provided by the host at run time; an extension must not ship its own copy. -->

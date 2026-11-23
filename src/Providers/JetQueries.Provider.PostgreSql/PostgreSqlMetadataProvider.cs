@@ -15,7 +15,7 @@ namespace JetQueries.Provider.PostgreSql;
 /// <c>(null, schema, name)</c>, with names as the catalog stores them. A null schema in a request means the
 /// session's search path, resolved by the server.
 /// </remarks>
-internal sealed class PostgreSqlMetadataProvider(Func<NpgsqlConnection> currentConnection) : IMetadataProvider
+internal sealed partial class PostgreSqlMetadataProvider(Func<NpgsqlConnection> currentConnection) : IMetadataProvider
 {
     // The oid of the table or view a (schema, name) pair means; without a schema, the search path decides.
     private const string Relation = """
