@@ -112,6 +112,28 @@ public partial class App : Application
 
         e.Cancel = true;
         _hostStopped = true;
+
+        // Open transactions are committed or rolled back only on the user's word; Cancel keeps the window.
+        var documents = Host!.Services.GetRequiredService<DocumentsViewModel>();
+        bool resolved;
+        try
+        {
+            resolved = await documents.ResolveOpenTransactionsAsync();
+        }
+#pragma warning disable CA1031 // A failure here must not lose the window: it stays open and the error is logged.
+        catch (Exception ex)
+#pragma warning restore CA1031
+        {
+            LogHostStopFailed(Logger, ex);
+            resolved = false;
+        }
+
+        if (!resolved)
+        {
+            _hostStopped = false;
+            return;
+        }
+
         try
         {
             // Unsaved texts are kept in the workspace, not asked about: they are back at the next start.

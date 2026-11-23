@@ -142,6 +142,19 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] Ctrl+/ comments the selected lines (or the caret's line) with `-- `, again removes it; Ctrl+Shift+U /
       Ctrl+U upper / lower case the selection or the word at the caret (`id` → `ID`, never `İD`).
 
+## Transactions
+- [ ] A connected tab shows "Auto-commit" after the database selector. Click: "Manual commit" (amber), with
+      Commit (✓) and Rollback (↶) next to it.
+- [ ] Manual: a SELECT runs as before (no badge). An UPDATE / INSERT / DELETE / EXEC: "Open transaction" badge;
+      from another tab (or SSMS) the change is not visible (and a write to the same rows waits).
+- [ ] Commit: the badge goes, "Transaction committed." under Messages, the change is visible elsewhere.
+      Rollback: the change is gone.
+- [ ] Auto-commit with `BEGIN TRAN; UPDATE …` typed in the editor: the badge shows too; Commit / Rollback end it.
+- [ ] With a transaction open: switching the database is refused with a message; switching back to
+      auto-commit asks Commit / Rollback / Cancel; closing the tab asks; closing the application asks once for
+      all tabs (Cancel keeps the window open). A failing commit keeps the tab, with the server's reason.
+- [ ] PostgreSQL: after an error inside the transaction the badge stays until Rollback (PostgreSQL rule).
+
 ## Settings screen
 - [ ] Settings opens a wider window: pages on the left (Appearance, SQL editor, Results, Query tabs, SQL
       formatting), the chosen one highlighted with a bar; the page's title and one line about it at the top;
@@ -200,6 +213,9 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
   are those of that execution (they may differ from the first page if the data changed meanwhile).
 - SQL Server: a query starting with WITH is not paged (SQL Server cannot count it) and is read to its end.
 - Filters on several columns are combined with AND; there is no OR (the SQL filter box takes any condition).
+- Disconnecting a connection from the explorer while a tab has an open transaction does not ask: the server
+  rolls it back.
+- Oracle and PostgreSQL count a transaction as open once it has changed something (a BEGIN alone is not).
 - Formatting needs a connection (the formatter follows its dialect). A statement it does not recognise (DDL,
   EXEC, SET…) is left as written. The settings previews use the SQL Server language when it is loaded.
 - Ctrl+/ may need another key on keyboards where "/" is typed with Shift (Turkish Q: use the menu, or numpad /).

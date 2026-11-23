@@ -119,8 +119,53 @@ public sealed class PostgreSqlProvider : IDatabaseProvider, IConnectionSettingsP
 /// A session connection. A PostgreSQL connection is to one database; switching database (the query window's
 /// selector) opens a connection to the other database and replaces this one's.
 /// </summary>
-internal sealed class PostgreSqlDatabaseConnection : IDatabaseConnection, IDatabaseContext
+internal sealed class PostgreSqlDatabaseConnection : IDatabaseConnection, IDatabaseContext, ITransactionControl
 {
+    public async Task BeginAsync(CancellationToken cancellationToken)
+    {
+        if (!await HasOpenTransactionAsync(cancellationToken).ConfigureAwait(false))
+        {
+            await ScalarAsync("BEGIN", 30, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    /// Open once it has changed something (it then has a transaction id), as Oracle counts it; a transaction
+    /// that failed (25P02) is open until it is rolled back.
+    /// </summary>
+    public async Task<bool> HasOpenTransactionAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await ScalarAsync("SELECT txid_current_if_assigned()", 30, cancellationToken).ConfigureAwait(false) is not (null or DBNull);
+        }
+        catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.InFailedSqlTransaction)
+        {
+            return true;
+        }
+    }
+
+    /// <summary>COMMIT of a failed transaction rolls it back, as PostgreSQL does.</summary>
+    public async Task CommitAsync(CancellationToken cancellationToken) =>
+        await ScalarAsync("COMMIT", 0, cancellationToken).ConfigureAwait(false);
+
+    public async Task RollbackAsync(CancellationToken cancellationToken) =>
+        await ScalarAsync("ROLLBACK", 0, cancellationToken).ConfigureAwait(false);
+
+    // Short commands of the transaction control: constant text, no parameters.
+    private async Task<object?> ScalarAsync(string sql, int timeout, CancellationToken cancellationToken)
+    {
+        var command = _connection.CreateCommand();
+        await using (command.ConfigureAwait(false))
+        {
+#pragma warning disable CA2100 // Constant text.
+            command.CommandText = sql;
+#pragma warning restore CA2100
+            command.CommandTimeout = timeout;
+            return await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
+        }
+    }
+
     private readonly ConnectionProfile _profile;
 
     // Kept in memory only, for as long as the connection, to connect to another database.

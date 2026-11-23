@@ -221,6 +221,57 @@ public sealed class SqliteDatabaseTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task A_transaction_is_begun_committed_and_rolled_back_on_request()
+    {
+        var connection = _connection;
+        var control = Assert.IsAssignableFrom<ITransactionControl>(connection);
+        await RunTx(connection, "CREATE TABLE tx (id INTEGER)");
+        Assert.False(await control.HasOpenTransactionAsync(Token));
+
+        // Rolled back: the row is gone.
+        await control.BeginAsync(Token);
+        await RunTx(connection, "INSERT INTO tx VALUES (1)");
+        Assert.True(await control.HasOpenTransactionAsync(Token));
+        await control.BeginAsync(Token);
+        await control.RollbackAsync(Token);
+        Assert.False(await control.HasOpenTransactionAsync(Token));
+        Assert.Equal(0L, await CountTx(connection));
+
+        // Committed: the row stays.
+        await control.BeginAsync(Token);
+        await RunTx(connection, "INSERT INTO tx VALUES (1)");
+        await control.CommitAsync(Token);
+        Assert.False(await control.HasOpenTransactionAsync(Token));
+        Assert.Equal(1L, await CountTx(connection));
+
+        // A BEGIN typed by the user is seen too, and rolled back.
+        await RunTx(connection, "BEGIN; INSERT INTO tx VALUES (2)");
+        Assert.True(await control.HasOpenTransactionAsync(Token));
+        await control.RollbackAsync(Token);
+        Assert.False(await control.HasOpenTransactionAsync(Token));
+    }
+
+    private static async Task RunTx(IDatabaseConnection connection, string sql)
+    {
+        await foreach (var _ in connection.Executor.ExecuteAsync(new QueryRequest(sql), Token))
+        {
+        }
+    }
+
+    private static async Task<long> CountTx(IDatabaseConnection connection)
+    {
+        await foreach (var item in connection.Executor.ExecuteAsync(new QueryRequest("SELECT count(*) FROM tx"), Token))
+        {
+            if (item is RowBatch { Rows: [var row, ..] })
+            {
+                return Convert.ToInt64(row[0], System.Globalization.CultureInfo.InvariantCulture);
+            }
+        }
+
+        return -1;
+    }
+
+    [Fact]
     public async Task A_read_only_connection_cannot_write()
     {
         await using var readOnly = await new SqliteProvider().OpenConnectionAsync(

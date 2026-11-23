@@ -81,6 +81,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
   format with the options in effect. SDK preview: `SqlFormatOptions` gains `SqlKeywordCase`, `UseTabs`,
   `ContentOnNewLine`, `ConditionsOnNewLine` (`UppercaseKeywords`, never released, is replaced by `KeywordCase`).
 
+- Transactions: each query tab has auto-commit (default) or manual commit. In manual mode text that can change
+  data starts a transaction that waits for Commit or Rollback (a single SELECT never opens one); an "Open
+  transaction" badge shows while one is open, also one begun in SQL. Closing a tab or the application with an
+  open transaction asks Commit / Rollback / Cancel; the database cannot be switched while one is open; a tab
+  never hands an open transaction to the next one. SDK preview: `ITransactionControl`, for SQL Server, Oracle,
+  PostgreSQL and SQLite.
+
 ### Changed
 - A result set may hold up to 1,000,000 rows (was 100,000), fetched page by page.
 

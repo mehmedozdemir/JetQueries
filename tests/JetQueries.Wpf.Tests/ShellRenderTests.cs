@@ -65,6 +65,10 @@ public sealed class ShellRenderTests
             await query.RunCommand.ExecuteAsync(null);
             documents.NewQueryCommand.Execute(null);
             documents.Selected = query;
+            // Manual commit with a transaction open, as the toolbar shows it.
+            await query.ToggleAutoCommitCommand.ExecuteAsync(null);
+            env.Provider.TransactionOpen = true;
+            await query.RefreshTransactionAsync();
             await env.History.AddAsync(TestEnvironment.HistoryEntry("UPDATE dbo.Cards SET Balance = 0 WHERE Id = 42"), CancellationToken.None);
             await env.History.AddAsync(
                 TestEnvironment.HistoryEntry("SELECT * FROM dbo.Cardz") with { Outcome = Core.Queries.QueryOutcome.Failed, Error = "Invalid object name 'dbo.Cardz'.", RowCount = null },

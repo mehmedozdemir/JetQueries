@@ -308,12 +308,69 @@ public sealed class QueryChannel : IAsyncDisposable
             }, cancellationToken)
             : throw new NotSupportedException("This connection cannot switch databases.");
 
-    /// <summary>Gives the channel back: its own connection is closed; the session's main one stays open.</summary>
+    /// <summary>Whether the provider lets a query window keep a transaction open and end it (manual commit).</summary>
+    public bool SupportsTransactions => _connection is ITransactionControl;
+
+    /// <summary>Starts a transaction unless one is open; what runs next waits for Commit or Rollback.</summary>
+    /// <param name="cancellationToken">Cancels waiting and the request.</param>
+    public Task BeginTransactionAsync(CancellationToken cancellationToken) =>
+        Transaction(static (control, token) => control.BeginAsync(token), cancellationToken);
+
+    /// <summary>Whether a transaction with changes is open (started here or by the user's own SQL); false when not supported.</summary>
+    /// <param name="cancellationToken">Cancels waiting and the request.</param>
+    public Task<bool> HasOpenTransactionAsync(CancellationToken cancellationToken) =>
+        _connection is ITransactionControl control ? UseAsync(control.HasOpenTransactionAsync, cancellationToken) : Task.FromResult(false);
+
+    /// <summary>Commits the open transaction.</summary>
+    /// <param name="cancellationToken">Cancels waiting and the request.</param>
+    public Task CommitAsync(CancellationToken cancellationToken) =>
+        Transaction(static (control, token) => control.CommitAsync(token), cancellationToken);
+
+    /// <summary>Rolls the open transaction back.</summary>
+    /// <param name="cancellationToken">Cancels waiting and the request.</param>
+    public Task RollbackAsync(CancellationToken cancellationToken) =>
+        Transaction(static (control, token) => control.RollbackAsync(token), cancellationToken);
+
+    private Task<bool> Transaction(Func<ITransactionControl, CancellationToken, Task> work, CancellationToken cancellationToken) =>
+        _connection is ITransactionControl control
+            ? UseAsync(async token =>
+            {
+                await work(control, token).ConfigureAwait(false);
+                return true;
+            }, cancellationToken)
+            : throw new NotSupportedException("This connection has no transaction control.");
+
+    /// <summary>
+    /// Gives the channel back: its own connection is closed (the server rolls back what was not committed); the
+    /// session's main one stays open, so anything left uncommitted on it is rolled back first, never handed to the
+    /// next window.
+    /// </summary>
     public async ValueTask DisposeAsync()
     {
         if (Interlocked.Exchange(ref _released, 1) != 0)
         {
             return;
+        }
+
+        if (_isMain && _connection is ITransactionControl control && !Session.IsDisposed)
+        {
+            try
+            {
+                await _gate.WaitAsync().ConfigureAwait(false);
+                try
+                {
+                    await control.RollbackAsync(CancellationToken.None).ConfigureAwait(false);
+                }
+                finally
+                {
+                    _gate.Release();
+                }
+            }
+#pragma warning disable CA1031 // Best effort: a broken connection has nothing left to roll back.
+            catch (Exception)
+#pragma warning restore CA1031
+            {
+            }
         }
 
         Session.Release(this);

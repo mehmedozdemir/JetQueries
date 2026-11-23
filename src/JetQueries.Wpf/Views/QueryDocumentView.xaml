@@ -38,6 +38,39 @@
                 <ComboBox x:Name="DatabaseBox" ItemsSource="{Binding Databases}" SelectedItem="{Binding SelectedDatabase}" MinWidth="200" MaxWidth="320"
                           ToolTip="{x:Static res:Strings.QueryDatabase}" />
             </StackPanel>
+            <!-- Auto-commit or manual commit; Commit / Rollback; a warning while a transaction is open -->
+            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Margin="8,0,0,0"
+                        Visibility="{Binding SupportsTransactions, Converter={StaticResource BoolToVisibility}}">
+                <Border Style="{StaticResource Separator.Vertical}" Margin="0,0,6,0" />
+                <Button x:Name="TransactionMode" Command="{Binding ToggleAutoCommitCommand}" ToolTip="{x:Static res:Strings.TransactionModeTip}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource Btn.Toolbar.Compact}">
+                            <Setter Property="c:Ui.Icon" Value="&#xE8FB;" />
+                            <Setter Property="Content" Value="{Binding TransactionModeText}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding AutoCommit}" Value="False">
+                                    <Setter Property="Foreground" Value="{DynamicResource Brush.Warning}" />
+                                    <Setter Property="c:Ui.Icon" Value="&#xE72E;" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <StackPanel Orientation="Horizontal" Visibility="{Binding ShowTransactionButtons, Converter={StaticResource BoolToVisibility}}">
+                    <Button Style="{StaticResource Btn.Icon.Compact}" c:Ui.Icon="{x:Static c:Icons.Check}" Foreground="{DynamicResource Brush.Success}"
+                            Command="{Binding CommitCommand}" ToolTip="{x:Static res:Strings.TransactionCommitTip}" />
+                    <Button Style="{StaticResource Btn.Icon.Compact}" c:Ui.Icon="&#xE7A7;" Foreground="{DynamicResource Brush.Danger}"
+                            Command="{Binding RollbackCommand}" ToolTip="{x:Static res:Strings.TransactionRollbackTip}" />
+                </StackPanel>
+                <Border Style="{StaticResource Badge}" Margin="6,0,0,0" Background="{DynamicResource Brush.Chip}" ToolTip="{x:Static res:Strings.TransactionOpenTip}"
+                        Visibility="{Binding HasOpenTransaction, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{x:Static c:Icons.Warning}" Style="{StaticResource Text.Icon}" FontSize="11" Foreground="{DynamicResource Brush.Warning}" />
+                        <TextBlock Text="{x:Static res:Strings.TransactionOpen}" FontSize="{DynamicResource FontSize.Small}" Margin="5,0,0,0"
+                                   Foreground="{DynamicResource Brush.Warning}" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
             <TextBlock DockPanel.Dock="Left" Text="{x:Static res:Strings.QueryNoConnection}" Style="{StaticResource Text.Caption}" VerticalAlignment="Center"
                        Visibility="{Binding SelectedSession, Converter={x:Static v:NullToVisibleConverter.Instance}}" />
             <ProgressBar DockPanel.Dock="Left" IsIndeterminate="{Binding IsRunning}" Width="80" Margin="12,0,0,0" VerticalAlignment="Center"

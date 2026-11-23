@@ -277,6 +277,20 @@ public static class Strings
     public static string SettingUiSample => Get(nameof(SettingUiSample));
     public static string SettingsGroupTheme => Get(nameof(SettingsGroupTheme));
     public static string SettingsGroupFont => Get(nameof(SettingsGroupFont));
+    public static string TransactionAuto => Get(nameof(TransactionAuto));
+    public static string TransactionManual => Get(nameof(TransactionManual));
+    public static string TransactionModeTip => Get(nameof(TransactionModeTip));
+    public static string TransactionCommit => Get(nameof(TransactionCommit));
+    public static string TransactionRollback => Get(nameof(TransactionRollback));
+    public static string TransactionCommitTip => Get(nameof(TransactionCommitTip));
+    public static string TransactionRollbackTip => Get(nameof(TransactionRollbackTip));
+    public static string TransactionOpen => Get(nameof(TransactionOpen));
+    public static string TransactionOpenTip => Get(nameof(TransactionOpenTip));
+    public static string TransactionCommitted => Get(nameof(TransactionCommitted));
+    public static string TransactionRolledBack => Get(nameof(TransactionRolledBack));
+    public static string TransactionBlocksDatabase => Get(nameof(TransactionBlocksDatabase));
+    public static string TransactionAskTitle => Get(nameof(TransactionAskTitle));
+    public static string TransactionAskMessage => Get(nameof(TransactionAskMessage));
 
     /// <summary>A string looked up by a computed name (for example <c>Setting_server</c>), or null if there is none.</summary>
     public static string? Find(string name) => Manager.GetString(name, CultureInfo.CurrentUICulture);

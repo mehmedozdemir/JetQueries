@@ -587,8 +587,14 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
             _ = _jobs.Enqueue("Close query connection", _ => old.DisposeAsync().AsTask(), JobPriority.Low);
         }
 
+        _ui.Post(() =>
+        {
+            SupportsTransactions = false;
+            HasOpenTransaction = false;
+        });
         if (await EnsureChannelAsync().ConfigureAwait(false) is { } channel)
         {
+            _ui.Post(() => SupportsTransactions = channel.SupportsTransactions);
             await RefreshDatabaseAsync(channel, withList: true).ConfigureAwait(false);
         }
     }
@@ -711,6 +717,14 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
 
     private async Task ChangeDatabaseAsync(QueryChannel channel, string database)
     {
+        if (HasOpenTransaction)
+        {
+            // Some providers reconnect to switch: the open transaction would be lost without a word.
+            _ui.Post(() => Status = Strings.TransactionBlocksDatabase);
+            await RefreshDatabaseAsync(channel, withList: false).ConfigureAwait(false);
+            return;
+        }
+
         await CloseCursorAsync();
         try
         {
@@ -777,6 +791,121 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanRun))]
     private Task RunInNewTabAsync() => RunSqlAsync(TextToRun(), keepResults: true);
+
+    /// <summary>
+    /// Each statement commits on its own (true, every driver's default) or, in manual mode, text that can change
+    /// data starts a transaction that stays open until Commit or Rollback. A single SELECT never starts one.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(TransactionModeText), nameof(ShowTransactionButtons))]
+    public partial bool AutoCommit { get; set; } = true;
+
+    /// <summary>The connection lets the tab keep a transaction open (all built-in providers do).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowTransactionButtons))]
+    public partial bool SupportsTransactions { get; set; }
+
+    /// <summary>A transaction with changes is open on the tab's connection (also one the user began in SQL).</summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(CommitCommand), nameof(RollbackCommand))]
+    [NotifyPropertyChangedFor(nameof(ShowTransactionButtons))]
+    public partial bool HasOpenTransaction { get; set; }
+
+    /// <summary>"Auto-commit" or "Manual commit", for the toggle.</summary>
+    public string TransactionModeText => AutoCommit ? Strings.TransactionAuto : Strings.TransactionManual;
+
+    /// <summary>Commit and Rollback are shown in manual mode, or while a transaction is open.</summary>
+    public bool ShowTransactionButtons => SupportsTransactions && (!AutoCommit || HasOpenTransaction);
+
+    private bool CanEndTransaction() => !IsRunning && HasOpenTransaction && _channel is not null;
+
+    /// <summary>Commits the tab's open transaction.</summary>
+    [RelayCommand(CanExecute = nameof(CanEndTransaction))]
+    private Task<bool> CommitAsync() => EndTransactionAsync(commit: true);
+
+    /// <summary>Rolls the tab's open transaction back.</summary>
+    [RelayCommand(CanExecute = nameof(CanEndTransaction))]
+    private Task<bool> RollbackAsync() => EndTransactionAsync(commit: false);
+
+    /// <summary>
+    /// Switches between auto-commit and manual commit. Going back to auto-commit with a transaction open asks
+    /// first whether to commit it or roll it back (Cancel stays in manual mode).
+    /// </summary>
+    [RelayCommand]
+    private async Task ToggleAutoCommitAsync()
+    {
+        if (!AutoCommit && HasOpenTransaction)
+        {
+            switch (await _dialogs.AskOpenTransactionAsync(Title))
+            {
+                case TransactionChoice.Commit when !await EndTransactionAsync(commit: true):
+                case TransactionChoice.Rollback when !await EndTransactionAsync(commit: false):
+                case TransactionChoice.Cancel:
+                    OnPropertyChanged(nameof(AutoCommit));
+                    return;
+                default:
+                    break;
+            }
+        }
+
+        AutoCommit = !AutoCommit;
+    }
+
+    /// <summary>Commits or rolls back; false (with the server's reason shown) when that failed.</summary>
+    public async Task<bool> EndTransactionAsync(bool commit)
+    {
+        if (_channel is not { } channel)
+        {
+            return false;
+        }
+
+        IsRunning = true;
+        try
+        {
+            await _jobs.Enqueue(
+                commit ? "Commit" : "Rollback",
+                context => commit ? channel.CommitAsync(context.CancellationToken) : channel.RollbackAsync(context.CancellationToken),
+                JobPriority.High).Completion;
+            AddMessage(commit ? Strings.TransactionCommitted : Strings.TransactionRolledBack, isError: false);
+            Status = commit ? Strings.TransactionCommitted : Strings.TransactionRolledBack;
+            return true;
+        }
+#pragma warning disable CA1031 // The server's reason is shown; the transaction state is read again below.
+        catch (Exception ex)
+#pragma warning restore CA1031
+        {
+            AddMessage(ex.Message, isError: true);
+            Status = ex.Message;
+            return false;
+        }
+        finally
+        {
+            IsRunning = false;
+            await RefreshTransactionAsync();
+        }
+    }
+
+    /// <summary>Asks the server whether a transaction is open on the tab's connection.</summary>
+    public async Task RefreshTransactionAsync()
+    {
+        if (_channel is not { SupportsTransactions: true } channel)
+        {
+            HasOpenTransaction = false;
+            return;
+        }
+
+        try
+        {
+            HasOpenTransaction = await _jobs.Enqueue("Transaction state", context => channel.HasOpenTransactionAsync(context.CancellationToken), JobPriority.High)
+                .Completion;
+        }
+#pragma warning disable CA1031 // A broken connection holds no transaction the tab can end.
+        catch (Exception)
+#pragma warning restore CA1031
+        {
+            HasOpenTransaction = false;
+        }
+    }
 
     /// <summary>
     /// Lays <paramref name="text"/> out with the connection's SQL formatter, as a background job. Null when the
@@ -905,11 +1034,30 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
             (run, filter) = (sql, null);
         }
 
+        // Manual commit: what can change data runs inside a transaction that waits for Commit or Rollback.
+        if (!AutoCommit && risk.WritesData && channel.SupportsTransactions)
+        {
+            try
+            {
+                await _jobs.Enqueue("Begin transaction", context => channel.BeginTransactionAsync(context.CancellationToken), JobPriority.High).Completion;
+            }
+#pragma warning disable CA1031 // The server's reason is shown and nothing is sent.
+            catch (Exception ex)
+#pragma warning restore CA1031
+            {
+                IsRunning = false;
+                AddMessage(ex.Message, isError: true);
+                Status = Strings.QueryNotSent;
+                return;
+            }
+        }
+
         // Batches of one page (within reason), so that a page ends exactly at the fetch size.
         var request = new QueryRequest(run) { BatchSize = Math.Min(fetchSize, 5000) };
         var cursor = new QueryCursor(channel, request, session, pageable ? fetchSize : MaxRows) { SelectFirst = keepResults };
         _cursor = cursor;
         await ReadPageAsync(cursor);
+        await RefreshTransactionAsync();
 
         // The one result of a single SELECT can be paged, counted and filtered on the server.
         if (pageable && cursor.First is { } set)

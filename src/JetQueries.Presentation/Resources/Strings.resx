@@ -294,4 +294,18 @@
   <data name="SettingUiSample" xml:space="preserve"><value>Explorer · New query · 1,234 rows · İıŞşĞğÜüÖöÇç</value></data>
   <data name="SettingsGroupTheme" xml:space="preserve"><value>THEME</value></data>
   <data name="SettingsGroupFont" xml:space="preserve"><value>FONT</value></data>
+  <data name="TransactionAuto" xml:space="preserve"><value>Auto-commit</value></data>
+  <data name="TransactionManual" xml:space="preserve"><value>Manual commit</value></data>
+  <data name="TransactionModeTip" xml:space="preserve"><value>Auto-commit: each statement commits on its own. Manual commit: changes wait for Commit or Rollback (a SELECT never opens a transaction).</value></data>
+  <data name="TransactionCommit" xml:space="preserve"><value>Commit</value></data>
+  <data name="TransactionRollback" xml:space="preserve"><value>Rollback</value></data>
+  <data name="TransactionCommitTip" xml:space="preserve"><value>Commit the open transaction</value></data>
+  <data name="TransactionRollbackTip" xml:space="preserve"><value>Roll the open transaction back</value></data>
+  <data name="TransactionOpen" xml:space="preserve"><value>Open transaction</value></data>
+  <data name="TransactionOpenTip" xml:space="preserve"><value>Changes on this tab are not committed yet; other connections do not see them and may wait on its locks.</value></data>
+  <data name="TransactionCommitted" xml:space="preserve"><value>Transaction committed.</value></data>
+  <data name="TransactionRolledBack" xml:space="preserve"><value>Transaction rolled back.</value></data>
+  <data name="TransactionBlocksDatabase" xml:space="preserve"><value>Commit or roll back the open transaction before switching the database.</value></data>
+  <data name="TransactionAskTitle" xml:space="preserve"><value>Open transaction</value></data>
+  <data name="TransactionAskMessage" xml:space="preserve"><value>{0} has changes that are not committed. Commit them or roll them back?</value></data>
 </root>
