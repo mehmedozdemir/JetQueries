@@ -380,6 +380,16 @@ public sealed class PostgreSqlIntegrationTests(PostgreSqlFixture fixture) : ICla
     }
 
     [Fact]
+    public async Task The_first_rows_select_runs_in_the_dialect()
+    {
+        await using var connection = await OpenAsync();
+        var provider = new PostgreSqlProvider();
+        var sql = provider.SelectRows("pg_catalog.pg_database", ["datname"], 2);
+        var events = await Collect(connection.Executor.ExecuteAsync(new QueryRequest(sql), Token));
+        Assert.Equal(2, events.OfType<RowBatch>().Sum(static b => b.Rows.Count));
+    }
+
+    [Fact]
     public async Task Row_counts_and_an_early_closed_cursor_work_on_the_server()
     {
         await using var connection = await OpenAsync();

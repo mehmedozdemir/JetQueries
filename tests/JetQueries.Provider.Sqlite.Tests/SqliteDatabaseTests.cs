@@ -272,6 +272,16 @@ public sealed class SqliteDatabaseTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task The_first_rows_select_runs_in_the_dialect()
+    {
+        await Task.CompletedTask;
+        var provider = new SqliteProvider();
+        var sql = provider.SelectRows("cards", ["id", "card_no"], 2);
+        var events = await RunAsync(sql);
+        Assert.Equal(2, events.OfType<RowBatch>().Sum(static b => b.Rows.Count));
+    }
+
+    [Fact]
     public async Task A_read_only_connection_cannot_write()
     {
         await using var readOnly = await new SqliteProvider().OpenConnectionAsync(

@@ -310,4 +310,17 @@
   <data name="TransactionAskMessage" xml:space="preserve"><value>{0} has changes that are not committed. Commit them or roll them back?</value></data>
   <data name="NoStatementAtCaret" xml:space="preserve"><value>No statement at the cursor.</value></data>
   <data name="EditorRunStatement" xml:space="preserve"><value>Run statement</value></data>
+  <data name="ExplorerSelectRows" xml:space="preserve"><value>Select first 1000 rows</value></data>
+  <data name="ExplorerScript" xml:space="preserve"><value>Script</value></data>
+  <data name="ExplorerScriptSelect" xml:space="preserve"><value>SELECT</value></data>
+  <data name="ExplorerScriptInsert" xml:space="preserve"><value>INSERT</value></data>
+  <data name="ExplorerScriptUpdate" xml:space="preserve"><value>UPDATE</value></data>
+  <data name="ExplorerScriptDelete" xml:space="preserve"><value>DELETE</value></data>
+  <data name="ExplorerScriptCreate" xml:space="preserve"><value>CREATE (definition)</value></data>
+  <data name="GoToObject" xml:space="preserve"><value>Go to object</value></data>
+  <data name="GoToObjectTip" xml:space="preserve"><value>Find a table, view or routine of the open connections by name (Ctrl+Shift+N)</value></data>
+  <data name="GoToObjectPlaceholder" xml:space="preserve"><value>Name of a table, view, procedure…</value></data>
+  <data name="GoToObjectNoConnection" xml:space="preserve"><value>Connect to a database first: objects of open connections are searched.</value></data>
+  <data name="GoToObjectIndexing" xml:space="preserve"><value>Loading lists…</value></data>
+  <data name="GoToObjectCount" xml:space="preserve"><value>{0:N0} objects</value></data>
 </root>

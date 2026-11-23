@@ -29,7 +29,7 @@ public partial class MainWindowViewModel : ObservableObject
         themeService.Changed += (_, _) => OnPropertyChanged(nameof(IsDark));
 
         // "New query" on an explorer node opens a tab on its connection and database.
-        connections.NewQueryRequested += (_, request) => documents.OpenEmpty(request.ConnectionId, request.Database);
+        connections.NewQueryRequested += (_, request) => _ = documents.OpenAsync(request);
 
         // A new query starts on the connection that is selected in the explorer.
         connections.PropertyChanged += (_, e) =>
@@ -67,6 +67,13 @@ public partial class MainWindowViewModel : ObservableObject
             : string.Format(CultureInfo.CurrentCulture, CompositeFormat.Parse(Strings.ExtensionsLoadedWithFailures), loaded, failed);
         _ui.Post(() => ExtensionStatus = text);
     }
+
+    /// <summary>Raised to show Go to object for the open connections.</summary>
+    public event EventHandler<GoToObjectViewModel>? GoToObjectRequested;
+
+    /// <summary>Go to object (Ctrl+Shift+N).</summary>
+    [RelayCommand]
+    private void GoToObject() => GoToObjectRequested?.Invoke(this, new GoToObjectViewModel(Connections, _ui));
 
     [RelayCommand]
     private void ToggleTheme() => _themeService.Toggle();

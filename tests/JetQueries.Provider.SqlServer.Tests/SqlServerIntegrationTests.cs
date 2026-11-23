@@ -452,6 +452,16 @@ public sealed class SqlServerIntegrationTests(SqlServerFixture fixture) : IClass
     }
 
     [Fact]
+    public async Task The_first_rows_select_runs_in_the_dialect()
+    {
+        await using var connection = await OpenAsync();
+        var provider = new SqlServerProvider();
+        var sql = provider.SelectRows("sys.databases", ["name", "database_id", "state", "[collation_name]"], 2);
+        var events = await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest(sql), Token));
+        Assert.Equal(2, events.OfType<RowBatch>().Sum(static b => b.Rows.Count));
+    }
+
+    [Fact]
     public async Task The_current_database_can_be_read_listed_and_switched()
     {
         await using var connection = await OpenAsync();

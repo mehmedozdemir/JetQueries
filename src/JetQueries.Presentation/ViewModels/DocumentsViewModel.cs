@@ -93,6 +93,17 @@ public partial class DocumentsViewModel : ObservableObject
     [RelayCommand]
     private void NewQuery() => OpenEmpty(PreferredConnectionId, null);
 
+    /// <summary>Opens what the explorer asked for: an empty query, or a script (run at once for Select first rows).</summary>
+    public async Task OpenAsync(NewQueryRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        var document = Open(request.Title ?? NextTitle(), request.Text, request.ConnectionId, request.Database);
+        if (request.Run && document.RunCommand.CanExecute(null))
+        {
+            await document.RunCommand.ExecuteAsync(null);
+        }
+    }
+
     /// <summary>Opens an empty query tab on a connection and, if given, a database of it (the explorer's New query).</summary>
     public QueryDocumentViewModel OpenEmpty(Guid? connectionId, string? database) => Open(NextTitle(), string.Empty, connectionId, database);
 

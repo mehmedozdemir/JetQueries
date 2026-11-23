@@ -18,7 +18,7 @@ public sealed class PostgreSqlExtension : IExtension
 }
 
 /// <summary>Database provider for PostgreSQL, on the Npgsql driver.</summary>
-public sealed class PostgreSqlProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder
+public sealed class PostgreSqlProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect
 {
     /// <summary>The provider identifier stored in connection profiles.</summary>
     public const string ProviderId = "postgresql";
@@ -78,6 +78,17 @@ public sealed class PostgreSqlProvider : IDatabaseProvider, IConnectionSettingsP
     /// <inheritdoc />
     public string? BuildCountQuery(string sql) =>
         CountQueryBuilder.Build(sql, PostgreSqlSyntax.Tokenizer.Tokenize(sql), withAllowedInside: true, orderByNeedsPaging: false);
+
+    /// <inheritdoc />
+    public string SelectRows(string qualifiedName, IReadOnlyList<string> quotedColumns, int rows)
+    {
+        ArgumentNullException.ThrowIfNull(qualifiedName);
+        ArgumentNullException.ThrowIfNull(quotedColumns);
+        return "SELECT " + Columns(quotedColumns) + "\nFROM " + qualifiedName + "\nLIMIT " + rows.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+        // One column per line once there are several.
+        static string Columns(IReadOnlyList<string> columns) => columns.Count == 0 ? "*" : columns.Count <= 3 ? string.Join(", ", columns) : "\n    " + string.Join(",\n    ", columns);
+    }
 
     /// <inheritdoc />
     public string? BuildFilterQuery(string sql, string condition)

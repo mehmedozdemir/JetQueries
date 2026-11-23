@@ -18,7 +18,7 @@ public sealed class OracleExtension : IExtension
 }
 
 /// <summary>Database provider for Oracle Database, on the managed ODP.NET driver (no Oracle client installation needed).</summary>
-public sealed class OracleProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder
+public sealed class OracleProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect
 {
     /// <summary>The provider identifier stored in connection profiles.</summary>
     public const string ProviderId = "oracle";
@@ -72,6 +72,17 @@ public sealed class OracleProvider : IDatabaseProvider, IConnectionSettingsProvi
     /// <inheritdoc />
     public string? BuildCountQuery(string sql) =>
         CountQueryBuilder.Build(sql.TrimEnd().TrimEnd('/').TrimEnd(), PlSqlTokenizer.Tokenize(sql.TrimEnd().TrimEnd('/').TrimEnd()), withAllowedInside: true, orderByNeedsPaging: false);
+
+    /// <inheritdoc />
+    public string SelectRows(string qualifiedName, IReadOnlyList<string> quotedColumns, int rows)
+    {
+        ArgumentNullException.ThrowIfNull(qualifiedName);
+        ArgumentNullException.ThrowIfNull(quotedColumns);
+        return "SELECT " + Columns(quotedColumns) + "\nFROM " + qualifiedName + "\nFETCH FIRST " + rows.ToString(System.Globalization.CultureInfo.InvariantCulture) + " ROWS ONLY";
+
+        // One column per line once there are several.
+        static string Columns(IReadOnlyList<string> columns) => columns.Count == 0 ? "*" : columns.Count <= 3 ? string.Join(", ", columns) : "\n    " + string.Join(",\n    ", columns);
+    }
 
     /// <inheritdoc />
     public string? BuildFilterQuery(string sql, string condition)

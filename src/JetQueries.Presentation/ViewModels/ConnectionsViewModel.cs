@@ -17,6 +17,12 @@ public abstract partial class ExplorerNodeViewModel(string name) : ObservableObj
 {
     public string Name { get; } = name;
 
+    /// <summary>A table or view: its data can be selected and scripted (INSERT, UPDATE, DELETE).</summary>
+    public virtual bool HasData => false;
+
+    /// <summary>The object's definition (CREATE …) can be scripted.</summary>
+    public virtual bool HasDefinition => false;
+
     public ObservableCollection<ExplorerNodeViewModel> Children { get; } = [];
 
     [ObservableProperty]
@@ -37,7 +43,17 @@ public abstract partial class ExplorerNodeViewModel(string name) : ObservableObj
 /// <summary>A new query tab wanted on a connection, in a database (or schema) of it if given.</summary>
 /// <param name="ConnectionId">The saved connection.</param>
 /// <param name="Database">The database (Oracle: schema) to start in; null for the connection's default.</param>
-public sealed record NewQueryRequest(Guid ConnectionId, string? Database);
+public sealed record NewQueryRequest(Guid ConnectionId, string? Database)
+{
+    /// <summary>The text the tab starts with (a script written by the explorer); empty for a new query.</summary>
+    public string Text { get; init; } = string.Empty;
+
+    /// <summary>The tab's title; null for the next "Query N".</summary>
+    public string? Title { get; init; }
+
+    /// <summary>Run the text at once (Select first rows).</summary>
+    public bool Run { get; init; }
+}
 
 /// <summary>A folder grouping connections.</summary>
 public sealed class FolderNodeViewModel(string name) : ExplorerNodeViewModel(name);
@@ -123,6 +139,17 @@ public partial class ConnectionsViewModel(
     [ObservableProperty]
     public partial string FilterText { get; set; } = string.Empty;
 
+    /// <summary>Raised when a node should be selected and scrolled into view (Go to object); its parents are expanded already.</summary>
+    public event EventHandler<ExplorerNodeViewModel>? RevealRequested;
+
+    /// <summary>Selects <paramref name="node"/> and asks the view to show it.</summary>
+    public void Reveal(ExplorerNodeViewModel node)
+    {
+        ArgumentNullException.ThrowIfNull(node);
+        Selected = node;
+        RevealRequested?.Invoke(this, node);
+    }
+
     /// <summary>Raised when a new query tab is wanted on a connection and, if known, a database (or schema) of it.</summary>
     public event EventHandler<NewQueryRequest>? NewQueryRequested;
 
@@ -183,6 +210,74 @@ public partial class ConnectionsViewModel(
         {
             NewQueryRequested?.Invoke(this, request);
         }
+    }
+
+    /// <summary>Opens a tab with the first rows of a table or view and runs it (SSMS's "Select Top 1000 Rows").</summary>
+    [RelayCommand]
+    private Task SelectRowsAsync(ExplorerNodeViewModel? node) => ScriptAsync(node, ObjectScriptKind.SelectRows);
+
+    /// <summary>Opens a tab with a SELECT of every column.</summary>
+    [RelayCommand]
+    private Task ScriptSelectAsync(ExplorerNodeViewModel? node) => ScriptAsync(node, ObjectScriptKind.Select);
+
+    /// <summary>Opens a tab with an INSERT template.</summary>
+    [RelayCommand]
+    private Task ScriptInsertAsync(ExplorerNodeViewModel? node) => ScriptAsync(node, ObjectScriptKind.Insert);
+
+    /// <summary>Opens a tab with an UPDATE template by primary key.</summary>
+    [RelayCommand]
+    private Task ScriptUpdateAsync(ExplorerNodeViewModel? node) => ScriptAsync(node, ObjectScriptKind.Update);
+
+    /// <summary>Opens a tab with a DELETE template by primary key.</summary>
+    [RelayCommand]
+    private Task ScriptDeleteAsync(ExplorerNodeViewModel? node) => ScriptAsync(node, ObjectScriptKind.Delete);
+
+    /// <summary>Opens a tab with the object's definition.</summary>
+    [RelayCommand]
+    private Task ScriptCreateAsync(ExplorerNodeViewModel? node) => ScriptAsync(node, ObjectScriptKind.Create);
+
+    /// <summary>The last problem writing a script (shown under the explorer); null when none.</summary>
+    [ObservableProperty]
+    public partial string? ScriptError { get; set; }
+
+    private async Task ScriptAsync(ExplorerNodeViewModel? node, ObjectScriptKind kind)
+    {
+        if (node is not DatabaseObjectNodeViewModel { Target: var target, Session: var session })
+        {
+            return;
+        }
+
+        ScriptError = null;
+        string? text;
+        try
+        {
+            text = await jobs.Enqueue("Write script", context => ObjectScripts.BuildAsync(session, metadata, target, kind, context.CancellationToken), JobPriority.High)
+                .Completion;
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+#pragma warning disable CA1031 // The server's reason is shown; nothing else is disturbed.
+        catch (Exception ex)
+#pragma warning restore CA1031
+        {
+            ScriptError = ex.Message;
+            return;
+        }
+
+        if (text is null)
+        {
+            ScriptError = string.Format(System.Globalization.CultureInfo.CurrentCulture, System.Text.CompositeFormat.Parse(Strings.DefinitionUnavailable), target.Name);
+            return;
+        }
+
+        NewQueryRequested?.Invoke(this, new NewQueryRequest(session.Definition.Id, DatabaseOf(session, target))
+        {
+            Text = text,
+            Title = target.Name.Name,
+            Run = kind == ObjectScriptKind.SelectRows,
+        });
     }
 
     /// <summary>The database a query on <paramref name="target"/> should start in: its database, or for Oracle its schema.</summary>

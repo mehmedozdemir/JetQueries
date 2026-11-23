@@ -91,6 +91,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
   statements end at a semicolon, an empty line or a GO / `/` line; strings, comments and quoted names never end
   one; BEGIN … END and CASE blocks, procedures, packages and DECLARE scripts keep together. The statement that
   runs flashes in the editor. Editor menu: "Run statement".
+- Explorer scripts: right-click a table or view for "Select first 1000 rows" (opens a tab and runs it, in the
+  dialect's words: TOP / FETCH FIRST / LIMIT) and Script → SELECT, INSERT, UPDATE, DELETE templates (NULL
+  placeholders with each column's type; UPDATE and DELETE by primary key, `WHERE 1 = 0` without one) and
+  CREATE (the definition); routines, packages and sequences get CREATE. SDK preview: `IRowLimitedSelect`.
+- Go to object (Ctrl+Shift+N, or the search icon over the explorer): finds tables, views, routines and packages
+  of the open connections by part of their name (Turkish letters in any case) and reveals the chosen one in the
+  explorer; lists not loaded yet load in the background through the metadata cache.
 
 ### Changed
 - A result set may hold up to 1,000,000 rows (was 100,000), fetched page by page.
