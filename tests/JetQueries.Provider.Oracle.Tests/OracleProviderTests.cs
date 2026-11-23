@@ -10,6 +10,44 @@ namespace JetQueries.Provider.Oracle.Tests;
 /// <summary>Everything that can be checked without a database.</summary>
 public sealed class OracleProviderTests
 {
+    [Theory]
+    [InlineData(DatabaseObjectKinds.Table, "DROP TABLE \"HR\".\"EMP\";")]
+    [InlineData(DatabaseObjectKinds.PackageBody, "DROP PACKAGE BODY \"HR\".\"EMP\";")]
+    [InlineData(DatabaseObjectKinds.Synonym, "DROP SYNONYM \"HR\".\"EMP\";")]
+    [InlineData(DatabaseObjectKinds.Schema, null)]
+    [InlineData(DatabaseObjectKinds.Database, null)]
+    public void Drop_is_written_with_quoted_names(DatabaseObjectKinds kind, string? expected) =>
+        Assert.Equal(expected, new OracleProvider().ScriptDrop(new DatabaseObject(new DatabaseObjectName(null, "HR", "EMP"), kind)));
+
+    [Fact]
+    public void Drop_without_a_schema_names_only_the_object() =>
+        Assert.Equal("DROP VIEW \"Müşteri İşlemleri\";", new OracleProvider().ScriptDrop(new DatabaseObject(new DatabaseObjectName(null, null, "Müşteri İşlemleri"), DatabaseObjectKinds.View)));
+
+    [Fact]
+    public void Alter_replaces_the_create_of_code_objects_only()
+    {
+        var provider = new OracleProvider();
+        var procedure = new DatabaseObject(new DatabaseObjectName(null, "HR", "P"), DatabaseObjectKinds.Procedure);
+        Assert.Equal("CREATE OR REPLACE PROCEDURE p IS BEGIN NULL; END;", provider.ScriptAlter(procedure, "CREATE PROCEDURE p IS BEGIN NULL; END;"));
+        Assert.Equal(
+            "CREATE OR REPLACE PACKAGE BODY pkg AS END;",
+            provider.ScriptAlter(procedure with { Kind = DatabaseObjectKinds.PackageBody }, "CREATE OR REPLACE EDITIONABLE PACKAGE BODY pkg AS END;"));
+        Assert.Equal(
+            "CREATE OR REPLACE VIEW \"HR\".\"V\" AS\nSELECT 1 FROM dual;",
+            provider.ScriptAlter(procedure with { Kind = DatabaseObjectKinds.View }, "CREATE OR REPLACE VIEW \"HR\".\"V\" AS\nSELECT 1 FROM dual;"));
+        Assert.Null(provider.ScriptAlter(procedure with { Kind = DatabaseObjectKinds.Table }, "CREATE TABLE t (id NUMBER);"));
+        Assert.Null(provider.ScriptAlter(procedure with { Kind = DatabaseObjectKinds.Sequence }, "CREATE SEQUENCE s;"));
+        Assert.Null(provider.ScriptAlter(procedure with { Kind = DatabaseObjectKinds.Synonym }, "CREATE SYNONYM s FOR t;"));
+    }
+
+    [Theory]
+    [InlineData("65536", "64 KB")]
+    [InlineData("1000", "1000 bytes")]
+    [InlineData("1572864", "1.5 MB")]
+    [InlineData(null, null)]
+    public void Sizes_are_shown_in_binary_units(string? bytes, string? expected) =>
+        Assert.Equal(expected, OracleMetadataProvider.FormatBytes(bytes));
+
     private static readonly ConnectionCredential Credential = new("app_user", "s3cret");
 
     [Theory]

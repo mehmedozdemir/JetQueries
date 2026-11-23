@@ -14,7 +14,7 @@ namespace JetQueries.Provider.Sqlite;
 /// Naming convention: objects are <c>(null, schema, name)</c> with names as written in their CREATE
 /// statement. A null schema means SQLite's own lookup order: temp, main, then attached databases.
 /// </remarks>
-internal sealed class SqliteMetadataProvider(SqliteConnection connection) : IMetadataProvider
+internal sealed partial class SqliteMetadataProvider(SqliteConnection connection) : IMetadataProvider
 {
     public async IAsyncEnumerable<DatabaseObject> GetObjectsAsync(
         DatabaseObject? parent,

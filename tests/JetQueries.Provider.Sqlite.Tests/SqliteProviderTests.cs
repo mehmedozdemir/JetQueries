@@ -9,6 +9,27 @@ namespace JetQueries.Provider.Sqlite.Tests;
 
 public sealed class SqliteProviderTests
 {
+    [Theory]
+    [InlineData("main", DatabaseObjectKinds.Table, "DROP TABLE \"Müşteri İşlemleri\";")]
+    [InlineData(null, DatabaseObjectKinds.View, "DROP VIEW \"Müşteri İşlemleri\";")]
+    [InlineData("archive", DatabaseObjectKinds.Trigger, "DROP TRIGGER \"archive\".\"Müşteri İşlemleri\";")]
+    [InlineData("main", DatabaseObjectKinds.Schema, null)]
+    [InlineData("main", DatabaseObjectKinds.Procedure, null)]
+    public void Drop_is_written_with_quoted_names(string? schema, DatabaseObjectKinds kind, string? expected) =>
+        Assert.Equal(expected, new SqliteProvider().ScriptDrop(new DatabaseObject(new DatabaseObjectName(null, schema, "Müşteri İşlemleri"), kind)));
+
+    [Fact]
+    public void Sqlite_has_no_alter_script() =>
+        Assert.Null(new SqliteProvider().ScriptAlter(new DatabaseObject(new DatabaseObjectName(null, "main", "v"), DatabaseObjectKinds.View), "CREATE VIEW v AS SELECT 1"));
+
+    [Theory]
+    [InlineData("CREATE TRIGGER t AFTER INSERT ON cards BEGIN SELECT 1; END", "INSERT", "AFTER")]
+    [InlineData("CREATE TRIGGER IF NOT EXISTS t UPDATE OF a, b ON cards BEGIN SELECT 1; END", "UPDATE OF a, b", "BEFORE")]
+    [InlineData("create temp trigger trg_delete instead of delete on v begin select 1; end", "DELETE", "INSTEAD OF")]
+    [InlineData("CREATE VIEW v AS SELECT 1", null, null)]
+    public void Trigger_heads_are_read(string sql, string? events, string? kind) =>
+        Assert.Equal((events, kind), SqliteMetadataProvider.DescribeTrigger(sql));
+
     private static CancellationToken Token => TestContext.Current.CancellationToken;
 
     [Fact]

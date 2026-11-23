@@ -1,6 +1,7 @@
 using System.Globalization;
 using JetQueries.Provider.PostgreSql.Language;
 using JetQueries.Providers.Language;
+using JetQueries.Providers.Metadata;
 using JetQueries.Sdk;
 using Npgsql;
 
@@ -19,7 +20,7 @@ public sealed class PostgreSqlExtension : IExtension
 
 /// <summary>Database provider for PostgreSQL, on the Npgsql driver.</summary>
 public sealed class PostgreSqlProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport,
-    IConnectionStringImport, IProviderAppearance
+    IConnectionStringImport, IProviderAppearance, IObjectScripting
 {
     /// <summary>The provider identifier stored in connection profiles.</summary>
     public const string ProviderId = "postgresql";
@@ -132,6 +133,35 @@ public sealed class PostgreSqlProvider : IDatabaseProvider, IConnectionSettingsP
 
     /// <inheritdoc />
     public string QuoteIdentifier(string identifier) => PostgreSqlNames.Quote(identifier);
+
+
+    /// <inheritdoc />
+    public string? ScriptDrop(DatabaseObject target)
+    {
+        ArgumentNullException.ThrowIfNull(target);
+
+        // A routine without its argument list is dropped when the name has one overload (PostgreSQL 10+);
+        // a trigger needs its table, which the name does not carry.
+        return target.Kind is DatabaseObjectKinds.Table or DatabaseObjectKinds.View or DatabaseObjectKinds.Procedure or DatabaseObjectKinds.Function
+            or DatabaseObjectKinds.Sequence or DatabaseObjectKinds.Type && DdlText.DropKeyword(target.Kind) is { } keyword
+            ? $"DROP {keyword} {PostgreSqlNames.Quote(target.Name.Schema, target.Name.Name)};"
+            : null;
+    }
+
+    /// <inheritdoc />
+    public string? ScriptAlter(DatabaseObject target, string definition)
+    {
+        ArgumentNullException.ThrowIfNull(target);
+        ArgumentNullException.ThrowIfNull(definition);
+        return target.Kind switch
+        {
+            // A materialized view has no OR REPLACE.
+            DatabaseObjectKinds.View when DdlText.ReplaceCreate(definition, string.Empty) is { } rest &&
+                                          rest.TrimStart().StartsWith("MATERIALIZED", StringComparison.OrdinalIgnoreCase) => null,
+            DatabaseObjectKinds.View or DatabaseObjectKinds.Function or DatabaseObjectKinds.Procedure => DdlText.ReplaceCreate(definition, "CREATE OR REPLACE"),
+            _ => null,
+        };
+    }
 
     /// <inheritdoc />
     public async Task<IDatabaseConnection> OpenConnectionAsync(

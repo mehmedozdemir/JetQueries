@@ -12,6 +12,45 @@ namespace JetQueries.Provider.PostgreSql.Tests;
 
 public sealed class PostgreSqlProviderTests
 {
+    [Theory]
+    [InlineData(DatabaseObjectKinds.Table, "DROP TABLE \"kart\".\"Müşteri İşlemleri\";")]
+    [InlineData(DatabaseObjectKinds.View, "DROP VIEW \"kart\".\"Müşteri İşlemleri\";")]
+    [InlineData(DatabaseObjectKinds.Function, "DROP FUNCTION \"kart\".\"Müşteri İşlemleri\";")]
+    [InlineData(DatabaseObjectKinds.Procedure, "DROP PROCEDURE \"kart\".\"Müşteri İşlemleri\";")]
+    [InlineData(DatabaseObjectKinds.Sequence, "DROP SEQUENCE \"kart\".\"Müşteri İşlemleri\";")]
+    [InlineData(DatabaseObjectKinds.Type, "DROP TYPE \"kart\".\"Müşteri İşlemleri\";")]
+    [InlineData(DatabaseObjectKinds.Trigger, null)]
+    [InlineData(DatabaseObjectKinds.Schema, null)]
+    [InlineData(DatabaseObjectKinds.Package, null)]
+    public void Drop_is_written_with_quoted_names(DatabaseObjectKinds kind, string? expected) =>
+        Assert.Equal(expected, new PostgreSqlProvider().ScriptDrop(new DatabaseObject(new DatabaseObjectName(null, "kart", "Müşteri İşlemleri"), kind)));
+
+    [Fact]
+    public void Alter_replaces_the_create_of_views_and_routines()
+    {
+        var provider = new PostgreSqlProvider();
+        var view = new DatabaseObject(new DatabaseObjectName(null, "kart", "v"), DatabaseObjectKinds.View);
+        Assert.Equal("CREATE OR REPLACE VIEW \"kart\".\"v\" AS\nSELECT 1;", provider.ScriptAlter(view, "CREATE OR REPLACE VIEW \"kart\".\"v\" AS\nSELECT 1;"));
+        Assert.Null(provider.ScriptAlter(view, "CREATE MATERIALIZED VIEW \"kart\".\"v\" AS\nSELECT 1;"));
+        Assert.Equal(
+            "CREATE OR REPLACE FUNCTION kart.f() RETURNS int LANGUAGE sql AS $$ SELECT 1 $$;",
+            provider.ScriptAlter(view with { Kind = DatabaseObjectKinds.Function }, "CREATE FUNCTION kart.f() RETURNS int LANGUAGE sql AS $$ SELECT 1 $$;"));
+        Assert.Equal(
+            "CREATE OR REPLACE PROCEDURE kart.p() LANGUAGE sql AS $$ SELECT 1 $$;",
+            provider.ScriptAlter(view with { Kind = DatabaseObjectKinds.Procedure }, "CREATE OR REPLACE PROCEDURE kart.p() LANGUAGE sql AS $$ SELECT 1 $$;"));
+        Assert.Null(provider.ScriptAlter(view with { Kind = DatabaseObjectKinds.Table }, "CREATE TABLE t (id int);"));
+        Assert.Null(provider.ScriptAlter(view with { Kind = DatabaseObjectKinds.Sequence }, "CREATE SEQUENCE s;"));
+        Assert.Null(provider.ScriptAlter(view with { Kind = DatabaseObjectKinds.Type }, "CREATE TYPE t AS ENUM ('a');"));
+    }
+
+    [Theory]
+    [InlineData(4 | 1 | 2, "INSERT", "BEFORE EACH ROW")]
+    [InlineData(4 | 16 | 8, "INSERT OR UPDATE OR DELETE", "AFTER STATEMENT")]
+    [InlineData(64 | 1 | 16, "UPDATE", "INSTEAD OF EACH ROW")]
+    [InlineData(32, "TRUNCATE", "AFTER STATEMENT")]
+    public void Trigger_types_are_decoded(int type, string events, string kind) =>
+        Assert.Equal((events, kind), PostgreSqlMetadataProvider.DescribeTrigger(type));
+
     private static readonly int?[] Integers = [1, 2, null];
     private static readonly decimal[] Decimals = [1.5m, 2.25m];
     private static readonly bool[] Bits = [true, false, true];

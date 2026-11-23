@@ -17,7 +17,7 @@ namespace JetQueries.Provider.Oracle;
 /// Naming convention of the objects returned: a schema is <c>(null, null, SCHEMA)</c>, everything else is
 /// <c>(null, SCHEMA, NAME)</c>, with names as the dictionary stores them (upper case unless created quoted).
 /// </remarks>
-internal sealed class OracleMetadataProvider(OracleConnection connection) : IMetadataProvider
+internal sealed partial class OracleMetadataProvider(OracleConnection connection) : IMetadataProvider
 {
     // ALL_OBJECTS.OBJECT_TYPE per kind. Literals chosen here, never user input.
     private static readonly (DatabaseObjectKinds Kind, string Type)[] ObjectTypes =
