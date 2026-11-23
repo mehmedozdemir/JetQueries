@@ -115,8 +115,67 @@ public sealed class OracleProvider : IDatabaseProvider, IConnectionSettingsProvi
     }
 }
 
-internal sealed class OracleDatabaseConnection(OracleConnection connection) : IDatabaseConnection, IDatabaseContext
+internal sealed class OracleDatabaseConnection(OracleConnection connection) : IDatabaseConnection, IDatabaseContext, ITransactionControl
 {
+    // ODP.NET commits each command on its own unless a transaction object is open on the connection.
+    private OracleTransaction? _transaction;
+
+    public Task BeginAsync(CancellationToken cancellationToken)
+    {
+        _transaction ??= connection.BeginTransaction();
+        return Task.CompletedTask;
+    }
+
+    /// <summary>The server's view: a transaction exists once something changed (also after the user's own COMMIT it does not).</summary>
+    public async Task<bool> HasOpenTransactionAsync(CancellationToken cancellationToken) =>
+        await ScalarAsync("SELECT dbms_transaction.local_transaction_id FROM dual", 30, cancellationToken).ConfigureAwait(false) is string;
+
+    public async Task CommitAsync(CancellationToken cancellationToken)
+    {
+        if (_transaction is { } transaction)
+        {
+            _transaction = null;
+            await using (transaction.ConfigureAwait(false))
+            {
+                await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+            }
+        }
+        else
+        {
+            await ScalarAsync("COMMIT", 0, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    public async Task RollbackAsync(CancellationToken cancellationToken)
+    {
+        if (_transaction is { } transaction)
+        {
+            _transaction = null;
+            await using (transaction.ConfigureAwait(false))
+            {
+                await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+            }
+        }
+        else
+        {
+            await ScalarAsync("ROLLBACK", 0, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    // Short commands of the transaction control: constant text, no parameters.
+    private async Task<object?> ScalarAsync(string sql, int timeout, CancellationToken cancellationToken)
+    {
+        var command = connection.CreateCommand();
+        await using (command.ConfigureAwait(false))
+        {
+#pragma warning disable CA2100 // Constant text.
+            command.CommandText = sql;
+#pragma warning restore CA2100
+            command.CommandTimeout = timeout;
+            return await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
+        }
+    }
+
     public IQueryExecutor Executor { get; } = new OracleQueryExecutor(connection);
 
     public IMetadataProvider Metadata { get; } = new OracleMetadataProvider(connection);

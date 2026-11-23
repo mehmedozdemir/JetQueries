@@ -34,6 +34,10 @@ public interface IDialogService
     /// <summary>Asks what to do with a query's unsaved changes before its tab closes.</summary>
     /// <param name="documentName">The tab's name.</param>
     Task<SaveChangesChoice> AskSaveChangesAsync(string documentName);
+
+    /// <summary>"Commit or roll back the open transaction of …?" (Cancel keeps it open and stops what asked).</summary>
+    /// <param name="documentNames">The query tab, or several tabs, holding open transactions.</param>
+    Task<TransactionChoice> AskOpenTransactionAsync(string documentNames);
 }
 
 /// <summary>The answer to "save changes?".</summary>
@@ -47,4 +51,17 @@ public enum SaveChangesChoice
 
     /// <summary>Do not go on.</summary>
     Cancel,
+}
+
+/// <summary>What to do with an open transaction.</summary>
+public enum TransactionChoice
+{
+    /// <summary>Keep it open; stop what asked.</summary>
+    Cancel,
+
+    /// <summary>Commit it.</summary>
+    Commit,
+
+    /// <summary>Roll it back.</summary>
+    Rollback,
 }

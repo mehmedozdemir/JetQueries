@@ -294,4 +294,18 @@
   <data name="SettingUiSample" xml:space="preserve"><value>Gezgin · Yeni sorgu · 1.234 satır · İıŞşĞğÜüÖöÇç</value></data>
   <data name="SettingsGroupTheme" xml:space="preserve"><value>TEMA</value></data>
   <data name="SettingsGroupFont" xml:space="preserve"><value>YAZI TİPİ</value></data>
+  <data name="TransactionAuto" xml:space="preserve"><value>Otomatik commit</value></data>
+  <data name="TransactionManual" xml:space="preserve"><value>Elle commit</value></data>
+  <data name="TransactionModeTip" xml:space="preserve"><value>Otomatik commit: her deyim kendi başına kalıcı olur. Elle commit: değişiklikler Commit ya da Rollback'i bekler (SELECT transaction açmaz).</value></data>
+  <data name="TransactionCommit" xml:space="preserve"><value>Commit</value></data>
+  <data name="TransactionRollback" xml:space="preserve"><value>Rollback</value></data>
+  <data name="TransactionCommitTip" xml:space="preserve"><value>Açık transaction'ı kalıcı yap (commit)</value></data>
+  <data name="TransactionRollbackTip" xml:space="preserve"><value>Açık transaction'ı geri al (rollback)</value></data>
+  <data name="TransactionOpen" xml:space="preserve"><value>Açık transaction</value></data>
+  <data name="TransactionOpenTip" xml:space="preserve"><value>Bu sekmedeki değişiklikler henüz kalıcı değil; diğer bağlantılar onları görmez ve kilitlerini bekleyebilir.</value></data>
+  <data name="TransactionCommitted" xml:space="preserve"><value>Transaction commit edildi.</value></data>
+  <data name="TransactionRolledBack" xml:space="preserve"><value>Transaction geri alındı.</value></data>
+  <data name="TransactionBlocksDatabase" xml:space="preserve"><value>Veritabanını değiştirmeden önce açık transaction'ı commit edin ya da geri alın.</value></data>
+  <data name="TransactionAskTitle" xml:space="preserve"><value>Açık transaction</value></data>
+  <data name="TransactionAskMessage" xml:space="preserve"><value>{0} içinde commit edilmemiş değişiklikler var. Commit edilsin mi, geri mi alınsın?</value></data>
 </root>

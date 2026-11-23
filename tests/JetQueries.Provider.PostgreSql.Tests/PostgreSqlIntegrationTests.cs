@@ -328,6 +328,58 @@ public sealed class PostgreSqlIntegrationTests(PostgreSqlFixture fixture) : ICla
     }
 
     [Fact]
+    public async Task A_transaction_is_begun_committed_and_rolled_back_on_request()
+    {
+        await using var connection = await OpenAsync();
+        var control = Assert.IsAssignableFrom<ITransactionControl>(connection);
+        await RunTx(connection, "CREATE TEMP TABLE tx (id int)");
+        Assert.False(await control.HasOpenTransactionAsync(Token));
+
+        // Rolled back: the row is gone.
+        await control.BeginAsync(Token);
+        await RunTx(connection, "INSERT INTO tx VALUES (1)");
+        Assert.True(await control.HasOpenTransactionAsync(Token));
+        await control.BeginAsync(Token);
+        await control.RollbackAsync(Token);
+        Assert.False(await control.HasOpenTransactionAsync(Token));
+        Assert.Equal(0L, await CountTx(connection));
+
+        // Committed: the row stays.
+        await control.BeginAsync(Token);
+        await RunTx(connection, "INSERT INTO tx VALUES (1)");
+        await control.CommitAsync(Token);
+        Assert.False(await control.HasOpenTransactionAsync(Token));
+        Assert.Equal(1L, await CountTx(connection));
+
+        // A transaction that failed stays open until it is rolled back.
+        await control.BeginAsync(Token);
+        await Assert.ThrowsAnyAsync<Exception>(() => RunTx(connection, "SELECT 1/0"));
+        Assert.True(await control.HasOpenTransactionAsync(Token));
+        await control.RollbackAsync(Token);
+        Assert.False(await control.HasOpenTransactionAsync(Token));
+    }
+
+    private static async Task RunTx(IDatabaseConnection connection, string sql)
+    {
+        await foreach (var _ in connection.Executor.ExecuteAsync(new QueryRequest(sql), Token))
+        {
+        }
+    }
+
+    private static async Task<long> CountTx(IDatabaseConnection connection)
+    {
+        await foreach (var item in connection.Executor.ExecuteAsync(new QueryRequest("SELECT count(*) FROM tx"), Token))
+        {
+            if (item is RowBatch { Rows: [var row, ..] })
+            {
+                return Convert.ToInt64(row[0], System.Globalization.CultureInfo.InvariantCulture);
+            }
+        }
+
+        return -1;
+    }
+
+    [Fact]
     public async Task Row_counts_and_an_early_closed_cursor_work_on_the_server()
     {
         await using var connection = await OpenAsync();

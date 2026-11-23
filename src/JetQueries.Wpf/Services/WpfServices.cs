@@ -174,6 +174,13 @@ internal sealed class WpfDialogService(IServiceProvider services) : IDialogServi
         dialog.ShowDialog();
         return Task.FromResult(dialog.Choice);
     }
+
+    public Task<TransactionChoice> AskOpenTransactionAsync(string documentNames)
+    {
+        var dialog = new TransactionDialog(documentNames) { Owner = Owner };
+        dialog.ShowDialog();
+        return Task.FromResult(dialog.Choice);
+    }
 }
 
 /// <summary>

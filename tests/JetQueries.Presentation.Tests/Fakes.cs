@@ -184,6 +184,14 @@ internal sealed class FakeDialogs : IDialogService
         Asked.Add("save-changes:" + documentName);
         return Task.FromResult(SaveChoice);
     }
+
+    public TransactionChoice TransactionChoice { get; set; } = TransactionChoice.Cancel;
+
+    public Task<TransactionChoice> AskOpenTransactionAsync(string documentNames)
+    {
+        Asked.Add("transaction:" + documentNames);
+        return Task.FromResult(TransactionChoice);
+    }
 }
 
 internal sealed class FakeProbe : IReachabilityProbe
@@ -307,6 +315,26 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
 
     public bool RequiresCredential(IReadOnlyDictionary<string, string> settings) => settings.GetValueOrDefault("authentication", "sql") != "windows";
 
+    /// <summary>Begin / commit / rollback calls, in order.</summary>
+    public List<string> TransactionLog { get; } = [];
+
+    /// <summary>Whether the fake server holds an open transaction; the error a commit fails with.</summary>
+    public bool TransactionOpen { get; set; }
+
+    public string? CommitError { get; set; }
+
+    internal Task Transaction(string what, bool open)
+    {
+        TransactionLog.Add(what);
+        if (what == "commit" && CommitError is not null)
+        {
+            return Task.FromException(new InvalidOperationException(CommitError));
+        }
+
+        TransactionOpen = open;
+        return Task.CompletedTask;
+    }
+
     public NetworkEndpoint? GetEndpoint(IReadOnlyDictionary<string, string> settings) => new("sql01", 1433);
 
     public Task<IDatabaseConnection> OpenConnectionAsync(ConnectionProfile profile, ConnectionCredential? credential, CancellationToken cancellationToken)
@@ -321,8 +349,16 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
         return Task.FromResult<IDatabaseConnection>(SupportsDatabaseContext ? new FakeContextConnection(this) : new FakeConnection(this));
     }
 
-    private sealed class FakeConnection(FakeProvider owner) : IDatabaseConnection
+    private sealed class FakeConnection(FakeProvider owner) : IDatabaseConnection, ITransactionControl
     {
+        public Task BeginAsync(CancellationToken cancellationToken) => owner.Transaction("begin", open: true);
+
+        public Task<bool> HasOpenTransactionAsync(CancellationToken cancellationToken) => Task.FromResult(owner.TransactionOpen);
+
+        public Task CommitAsync(CancellationToken cancellationToken) => owner.Transaction("commit", open: false);
+
+        public Task RollbackAsync(CancellationToken cancellationToken) => owner.Transaction("rollback", open: false);
+
         public IQueryExecutor Executor { get; } = new FakeExecutor(owner, null);
 
         public IMetadataProvider Metadata { get; } = new FakeMetadata(owner);
@@ -331,15 +367,27 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
     }
 
     /// <summary>A connection with a current database that starts at "Cards" and follows USE.</summary>
-    internal sealed class FakeContextConnection : IDatabaseConnection, IDatabaseContext
+    internal sealed class FakeContextConnection : IDatabaseConnection, IDatabaseContext, ITransactionControl
     {
+        private readonly FakeProvider owner;
+
         public FakeContextConnection(FakeProvider owner)
         {
+            this.owner = owner;
+
             Executor = new FakeExecutor(owner, this);
             Metadata = new FakeMetadata(owner);
         }
 
         public string Current { get; set; } = "Cards";
+
+        public Task BeginAsync(CancellationToken cancellationToken) => owner.Transaction("begin", open: true);
+
+        public Task<bool> HasOpenTransactionAsync(CancellationToken cancellationToken) => Task.FromResult(owner.TransactionOpen);
+
+        public Task CommitAsync(CancellationToken cancellationToken) => owner.Transaction("commit", open: false);
+
+        public Task RollbackAsync(CancellationToken cancellationToken) => owner.Transaction("rollback", open: false);
 
         public IQueryExecutor Executor { get; }
 

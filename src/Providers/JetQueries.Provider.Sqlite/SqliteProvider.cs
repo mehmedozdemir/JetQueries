@@ -98,8 +98,51 @@ public sealed class SqliteProvider : IDatabaseProvider, IConnectionSettingsProvi
     }
 }
 
-internal sealed class SqliteDatabaseConnection(SqliteConnection connection) : IDatabaseConnection
+internal sealed class SqliteDatabaseConnection(SqliteConnection connection) : IDatabaseConnection, ITransactionControl
 {
+    /// <summary>SQLite says itself whether it is outside a transaction (its autocommit mode).</summary>
+    private bool InTransaction => SQLitePCL.raw.sqlite3_get_autocommit(connection.Handle) == 0;
+
+    public async Task BeginAsync(CancellationToken cancellationToken)
+    {
+        if (!InTransaction)
+        {
+            await ScalarAsync("BEGIN", 30, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    public Task<bool> HasOpenTransactionAsync(CancellationToken cancellationToken) => Task.FromResult(InTransaction);
+
+    public async Task CommitAsync(CancellationToken cancellationToken)
+    {
+        if (InTransaction)
+        {
+            await ScalarAsync("COMMIT", 0, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    public async Task RollbackAsync(CancellationToken cancellationToken)
+    {
+        if (InTransaction)
+        {
+            await ScalarAsync("ROLLBACK", 0, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    // Short commands of the transaction control: constant text, no parameters.
+    private async Task<object?> ScalarAsync(string sql, int timeout, CancellationToken cancellationToken)
+    {
+        var command = connection.CreateCommand();
+        await using (command.ConfigureAwait(false))
+        {
+#pragma warning disable CA2100 // Constant text.
+            command.CommandText = sql;
+#pragma warning restore CA2100
+            command.CommandTimeout = timeout;
+            return await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
+        }
+    }
+
     public IQueryExecutor Executor { get; } = new SqliteQueryExecutor(connection);
 
     public IMetadataProvider Metadata { get; } = new SqliteMetadataProvider(connection);

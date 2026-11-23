@@ -145,6 +145,50 @@ public sealed class ConnectionManagerIntegrationTests(SqlServerFixture fixture) 
     }
 
     [Fact]
+    public async Task A_window_never_hands_an_open_transaction_to_the_next_one()
+    {
+        Assert.SkipWhen(fixture.SkipReason is not null, fixture.SkipReason ?? string.Empty);
+        await using var manager = new ConnectionManager(new SingleProvider(new SqlServerProvider()), new SessionCredentialStore(), new TcpReachabilityProbe());
+        var definition = new ConnectionDefinition
+        {
+            Id = Guid.NewGuid(),
+            Name = "container",
+            ProviderId = SqlServerProvider.ProviderId,
+            Settings = fixture.Profile.Settings,
+            UserName = fixture.Credential.UserName,
+        };
+        var session = (await manager.OpenAsync(definition, fixture.Credential.Password, Token)).Session!;
+        await Drain(session.ExecuteAsync(new QueryRequest("IF OBJECT_ID(N'dbo.jq_tx') IS NOT NULL DROP TABLE dbo.jq_tx; CREATE TABLE dbo.jq_tx (id int)"), Token));
+
+        // The first window gets the session's main connection, begins and changes, then closes without a word.
+        var first = await session.OpenChannelAsync(Token);
+        Assert.True(first.SupportsTransactions);
+        await first.BeginTransactionAsync(Token);
+        await Drain(first.ExecuteAsync(new QueryRequest("INSERT INTO dbo.jq_tx VALUES (1)"), Token));
+        Assert.True(await first.HasOpenTransactionAsync(Token));
+        await first.DisposeAsync();
+
+        // The next window gets the same connection: nothing open, nothing kept.
+        var second = await session.OpenChannelAsync(Token);
+        Assert.False(await second.HasOpenTransactionAsync(Token));
+        var rows = new List<QueryEvent>();
+        await foreach (var item in second.ExecuteAsync(new QueryRequest("SELECT COUNT(*) FROM dbo.jq_tx"), Token))
+        {
+            rows.Add(item);
+        }
+
+        Assert.Equal(0, rows.OfType<RowBatch>().Single().Rows[0][0]);
+        await second.DisposeAsync();
+
+        static async Task Drain(IAsyncEnumerable<QueryEvent> events)
+        {
+            await foreach (var _ in events)
+            {
+            }
+        }
+    }
+
+    [Fact]
     public async Task A_script_with_go_runs_batch_by_batch_and_completion_reads_real_metadata()
     {
         Assert.SkipWhen(fixture.SkipReason is not null, fixture.SkipReason ?? string.Empty);

@@ -116,8 +116,36 @@ public sealed class SqlServerProvider : IDatabaseProvider, IConnectionSettingsPr
     }
 }
 
-internal sealed class SqlServerConnection(SqlConnection connection) : IDatabaseConnection, IDatabaseContext
+internal sealed class SqlServerConnection(SqlConnection connection) : IDatabaseConnection, IDatabaseContext, ITransactionControl
 {
+    /// <summary>Started in T-SQL, so the user's own BEGIN TRAN / COMMIT in the editor work alongside.</summary>
+    public async Task BeginAsync(CancellationToken cancellationToken) =>
+        await ScalarAsync("IF @@TRANCOUNT = 0 BEGIN TRANSACTION", 30, cancellationToken).ConfigureAwait(false);
+
+    public async Task<bool> HasOpenTransactionAsync(CancellationToken cancellationToken) =>
+        Convert.ToInt32(await ScalarAsync("SELECT @@TRANCOUNT", 30, cancellationToken).ConfigureAwait(false), System.Globalization.CultureInfo.InvariantCulture) > 0;
+
+    /// <summary>Nested BEGIN TRANs are committed all the way down.</summary>
+    public async Task CommitAsync(CancellationToken cancellationToken) =>
+        await ScalarAsync("WHILE @@TRANCOUNT > 0 COMMIT TRANSACTION", 0, cancellationToken).ConfigureAwait(false);
+
+    public async Task RollbackAsync(CancellationToken cancellationToken) =>
+        await ScalarAsync("IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION", 0, cancellationToken).ConfigureAwait(false);
+
+    // Short commands of the transaction control: constant text, no parameters.
+    private async Task<object?> ScalarAsync(string sql, int timeout, CancellationToken cancellationToken)
+    {
+        var command = connection.CreateCommand();
+        await using (command.ConfigureAwait(false))
+        {
+#pragma warning disable CA2100 // Constant text.
+            command.CommandText = sql;
+#pragma warning restore CA2100
+            command.CommandTimeout = timeout;
+            return await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
+        }
+    }
+
     public IQueryExecutor Executor { get; } = new SqlServerQueryExecutor(connection);
 
     public IMetadataProvider Metadata { get; } = new SqlServerMetadataProvider(connection);

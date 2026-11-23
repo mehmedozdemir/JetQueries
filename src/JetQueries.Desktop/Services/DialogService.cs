@@ -49,4 +49,7 @@ internal sealed class DialogService(IServiceProvider services) : IDialogService
     public Task<string?> PickFileToSaveAsync(string suggestedName, string? currentPath) => Task.FromResult<string?>(null);
 
     public Task<SaveChangesChoice> AskSaveChangesAsync(string documentName) => Task.FromResult(SaveChangesChoice.Discard);
+
+    // Paused interface (ADR 0007): what is not committed is rolled back, as closing the connection would.
+    public Task<TransactionChoice> AskOpenTransactionAsync(string documentNames) => Task.FromResult(TransactionChoice.Rollback);
 }

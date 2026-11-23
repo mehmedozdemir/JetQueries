@@ -239,6 +239,12 @@ public partial class DocumentsViewModel : ObservableObject
             return;
         }
 
+        // An open transaction is not ended without asking.
+        if (document.HasOpenTransaction && !await EndTransactionsAsync([document]))
+        {
+            return;
+        }
+
         // A changed text is not thrown away without asking (an empty new query has nothing to lose).
         if (document.IsDirty && (document.FilePath is not null || document.Text.Length > 0))
         {
@@ -278,6 +284,36 @@ public partial class DocumentsViewModel : ObservableObject
     /// <summary>Closes every tab, asking about each changed one; stops at a Cancel.</summary>
     [RelayCommand]
     private Task CloseAllAsync() => CloseOthersAsync(null);
+
+    /// <summary>
+    /// Before the application closes: tabs with an open transaction are asked about once, together (Commit all,
+    /// Roll back all, Cancel). False when the user canceled or a commit failed; the application then stays open.
+    /// </summary>
+    public async Task<bool> ResolveOpenTransactionsAsync()
+    {
+        var open = Documents.Where(static d => d.HasOpenTransaction).ToList();
+        return open.Count == 0 || await EndTransactionsAsync(open);
+    }
+
+    private async Task<bool> EndTransactionsAsync(IReadOnlyList<QueryDocumentViewModel> documents)
+    {
+        var choice = await _dialogs.AskOpenTransactionAsync(string.Join(", ", documents.Select(static d => d.Title)));
+        if (choice == TransactionChoice.Cancel)
+        {
+            return false;
+        }
+
+        foreach (var document in documents)
+        {
+            if (!await document.EndTransactionAsync(commit: choice == TransactionChoice.Commit))
+            {
+                Selected = document;
+                return false;
+            }
+        }
+
+        return true;
+    }
 
     private async Task CloseWithoutAskingAsync(QueryDocumentViewModel document)
     {
