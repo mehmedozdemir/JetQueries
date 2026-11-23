@@ -102,11 +102,40 @@ public sealed class SqlServerProvider : IDatabaseProvider, IConnectionSettingsPr
     }
 }
 
-internal sealed class SqlServerConnection(SqlConnection connection) : IDatabaseConnection
+internal sealed class SqlServerConnection(SqlConnection connection) : IDatabaseConnection, IDatabaseContext
 {
     public IQueryExecutor Executor { get; } = new SqlServerQueryExecutor(connection);
 
     public IMetadataProvider Metadata { get; } = new SqlServerMetadataProvider(connection);
+
+    public DatabaseContextKind Kind => DatabaseContextKind.Database;
+
+    /// <summary>SqlClient follows the server's database changes, including a <c>USE</c> in a script.</summary>
+    public Task<string?> GetCurrentAsync(CancellationToken cancellationToken) => Task.FromResult<string?>(connection.Database);
+
+    public async Task<IReadOnlyList<string>> GetAvailableAsync(CancellationToken cancellationToken)
+    {
+        // Online databases the login may enter.
+        var command = connection.CreateCommand();
+        await using (command.ConfigureAwait(false))
+        {
+            command.CommandText = "SELECT d.name FROM sys.databases d WHERE d.state = 0 AND HAS_DBACCESS(d.name) = 1 ORDER BY d.name";
+            command.CommandTimeout = 30;
+            var names = new List<string>();
+            var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+            await using (reader.ConfigureAwait(false))
+            {
+                while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+                {
+                    names.Add(reader.GetString(0));
+                }
+            }
+
+            return names;
+        }
+    }
+
+    public Task ChangeAsync(string name, CancellationToken cancellationToken) => connection.ChangeDatabaseAsync(name, cancellationToken);
 
     public ValueTask DisposeAsync() => connection.DisposeAsync();
 }

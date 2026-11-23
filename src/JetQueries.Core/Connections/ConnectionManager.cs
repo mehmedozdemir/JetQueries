@@ -37,16 +37,19 @@ public sealed record ConnectionAttempt(ConnectionOutcome Outcome, string? Detail
 }
 
 /// <summary>
-/// An open connection to a saved database. It owns two driver connections: one for running the user's SQL and,
-/// opened on first use, one for reading metadata, so a long query never blocks the object explorer or
-/// IntelliSense.
+/// An open connection to a saved database. It owns a driver connection for running the user's SQL, one for
+/// reading metadata (opened on first use) so a long query never blocks the object explorer or IntelliSense,
+/// and the extra query channels that query windows open so each has its own current database.
 /// </summary>
 public sealed class ConnectionSession : IAsyncDisposable
 {
-    // Kept in memory for the life of the session only, to open the metadata connection later.
+    // Kept in memory for the life of the session only, to open further connections later.
     private readonly ConnectionCredential? _credential;
     private readonly SemaphoreSlim _metadataGate = new(1, 1);
-    private readonly SemaphoreSlim _queryGate = new(1, 1);
+    private readonly Lock _channelsLock = new();
+    private readonly List<QueryChannel> _channels = [];
+    private readonly QueryChannel _main;
+    private bool _mainLeased;
     private IDatabaseConnection? _metadataConnection;
     private bool _disposed;
 
@@ -56,6 +59,7 @@ public sealed class ConnectionSession : IAsyncDisposable
         Provider = provider;
         Connection = connection;
         _credential = credential;
+        _main = new QueryChannel(this, connection, isMain: true);
     }
 
     /// <summary>The saved connection the session was opened from.</summary>
@@ -68,56 +72,70 @@ public sealed class ConnectionSession : IAsyncDisposable
     public IDatabaseConnection Connection { get; }
 
     /// <summary>
-    /// Runs SQL on the session's query connection and streams what happens. Statements are run one at a time:
-    /// a second caller waits until the first has finished or was canceled. On a connection marked read-only,
-    /// text that can change data is refused before anything is sent. If the provider splits scripts into
-    /// batches (SQL Server's GO), each batch is sent in turn and message line numbers refer to the whole text;
-    /// an error ends the run at the batch that failed.
+    /// Runs SQL on the session's main query connection; see <see cref="QueryChannel.ExecuteAsync"/>. Query
+    /// windows use a channel of their own (<see cref="OpenChannelAsync"/>) instead.
     /// </summary>
     /// <param name="request">The SQL and how to run it.</param>
     /// <param name="cancellationToken">Cancels waiting for the connection and the statement itself.</param>
     /// <exception cref="ReadOnlyConnectionException">The connection is read-only and the text can change data.</exception>
-    public async IAsyncEnumerable<QueryEvent> ExecuteAsync(QueryRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public IAsyncEnumerable<QueryEvent> ExecuteAsync(QueryRequest request, CancellationToken cancellationToken) =>
+        _main.ExecuteAsync(request, cancellationToken);
+
+    /// <summary>
+    /// A query channel for one query window: its own driver connection, so that its current database and
+    /// running statement do not affect other windows. The first window gets the session's main connection;
+    /// later ones open another with the same profile and credential.
+    /// </summary>
+    /// <param name="cancellationToken">Cancels opening.</param>
+    public async Task<QueryChannel> OpenChannelAsync(CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(request);
-
-        // Checked here, below every user interface, so that no code path can forget it.
-        if (Definition.IsReadOnly && StatementGuard.Analyze(request.Sql).WritesData)
-        {
-            throw new ReadOnlyConnectionException();
-        }
-
-        await _queryGate.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        lock (_channelsLock)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
-            if (Provider is not IScriptSplitter splitter)
+            if (!_mainLeased)
             {
-                await foreach (var item in Connection.Executor.ExecuteAsync(request, cancellationToken).ConfigureAwait(false))
-                {
-                    yield return item;
-                }
-
-                yield break;
-            }
-
-            foreach (var batch in splitter.SplitBatches(request.Sql))
-            {
-                var batchRequest = request with { Sql = batch.Text };
-                for (var run = 0; run < Math.Max(1, batch.RepeatCount); run++)
-                {
-                    await foreach (var item in Connection.Executor.ExecuteAsync(batchRequest, cancellationToken).ConfigureAwait(false))
-                    {
-                        yield return item is QueryMessage { Line: { } line } message ? message with { Line = line + batch.StartLine } : item;
-                    }
-                }
+                _mainLeased = true;
+                return _main;
             }
         }
-        finally
+
+        var connection = await Provider.OpenConnectionAsync(Definition.ToProfile(), _credential, cancellationToken).ConfigureAwait(false);
+        var channel = new QueryChannel(this, connection, isMain: false);
+        bool disposed;
+        lock (_channelsLock)
         {
-            _queryGate.Release();
+            disposed = _disposed;
+            if (!disposed)
+            {
+                _channels.Add(channel);
+            }
+        }
+
+        if (disposed)
+        {
+            await connection.DisposeAsync().ConfigureAwait(false);
+            throw new ObjectDisposedException(nameof(ConnectionSession));
+        }
+
+        return channel;
+    }
+
+    internal void Release(QueryChannel channel)
+    {
+        lock (_channelsLock)
+        {
+            if (ReferenceEquals(channel, _main))
+            {
+                _mainLeased = false;
+            }
+            else
+            {
+                _channels.Remove(channel);
+            }
         }
     }
+
+    internal bool IsDisposed => _disposed;
 
     /// <summary>
     /// Runs one metadata operation on the session's metadata connection. Operations are run one at a time, as
@@ -153,18 +171,25 @@ public sealed class ConnectionSession : IAsyncDisposable
         }
     }
 
-    /// <summary>Closes both driver connections.</summary>
+    /// <summary>Closes every driver connection of the session: query channels, metadata, main.</summary>
     public async ValueTask DisposeAsync()
     {
         await _metadataGate.WaitAsync().ConfigureAwait(false);
+        QueryChannel[] channels;
         try
         {
-            if (_disposed)
+            lock (_channelsLock)
             {
-                return;
+                if (_disposed)
+                {
+                    return;
+                }
+
+                _disposed = true;
+                channels = [.. _channels];
+                _channels.Clear();
             }
 
-            _disposed = true;
             if (_metadataConnection is not null)
             {
                 await _metadataConnection.DisposeAsync().ConfigureAwait(false);
@@ -175,7 +200,150 @@ public sealed class ConnectionSession : IAsyncDisposable
             _metadataGate.Release();
         }
 
+        foreach (var channel in channels)
+        {
+            await channel.CloseConnectionAsync().ConfigureAwait(false);
+        }
+
         await Connection.DisposeAsync().ConfigureAwait(false);
+    }
+}
+
+/// <summary>
+/// A query window's connection within a session. Statements run one at a time; the current database can be
+/// read and switched when the provider supports it (<see cref="IDatabaseContext"/>).
+/// </summary>
+public sealed class QueryChannel : IAsyncDisposable
+{
+    private readonly SemaphoreSlim _gate = new(1, 1);
+    private readonly IDatabaseConnection _connection;
+    private readonly bool _isMain;
+    private int _released;
+
+    internal QueryChannel(ConnectionSession session, IDatabaseConnection connection, bool isMain)
+    {
+        Session = session;
+        _connection = connection;
+        _isMain = isMain;
+    }
+
+    /// <summary>The session the channel belongs to.</summary>
+    public ConnectionSession Session { get; }
+
+    /// <summary>What the current database is called for this provider; null when it cannot be switched.</summary>
+    public DatabaseContextKind? ContextKind => (_connection as IDatabaseContext)?.Kind;
+
+    /// <summary>
+    /// Runs SQL and streams what happens. Statements are run one at a time: a second caller waits until the
+    /// first has finished or was canceled. On a connection marked read-only, text that can change data is
+    /// refused before anything is sent. If the provider splits scripts into batches (SQL Server's GO), each
+    /// batch is sent in turn and message line numbers refer to the whole text; an error ends the run at the
+    /// batch that failed.
+    /// </summary>
+    /// <param name="request">The SQL and how to run it.</param>
+    /// <param name="cancellationToken">Cancels waiting for the connection and the statement itself.</param>
+    /// <exception cref="ReadOnlyConnectionException">The connection is read-only and the text can change data.</exception>
+    public async IAsyncEnumerable<QueryEvent> ExecuteAsync(QueryRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        // Checked here, below every user interface, so that no code path can forget it.
+        if (Session.Definition.IsReadOnly && StatementGuard.Analyze(request.Sql).WritesData)
+        {
+            throw new ReadOnlyConnectionException();
+        }
+
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            ObjectDisposedException.ThrowIf(Session.IsDisposed, Session);
+            if (Session.Provider is not IScriptSplitter splitter)
+            {
+                await foreach (var item in _connection.Executor.ExecuteAsync(request, cancellationToken).ConfigureAwait(false))
+                {
+                    yield return item;
+                }
+
+                yield break;
+            }
+
+            foreach (var batch in splitter.SplitBatches(request.Sql))
+            {
+                var batchRequest = request with { Sql = batch.Text };
+                for (var run = 0; run < Math.Max(1, batch.RepeatCount); run++)
+                {
+                    await foreach (var item in _connection.Executor.ExecuteAsync(batchRequest, cancellationToken).ConfigureAwait(false))
+                    {
+                        yield return item is QueryMessage { Line: { } line } message ? message with { Line = line + batch.StartLine } : item;
+                    }
+                }
+            }
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    /// <summary>The current database (or schema); null when the provider cannot tell.</summary>
+    /// <param name="cancellationToken">Cancels waiting and the request.</param>
+    public Task<string?> GetCurrentDatabaseAsync(CancellationToken cancellationToken) =>
+        _connection is IDatabaseContext context ? UseAsync(context.GetCurrentAsync, cancellationToken) : Task.FromResult<string?>(null);
+
+    /// <summary>The databases (or schemas) that can be switched to; empty when switching is not supported.</summary>
+    /// <param name="cancellationToken">Cancels waiting and the request.</param>
+    public Task<IReadOnlyList<string>> GetDatabasesAsync(CancellationToken cancellationToken) =>
+        _connection is IDatabaseContext context ? UseAsync(context.GetAvailableAsync, cancellationToken) : Task.FromResult<IReadOnlyList<string>>([]);
+
+    /// <summary>Switches the current database (or schema).</summary>
+    /// <param name="name">The database.</param>
+    /// <param name="cancellationToken">Cancels waiting and the request.</param>
+    /// <exception cref="NotSupportedException">The provider cannot switch databases.</exception>
+    public Task ChangeDatabaseAsync(string name, CancellationToken cancellationToken) =>
+        _connection is IDatabaseContext context
+            ? UseAsync(async token =>
+            {
+                await context.ChangeAsync(name, token).ConfigureAwait(false);
+                return true;
+            }, cancellationToken)
+            : throw new NotSupportedException("This connection cannot switch databases.");
+
+    /// <summary>Gives the channel back: its own connection is closed; the session's main one stays open.</summary>
+    public async ValueTask DisposeAsync()
+    {
+        if (Interlocked.Exchange(ref _released, 1) != 0)
+        {
+            return;
+        }
+
+        Session.Release(this);
+        if (!_isMain)
+        {
+            await _connection.DisposeAsync().ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>Closes the channel's own connection when its session closes.</summary>
+    internal async ValueTask CloseConnectionAsync()
+    {
+        if (Interlocked.Exchange(ref _released, 1) == 0 && !_isMain)
+        {
+            await _connection.DisposeAsync().ConfigureAwait(false);
+        }
+    }
+
+    private async Task<T> UseAsync<T>(Func<CancellationToken, Task<T>> work, CancellationToken cancellationToken)
+    {
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            ObjectDisposedException.ThrowIf(Session.IsDisposed, Session);
+            return await work(cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            _gate.Release();
+        }
     }
 }
 

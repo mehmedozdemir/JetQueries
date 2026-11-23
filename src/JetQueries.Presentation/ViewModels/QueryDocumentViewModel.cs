@@ -148,10 +148,23 @@ public partial class QueryDocumentViewModel : ObservableObject
     private readonly IUiDispatcher _ui;
     private JobHandle? _run;
 
+    // The window's own connection within the selected session (see QueryChannel), opened when a session is chosen.
+    private ConnectionSession? _channelSession;
+    private QueryChannel? _channel;
+    private Task<QueryChannel?>? _channelOpening;
+    private bool _applyingDatabase;
+    private string? _channelError;
+    private Task _databaseChange = Task.CompletedTask;
+
+    /// <param name="database">A database to start in (New query on a database node); null for the connection's default.</param>
     public QueryDocumentViewModel(
-        string title, IConnectionManager manager, IMetadataService metadata, IQueryHistory history, IJobQueue jobs, IDialogService dialogs, IUiDispatcher ui)
+        string title, IConnectionManager manager, IMetadataService metadata, IQueryHistory history, IJobQueue jobs, IDialogService dialogs, IUiDispatcher ui,
+        string? database = null)
     {
         Title = title;
+
+        // Set before a session is chosen below: choosing one starts opening the window's connection.
+        PendingDatabase = database;
         _manager = manager;
         _metadata = metadata;
         _history = history;
@@ -185,6 +198,27 @@ public partial class QueryDocumentViewModel : ObservableObject
     [NotifyCanExecuteChangedFor(nameof(RunCommand))]
     [NotifyPropertyChangedFor(nameof(LanguageService))]
     public partial SessionOption? SelectedSession { get; set; }
+
+    /// <summary>The databases (or, for Oracle, schemas) of the connection, for the window's database selector.</summary>
+    public ObservableCollection<string> Databases { get; } = [];
+
+    /// <summary>
+    /// The window's current database (schema for Oracle), as the server reports it; it follows a <c>USE</c> run in
+    /// the window. Choosing another one switches the window's connection, as SSMS's database selector does.
+    /// </summary>
+    [ObservableProperty]
+    public partial string? SelectedDatabase { get; set; }
+
+    /// <summary>Whether the connection can switch databases (SQLite cannot).</summary>
+    [ObservableProperty]
+    public partial bool CanChangeDatabase { get; set; }
+
+    /// <summary>Whether the selector switches schemas (Oracle) rather than databases.</summary>
+    [ObservableProperty]
+    public partial bool SwitchesSchema { get; set; }
+
+    /// <summary>A database to switch to as soon as the window's connection is open (New query on a database node).</summary>
+    public string? PendingDatabase { get; set; }
 
     /// <summary>
     /// The language of the chosen connection: its provider's language service, or plain keyword colouring when
@@ -222,7 +256,7 @@ public partial class QueryDocumentViewModel : ObservableObject
         try
         {
             var metadata = new SessionMetadataProvider(session, _metadata);
-            var document = new SqlDocument(text, metadata);
+            var document = Document(text, metadata);
             var found = await _jobs.Enqueue<(DatabaseObject? Target, string? Source)>(
                 "Go to definition",
                 async context =>
@@ -269,13 +303,20 @@ public partial class QueryDocumentViewModel : ObservableObject
             return Task.FromResult<IReadOnlyList<CompletionItem>>([]);
         }
 
-        var document = new SqlDocument(text, new SessionMetadataProvider(session, _metadata));
+        var document = Document(text, new SessionMetadataProvider(session, _metadata));
         return _jobs.Enqueue(
             "Completion",
             context => service.GetCompletionsAsync(document, offset, context.CancellationToken),
             JobPriority.High,
             cancellationToken).Completion;
     }
+
+    private SqlDocument Document(string text, IMetadataProvider metadata) => _channel?.ContextKind switch
+    {
+        DatabaseContextKind.Database => new SqlDocument(text, metadata) { DefaultDatabase = SelectedDatabase },
+        DatabaseContextKind.Schema => new SqlDocument(text, metadata, SelectedDatabase),
+        _ => new SqlDocument(text, metadata),
+    };
 
     [ObservableProperty]
     public partial IResultTab? SelectedTab { get; set; }
@@ -299,6 +340,189 @@ public partial class QueryDocumentViewModel : ObservableObject
         }
 
         SelectedSession = Sessions.FirstOrDefault(s => ReferenceEquals(s.Session, selected)) ?? (Sessions.Count == 1 || selected is null ? Sessions.FirstOrDefault() : null);
+    }
+
+    partial void OnSelectedSessionChanged(SessionOption? value) => _ = AttachChannelAsync(value?.Session);
+
+    partial void OnSelectedDatabaseChanged(string? value)
+    {
+        if (!_applyingDatabase && value is not null && _channel is { } channel)
+        {
+            // A run started right after waits for this, so it runs in the database just chosen.
+            _databaseChange = ChangeDatabaseAsync(channel, value);
+        }
+    }
+
+    /// <summary>Gives the window's connection back; called when the window closes.</summary>
+    public async Task CloseAsync()
+    {
+        var channel = _channel;
+        _channelSession = null;
+        _channel = null;
+        _channelOpening = null;
+        if (channel is not null)
+        {
+            await _jobs.Enqueue("Close query connection", _ => channel.DisposeAsync().AsTask(), JobPriority.Low).Completion.ConfigureAwait(false);
+        }
+    }
+
+    private async Task AttachChannelAsync(ConnectionSession? session)
+    {
+        if (ReferenceEquals(session, _channelSession))
+        {
+            return;
+        }
+
+        var old = _channel;
+        _channelSession = session;
+        _channel = null;
+        _channelOpening = null;
+        ShowDatabases(null, null, null);
+        if (old is not null)
+        {
+            _ = _jobs.Enqueue("Close query connection", _ => old.DisposeAsync().AsTask(), JobPriority.Low);
+        }
+
+        if (await EnsureChannelAsync().ConfigureAwait(false) is { } channel)
+        {
+            await RefreshDatabaseAsync(channel, withList: true).ConfigureAwait(false);
+        }
+    }
+
+    private Task<QueryChannel?> EnsureChannelAsync() =>
+        _channel is { } open ? Task.FromResult<QueryChannel?>(open) : _channelOpening ??= OpenChannelAsync(_channelSession);
+
+    private async Task<QueryChannel?> OpenChannelAsync(ConnectionSession? session)
+    {
+        if (session is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            var channel = await _jobs.Enqueue("Open query connection", context => session.OpenChannelAsync(context.CancellationToken), JobPriority.High)
+                .Completion.ConfigureAwait(false);
+            if (!ReferenceEquals(session, _channelSession))
+            {
+                // Another connection was chosen meanwhile.
+                await channel.DisposeAsync().ConfigureAwait(false);
+                return null;
+            }
+
+            _channel = channel;
+            if (PendingDatabase is { } database)
+            {
+                PendingDatabase = null;
+                await _jobs.Enqueue("Change database", context => channel.ChangeDatabaseAsync(database, context.CancellationToken), JobPriority.High)
+                    .Completion.ConfigureAwait(false);
+            }
+
+            return channel;
+        }
+        catch (OperationCanceledException)
+        {
+            _channelOpening = null;
+            return null;
+        }
+#pragma warning disable CA1031 // The server's reason is shown; the window stays usable and tries again on the next run.
+        catch (Exception ex)
+#pragma warning restore CA1031
+        {
+            _channelOpening = null;
+            _channelError = ex.Message;
+            _ui.Post(() => Status = ex.Message);
+            return null;
+        }
+    }
+
+    /// <summary>Reads the current database (and, with <paramref name="withList"/>, the list) from the server.</summary>
+    private async Task RefreshDatabaseAsync(QueryChannel channel, bool withList)
+    {
+        if (channel.ContextKind is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var (current, list) = await _jobs.Enqueue<(string? Current, IReadOnlyList<string>? List)>(
+                    "Read databases",
+                    async context => (
+                        await channel.GetCurrentDatabaseAsync(context.CancellationToken).ConfigureAwait(false),
+                        withList ? await channel.GetDatabasesAsync(context.CancellationToken).ConfigureAwait(false) : null),
+                    JobPriority.High)
+                .Completion.ConfigureAwait(false);
+            _ui.Post(() =>
+            {
+                if (ReferenceEquals(channel, _channel))
+                {
+                    ShowDatabases(channel.ContextKind, current, list);
+                }
+            });
+        }
+        catch (OperationCanceledException)
+        {
+        }
+#pragma warning disable CA1031 // The selector is a convenience; a failure leaves it as it was.
+        catch (Exception)
+#pragma warning restore CA1031
+        {
+        }
+    }
+
+    private void ShowDatabases(DatabaseContextKind? kind, string? current, IReadOnlyList<string>? list)
+    {
+        _applyingDatabase = true;
+        try
+        {
+            if (kind is null)
+            {
+                Databases.Clear();
+            }
+            else if (list is not null)
+            {
+                Databases.Clear();
+                foreach (var name in list)
+                {
+                    Databases.Add(name);
+                }
+            }
+
+            // A database the list does not have (no access to the catalog view) is still shown.
+            if (current is not null && !Databases.Contains(current))
+            {
+                Databases.Add(current);
+            }
+
+            SelectedDatabase = current;
+            CanChangeDatabase = kind is not null;
+            SwitchesSchema = kind == DatabaseContextKind.Schema;
+        }
+        finally
+        {
+            _applyingDatabase = false;
+        }
+    }
+
+    private async Task ChangeDatabaseAsync(QueryChannel channel, string database)
+    {
+        try
+        {
+            await _jobs.Enqueue("Change database", context => channel.ChangeDatabaseAsync(database, context.CancellationToken), JobPriority.High)
+                .Completion.ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+#pragma warning disable CA1031 // The server's reason is shown; the selector goes back to the real current database below.
+        catch (Exception ex)
+#pragma warning restore CA1031
+        {
+            _ui.Post(() => Status = ex.Message);
+        }
+
+        await RefreshDatabaseAsync(channel, withList: false).ConfigureAwait(false);
     }
 
     /// <summary>Chooses the session of a connection, if it is open.</summary>
@@ -334,6 +558,17 @@ public partial class QueryDocumentViewModel : ObservableObject
 
         IsRunning = true;
         Status = Format(Strings.QueryRunning, 0);
+        var channel = await EnsureChannelAsync();
+        await _databaseChange;
+        if (channel is null)
+        {
+            // The window's connection could not be opened: the server's reason, and nothing was sent.
+            IsRunning = false;
+            AddMessage(_channelError ?? Strings.QueryNotSent, isError: true);
+            Status = Strings.QueryNotSent;
+            return;
+        }
+
         var startedAt = DateTimeOffset.UtcNow;
         var watch = Stopwatch.StartNew();
         long totalRows = 0;
@@ -367,7 +602,7 @@ public partial class QueryDocumentViewModel : ObservableObject
                         return created;
                     }
 
-                    await foreach (var item in session.ExecuteAsync(request, context.CancellationToken).ConfigureAwait(false))
+                    await foreach (var item in channel.ExecuteAsync(request, context.CancellationToken).ConfigureAwait(false))
                     {
                         switch (item)
                         {
@@ -443,6 +678,9 @@ public partial class QueryDocumentViewModel : ObservableObject
         {
             _run = null;
             IsRunning = false;
+
+            // The script may have switched database (USE): the selector follows.
+            _ = RefreshDatabaseAsync(channel, withList: false);
         }
     }
 
@@ -525,10 +763,17 @@ public partial class DocumentsViewModel : ObservableObject
         Open(title, string.Empty, PreferredConnectionId);
     }
 
-    /// <summary>Opens a tab with the given text, on the given connection if it is open.</summary>
-    public QueryDocumentViewModel Open(string title, string text, Guid? connectionId)
+    /// <summary>Opens an empty query tab on a connection and, if given, a database of it (the explorer's New query).</summary>
+    public QueryDocumentViewModel OpenEmpty(Guid? connectionId, string? database)
     {
-        var document = new QueryDocumentViewModel(title, _manager, _metadata, _history, _jobs, _dialogs, _ui) { Text = text };
+        var title = string.Format(CultureInfo.CurrentCulture, CompositeFormat.Parse(Strings.QueryTitle), ++_counter);
+        return Open(title, string.Empty, connectionId, database);
+    }
+
+    /// <summary>Opens a tab with the given text, on the given connection if it is open, and on a database of it if given.</summary>
+    public QueryDocumentViewModel Open(string title, string text, Guid? connectionId, string? database = null)
+    {
+        var document = new QueryDocumentViewModel(title, _manager, _metadata, _history, _jobs, _dialogs, _ui, database) { Text = text };
         if (connectionId is { } id)
         {
             document.SelectSession(id);
@@ -550,6 +795,7 @@ public partial class DocumentsViewModel : ObservableObject
         }
 
         document.CancelCommand.Execute(null);
+        _ = document.CloseAsync();
         var index = Documents.IndexOf(document);
         Documents.Remove(document);
         if (Documents.Count == 0)

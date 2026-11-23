@@ -22,18 +22,6 @@ internal sealed class WpfUiDispatcher : IUiDispatcher
 }
 
 /// <summary>Light or dark theme; UiKit's theme manager swaps the colour tokens and remembers the choice.</summary>
-public interface IThemeService
-{
-    /// <summary>Whether the dark theme is showing.</summary>
-    bool IsDark { get; }
-
-    /// <summary>Raised after the theme changed.</summary>
-    event EventHandler? Changed;
-
-    /// <summary>Switches between light and dark.</summary>
-    void Toggle();
-}
-
 internal sealed class ThemeService : IThemeService
 {
     public ThemeService() => ThemeManager.ThemeChanged += () => Changed?.Invoke(this, EventArgs.Empty);
@@ -43,6 +31,69 @@ internal sealed class ThemeService : IThemeService
     public bool IsDark => ThemeManager.Current == AppTheme.Dark;
 
     public void Toggle() => ThemeManager.Toggle();
+
+    public void SetDark(bool dark) => ThemeManager.Apply(dark ? AppTheme.Dark : AppTheme.Light);
+}
+
+/// <summary>
+/// Puts appearance settings into the application's resources: the UI font and the text-size tokens UiKit's
+/// styles read (body, small, caption, section, subtitle, title), the editor's font and size, and the grids'
+/// scale. Everything that uses them is a DynamicResource, so the whole window follows at once.
+/// </summary>
+public sealed class AppearanceService : IAppearanceService
+{
+    /// <summary>The grids' size relative to UiKit's 13 px design, from the grid text size setting.</summary>
+    public static double GridScale { get; private set; } = 1;
+
+    /// <summary>Raised on the UI thread after the appearance changed.</summary>
+    public static event EventHandler? Changed;
+
+    public AppearanceSettings Current { get; private set; } = new();
+
+    public void Apply(AppearanceSettings settings)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        settings = settings.Normalized();
+        Current = settings;
+        var resources = Application.Current.Resources;
+        var size = settings.UiFontSize;
+        resources["Font.UI"] = new System.Windows.Media.FontFamily(settings.UiFontFamily);
+        resources["FontSize.Body"] = size;
+        resources["FontSize.Small"] = size - 1;
+        resources["FontSize.Caption"] = size - 1.5;
+        resources["FontSize.Section"] = size - 2;
+        resources["FontSize.Subtitle"] = size + 2;
+        resources["FontSize.Title"] = size + 9;
+        resources["Font.Code"] = new System.Windows.Media.FontFamily(settings.EditorFontFamily);
+        resources["FontSize.Code"] = settings.EditorFontSize;
+        GridScale = settings.GridFontSize / 13;
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
+}
+
+/// <summary>Opens the settings screen.</summary>
+public interface ISettingsDialog
+{
+    /// <summary>Shows the settings screen over the main window.</summary>
+    void Show();
+}
+
+/// <summary>Shows the settings window over the main window.</summary>
+internal sealed class SettingsDialog(IServiceProvider services) : ISettingsDialog
+{
+    public void Show()
+    {
+        var fonts = System.Windows.Media.Fonts.SystemFontFamilies.Select(static f => f.Source)
+            .Append(new AppearanceSettings().UiFontFamily)
+            .Append(new AppearanceSettings().EditorFontFamily);
+        var viewModel = new SettingsViewModel(
+            services.GetRequiredService<Core.Settings.ISettingsStore>(),
+            services.GetRequiredService<IJobQueue>(),
+            services.GetRequiredService<IAppearanceService>(),
+            services.GetRequiredService<IThemeService>(),
+            fonts);
+        new SettingsWindow(viewModel) { Owner = services.GetRequiredService<MainWindow>() }.ShowDialog();
+    }
 }
 
 /// <summary>Shows dialogs owned by the main window. Must be called on the UI thread.</summary>

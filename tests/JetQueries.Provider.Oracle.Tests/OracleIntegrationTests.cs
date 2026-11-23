@@ -355,6 +355,26 @@ public sealed class OracleIntegrationTests(OracleFixture fixture) : IClassFixtur
         UserName = fixture.Credential.UserName,
     };
 
+    [Fact]
+    public async Task The_current_schema_can_be_read_listed_and_switched()
+    {
+        await using var connection = await OpenAsync();
+        var context = Assert.IsAssignableFrom<IDatabaseContext>(connection);
+        Assert.Equal(DatabaseContextKind.Schema, context.Kind);
+
+        var user = await context.GetCurrentAsync(Token);
+        Assert.Equal(fixture.Credential.UserName!.ToUpperInvariant(), user);
+        Assert.Contains(user!, await context.GetAvailableAsync(Token));
+
+        // SYS is not offered, but any schema can be made current; names go through the quoting helper.
+        await context.ChangeAsync("SYS", Token);
+        Assert.Equal("SYS", await context.GetCurrentAsync(Token));
+        await Assert.ThrowsAnyAsync<Exception>(() => context.ChangeAsync("NO_SUCH_SCHEMA_HERE", Token));
+        Assert.Equal("SYS", await context.GetCurrentAsync(Token));
+        await context.ChangeAsync(user!, Token);
+        Assert.Equal(user, await context.GetCurrentAsync(Token));
+    }
+
     private async Task<IDatabaseConnection> OpenAsync()
     {
         Assert.SkipWhen(fixture.SkipReason is not null, fixture.SkipReason ?? string.Empty);

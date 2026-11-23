@@ -101,13 +101,62 @@ public sealed class OracleProvider : IDatabaseProvider, IConnectionSettingsProvi
     }
 }
 
-internal sealed class OracleDatabaseConnection(OracleConnection connection) : IDatabaseConnection
+internal sealed class OracleDatabaseConnection(OracleConnection connection) : IDatabaseConnection, IDatabaseContext
 {
     public IQueryExecutor Executor { get; } = new OracleQueryExecutor(connection);
 
     public IMetadataProvider Metadata { get; } = new OracleMetadataProvider(connection);
 
+    /// <summary>An Oracle connection is to one database; what a query window switches is the current schema.</summary>
+    public DatabaseContextKind Kind => DatabaseContextKind.Schema;
+
+    public async Task<string?> GetCurrentAsync(CancellationToken cancellationToken)
+    {
+        var names = await QueryAsync("SELECT SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA') FROM dual", cancellationToken).ConfigureAwait(false);
+        return names.Count > 0 ? names[0] : null;
+    }
+
+    /// <summary>The schemas the explorer shows: not Oracle's own, and always the user's.</summary>
+    public Task<IReadOnlyList<string>> GetAvailableAsync(CancellationToken cancellationToken) =>
+        QueryAsync("SELECT u.username FROM all_users u WHERE u.oracle_maintained = 'N' OR u.username = USER ORDER BY u.username", cancellationToken);
+
+    public async Task ChangeAsync(string name, CancellationToken cancellationToken)
+    {
+        // ALTER SESSION takes no bind variables: the name is quoted by the provider's quoting helper.
+        var command = connection.CreateCommand();
+        await using (command.ConfigureAwait(false))
+        {
+#pragma warning disable CA2100 // The only variable part is a quoted identifier.
+            command.CommandText = "ALTER SESSION SET CURRENT_SCHEMA = " + OracleNames.Quote(name);
+#pragma warning restore CA2100
+            await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        }
+    }
+
     public ValueTask DisposeAsync() => connection.DisposeAsync();
+
+    private async Task<IReadOnlyList<string>> QueryAsync(string sql, CancellationToken cancellationToken)
+    {
+        var command = connection.CreateCommand();
+        await using (command.ConfigureAwait(false))
+        {
+#pragma warning disable CA2100 // Constant text.
+            command.CommandText = sql;
+#pragma warning restore CA2100
+            command.CommandTimeout = 30;
+            var names = new List<string>();
+            var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+            await using (reader.ConfigureAwait(false))
+            {
+                while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+                {
+                    names.Add(reader.GetString(0));
+                }
+            }
+
+            return names;
+        }
+    }
 }
 
 internal static class OracleNames

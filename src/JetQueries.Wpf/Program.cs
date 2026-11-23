@@ -46,13 +46,16 @@ internal static class Program
             // Roaming profile, not the local one: the installer owns %LocalAppData%\JetQueries and removes it
             // on uninstall, and the user's connections and history must survive that (ADR 0005).
             connections => connections.FilePath = Path.Combine(userData, "connections.json"),
-            history => history.DatabasePath = Path.Combine(userData, "history.db"));
+            history => history.DatabasePath = Path.Combine(userData, "history.db"),
+            settings => settings.Directory = userData);
         builder.Services.AddSingleton<IDialogService, WpfDialogService>();
         builder.Services.AddSingleton<IUiDispatcher, WpfUiDispatcher>();
         builder.Services.AddSingleton<ConnectionsViewModel>();
         builder.Services.AddSingleton<DocumentsViewModel>();
         builder.Services.AddSingleton<HistoryViewModel>();
         builder.Services.AddSingleton<IThemeService, ThemeService>();
+        builder.Services.AddSingleton<IAppearanceService, AppearanceService>();
+        builder.Services.AddSingleton<ISettingsDialog, SettingsDialog>();
         builder.Services.AddSingleton<MainWindowViewModel>();
         builder.Services.AddSingleton<MainWindow>();
         builder.Services.AddHostedService<ExtensionStartupService>();

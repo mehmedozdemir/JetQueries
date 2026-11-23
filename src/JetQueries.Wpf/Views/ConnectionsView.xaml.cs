@@ -17,6 +17,16 @@ public partial class ConnectionsView : UserControl
         }
     }
 
+    // A right-click selects the node first, so that the menu acts on it.
+    private void OnItemRightButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is TreeViewItem item && e.OriginalSource is DependencyObject source && ItemsControl.ContainerFromElement(item, source) is null)
+        {
+            item.IsSelected = true;
+            item.Focus();
+        }
+    }
+
     // Double-click on a connection connects it; on anything else the tree's own expand/collapse applies.
     private void OnTreeDoubleClick(object sender, MouseButtonEventArgs e)
     {

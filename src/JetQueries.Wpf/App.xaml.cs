@@ -52,12 +52,35 @@ public partial class App : Application
             return;
         }
 
-        var window = Host.Services.GetRequiredService<MainWindow>();
+        _ = ShowMainWindowAsync();
+    }
+
+    // The saved appearance is read first (a small file, off the UI thread), so the window opens in it.
+    private async Task ShowMainWindowAsync()
+    {
+        var services = Host!.Services;
+        try
+        {
+            var store = services.GetRequiredService<Core.Settings.ISettingsStore>();
+            var settings = await Task.Run(() => store.LoadAsync(AppearanceSettings.Section, new AppearanceSettings(), CancellationToken.None));
+            services.GetRequiredService<IAppearanceService>().Apply(settings);
+        }
+#pragma warning disable CA1031 // Settings that cannot be read leave the defaults; the application still starts.
+        catch (Exception ex)
+#pragma warning restore CA1031
+        {
+            LogSettingsUnreadable(Logger, ex);
+        }
+
+        var window = services.GetRequiredService<MainWindow>();
         MainWindow = window;
         window.Closing += OnMainWindowClosing;
         window.Show();
-        _ = StartHostAsync();
+        await StartHostAsync();
     }
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Appearance settings could not be read; defaults are used.")]
+    private static partial void LogSettingsUnreadable(ILogger logger, Exception exception);
 
     // The window is already visible: extensions and the rest of the host start behind it.
     private async Task StartHostAsync()

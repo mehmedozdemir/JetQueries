@@ -50,6 +50,11 @@
         <Grid>
             <c:VirtualGrid x:Name="Grid" NullText="NULL" ShowFilterButtons="True" />
 
+            <!-- Shown while the grid is zoomed; a click goes back to 100 % -->
+            <Button x:Name="ZoomBadge" Style="{StaticResource Btn.Link}" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                    Margin="0,0,20,18" Padding="6,2" Visibility="Collapsed" Background="{DynamicResource Brush.Card}"
+                    FontSize="{DynamicResource FontSize.Caption}" ToolTip="{x:Static res:Strings.ZoomReset}" Click="OnZoomReset" />
+
             <!-- Filter panel of a column (DESIGN.md: filter popup) -->
             <Popup x:Name="FilterPopup" PlacementTarget="{Binding ElementName=Grid}" Placement="Relative" StaysOpen="False"
                    AllowsTransparency="True" PopupAnimation="Fade">

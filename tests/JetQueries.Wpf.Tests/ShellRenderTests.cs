@@ -101,13 +101,67 @@ public sealed class ShellRenderTests
             }
 
             dialog.Close();
+
+            // Larger text from the settings, the explorer filtered, the editor zoomed to 120 %.
+            ThemeManager.Apply(AppTheme.Dark, save: false);
+            ((TabControl)window.FindName("SideTabs")).SelectedIndex = 0;
+            var appearance = new AppearanceService();
+            appearance.Apply(new AppearanceSettings { UiFontSize = 15, EditorFontSize = 14, GridFontSize = 15 });
+            connections.FilterText = "Cards";
+            var sqlEditor = Find<Editor.SqlEditor>(window);
+            sqlEditor.Zoom = 1.2;
+            await Idle();
+            Assert.True(query.CanChangeDatabase);
+            Assert.Equal("Cards", query.SelectedDatabase);
+            Assert.Equal(14 * 1.2, Find<ICSharpCode.AvalonEdit.TextEditor>(sqlEditor).FontSize, 3);
+            Assert.Equal(15d, (double)Application.Current.Resources["FontSize.Body"]);
+            results["window-large"] = Capture(window, Path.Combine(directory, "wpf-window-large-dark.png"));
+
+            // The settings screen; closing it without saving puts the defaults back.
+            var settings = new SettingsViewModel(
+                new Core.Settings.JsonSettingsStore(new Core.Settings.SettingsStoreOptions(), Microsoft.Extensions.Logging.Abstractions.NullLogger<Core.Settings.JsonSettingsStore>.Instance),
+                env.Jobs, appearance, new TestTheme(), ["Segoe UI", "Segoe UI Variable Text, Segoe UI", "Cascadia Mono, Consolas", "Consolas", "Arial"]);
+            var settingsWindow = new SettingsWindow(settings) { Left = -20000, Top = 0, ShowActivated = false };
+            settingsWindow.Show();
+            foreach (var theme in new[] { AppTheme.Dark, AppTheme.Light })
+            {
+                ThemeManager.Apply(theme, save: false);
+                await Idle();
+                results[$"settings-{theme}"] = Capture(settingsWindow, Path.Combine(directory, $"wpf-settings-{(theme == AppTheme.Dark ? "dark" : "light")}.png"));
+            }
+
+            settingsWindow.Close();
+            Assert.Equal(15d, (double)Application.Current.Resources["FontSize.Body"]);
+            appearance.Apply(new AppearanceSettings());
+            connections.FilterText = string.Empty;
             window.Close();
             ThemeManager.Apply(AppTheme.Dark, save: false);
             return results;
         });
 
-        Assert.Equal(6, colours.Count);
+        Assert.Equal(9, colours.Count);
         Assert.All(colours, static pair => Assert.True(pair.Value > 12, $"{pair.Key} rendered only {pair.Value} distinct colours."));
+    }
+
+    private static T Find<T>(DependencyObject root)
+        where T : DependencyObject
+    {
+        var queue = new Queue<DependencyObject>([root]);
+        while (queue.Count > 0)
+        {
+            var node = queue.Dequeue();
+            if (node is T found && !ReferenceEquals(node, root))
+            {
+                return found;
+            }
+
+            for (var i = 0; i < VisualTreeHelper.GetChildrenCount(node); i++)
+            {
+                queue.Enqueue(VisualTreeHelper.GetChild(node, i));
+            }
+        }
+
+        throw new InvalidOperationException($"No {typeof(T).Name} under {root}.");
     }
 
     private static async Task Idle()
@@ -154,5 +208,7 @@ public sealed class ShellRenderTests
         public bool IsDark => ThemeManager.Current == AppTheme.Dark;
 
         public void Toggle() => Changed?.Invoke(this, EventArgs.Empty);
+
+        public void SetDark(bool dark) => Changed?.Invoke(this, EventArgs.Empty);
     }
 }

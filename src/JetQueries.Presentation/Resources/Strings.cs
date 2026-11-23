@@ -153,6 +153,24 @@ public static class Strings
     public static string FilterRemove => Get(nameof(FilterRemove));
     public static string ResultRowsShown => Get(nameof(ResultRowsShown));
     public static string HiddenColumns => Get(nameof(HiddenColumns));
+    public static string Settings => Get(nameof(Settings));
+    public static string SettingsTip => Get(nameof(SettingsTip));
+    public static string SectionAppearance => Get(nameof(SectionAppearance));
+    public static string SectionEditor => Get(nameof(SectionEditor));
+    public static string SectionGrid => Get(nameof(SectionGrid));
+    public static string FieldTheme => Get(nameof(FieldTheme));
+    public static string ThemeDark => Get(nameof(ThemeDark));
+    public static string ThemeLight => Get(nameof(ThemeLight));
+    public static string FieldFontFamily => Get(nameof(FieldFontFamily));
+    public static string FieldFontSize => Get(nameof(FieldFontSize));
+    public static string ButtonResetDefaults => Get(nameof(ButtonResetDefaults));
+    public static string SettingsZoomHint => Get(nameof(SettingsZoomHint));
+    public static string ZoomPercent => Get(nameof(ZoomPercent));
+    public static string ZoomReset => Get(nameof(ZoomReset));
+    public static string QueryDatabase => Get(nameof(QueryDatabase));
+    public static string QuerySchema => Get(nameof(QuerySchema));
+    public static string QueryConnection => Get(nameof(QueryConnection));
+    public static string ExplorerFilter => Get(nameof(ExplorerFilter));
 
     /// <summary>A string looked up by a computed name (for example <c>Setting_server</c>), or null if there is none.</summary>
     public static string? Find(string name) => Manager.GetString(name, CultureInfo.CurrentUICulture);

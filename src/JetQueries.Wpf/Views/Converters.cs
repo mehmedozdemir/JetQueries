@@ -7,6 +7,20 @@ using UiKit.Controls;
 
 namespace JetQueries.Wpf.Views;
 
+/// <summary>A zoom factor as the user's percentage text: %110 in Turkish, 110% in English.</summary>
+public sealed class ZoomTextConverter : IValueConverter
+{
+    public static ZoomTextConverter Instance { get; } = new();
+
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value is double zoom ? Text(zoom) : string.Empty;
+
+    public static string Text(double zoom) =>
+        string.Format(CultureInfo.CurrentCulture, System.Text.CompositeFormat.Parse(Strings.ZoomPercent), Math.Round(zoom * 100));
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
+}
+
 /// <summary>true → Collapsed, false → Visible.</summary>
 public sealed class InverseBoolToVisibilityConverter : IValueConverter
 {

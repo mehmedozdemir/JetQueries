@@ -3,6 +3,7 @@ using JetQueries.Core.Extensions;
 using JetQueries.Core.Jobs;
 using JetQueries.Core.Metadata;
 using JetQueries.Core.Queries;
+using JetQueries.Core.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -17,13 +18,15 @@ public static class ServiceCollectionExtensions
     /// <param name="configureMetadataCache">Sets the metadata cache file; memory-only by default.</param>
     /// <param name="configureConnectionStore">Sets the connection definitions file; memory-only by default.</param>
     /// <param name="configureQueryHistory">Sets the query history file and its limits; memory-only by default.</param>
+    /// <param name="configureSettings">Sets the settings folder; memory-only by default.</param>
     /// <returns>The same service collection, for chaining.</returns>
     public static IServiceCollection AddJetQueriesCore(
         this IServiceCollection services,
         Action<ExtensionHostOptions>? configureExtensions = null,
         Action<MetadataCacheOptions>? configureMetadataCache = null,
         Action<ConnectionStoreOptions>? configureConnectionStore = null,
-        Action<QueryHistoryOptions>? configureQueryHistory = null)
+        Action<QueryHistoryOptions>? configureQueryHistory = null,
+        Action<SettingsStoreOptions>? configureSettings = null)
     {
         ArgumentNullException.ThrowIfNull(services);
         services.TryAddSingleton<IJobQueue>(static _ => new JobQueue());
@@ -53,6 +56,11 @@ public static class ServiceCollectionExtensions
         configureQueryHistory?.Invoke(historyOptions);
         services.TryAddSingleton(historyOptions);
         services.TryAddSingleton<IQueryHistory, SqliteQueryHistory>();
+
+        var settingsOptions = new SettingsStoreOptions();
+        configureSettings?.Invoke(settingsOptions);
+        services.TryAddSingleton(settingsOptions);
+        services.TryAddSingleton<ISettingsStore, JsonSettingsStore>();
         return services;
     }
 }

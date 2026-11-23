@@ -40,6 +40,12 @@ public partial class QueryDocumentView : UserControl
         PreviewKeyDown += OnPreviewKeyDown;
     }
 
+    private void OnZoomReset(object sender, System.Windows.RoutedEventArgs e)
+    {
+        Editor.Zoom = 1;
+        Editor.FocusText();
+    }
+
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
         if (DataContext is not QueryDocumentViewModel viewModel)

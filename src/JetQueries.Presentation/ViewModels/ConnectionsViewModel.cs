@@ -8,6 +8,7 @@ using JetQueries.Core.Jobs;
 using JetQueries.Core.Metadata;
 using JetQueries.Presentation.Resources;
 using JetQueries.Presentation.Services;
+using JetQueries.Sdk;
 
 namespace JetQueries.Presentation.ViewModels;
 
@@ -21,6 +22,10 @@ public abstract partial class ExplorerNodeViewModel(string name) : ObservableObj
     [ObservableProperty]
     public partial bool IsExpanded { get; set; } = true;
 
+    /// <summary>False while the explorer's filter hides the node.</summary>
+    [ObservableProperty]
+    public partial bool IsVisible { get; set; } = true;
+
     /// <summary>Called when the node is expanded or collapsed, by the user or by code.</summary>
     protected virtual void OnExpanded(bool expanded)
     {
@@ -28,6 +33,11 @@ public abstract partial class ExplorerNodeViewModel(string name) : ObservableObj
 
     partial void OnIsExpandedChanged(bool value) => OnExpanded(value);
 }
+
+/// <summary>A new query tab wanted on a connection, in a database (or schema) of it if given.</summary>
+/// <param name="ConnectionId">The saved connection.</param>
+/// <param name="Database">The database (Oracle: schema) to start in; null for the connection's default.</param>
+public sealed record NewQueryRequest(Guid ConnectionId, string? Database);
 
 /// <summary>A folder grouping connections.</summary>
 public sealed class FolderNodeViewModel(string name) : ExplorerNodeViewModel(name);
@@ -106,6 +116,89 @@ public partial class ConnectionsViewModel(
 
     public string ToggleConnectionText => Selected is ConnectionNodeViewModel { IsConnected: true } ? Strings.ConnectionDisconnect : Strings.ConnectionConnect;
 
+    /// <summary>
+    /// Text that names must contain to be shown (ignoring case, by the user's culture). A node is shown when it
+    /// matches or something loaded under it does; under a match everything is shown. Empty shows everything.
+    /// </summary>
+    [ObservableProperty]
+    public partial string FilterText { get; set; } = string.Empty;
+
+    /// <summary>Raised when a new query tab is wanted on a connection and, if known, a database (or schema) of it.</summary>
+    public event EventHandler<NewQueryRequest>? NewQueryRequested;
+
+    partial void OnFilterTextChanged(string value) => ApplyFilter();
+
+    /// <summary>Applies <see cref="FilterText"/> to the whole tree; also run whenever nodes load.</summary>
+    public void ApplyFilter()
+    {
+        var filter = FilterText.Trim();
+        foreach (var root in Roots)
+        {
+            Filter(root, filter, ancestorMatched: false);
+        }
+    }
+
+    private readonly HashSet<LazyNodeViewModel> _watched = [];
+
+    private bool Filter(ExplorerNodeViewModel node, string filter, bool ancestorMatched)
+    {
+        // Children loaded later are filtered when they arrive.
+        if (node is LazyNodeViewModel lazy && _watched.Add(lazy))
+        {
+            lazy.ChildrenLoaded += (_, _) => ApplyFilter();
+        }
+
+        var matched = filter.Length == 0 || ancestorMatched ||
+                      (node is not MessageNodeViewModel && CultureInfo.CurrentCulture.CompareInfo.IndexOf(node.Name, filter, CompareOptions.IgnoreCase) >= 0);
+        var anyChild = false;
+        foreach (var child in node.Children)
+        {
+            anyChild |= Filter(child, filter, matched);
+        }
+
+        node.IsVisible = matched || anyChild;
+        return node.IsVisible;
+    }
+
+    private static bool CanOpenQuery(ExplorerNodeViewModel? node) => node switch
+    {
+        ConnectionNodeViewModel connection => connection.IsConnected,
+        DatabaseObjectNodeViewModel or CategoryNodeViewModel => true,
+        _ => false,
+    };
+
+    /// <summary>"New query" on a node: a connected connection, or a database, schema or object under one.</summary>
+    [RelayCommand(CanExecute = nameof(CanOpenQuery))]
+    private void NewQuery(ExplorerNodeViewModel? node)
+    {
+        var request = node switch
+        {
+            ConnectionNodeViewModel { IsConnected: true } connection => new NewQueryRequest(connection.Definition.Id, null),
+            DatabaseObjectNodeViewModel item => new NewQueryRequest(item.Session.Definition.Id, DatabaseOf(item.Session, item.Target)),
+            CategoryNodeViewModel { Parent: { } parent } category => new NewQueryRequest(category.Session.Definition.Id, DatabaseOf(category.Session, parent)),
+            CategoryNodeViewModel category => new NewQueryRequest(category.Session.Definition.Id, null),
+            _ => null,
+        };
+        if (request is not null)
+        {
+            NewQueryRequested?.Invoke(this, request);
+        }
+    }
+
+    /// <summary>The database a query on <paramref name="target"/> should start in: its database, or for Oracle its schema.</summary>
+    internal static string? DatabaseOf(ConnectionSession session, DatabaseObject target)
+    {
+        if (session.Provider.Capabilities.HasFlag(ProviderCapabilities.MultipleDatabases))
+        {
+            return target.Kind == DatabaseObjectKinds.Database ? target.Name.Name : target.Name.Database;
+        }
+
+        // A provider whose query windows switch schemas (Oracle): the schema of the node.
+        return session.Connection is IDatabaseContext { Kind: DatabaseContextKind.Schema }
+            ? target.Kind == DatabaseObjectKinds.Schema ? target.Name.Name : target.Name.Schema
+            : null;
+    }
+
     /// <summary>Reads the saved connections and rebuilds the tree, keeping live state where the connection still exists.</summary>
     public async Task LoadAsync()
     {
@@ -148,6 +241,7 @@ public partial class ConnectionsViewModel(
 
         Selected = reselect;
         IsEmpty = definitions.Count == 0;
+        ApplyFilter();
     }
 
     [RelayCommand]
