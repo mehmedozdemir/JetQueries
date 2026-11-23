@@ -55,17 +55,20 @@ public partial class DocumentsViewModel : ObservableObject
     private readonly IUiDispatcher _ui;
     private readonly ISettingsStore? _workspace;
     private readonly IAppearanceService? _settings;
+    private readonly ISnippetService? _snippets;
     private int _saveVersion;
     private bool _restoring;
     private int _counter;
 
     /// <param name="workspace">Where the open tabs are remembered; without one they are not.</param>
     /// <param name="settings">The user's settings (the fetch size of new tabs); defaults without.</param>
+    /// <param name="snippets">The snippets the editors expand; none without.</param>
     public DocumentsViewModel(
         IConnectionManager manager, IMetadataService metadata, IQueryHistory history, IJobQueue jobs, IDialogService dialogs, IUiDispatcher ui,
-        ISettingsStore? workspace = null, IAppearanceService? settings = null)
+        ISettingsStore? workspace = null, IAppearanceService? settings = null, ISnippetService? snippets = null)
     {
         _settings = settings;
+        _snippets = snippets;
         _manager = manager;
         _metadata = metadata;
         _history = history;
@@ -122,6 +125,8 @@ public partial class DocumentsViewModel : ObservableObject
         {
             document.FormatOptionsSource = () => settings.Current.FormatOptions();
         }
+
+        document.Snippets = _snippets;
         document.MarkClean();
         if (connectionId is { } id)
         {

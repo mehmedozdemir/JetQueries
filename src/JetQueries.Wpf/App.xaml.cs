@@ -64,6 +64,8 @@ public partial class App : Application
             var store = services.GetRequiredService<Core.Settings.ISettingsStore>();
             var settings = await Task.Run(() => store.LoadAsync(AppearanceSettings.Section, new AppearanceSettings(), CancellationToken.None));
             services.GetRequiredService<IAppearanceService>().Apply(settings);
+            var snippets = await Task.Run(() => store.LoadAsync(SnippetSettings.Section, new SnippetSettings(), CancellationToken.None));
+            services.GetRequiredService<ISnippetService>().Apply(snippets.Snippets);
         }
 #pragma warning disable CA1031 // Settings that cannot be read leave the defaults; the application still starts.
         catch (Exception ex)

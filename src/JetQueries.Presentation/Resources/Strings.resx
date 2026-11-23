@@ -334,4 +334,12 @@
   <data name="ValuePanelTip" xml:space="preserve"><value>Value panel: the current cell in full (JSON and XML laid out, binary as hex, images)</value></data>
   <data name="SelectionCells" xml:space="preserve"><value>{0:N0} cells</value></data>
   <data name="SelectionNumbers" xml:space="preserve"><value>{0:N0} cells · Sum {1} · Avg {2} · Min {3} · Max {4}</value></data>
+  <data name="EditorInsertSnippet" xml:space="preserve"><value>Insert snippet</value></data>
+  <data name="SettingsPageSnippets" xml:space="preserve"><value>Snippets</value></data>
+  <data name="SettingsPageSnippetsInfo" xml:space="preserve"><value>Type a shortcut and press Tab in the editor; $0 marks where the cursor goes.</value></data>
+  <data name="SnippetAdd" xml:space="preserve"><value>New snippet</value></data>
+  <data name="SnippetRemove" xml:space="preserve"><value>Remove</value></data>
+  <data name="FieldShortcut" xml:space="preserve"><value>Shortcut</value></data>
+  <data name="FieldDescription" xml:space="preserve"><value>Description</value></data>
+  <data name="SnippetInvalid" xml:space="preserve"><value>Each snippet needs a shortcut of letters, digits and _ (starting with a letter), used only once.</value></data>
 </root>

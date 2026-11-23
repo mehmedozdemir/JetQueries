@@ -317,6 +317,14 @@ public static class Strings
     public static string ValuePanelTip => Get(nameof(ValuePanelTip));
     public static string SelectionCells => Get(nameof(SelectionCells));
     public static string SelectionNumbers => Get(nameof(SelectionNumbers));
+    public static string EditorInsertSnippet => Get(nameof(EditorInsertSnippet));
+    public static string SettingsPageSnippets => Get(nameof(SettingsPageSnippets));
+    public static string SettingsPageSnippetsInfo => Get(nameof(SettingsPageSnippetsInfo));
+    public static string SnippetAdd => Get(nameof(SnippetAdd));
+    public static string SnippetRemove => Get(nameof(SnippetRemove));
+    public static string FieldShortcut => Get(nameof(FieldShortcut));
+    public static string FieldDescription => Get(nameof(FieldDescription));
+    public static string SnippetInvalid => Get(nameof(SnippetInvalid));
 
     /// <summary>A string looked up by a computed name (for example <c>Setting_server</c>), or null if there is none.</summary>
     public static string? Find(string name) => Manager.GetString(name, CultureInfo.CurrentUICulture);

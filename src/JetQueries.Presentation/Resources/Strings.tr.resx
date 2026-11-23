@@ -334,4 +334,12 @@
   <data name="ValuePanelTip" xml:space="preserve"><value>Değer paneli: geçerli hücrenin tamamı (JSON ve XML düzenli, ikili veri hex, resimler)</value></data>
   <data name="SelectionCells" xml:space="preserve"><value>{0:N0} hücre</value></data>
   <data name="SelectionNumbers" xml:space="preserve"><value>{0:N0} hücre · Toplam {1} · Ort. {2} · Min {3} · Maks {4}</value></data>
+  <data name="EditorInsertSnippet" xml:space="preserve"><value>Kod parçacığı ekle</value></data>
+  <data name="SettingsPageSnippets" xml:space="preserve"><value>Kod parçacıkları</value></data>
+  <data name="SettingsPageSnippetsInfo" xml:space="preserve"><value>Editörde kısayolu yazıp Tab'a basın; $0 imlecin gideceği yeri gösterir.</value></data>
+  <data name="SnippetAdd" xml:space="preserve"><value>Yeni parçacık</value></data>
+  <data name="SnippetRemove" xml:space="preserve"><value>Kaldır</value></data>
+  <data name="FieldShortcut" xml:space="preserve"><value>Kısayol</value></data>
+  <data name="FieldDescription" xml:space="preserve"><value>Açıklama</value></data>
+  <data name="SnippetInvalid" xml:space="preserve"><value>Her parçacığın harf, rakam ve _ içeren (harfle başlayan) ve yalnızca bir kez kullanılan bir kısayolu olmalı.</value></data>
 </root>

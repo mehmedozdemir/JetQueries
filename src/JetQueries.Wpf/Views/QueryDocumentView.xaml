@@ -93,6 +93,7 @@
                             <MenuItem Header="{x:Static res:Strings.EditorPaste}" c:Ui.Icon="&#xE77F;" InputGestureText="Ctrl+V" Click="OnMenuEdit" Tag="Paste" />
                             <MenuItem Header="{x:Static res:Strings.EditorSelectAll}" InputGestureText="Ctrl+A" Click="OnMenuEdit" Tag="SelectAll" />
                             <Separator />
+                            <MenuItem x:Name="SnippetItem" Header="{x:Static res:Strings.EditorInsertSnippet}" c:Ui.Icon="{x:Static c:Icons.Code}" />
                             <MenuItem Header="{x:Static res:Strings.EditorFormat}" c:Ui.Icon="&#xE8E4;" InputGestureText="Ctrl+Shift+F" Click="OnMenuEdit" Tag="Format" />
                             <MenuItem Header="{x:Static res:Strings.EditorToggleComment}" InputGestureText="Ctrl+/" Click="OnMenuEdit" Tag="Comment" />
                             <MenuItem Header="{x:Static res:Strings.EditorUpperCase}" InputGestureText="Ctrl+Shift+U" Click="OnMenuEdit" Tag="Upper" />

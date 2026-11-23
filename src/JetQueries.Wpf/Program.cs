@@ -55,6 +55,7 @@ internal static class Program
         builder.Services.AddSingleton<HistoryViewModel>();
         builder.Services.AddSingleton<IThemeService, ThemeService>();
         builder.Services.AddSingleton<IAppearanceService, AppearanceService>();
+        builder.Services.AddSingleton<ISnippetService, SnippetService>();
         builder.Services.AddSingleton<ISettingsDialog, SettingsDialog>();
         builder.Services.AddSingleton<MainWindowViewModel>();
         builder.Services.AddSingleton<MainWindow>();

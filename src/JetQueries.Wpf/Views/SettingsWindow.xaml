@@ -60,6 +60,9 @@
                             <DataTrigger Binding="{Binding Key}" Value="format">
                                 <Setter TargetName="Icon" Property="Text" Value="&#xE8E4;" />
                             </DataTrigger>
+                            <DataTrigger Binding="{Binding Key}" Value="snippets">
+                                <Setter TargetName="Icon" Property="Text" Value="&#xE8EC;" />
+                            </DataTrigger>
                         </DataTemplate.Triggers>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
@@ -283,6 +286,74 @@
                             </StackPanel>
                         </Border>
                     </StackPanel>
+
+                    <!-- Snippets: the list on the left, the one chosen on the right -->
+                    <Grid x:Name="SnippetsPage" Visibility="Collapsed">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="230" />
+                            <ColumnDefinition Width="16" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.ColumnSpan="3" Text="{Binding SnippetError}" Foreground="{DynamicResource Brush.Danger}" TextWrapping="Wrap" Margin="2,0,0,10"
+                                   Visibility="{Binding SnippetError, Converter={x:Static v:NotNullToVisibilityConverter.Instance}}" />
+                        <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,0,0,8">
+                            <DockPanel>
+                                <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,0,1" Padding="6,4">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button Style="{StaticResource Btn.Icon}" Width="28" Height="28" c:Ui.Icon="{x:Static c:Icons.Add}"
+                                                Command="{Binding AddSnippetCommand}" ToolTip="{x:Static res:Strings.SnippetAdd}" />
+                                        <Button Style="{StaticResource Btn.Icon}" Width="28" Height="28" c:Ui.Icon="{x:Static c:Icons.Delete}"
+                                                Command="{Binding RemoveSnippetCommand}" ToolTip="{x:Static res:Strings.SnippetRemove}" />
+                                    </StackPanel>
+                                </Border>
+                                <ListBox x:Name="SnippetList" ItemsSource="{Binding SnippetItems}" SelectedItem="{Binding SelectedSnippet}" Padding="4"
+                                         MinHeight="300" ItemContainerStyle="{StaticResource Settings.NavItem}">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Shortcut}" FontFamily="{DynamicResource Font.Code}" FontWeight="SemiBold" />
+                                                <TextBlock Text="{Binding Description}" Style="{StaticResource Text.Caption}" TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </DockPanel>
+                        </Border>
+                        <Border Grid.Row="1" Grid.Column="2" Style="{StaticResource Card}" Margin="0,0,0,8" Grid.IsSharedSizeScope="True"
+                                Visibility="{Binding SelectedSnippet, Converter={x:Static v:NotNullToVisibilityConverter.Instance}}">
+                            <DockPanel>
+                                <Border DockPanel.Dock="Top" Style="{StaticResource Settings.Row}" BorderThickness="0">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" SharedSizeGroup="SnippetLabel" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{x:Static res:Strings.FieldShortcut}" Foreground="{DynamicResource Brush.Text}" VerticalAlignment="Center" Margin="0,0,16,0" />
+                                        <TextBox Grid.Column="1" FontFamily="{DynamicResource Font.Code}"
+                                                 Text="{Binding SelectedSnippet.Shortcut, UpdateSourceTrigger=PropertyChanged}" />
+                                    </Grid>
+                                </Border>
+                                <Border DockPanel.Dock="Top" Style="{StaticResource Settings.Row}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" SharedSizeGroup="SnippetLabel" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{x:Static res:Strings.FieldDescription}" Foreground="{DynamicResource Brush.Text}" VerticalAlignment="Center" Margin="0,0,16,0" />
+                                        <TextBox Grid.Column="1" Text="{Binding SelectedSnippet.Description, UpdateSourceTrigger=PropertyChanged}" />
+                                    </Grid>
+                                </Border>
+                                <Border Style="{StaticResource Settings.Row}" Padding="4,8,4,4">
+                                    <e:SqlEditor x:Name="SnippetEditor" MinHeight="200" LanguageService="{Binding PreviewLanguage}"
+                                                 Text="{Binding SelectedSnippet.Text, UpdateSourceTrigger=PropertyChanged}" />
+                                </Border>
+                            </DockPanel>
+                        </Border>
+                    </Grid>
                 </Grid>
             </ScrollViewer>
         </DockPanel>

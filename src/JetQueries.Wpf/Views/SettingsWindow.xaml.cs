@@ -50,6 +50,7 @@ public partial class SettingsWindow : Window
         ResultsPage.Visibility = Show(key == "results");
         QueryPage.Visibility = Show(key == "query");
         FormatPage.Visibility = Show(key == "format");
+        SnippetsPage.Visibility = Show(key == "snippets");
         Pages.ScrollToTop();
 
         static Visibility Show(bool shown) => shown ? Visibility.Visible : Visibility.Collapsed;

@@ -24,6 +24,7 @@ public partial class QueryDocumentView : UserControl
         Editor.DiagnosticSource = (text, token) => DataContext is QueryDocumentViewModel viewModel
             ? viewModel.DiagnoseAsync(text, token)
             : Task.FromResult<IReadOnlyList<SqlDiagnostic>>([]);
+        Editor.SnippetLookup = shortcut => (DataContext as QueryDocumentViewModel)?.Snippets?.Find(shortcut)?.Text;
         Editor.NavigationRequested += (_, offset) =>
         {
             if (DataContext is QueryDocumentViewModel viewModel)
@@ -52,6 +53,20 @@ public partial class QueryDocumentView : UserControl
 
     private void OnEditorMenuOpened(object sender, System.Windows.RoutedEventArgs e)
     {
+        // Insert snippet: the snippets of now, each with its shortcut.
+        SnippetItem.Items.Clear();
+        foreach (var snippet in (DataContext as QueryDocumentViewModel)?.Snippets?.Current ?? [])
+        {
+            var item = new MenuItem { Header = snippet.Description, InputGestureText = snippet.Shortcut + " + Tab" };
+            item.Click += (_, _) =>
+            {
+                Editor.InsertSnippet(snippet.Text);
+                Editor.FocusText();
+            };
+            SnippetItem.Items.Add(item);
+        }
+
+        SnippetItem.IsEnabled = SnippetItem.Items.Count > 0;
         CutItem.IsEnabled = CopyItem.IsEnabled = Editor.HasSelection;
         UndoItem.IsEnabled = Editor.CanUndo;
         RedoItem.IsEnabled = Editor.CanRedo;
