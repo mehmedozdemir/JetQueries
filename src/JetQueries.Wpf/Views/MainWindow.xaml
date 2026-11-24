@@ -4,7 +4,7 @@
         xmlns:c="clr-namespace:UiKit.Controls;assembly=UiKit.Wpf"
         xmlns:res="clr-namespace:JetQueries.Presentation.Resources;assembly=JetQueries.Presentation"
         xmlns:v="clr-namespace:JetQueries.Wpf.Views"
-        Title="JetQueries" Width="1360" Height="840" MinWidth="820" MinHeight="480"
+        Title="JetQueries" Icon="pack://application:,,,/JetQueries;component/Assets/JetQueries.ico" Width="1360" Height="840" MinWidth="820" MinHeight="480"
         WindowStartupLocation="CenterScreen" AllowDrop="True" Drop="OnDrop" DragOver="OnDragOver"
         Style="{StaticResource Window.App}">
     <Window.InputBindings>
@@ -40,15 +40,9 @@
         <Border Style="{StaticResource Toolbar.Compact}">
             <DockPanel>
                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border Width="26" Height="26" CornerRadius="7" Margin="0,0,8,0">
-                        <Border.Background>
-                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                <GradientStop Color="#FF6E8BFF" Offset="0" />
-                                <GradientStop Color="#FF3F5BD8" Offset="1" />
-                            </LinearGradientBrush>
-                        </Border.Background>
-                        <TextBlock Text="{x:Static c:Icons.Database}" Style="{StaticResource Text.Icon}" Foreground="White" FontSize="15" />
-                    </Border>
+                    <!-- The mark (Assets/Logo.xaml), the same drawing as the exe's icon -->
+                    <Image x:Name="Logo" Source="{StaticResource Brand.Logo}" Width="28" Height="28" Margin="0,0,7,0"
+                           RenderOptions.BitmapScalingMode="HighQuality" />
                     <TextBlock Text="JetQueries" FontSize="{DynamicResource FontSize.Subtitle}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" />
 
                     <!-- Main menu -->

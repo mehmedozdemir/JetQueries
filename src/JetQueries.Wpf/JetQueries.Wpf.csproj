@@ -7,6 +7,8 @@
     <AssemblyName>JetQueries</AssemblyName>
     <RootNamespace>JetQueries.Wpf</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- The exe's icon (Explorer, taskbar, shortcuts): rendered from Assets/Logo.xaml by scripts/make-icon.ps1. -->
+    <ApplicationIcon>Assets\JetQueries.ico</ApplicationIcon>
     <NeutralLanguage>en</NeutralLanguage>
     <!-- Program.Main starts the application: Velopack must run before WPF. -->
     <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
@@ -21,6 +23,10 @@
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="JetQueries.Wpf.Tests" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- The window icon (pack://application:,,,/JetQueries;component/Assets/JetQueries.ico). -->
+    <Resource Include="Assets\JetQueries.ico" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AvalonEdit" />

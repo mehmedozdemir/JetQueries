@@ -674,3 +674,8 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
       reason. Ctrl+Enter runs the lines around the cursor up to an empty line.
 - [ ] On a read-only connection `SET x 1` is refused and the key tab's buttons are off. On a production connection
       `DEL x` / `FLUSHDB` ask first, and so does removing an item or a key.
+
+## Application icon
+- [ ] The installed app shows the blue database-and-bolt icon on its Start menu and desktop shortcuts, in the taskbar
+      (also pinned), in Alt+Tab and in Explorer for JetQueries.exe; Setup.exe has it too.
+- [ ] The same mark is at the left of the title bar, sharp at 100 %, 150 % and 200 % scaling, in light and dark themes.

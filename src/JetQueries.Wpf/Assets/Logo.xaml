@@ -1,0 +1,80 @@
+<!--
+    The JetQueries mark: the title bar's rounded blue square with a white database, drawn as vectors on a 256 × 256
+    grid so that it stays sharp from 16 px (title bar, taskbar) to 256 px (Explorer, installer). The same drawing is
+    rendered into Assets/JetQueries.ico by scripts/make-icon.ps1; edit it here and run that script again.
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DrawingGroup x:Key="Brand.LogoDrawing">
+        <!-- Clip to the full grid so that the image is always 256 × 256 (the square has a margin inside it). -->
+        <DrawingGroup.ClipGeometry>
+            <RectangleGeometry Rect="0,0,256,256" />
+        </DrawingGroup.ClipGeometry>
+        <GeometryDrawing Brush="Transparent" Geometry="M0,0 H256 V256 H0 Z" />
+
+        <!-- The square: a diagonal blue gradient, a soft light from the top -->
+        <GeometryDrawing>
+            <GeometryDrawing.Brush>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#FF7896FF" Offset="0" />
+                    <GradientStop Color="#FF4A66E4" Offset="0.55" />
+                    <GradientStop Color="#FF3550C8" Offset="1" />
+                </LinearGradientBrush>
+            </GeometryDrawing.Brush>
+            <GeometryDrawing.Geometry>
+                <RectangleGeometry Rect="12,12,232,232" RadiusX="56" RadiusY="56" />
+            </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing>
+            <GeometryDrawing.Brush>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#2EFFFFFF" Offset="0" />
+                    <GradientStop Color="#00FFFFFF" Offset="0.55" />
+                </LinearGradientBrush>
+            </GeometryDrawing.Brush>
+            <GeometryDrawing.Geometry>
+                <RectangleGeometry Rect="12,12,232,232" RadiusX="56" RadiusY="56" />
+            </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+
+        <!-- The database: a white cylinder, its top a little lighter, two bands -->
+        <GeometryDrawing Brush="#FFFFFFFF" Geometry="M52,84 V170 A62,22 0 0 0 176,170 V84 Z" />
+        <GeometryDrawing Brush="#FFE3E9FF">
+            <GeometryDrawing.Geometry>
+                <EllipseGeometry Center="114,84" RadiusX="62" RadiusY="22" />
+            </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Geometry="M52,113 A62,22 0 0 0 176,113 M52,142 A62,22 0 0 0 176,142">
+            <GeometryDrawing.Pen>
+                <Pen Brush="#FF5470E6" Thickness="7" StartLineCap="Round" EndLineCap="Round" />
+            </GeometryDrawing.Pen>
+        </GeometryDrawing>
+
+        <!-- The jet: an amber bolt over the cylinder's corner, set off by a ring of the square's blue -->
+        <GeometryDrawing Brush="#FF3D58D2" Geometry="M178,104 L218,104 L199,138 L226,138 L158,218 L172,168 L146,168 Z">
+            <GeometryDrawing.Pen>
+                <Pen Brush="#FF3D58D2" Thickness="16" LineJoin="Round" />
+            </GeometryDrawing.Pen>
+        </GeometryDrawing>
+        <GeometryDrawing Geometry="M178,104 L218,104 L199,138 L226,138 L158,218 L172,168 L146,168 Z">
+            <GeometryDrawing.Brush>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#FFFFD36B" Offset="0" />
+                    <GradientStop Color="#FFFFA928" Offset="1" />
+                </LinearGradientBrush>
+            </GeometryDrawing.Brush>
+            <GeometryDrawing.Pen>
+                <Pen Thickness="3" LineJoin="Round">
+                    <Pen.Brush>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#FFFFD36B" Offset="0" />
+                            <GradientStop Color="#FFFFA928" Offset="1" />
+                        </LinearGradientBrush>
+                    </Pen.Brush>
+                </Pen>
+            </GeometryDrawing.Pen>
+        </GeometryDrawing>
+    </DrawingGroup>
+
+    <DrawingImage x:Key="Brand.Logo" Drawing="{StaticResource Brand.LogoDrawing}" />
+</ResourceDictionary>

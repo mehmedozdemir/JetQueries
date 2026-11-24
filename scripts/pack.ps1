@@ -71,6 +71,7 @@ try {
         '--packVersion', $Version,
         '--packDir', $publishDir,
         '--mainExe', 'JetQueries.exe',
+        '--icon', (Join-Path $root 'src/JetQueries.Wpf/Assets/JetQueries.ico'),
         '--runtime', $Runtime,
         '--channel', "$os-$Channel",
         '--outputDir', $releaseDir
