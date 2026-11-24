@@ -130,14 +130,16 @@ internal sealed partial class OracleMetadataProvider(OracleConnection connection
     public async Task<IReadOnlyList<ColumnInfo>> GetColumnsAsync(DatabaseObjectName tableOrView, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(tableOrView);
+        // The key columns are joined once, not looked up per column: ALL_CONSTRAINTS is slow to run nested.
         const string Sql = """
             SELECT c.column_name, c.data_type, c.data_length, c.data_precision, c.data_scale, c.nullable, c.column_id,
-                   c.char_length, c.char_used,
-                   (SELECT COUNT(*)
-                    FROM all_constraints k
-                    JOIN all_cons_columns kc ON kc.owner = k.owner AND kc.constraint_name = k.constraint_name
-                    WHERE k.constraint_type = 'P' AND k.owner = c.owner AND k.table_name = c.table_name AND kc.column_name = c.column_name) AS is_key
+                   c.char_length, c.char_used, NVL2(pk.column_name, 1, 0) AS is_key
             FROM all_tab_columns c
+            LEFT JOIN (SELECT kc.column_name
+                       FROM all_constraints k
+                       JOIN all_cons_columns kc ON kc.owner = k.owner AND kc.constraint_name = k.constraint_name AND kc.table_name = k.table_name
+                       WHERE k.constraint_type = 'P' AND k.owner = NVL(:owner, SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA')) AND k.table_name = :name) pk
+              ON pk.column_name = c.column_name
             WHERE c.owner = NVL(:owner, SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA')) AND c.table_name = :name
             ORDER BY c.column_id
             """;

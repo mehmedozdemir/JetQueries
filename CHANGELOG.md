@@ -6,6 +6,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 ## [Unreleased]
 
 ### Added
+- SDK (preview): `IProgressiveObjectDetailsProvider` reports object details as they are read; the details view shows the properties and columns first and adds the other tabs as they arrive (Oracle).
 - Repository foundation: CLAUDE.md, product analysis, build props.
 - Solution skeleton (`JetQueries.slnx`): Desktop, Core, Sdk, Editor, DataGrid, SQL Server and Oracle provider projects, Core and Sdk test projects.
 - Desktop shell window with light/dark design tokens (`Styles/Tokens.axaml`), explorer / documents / results placeholders, generic host and DI.
@@ -152,6 +153,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 - Accessibility: icon buttons give screen readers their tooltip as name; muted text is darker in both themes (≥ 4.5:1 for small text).
 
 ### Fixed
+- Oracle object details (Ctrl+Click) were slow: the dictionary queries ran ALL_CONSTRAINTS nested per column and per row. They are now plain single-view reads joined in code; a first look at a table on a cold instance went from about 28 s to under 6 s (columns after well under 1 s), later looks take tens of milliseconds. Oracle column lists for completion use the same cheaper key lookup.
+- The SQL editor's text no longer touches the line numbers' rule.
 - An empty completion card (only the hint line) stayed open after "." or after typing what no row matched; "." now opens the columns of the alias, and a list filtered to nothing closes.
 - The editor/results splitter had no resize cursor or visible line for rows (UiKit splitter template), so the results could not be found to drag up.
 - The explorer's toolbar was cut off at the default panel width; its actions are icons that wrap.

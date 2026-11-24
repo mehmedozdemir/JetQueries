@@ -16,6 +16,25 @@ public interface IObjectDetailsProvider
     Task<ObjectDetails?> GetDetailsAsync(DatabaseObject target, CancellationToken cancellationToken);
 }
 
+/// <summary>
+/// Optional for an <see cref="IObjectDetailsProvider"/> whose catalog queries can be slow (large dictionaries,
+/// remote servers): it reports what it has read so far, so the view shows the properties and columns while
+/// the other tables are still being read.
+/// </summary>
+/// <remarks>Preview contract: may change until SDK 1.0.</remarks>
+public interface IProgressiveObjectDetailsProvider : IObjectDetailsProvider
+{
+    /// <summary>Reads the details of <paramref name="target"/>, reporting them as they grow.</summary>
+    /// <param name="target">A table, view, routine, package, sequence or other object.</param>
+    /// <param name="progress">
+    /// Receives the details read so far, each report a complete <see cref="ObjectDetails"/> holding everything of the
+    /// previous one and more; the returned value is the final state.
+    /// </param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <returns>The details, or <see langword="null"/> when the object does not exist or cannot be seen.</returns>
+    Task<ObjectDetails?> GetDetailsAsync(DatabaseObject target, IProgress<ObjectDetails> progress, CancellationToken cancellationToken);
+}
+
 /// <summary>The details of one object.</summary>
 /// <param name="Target">The object, with its name as the catalog has it.</param>
 /// <param name="Properties">Name/value pairs (type, owner, created, rows, size, comment…), in display order.</param>

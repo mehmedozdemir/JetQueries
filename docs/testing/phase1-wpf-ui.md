@@ -471,3 +471,11 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
   is closed. Query history masks password literals; the workspace does not change the user's text.
 - Files larger than 50 MB are not opened in an editor tab.
 - The Avalonia application still builds (`JetQueries.Avalonia.exe`) but is no longer packaged or developed.
+
+## Object details speed (Oracle) and editor spacing
+- [ ] Ctrl+Click a table on an Oracle connection: the details tab opens at once with the moving bar; the Columns tab
+      fills in first, then Constraints, Foreign keys, Indexes and References appear; the bar stops when all are in.
+- [ ] While the tabs fill in, the tab you are on stays selected (Properties, DDL or a section tab).
+- [ ] The second look at the same table (Refresh, or Ctrl+Click again) is near instant.
+- [ ] The PK/FK marks in the Columns tab appear (a moment after the columns on a large dictionary).
+- [ ] In the query editor the text has a clear gap from the dotted rule after the line numbers.

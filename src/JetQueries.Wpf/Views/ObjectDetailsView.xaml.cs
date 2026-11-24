@@ -59,7 +59,12 @@ public partial class ObjectDetailsView : UserControl
     /// <summary>One tab per section, between Properties and DDL; the columns tab is selected first when there is one.</summary>
     private void BuildSectionTabs()
     {
-        var selectedKey = (Tabs.SelectedItem as TabItem)?.Tag as string;
+        var selected = Tabs.SelectedItem as TabItem;
+        var selectedKey = selected?.Tag as string;
+
+        // Tabs fill in as the details are read: the first ones open on the columns; after that the tab the
+        // user is on (Properties and DDL included) stays.
+        var first = _sectionTabs.Count == 0;
         foreach (var tab in _sectionTabs)
         {
             Tabs.Items.Remove(tab);
@@ -76,8 +81,9 @@ public partial class ObjectDetailsView : UserControl
         }
 
         Tabs.SelectedItem = _sectionTabs.FirstOrDefault(t => (string)t.Tag == selectedKey)
-            ?? (selectedKey is null ? _sectionTabs.FirstOrDefault(static t => (string)t.Tag == Sdk.ObjectDetailKeys.Columns || (string)t.Tag == Sdk.ObjectDetailKeys.Parameters) : null)
-            ?? Tabs.SelectedItem ?? PropertiesTab;
+            ?? (first && selectedKey is null ? _sectionTabs.FirstOrDefault(static t => (string)t.Tag == Sdk.ObjectDetailKeys.Columns || (string)t.Tag == Sdk.ObjectDetailKeys.Parameters) : null)
+            ?? (selected == PropertiesTab || selected == DdlTab ? selected : null)
+            ?? PropertiesTab;
     }
 
     private static string IconOf(string key) => key switch

@@ -242,6 +242,9 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
     /// <summary>What the details view reads; null: the catalog has no such object.</summary>
     public Func<DatabaseObject, ObjectDetails?> Details { get; set; } = static _ => null;
 
+    /// <summary>When set, the details are read in steps through this (a progressive provider).</summary>
+    public Func<DatabaseObject, IProgress<ObjectDetails>, CancellationToken, Task<ObjectDetails?>>? ProgressiveDetails { get; set; }
+
     /// <summary>Every request that reached the "database".</summary>
     public List<QueryRequest> Executed { get; } = [];
 
@@ -466,13 +469,16 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
     }
 
     /// <summary>A small fixed catalog: databases Cards and master, schemas dbo and kart, a few objects in dbo.</summary>
-    private sealed class FakeMetadata(FakeProvider owner) : IMetadataProvider, IObjectDetailsProvider
+    private sealed class FakeMetadata(FakeProvider owner) : IMetadataProvider, IProgressiveObjectDetailsProvider
     {
         public Task<ObjectDetails?> GetDetailsAsync(DatabaseObject target, CancellationToken cancellationToken)
         {
             owner.MetadataCalls.Add($"details:{target.Name}");
             return Task.FromResult(owner.Details(target));
         }
+
+        public Task<ObjectDetails?> GetDetailsAsync(DatabaseObject target, IProgress<ObjectDetails> progress, CancellationToken cancellationToken) =>
+            owner.ProgressiveDetails is { } progressive ? progressive(target, progress, cancellationToken) : GetDetailsAsync(target, cancellationToken);
 
         public async IAsyncEnumerable<DatabaseObject> GetObjectsAsync(
             DatabaseObject? parent, DatabaseObjectKinds kinds, [EnumeratorCancellation] CancellationToken cancellationToken)
