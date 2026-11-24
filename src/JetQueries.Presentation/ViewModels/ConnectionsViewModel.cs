@@ -41,6 +41,10 @@ public abstract partial class ExplorerNodeViewModel(string name) : ObservableObj
     [ObservableProperty]
     public partial bool IsVisible { get; set; } = true;
 
+    /// <summary>Picked with Ctrl+click, to be moved together with others.</summary>
+    [ObservableProperty]
+    public partial bool IsMarked { get; set; }
+
     /// <summary>A dragged connection or folder would land here (drawn highlighted).</summary>
     [ObservableProperty]
     public partial bool IsDropTarget { get; set; }
@@ -222,6 +226,52 @@ public partial class ConnectionsViewModel(
             _ => false,
         };
     }
+
+    /// <summary>The connections picked with Ctrl+click.</summary>
+    public IReadOnlyList<ConnectionNodeViewModel> MarkedConnections() =>
+        [.. AllNodes(Roots).OfType<ConnectionNodeViewModel>().Where(static c => c.IsMarked)];
+
+    /// <summary>Forgets the Ctrl+click picks.</summary>
+    public void ClearMarks()
+    {
+        foreach (var node in AllNodes(Roots).Where(static n => n.IsMarked))
+        {
+            node.IsMarked = false;
+        }
+    }
+
+    /// <summary>Where a drop on <paramref name="target"/> lands, as the drag caption says it ("the top level" for null).</summary>
+    public static string DropCaption(int count, ExplorerNodeViewModel? target)
+    {
+        var folder = FolderOf(target);
+        var where = folder.Length == 0 ? Strings.FolderTopLevel : folder;
+        return count > 1 ? Format2(Strings.MoveManyTo, count, where) : Format(Strings.MoveTo, where);
+    }
+
+    /// <summary>Moves several connections (picked with Ctrl+click) into one folder.</summary>
+    public async Task MoveAsync(IReadOnlyList<ExplorerNodeViewModel> dragged, ExplorerNodeViewModel? target)
+    {
+        ArgumentNullException.ThrowIfNull(dragged);
+        if (dragged.Count == 1)
+        {
+            await MoveAsync(dragged[0], target);
+            return;
+        }
+
+        var into = FolderOf(target);
+        foreach (var connection in dragged.OfType<ConnectionNodeViewModel>().Where(c => CanMove(c, target)))
+        {
+            await SaveFolderAsync(connection.Definition, into);
+        }
+
+        await LoadAsync();
+    }
+
+    private static IEnumerable<ExplorerNodeViewModel> AllNodes(IEnumerable<ExplorerNodeViewModel> nodes) =>
+        nodes.SelectMany(static n => n is FolderNodeViewModel folder ? (IEnumerable<ExplorerNodeViewModel>)[folder, .. AllNodes(folder.Children)] : [n]);
+
+    private static string Format2(string format, object? first, object? second) =>
+        string.Format(CultureInfo.CurrentCulture, CompositeFormat.Parse(format), first, second);
 
     /// <summary>Moves a connection or a folder onto a folder (or a connection's folder, or the top level).</summary>
     public async Task MoveAsync(ExplorerNodeViewModel dragged, ExplorerNodeViewModel? target)
@@ -669,6 +719,24 @@ public partial class ConnectionsViewModel(
     }
 
     private bool HasConnectionSelected() => Selected is ConnectionNodeViewModel { IsBusy: false };
+
+    /// <summary>Delete key: the selected connection, or the selected folder (each asks first).</summary>
+    [RelayCommand]
+    private Task DeleteSelectedAsync() => Selected switch
+    {
+        FolderNodeViewModel folder => DeleteFolderAsync(folder),
+        ConnectionNodeViewModel when DeleteCommand.CanExecute(null) => DeleteAsync(),
+        _ => Task.CompletedTask,
+    };
+
+    /// <summary>F2: edits the selected connection, or renames the selected folder.</summary>
+    [RelayCommand]
+    private Task EditSelectedAsync() => Selected switch
+    {
+        FolderNodeViewModel folder => RenameFolderAsync(folder),
+        ConnectionNodeViewModel when EditCommand.CanExecute(null) => EditCommand.ExecuteAsync(null),
+        _ => Task.CompletedTask,
+    };
 
     [RelayCommand(CanExecute = nameof(HasConnectionSelected))]
     private async Task EditAsync()

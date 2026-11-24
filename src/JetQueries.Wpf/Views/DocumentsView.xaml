@@ -5,6 +5,9 @@
              xmlns:res="clr-namespace:JetQueries.Presentation.Resources;assembly=JetQueries.Presentation"
              xmlns:v="clr-namespace:JetQueries.Wpf.Views"
              x:Name="Root">
+    <UserControl.CommandBindings>
+        <CommandBinding Command="{x:Static v:DocumentsView.CopyPathCommand}" Executed="OnCopyPath" CanExecute="OnCanCopyPath" />
+    </UserControl.CommandBindings>
     <Grid>
         <!-- Empty state: every tab closed -->
         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="{Binding Tabs.Count, Converter={x:Static v:ZeroToVisibleConverter.Instance}}">
@@ -51,8 +54,7 @@
                                 <MenuItem Header="{x:Static res:Strings.TabCloseAll}"
                                           Command="{Binding PlacementTarget.Tag.CloseAllTabsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
                                 <Separator />
-                                <MenuItem Header="{x:Static res:Strings.TabCopyPath}" c:Ui.Icon="&#xE8C8;" Click="OnCopyPath"
-                                          IsEnabled="{Binding FilePath, Converter={x:Static v:NotNullConverter.Instance}, FallbackValue=False}" />
+                                <MenuItem Header="{x:Static res:Strings.TabCopyPath}" c:Ui.Icon="&#xE8C8;" Command="{x:Static v:DocumentsView.CopyPathCommand}" CommandParameter="{Binding}" />
                             </ContextMenu>
                         </Setter.Value>
                     </Setter>
@@ -72,5 +74,10 @@
                 </DataTemplate>
             </TabControl.ItemTemplate>
         </TabControl>
+
+        <!-- New query at the end of the tab row (the main toolbar no longer repeats the menu's commands) -->
+        <Button Style="{StaticResource Btn.Icon.Compact}" c:Ui.Icon="{x:Static c:Icons.Add}" Command="{Binding NewQueryCommand}"
+                ToolTip="{x:Static res:Strings.QueryNewTip}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,2,2,0"
+                Visibility="{Binding Tabs.Count, Converter={x:Static v:ZeroToCollapsedConverter.Instance}}" />
     </Grid>
 </UserControl>

@@ -447,4 +447,13 @@ public static class Strings
     public static string ImportTargetFolderHint => Get(nameof(ImportTargetFolderHint));
     public static string ImportBack => Get(nameof(ImportBack));
     public static string SettingSchemeInfo => Get(nameof(SettingSchemeInfo));
+    public static string ConnectionEditLong => Get(nameof(ConnectionEditLong));
+    public static string ConnectionDeleteLong => Get(nameof(ConnectionDeleteLong));
+    public static string WindowMinimize => Get(nameof(WindowMinimize));
+    public static string WindowMaximize => Get(nameof(WindowMaximize));
+    public static string WindowRestore => Get(nameof(WindowRestore));
+    public static string WindowClose => Get(nameof(WindowClose));
+    public static string FolderTopLevel => Get(nameof(FolderTopLevel));
+    public static string MoveTo => Get(nameof(MoveTo));
+    public static string MoveManyTo => Get(nameof(MoveManyTo));
 }

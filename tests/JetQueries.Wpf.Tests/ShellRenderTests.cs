@@ -88,6 +88,32 @@ public sealed class ShellRenderTests
             var dialog = new ConnectionDialog(editor) { Left = -20000, Top = 0, ShowActivated = false };
             dialog.Show();
 
+            // The result's view and SQL filter sit in the result tab row and act on the shown result.
+            var queryView = Find<QueryDocumentView>(window);
+            Assert.True(((FrameworkElement)queryView.FindName("ResultTools")).IsVisible);
+            var set = (QueryResultSet)query.Tabs[0];
+            ((RadioButton)queryView.FindName("TextMode")).IsChecked = true;
+            Assert.Equal(ResultViewMode.Text, set.ViewMode);
+            set.ViewMode = ResultViewMode.Grid;
+            await Idle();
+            Assert.True(((RadioButton)queryView.FindName("GridMode")).IsChecked);
+            ((System.Windows.Controls.Primitives.ToggleButton)queryView.FindName("SqlFilterToggle")).IsChecked = true;
+            Assert.True(set.IsSqlFilterOpen);
+            set.IsSqlFilterOpen = false;
+
+            // One title bar: the window draws its caption buttons; maximized, the content stays on screen.
+            Assert.NotNull(System.Windows.Shell.WindowChrome.GetWindowChrome(window));
+            ((Button)window.FindName("MaximizeButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Assert.Equal(WindowState.Maximized, window.WindowState);
+            Assert.True(((FrameworkElement)window.FindName("Root")).Margin.Top > 0);
+            ((Button)window.FindName("MaximizeButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Assert.Equal(WindowState.Normal, window.WindowState);
+            Assert.Equal(0, ((FrameworkElement)window.FindName("Root")).Margin.Top);
+            window.Width = 1280;
+            window.Height = 760;
+            window.Left = -20000;
+            await Idle();
+
             // The command palette lists the menu's commands and runs one as the menu would.
             var palette = window.ShowCommandPalette();
             var paletteModel = (CommandPaletteViewModel)palette.DataContext;

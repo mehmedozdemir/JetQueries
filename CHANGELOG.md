@@ -138,6 +138,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
   (mark as SVG path data, colour, description).
 
 ### Changed
+- One title bar: the main window draws its own caption (WindowChrome) with the menu in it; the toolbar's new connection / new query / open icons are gone and a "+" ends the query tab row.
+- Results: the view modes and the SQL filter toggle moved into the result tab row (QueryResultSet.IsSqlFilterOpen); Commit / Rollback are neutral with coloured icons; the empty results area shows the run shortcuts.
+- Explorer: Ctrl+click multi-select for moving connections, a drop caption while dragging; Edit / Delete connection in the context menu, the Connection menu, F2 and Del.
+- Connection editor's Advanced section: values first, switches in one row. Scheme cards preview the editor's keyword and string colours.
 - A query is framed in its connection's environment colour instead of the environment strip and the toolbar's connection name.
 - The connection editor's environment is a row of coloured chips; the query toolbar no longer repeats the status bar; the editor's zoom badge shows only away from 100 %; loading rows in the explorer show a small spinner instead of a progress bar; keyboard focus is visible on custom controls.
 - A result set may hold up to 1,000,000 rows (was 100,000), fetched page by page.

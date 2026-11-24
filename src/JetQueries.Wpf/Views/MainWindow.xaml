@@ -22,7 +22,12 @@
         <CommandBinding Command="{x:Static ApplicationCommands.Find}" Executed="OnCommandPalette" />
     </Window.CommandBindings>
 
-    <Grid>
+    <!-- One title bar: the menu and toolbar row is the window's caption (no second, Windows-drawn bar above it) -->
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="40" ResizeBorderThickness="6" GlassFrameThickness="0,0,0,1" CornerRadius="0" UseAeroCaptionButtons="False" />
+    </WindowChrome.WindowChrome>
+
+    <Grid x:Name="Root">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -45,7 +50,7 @@
                     <TextBlock Text="JetQueries" FontSize="{DynamicResource FontSize.Subtitle}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" />
 
                     <!-- Main menu -->
-                    <Menu x:Name="MainMenu" VerticalAlignment="Center" Margin="0,0,6,0">
+                    <Menu x:Name="MainMenu" VerticalAlignment="Center" Margin="0,0,6,0" WindowChrome.IsHitTestVisibleInChrome="True">
                         <MenuItem Header="{x:Static res:Strings.MenuFile}">
                             <MenuItem Header="{x:Static res:Strings.QueryNew}" c:Ui.Icon="{x:Static c:Icons.Add}" InputGestureText="Ctrl+N" Command="{Binding Documents.NewQueryCommand}" />
                             <MenuItem Header="{x:Static res:Strings.FileOpen}" c:Ui.Icon="{x:Static c:Icons.OpenFile}" InputGestureText="Ctrl+O" Command="{Binding Documents.OpenFileCommand}" />
@@ -56,6 +61,10 @@
                         </MenuItem>
                         <MenuItem Header="{x:Static res:Strings.MenuConnection}">
                             <MenuItem Header="{x:Static res:Strings.ConnectionNewLong}" c:Ui.Icon="{x:Static c:Icons.Plug}" Command="{Binding Connections.NewCommand}" />
+                            <MenuItem Header="{x:Static res:Strings.ConnectionEditLong}" c:Ui.Icon="{x:Static c:Icons.Edit}" InputGestureText="F2" Command="{Binding Connections.EditCommand}" />
+                            <MenuItem Header="{x:Static res:Strings.ConnectionDeleteLong}" c:Ui.Icon="{x:Static c:Icons.Delete}" InputGestureText="Del" Command="{Binding Connections.DeleteCommand}" />
+                            <MenuItem Header="{x:Static res:Strings.FolderNew}" c:Ui.Icon="&#xE8F4;" Command="{Binding Connections.NewFolderCommand}" CommandParameter="{Binding Connections.Selected}" />
+                            <Separator />
                             <MenuItem Header="{x:Static res:Strings.MenuImportConnections}" c:Ui.Icon="&#xE8B5;" Command="{Binding Connections.ImportCommand}" />
                             <Separator />
                             <MenuItem Header="{Binding Connections.ToggleConnectionText}" Command="{Binding Connections.ToggleConnectionCommand}" />
@@ -80,17 +89,11 @@
                             <MenuItem Header="{x:Static res:Strings.MenuSettings}" c:Ui.Icon="{x:Static c:Icons.Settings}" Command="{Binding OpenSettingsCommand}" />
                         </MenuItem>
                     </Menu>
-                    <Border Style="{StaticResource Separator.Vertical}" />
 
-                    <Button ToolTip="{x:Static res:Strings.ConnectionNewLong}" Style="{StaticResource Btn.Icon.Compact}" c:Ui.Icon="{x:Static c:Icons.Plug}"
-                            Command="{Binding Connections.NewCommand}" />
-                    <Button Style="{StaticResource Btn.Icon.Compact}" c:Ui.Icon="{x:Static c:Icons.Add}"
-                            Command="{Binding Documents.NewQueryCommand}" ToolTip="{x:Static res:Strings.QueryNewTip}" />
-                    <Button Style="{StaticResource Btn.Icon.Compact}" c:Ui.Icon="{x:Static c:Icons.OpenFile}"
-                            Command="{Binding Documents.OpenFileCommand}" ToolTip="{x:Static res:Strings.FileOpenTip}" />
                     <!-- Icons only: the menu has the same commands with their names. Run buttons are here when the settings say so;
                          otherwise each query tab has them -->
-                    <StackPanel Orientation="Horizontal" Visibility="{DynamicResource QueryButtons.Toolbar}">
+                    <StackPanel Orientation="Horizontal" Visibility="{DynamicResource QueryButtons.Toolbar}" WindowChrome.IsHitTestVisibleInChrome="True">
+                        <Border Style="{StaticResource Separator.Vertical}" />
                         <Button Style="{StaticResource Btn.Icon.Compact}" c:Ui.Icon="{x:Static c:Icons.Save}"
                                 Command="{Binding Documents.SaveCommand}" ToolTip="{x:Static res:Strings.FileSaveTip}" />
                         <Border Style="{StaticResource Separator.Vertical}" />
@@ -103,9 +106,20 @@
                     </StackPanel>
                 </StackPanel>
 
-                <Button x:Name="ThemeButton" DockPanel.Dock="Right" Style="{StaticResource Btn.Icon.Compact}"
+                <!-- The window's own caption buttons (the menu row is the title bar) -->
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="10,0,0,0" WindowChrome.IsHitTestVisibleInChrome="True">
+                    <Button x:Name="MinimizeButton" Style="{StaticResource Btn.Caption}" c:Ui.Icon="&#xE921;" Click="OnMinimize"
+                            ToolTip="{x:Static res:Strings.WindowMinimize}" />
+                    <Button x:Name="MaximizeButton" Style="{StaticResource Btn.Caption}" c:Ui.Icon="&#xE922;" Click="OnMaximize"
+                            ToolTip="{x:Static res:Strings.WindowMaximize}" />
+                    <Button x:Name="CloseButton" Style="{StaticResource Btn.Caption.Close}" c:Ui.Icon="&#xE8BB;" Click="OnCloseWindow"
+                            ToolTip="{x:Static res:Strings.WindowClose}" />
+                </StackPanel>
+                <Button x:Name="ThemeButton" DockPanel.Dock="Right" Style="{StaticResource Btn.Icon.Compact}" WindowChrome.IsHitTestVisibleInChrome="True"
                         Command="{Binding ToggleThemeCommand}" ToolTip="{x:Static res:Strings.ToggleTheme}" Margin="4,0,0,0" />
-                <Button DockPanel.Dock="Right" Style="{StaticResource Btn.Icon.Compact}" c:Ui.Icon="{x:Static c:Icons.Settings}" Command="{Binding OpenSettingsCommand}" ToolTip="{x:Static res:Strings.SettingsTip}" />
+                <Button DockPanel.Dock="Right" Style="{StaticResource Btn.Icon.Compact}" c:Ui.Icon="{x:Static c:Icons.Settings}" Command="{Binding OpenSettingsCommand}"
+                        ToolTip="{x:Static res:Strings.SettingsTip}" WindowChrome.IsHitTestVisibleInChrome="True" />
+                <!-- Empty caption: drag to move, double-click to maximize -->
                 <Grid />
             </DockPanel>
         </Border>

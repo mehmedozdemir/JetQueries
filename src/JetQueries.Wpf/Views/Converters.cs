@@ -153,6 +153,39 @@ public sealed class IsFolderToVisibilityConverter : IValueConverter
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
 }
 
+/// <summary>True when an enum value equals the parameter; checking sets the value to the parameter (radio buttons).</summary>
+public sealed class EnumEqualsConverter : IValueConverter
+{
+    public static EnumEqualsConverter Instance { get; } = new();
+
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => Equals(value, parameter);
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value is true && parameter is not null ? parameter : Binding.DoNothing;
+}
+
+/// <summary>Visible when the value is a result set (not the Messages tab).</summary>
+public sealed class IsResultSetToVisibilityConverter : IValueConverter
+{
+    public static IsResultSetToVisibilityConverter Instance { get; } = new();
+
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value is QueryResultSet ? Visibility.Visible : Visibility.Collapsed;
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
+}
+
+/// <summary>Visible for a connection node.</summary>
+public sealed class IsConnectionToVisibilityConverter : IValueConverter
+{
+    public static IsConnectionToVisibilityConverter Instance { get; } = new();
+
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value is ConnectionNodeViewModel ? Visibility.Visible : Visibility.Collapsed;
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
+}
+
 /// <summary>Visible for a folder or a connection node (where a new folder can be made).</summary>
 public sealed class IsFolderOrConnectionToVisibilityConverter : IValueConverter
 {
@@ -177,4 +210,15 @@ public sealed class EnvironmentFrameConverter : IValueConverter
     };
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
+}
+
+/// <summary>A run shortcut shown in the empty results area.</summary>
+public sealed record RunHint(string Keys, string Text)
+{
+    public static IReadOnlyList<RunHint> All =>
+    [
+        new("F5", Strings.EditorRun),
+        new("Ctrl+Enter", Strings.EditorRunStatement),
+        new("Ctrl+Shift+Enter", Strings.EditorRunInNewTab),
+    ];
 }

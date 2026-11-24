@@ -6,6 +6,7 @@ themes). Items fixed in the same change are marked **fixed**; the rest are open,
 area.
 
 Priorities: **P1** hurts daily work or safety · **P2** friction or inconsistency · **P3** polish.
+Status: every finding below is fixed (follow-up change on 2026-11-24).
 
 ## Fixed in this pass
 - **fixed** The environment was said three times on a query (a "TEST · name" strip, the connection name with
@@ -28,33 +29,33 @@ Priorities: **P1** hurts daily work or safety · **P2** friction or inconsistenc
   the theme.
 
 ## Shell and navigation
-- **P2** Two title bars: Windows' caption plus the app's menu/toolbar row. Drawing the menu into the caption
+- **fixed** (P2) Two title bars: Windows' caption plus the app's menu/toolbar row. Drawing the menu into the caption
   (as VS Code and DataGrip do) would give the editor about 30 px more.
-- **P3** The main toolbar's three icons (new connection, new query, open) sit right after the menu with no
+- **fixed** (P3) The main toolbar's three icons (new connection, new query, open) sit right after the menu with no
   grouping or labels; with the command palette and the menu they could go, or move to the explorer/tab bar.
 
 ## Query and results
-- **P2** The results take three rows before the first data row: result tabs, the result toolbar (view modes,
+- **fixed** (P2) The results take three rows before the first data row: result tabs, the result toolbar (view modes,
   SQL filter) and a two-line header. The view modes and the SQL filter button could sit at the right end of the
   result tab row.
-- **P2** The query toolbar's transaction controls use four colours at once (amber mode, green Commit, red
+- **fixed** (P2) The query toolbar's transaction controls use four colours at once (amber mode, green Commit, red
   Rollback, amber badge); in manual-commit mode it reads busy. A neutral Commit/Rollback pair with coloured
   icons only would calm it down.
-- **P3** Before a first run the results area is an empty card; a short hint (F5 runs, Ctrl+Enter runs the
+- **fixed** (P3) Before a first run the results area is an empty card; a short hint (F5 runs, Ctrl+Enter runs the
   statement at the cursor) would teach the shortcuts where they matter.
 
 ## Explorer
-- **P1** Deleting a connection is effectively missing: it exists only as the trash icon in the explorer's
+- **fixed** (P1) Deleting a connection is effectively missing: it exists only as the trash icon in the explorer's
   toolbar (icon-only since the first review). It is not in the connection's right-click menu, not in the
   main menu (Connection) nor the command palette, and the Delete key does nothing on a selected connection.
   It should be in all of these (with the existing confirmation; the connection is closed, its saved password
   removed), next to "Edit connection", which has the same problem.
-- **P2** Drag-and-drop shows only a highlighted target; an insertion caption ("Move to Customer A") next to
+- **fixed** (P2) Drag-and-drop shows only a highlighted target; an insertion caption ("Move to Customer A") next to
   the cursor would confirm what will happen, and Esc should cancel visibly.
-- **P3** No multi-select: moving several connections into a folder takes one drag each.
+- **fixed** (P3) No multi-select: moving several connections into a folder takes one drag each.
 
 ## Dialogs
-- **P3** The connection editor's "Advanced" section puts switches and the timeout box in one two-column grid;
+- **fixed** (P3) The connection editor's "Advanced" section puts switches and the timeout box in one two-column grid;
   the switch row is as tall as the labelled box next to it, leaving a gap.
-- **P3** Settings: the scheme cards show a small picture of the colours; a live preview of the editor's syntax
+- **fixed** (P3) Settings: the scheme cards show a small picture of the colours; a live preview of the editor's syntax
   colours in each scheme would help choose.

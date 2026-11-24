@@ -114,7 +114,9 @@ public interface IThemeService
 /// <param name="Surface">The panels' colour.</param>
 /// <param name="Text">The text colour.</param>
 /// <param name="Accent">The accent colour.</param>
-public sealed record ColorScheme(string Key, bool IsDark, string Window, string Surface, string Text, string Accent)
+/// <param name="Keyword">The editor's keyword colour.</param>
+/// <param name="Literal">The editor's string colour.</param>
+public sealed record ColorScheme(string Key, bool IsDark, string Window, string Surface, string Text, string Accent, string Keyword, string Literal)
 {
     /// <summary>The scheme's name in the user's language.</summary>
     public string Name => Strings.Find("Scheme_" + (IsDark ? "Dark" : "Light") + "_" + Key) ?? Key;
@@ -122,14 +124,14 @@ public sealed record ColorScheme(string Key, bool IsDark, string Window, string 
     /// <summary>Every scheme; the first of each theme is its default.</summary>
     public static IReadOnlyList<ColorScheme> All { get; } =
     [
-        new("Midnight", true, "#0D0F13", "#181B22", "#F3F5F9", "#4C8DFF"),
-        new("Graphite", true, "#15171C", "#20242C", "#E7E9EE", "#5B8CFF"),
-        new("Ocean", true, "#0B141D", "#13212D", "#E8F1F8", "#22B8F0"),
-        new("Contrast", true, "#000000", "#121212", "#FFFFFF", "#6AA8FF"),
-        new("Paper", false, "#F3F4F7", "#FFFFFF", "#1C2128", "#2F6FEB"),
-        new("Sky", false, "#EAF1F8", "#FFFFFF", "#0F1B2A", "#0A63D1"),
-        new("Sand", false, "#F3EFE8", "#FFFDF8", "#1F1A14", "#B4531B"),
-        new("Contrast", false, "#FFFFFF", "#F5F5F5", "#000000", "#0047B3"),
+        new("Midnight", true, "#0D0F13", "#181B22", "#F3F5F9", "#4C8DFF", "#6FA8FF", "#7EE2B0"),
+        new("Graphite", true, "#15171C", "#20242C", "#E7E9EE", "#5B8CFF", "#7AA2FF", "#7FD1A8"),
+        new("Ocean", true, "#0B141D", "#13212D", "#E8F1F8", "#22B8F0", "#4CC8F5", "#8BE0B8"),
+        new("Contrast", true, "#000000", "#121212", "#FFFFFF", "#6AA8FF", "#7DB4FF", "#8CF0BE"),
+        new("Paper", false, "#F3F4F7", "#FFFFFF", "#1C2128", "#2F6FEB", "#2F5FD0", "#1F8A5B"),
+        new("Sky", false, "#EAF1F8", "#FFFFFF", "#0F1B2A", "#0A63D1", "#0A5BC4", "#1F8A5B"),
+        new("Sand", false, "#F3EFE8", "#FFFDF8", "#1F1A14", "#B4531B", "#A9451A", "#1F8A5B"),
+        new("Contrast", false, "#FFFFFF", "#F5F5F5", "#000000", "#0047B3", "#0041A8", "#1F8A5B"),
     ];
 }
 

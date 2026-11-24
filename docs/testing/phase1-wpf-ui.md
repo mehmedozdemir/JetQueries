@@ -377,6 +377,25 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
       Grafit, Okyanus, Yüksek kontrast; light: Kağıt (default), Gökyüzü, Kum, Yüksek kontrast. A click applies at
       once (title bar too); Vazgeç puts back the previous scheme; the choice survives a restart.
 
+## Round 2 findings
+- [ ] Right-click a connection: "Bağlantıyı düzenle… (F2)" and "Bağlantıyı sil (Del)"; the same in Bağlantı menu
+      and the command palette. Del on a selected connection asks and deletes it (its saved password too); Del
+      on a folder deletes the folder (contents move up); F2 edits a connection or renames a folder.
+- [ ] One title bar: the menu row is the caption. Drag it to move the window, double-click to maximize; the
+      minimize / maximize (restore when maximized) / close buttons at the right; close turns red on hover.
+      Maximized, nothing is cut off at the screen edges; Windows snap (Win+arrows) works.
+- [ ] The main toolbar has no new connection / new query / open icons; a "+" at the right of the query tab row
+      opens a new query.
+- [ ] Results: "SQL filtresi" and Izgara / Metin / Kayıt are at the right of the result tab row (hidden on
+      Mesajlar); there is no separate result toolbar row.
+- [ ] Manual commit with an open transaction: Commit and Rollback are plain text with a green / red icon.
+- [ ] Before the first run the results area shows F5, Ctrl+Enter and Ctrl+Shift+Enter as keys with what they do.
+- [ ] Explorer: Ctrl+click picks several connections (highlighted); dragging one of them moves all; a plain
+      click forgets the picks. While dragging, a caption beside the cursor says where the drop lands ("Şuraya
+      taşı: Müşteri A", "3 bağlantıyı taşı: en üst düzey"); Esc cancels.
+- [ ] Connection editor → Gelişmiş: the timeout box, then the switches on one row, without gaps.
+- [ ] Settings → Görünüm: each scheme card shows a line of SQL in the scheme's keyword and string colours.
+
 ## Connection editor (compact)
 - [ ] The form is two columns: Name + Environment (with its colour) on top, the type's main settings two to a
       row, user and password side by side, "Save password" and "Read-only" switches, then "Advanced" (folder,

@@ -104,6 +104,7 @@ public partial class ConnectionsView : UserControl
     }
 
     private Point _dragStart;
+    private IReadOnlyList<ExplorerNodeViewModel> _dragged = [];
     private ExplorerNodeViewModel? _dragNode;
     private ExplorerNodeViewModel? _dropTarget;
 
@@ -111,7 +112,29 @@ public partial class ConnectionsView : UserControl
     private void OnTreeMouseDown(object sender, MouseButtonEventArgs e)
     {
         _dragStart = e.GetPosition(Tree);
-        _dragNode = NodeAt(e.OriginalSource as DependencyObject) is { } node and (ConnectionNodeViewModel or FolderNodeViewModel) ? node : null;
+        var node = NodeAt(e.OriginalSource as DependencyObject);
+        _dragNode = node is ConnectionNodeViewModel or FolderNodeViewModel ? node : null;
+        if (DataContext is not ConnectionsViewModel viewModel)
+        {
+            return;
+        }
+
+        // Ctrl+click picks several connections (to drag them into a folder together); a plain click forgets them,
+        // except on one of the picked ones, which starts dragging them all.
+        if (Keyboard.Modifiers == ModifierKeys.Control && node is ConnectionNodeViewModel connection)
+        {
+            if (viewModel.MarkedConnections().Count == 0 && viewModel.Selected is ConnectionNodeViewModel { } current && !ReferenceEquals(current, connection))
+            {
+                current.IsMarked = true;
+            }
+
+            connection.IsMarked = !connection.IsMarked;
+            e.Handled = true;
+        }
+        else if (node is not { IsMarked: true })
+        {
+            viewModel.ClearMarks();
+        }
     }
 
     private void OnTreeMouseMove(object sender, MouseEventArgs e)
@@ -129,8 +152,11 @@ public partial class ConnectionsView : UserControl
 
         var node = _dragNode;
         _dragNode = null;
+        _dragged = node.IsMarked && DataContext is ConnectionsViewModel viewModel ? [.. viewModel.MarkedConnections()] : [node];
         DragDrop.DoDragDrop(Tree, new DataObject(typeof(ExplorerNodeViewModel), node), DragDropEffects.Move);
         SetDropTarget(null);
+        DragCaption.IsOpen = false;
+        _dragged = [];
     }
 
     private void OnTreeDragOver(object sender, DragEventArgs e)
@@ -148,13 +174,26 @@ public partial class ConnectionsView : UserControl
             return;
         }
 
-        var allowed = ConnectionsViewModel.CanMove(dragged, target);
+        var allowed = _dragged.Count > 1
+            ? _dragged.Any(d => ConnectionsViewModel.CanMove(d, target))
+            : ConnectionsViewModel.CanMove(dragged, target);
         e.Effects = allowed ? DragDropEffects.Move : DragDropEffects.None;
+
+        // Beside the cursor: where the drop lands ("Move to Customer A", "Move 3 connections to the top level").
+        DragCaptionText.Text = allowed ? ConnectionsViewModel.DropCaption(Math.Max(1, _dragged.Count), target) : string.Empty;
+        var at = e.GetPosition(Tree);
+        DragCaption.HorizontalOffset = at.X + 18;
+        DragCaption.VerticalOffset = at.Y + 14;
+        DragCaption.IsOpen = allowed;
         SetDropTarget(allowed ? target as FolderNodeViewModel ?? (target is ConnectionNodeViewModel ? FolderAbove(target) : null) : null);
         e.Handled = true;
     }
 
-    private void OnTreeDragLeave(object sender, DragEventArgs e) => SetDropTarget(null);
+    private void OnTreeDragLeave(object sender, DragEventArgs e)
+    {
+        SetDropTarget(null);
+        DragCaption.IsOpen = false;
+    }
 
     private async void OnTreeDrop(object sender, DragEventArgs e)
     {
@@ -165,7 +204,15 @@ public partial class ConnectionsView : UserControl
             if (target is null or ConnectionNodeViewModel or FolderNodeViewModel)
             {
                 e.Handled = true;
-                await viewModel.MoveAsync(dragged, target);
+                DragCaption.IsOpen = false;
+                if (_dragged.Count > 1)
+                {
+                    await viewModel.MoveAsync(_dragged, target);
+                }
+                else
+                {
+                    await viewModel.MoveAsync(dragged, target);
+                }
             }
         }
     }

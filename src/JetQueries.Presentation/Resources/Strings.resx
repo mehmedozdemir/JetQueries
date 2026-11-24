@@ -130,7 +130,7 @@
   <data name="DocumentsEmptyTitle" xml:space="preserve"><value>No open queries</value></data>
   <data name="DocumentsEmptyMessage" xml:space="preserve"><value>Open a new query tab to write and run SQL.</value></data>
   <data name="ResultsEmptyTitle" xml:space="preserve"><value>No results yet</value></data>
-  <data name="ResultsEmptyMessage" xml:space="preserve"><value>Write a query and run it with Ctrl+Enter.</value></data>
+  <data name="ResultsEmptyMessage" xml:space="preserve"><value>Write a query and run it.</value></data>
   <data name="SectionConnection" xml:space="preserve"><value>CONNECTION</value></data>
   <data name="SectionCredential" xml:space="preserve"><value>SIGN-IN</value></data>
   <data name="SectionOrganisation" xml:space="preserve"><value>ORGANISATION AND SAFETY</value></data>
@@ -542,4 +542,13 @@
   <data name="Scheme_Light_Sky" xml:space="preserve"><value>Sky</value></data>
   <data name="Scheme_Light_Sand" xml:space="preserve"><value>Sand</value></data>
   <data name="Scheme_Light_Contrast" xml:space="preserve"><value>High contrast</value></data>
+  <data name="ConnectionEditLong" xml:space="preserve"><value>Edit connection…</value></data>
+  <data name="ConnectionDeleteLong" xml:space="preserve"><value>Delete connection</value></data>
+  <data name="WindowMinimize" xml:space="preserve"><value>Minimize</value></data>
+  <data name="WindowMaximize" xml:space="preserve"><value>Maximize</value></data>
+  <data name="WindowRestore" xml:space="preserve"><value>Restore</value></data>
+  <data name="WindowClose" xml:space="preserve"><value>Close</value></data>
+  <data name="FolderTopLevel" xml:space="preserve"><value>the top level</value></data>
+  <data name="MoveTo" xml:space="preserve"><value>Move to {0}</value></data>
+  <data name="MoveManyTo" xml:space="preserve"><value>Move {0} connections to {1}</value></data>
 </root>
