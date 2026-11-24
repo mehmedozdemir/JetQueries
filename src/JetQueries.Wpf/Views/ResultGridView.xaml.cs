@@ -323,7 +323,6 @@ public partial class ResultGridView : UserControl
         _set = set;
         _hidden.Clear();
         FilterPopup.IsOpen = false;
-        _sqlFilterOpen = false;
         UpdateSqlFilterBar();
         if (set is null)
         {
@@ -401,17 +400,6 @@ public partial class ResultGridView : UserControl
     private ResultViewMode _mode = ResultViewMode.Grid;
     private int _textVersion;
 
-    private void OnModeClick(object sender, RoutedEventArgs e)
-    {
-        if (_set is not null && sender is FrameworkElement { Tag: string tag } && Enum.TryParse<ResultViewMode>(tag, out var mode))
-        {
-            _set.ViewMode = mode;
-        }
-
-        // The toggles show the mode, not their own clicks.
-        ApplyToggles();
-    }
-
     private void OnSetPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(QueryResultSet.ViewMode))
@@ -422,36 +410,32 @@ public partial class ResultGridView : UserControl
         {
             UpdateSqlFilterBar();
         }
-    }
-
-    private bool _sqlFilterOpen;
-
-    /// <summary>Opens or closes the SQL filter bar (it stays while a filter is applied).</summary>
-    private void OnSqlFilterToggle(object sender, RoutedEventArgs e)
-    {
-        _sqlFilterOpen = SqlFilterToggle.IsChecked == true;
-        UpdateSqlFilterBar();
-        if (_sqlFilterOpen)
+        else if (e.PropertyName == nameof(QueryResultSet.IsSqlFilterOpen))
         {
-            Dispatcher.BeginInvoke(() => SqlFilterBox.Focus(), DispatcherPriority.Input);
+            UpdateSqlFilterBar();
+            if (_set?.IsSqlFilterOpen == true)
+            {
+                Dispatcher.BeginInvoke(() => SqlFilterBox.Focus(), DispatcherPriority.Input);
+            }
         }
     }
 
     /// <summary>Whether the SQL filter bar shows, for tests.</summary>
     internal bool SqlFilterShown => SqlFilterBar.Visibility == Visibility.Visible;
 
-    /// <summary>Opens the SQL filter bar, as its toolbar button does.</summary>
+    /// <summary>Opens the SQL filter bar, as the result tab row's button does.</summary>
     internal void OpenSqlFilter()
     {
-        SqlFilterToggle.IsChecked = true;
-        OnSqlFilterToggle(SqlFilterToggle, new RoutedEventArgs());
+        if (_set is not null)
+        {
+            _set.IsSqlFilterOpen = true;
+        }
     }
 
     private void UpdateSqlFilterBar()
     {
-        var shown = _sqlFilterOpen || _set?.IsFiltered == true;
+        var shown = _set is { IsSqlFilterOpen: true } or { IsFiltered: true };
         SqlFilterBar.Visibility = shown ? Visibility.Visible : Visibility.Collapsed;
-        SqlFilterToggle.IsChecked = shown;
     }
 
     /// <summary>Shows the grid, the text or the record view; the record view starts at the grid's current row and the grid comes back on the record's row.</summary>
@@ -467,8 +451,6 @@ public partial class ResultGridView : UserControl
         Grid.Visibility = mode == ResultViewMode.Grid ? Visibility.Visible : Visibility.Collapsed;
         TextView.Visibility = mode == ResultViewMode.Text ? Visibility.Visible : Visibility.Collapsed;
         RecordView.Visibility = mode == ResultViewMode.Record ? Visibility.Visible : Visibility.Collapsed;
-        ApplyToggles();
-
         // The grid's current row is the one place the row is kept: leaving the record view moves it there.
         if (previous == ResultViewMode.Record && mode != ResultViewMode.Record)
         {
@@ -490,14 +472,6 @@ public partial class ResultGridView : UserControl
 
                 break;
         }
-    }
-
-    private void ApplyToggles()
-    {
-        var mode = _set?.ViewMode ?? ResultViewMode.Grid;
-        GridMode.IsChecked = mode == ResultViewMode.Grid;
-        TextMode.IsChecked = mode == ResultViewMode.Text;
-        RecordMode.IsChecked = mode == ResultViewMode.Record;
     }
 
     /// <summary>Builds the text table in the background; only the newest build is shown.</summary>

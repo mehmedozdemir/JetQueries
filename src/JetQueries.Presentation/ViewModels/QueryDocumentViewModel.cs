@@ -135,6 +135,10 @@ public sealed partial class QueryResultSet : ObservableObject, IResultTab
     [ObservableProperty]
     public partial ResultViewMode ViewMode { get; set; }
 
+    /// <summary>The SQL filter bar is open (it shows anyway while a filter is applied).</summary>
+    [ObservableProperty]
+    public partial bool IsSqlFilterOpen { get; set; }
+
     /// <summary>The shown row (in the view's order) the record view shows.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(RecordFields), nameof(RecordPosition))]

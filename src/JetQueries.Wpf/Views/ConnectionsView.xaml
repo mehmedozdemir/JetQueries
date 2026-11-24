@@ -52,6 +52,18 @@
         </Border>
 
         <Grid>
+            <!-- While dragging: where the drop will land, beside the cursor -->
+            <Popup x:Name="DragCaption" PlacementTarget="{Binding ElementName=Tree}" Placement="Relative" AllowsTransparency="True"
+                   IsHitTestVisible="False" StaysOpen="True">
+                <Border Background="{DynamicResource Brush.Card}" BorderBrush="{DynamicResource Brush.Accent}" BorderThickness="1" CornerRadius="6"
+                        Padding="8,4" IsHitTestVisible="False">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE8DE;" Style="{StaticResource Text.Icon}" FontSize="12" Foreground="{DynamicResource Brush.Accent}" Margin="0,0,6,0" />
+                        <TextBlock x:Name="DragCaptionText" FontSize="{DynamicResource FontSize.Small}" />
+                    </StackPanel>
+                </Border>
+            </Popup>
+
             <!-- Empty state -->
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="20"
                         Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}">
@@ -71,6 +83,8 @@
                       PreviewMouseLeftButtonDown="OnTreeMouseDown" PreviewMouseMove="OnTreeMouseMove">
                 <TreeView.InputBindings>
                     <KeyBinding Key="F4" Command="{Binding OpenDetailsCommand}" />
+                    <KeyBinding Key="Delete" Command="{Binding DeleteSelectedCommand}" />
+                    <KeyBinding Key="F2" Command="{Binding EditSelectedCommand}" />
                 </TreeView.InputBindings>
                 <TreeView.ItemContainerStyle>
                     <Style TargetType="TreeViewItem" BasedOn="{StaticResource {x:Type TreeViewItem}}">
@@ -88,10 +102,15 @@
                                     <!-- Folders: a subfolder, rename, delete (what is inside moves up) -->
                                     <MenuItem Header="{x:Static res:Strings.FolderNew}" c:Ui.Icon="&#xE8F4;" Command="{Binding NewFolderCommand}" CommandParameter="{Binding Selected}"
                                               Visibility="{Binding Selected, Converter={x:Static v:IsFolderOrConnectionToVisibilityConverter.Instance}}" />
-                                    <MenuItem Header="{x:Static res:Strings.FolderRename}" c:Ui.Icon="{x:Static c:Icons.Edit}" Command="{Binding RenameFolderCommand}" CommandParameter="{Binding Selected}"
+                                    <MenuItem Header="{x:Static res:Strings.FolderRename}" c:Ui.Icon="{x:Static c:Icons.Edit}" Command="{Binding RenameFolderCommand}" CommandParameter="{Binding Selected}" InputGestureText="F2"
                                               Visibility="{Binding Selected, Converter={x:Static v:IsFolderToVisibilityConverter.Instance}}" />
-                                    <MenuItem Header="{x:Static res:Strings.FolderDelete}" c:Ui.Icon="{x:Static c:Icons.Delete}" Command="{Binding DeleteFolderCommand}" CommandParameter="{Binding Selected}"
+                                    <MenuItem Header="{x:Static res:Strings.FolderDelete}" c:Ui.Icon="{x:Static c:Icons.Delete}" Command="{Binding DeleteFolderCommand}" CommandParameter="{Binding Selected}" InputGestureText="Del"
                                               Visibility="{Binding Selected, Converter={x:Static v:IsFolderToVisibilityConverter.Instance}}" />
+                                    <!-- Connections: edit and delete (F2, Del) -->
+                                    <MenuItem Header="{x:Static res:Strings.ConnectionEditLong}" c:Ui.Icon="{x:Static c:Icons.Edit}" InputGestureText="F2"
+                                              Command="{Binding EditCommand}" Visibility="{Binding Selected, Converter={x:Static v:IsConnectionToVisibilityConverter.Instance}}" />
+                                    <MenuItem Header="{x:Static res:Strings.ConnectionDeleteLong}" c:Ui.Icon="{x:Static c:Icons.Delete}" InputGestureText="Del"
+                                              Command="{Binding DeleteCommand}" Visibility="{Binding Selected, Converter={x:Static v:IsConnectionToVisibilityConverter.Instance}}" />
                                     <Separator Visibility="{Binding Selected, Converter={x:Static v:IsFolderOrConnectionToVisibilityConverter.Instance}}" />
                                     <MenuItem Header="{x:Static res:Strings.QueryNew}" c:Ui.Icon="{x:Static c:Icons.Add}"
                                               Command="{Binding NewQueryCommand}" CommandParameter="{Binding Selected}" />
@@ -137,6 +156,10 @@
                             </Setter.Value>
                         </Setter>
                         <Style.Triggers>
+                            <!-- Picked with Ctrl+click -->
+                            <DataTrigger Binding="{Binding IsMarked}" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource Brush.Selection}" />
+                            </DataTrigger>
                             <!-- Where a dragged connection or folder would land -->
                             <DataTrigger Binding="{Binding IsDropTarget}" Value="True">
                                 <Setter Property="Background" Value="{DynamicResource Brush.AccentSoft}" />

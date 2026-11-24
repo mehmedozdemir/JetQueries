@@ -252,7 +252,8 @@
                                 <TextBlock Text="{x:Static res:Strings.FieldFolder}" Style="{StaticResource Label}" />
                                 <TextBox Text="{Binding Folder, UpdateSourceTrigger=PropertyChanged}" c:Ui.Placeholder="{x:Static res:Strings.FieldFolderHint}" />
                             </StackPanel>
-                            <ItemsControl ItemsSource="{Binding Fields}" Focusable="False">
+                            <!-- Values (timeouts…) two to a row, then the switches in one flowing row: no tall gaps -->
+                            <ItemsControl x:Name="AdvancedValues" ItemsSource="{Binding Fields}" Focusable="False">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <UniformGrid Columns="2" VerticalAlignment="Top" />
@@ -262,7 +263,7 @@
                                     <Style TargetType="ContentPresenter">
                                         <Setter Property="Visibility" Value="Collapsed" />
                                         <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsAdvanced}" Value="True">
+                                            <DataTrigger Binding="{Binding IsAdvancedValue}" Value="True">
                                                 <Setter Property="Visibility" Value="Visible" />
                                             </DataTrigger>
                                         </Style.Triggers>
@@ -271,13 +272,32 @@
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <StackPanel Style="{StaticResource Field}" ToolTip="{Binding Hint}" ToolTipService.IsEnabled="{Binding Hint, Converter={x:Static v:NotNullConverter.Instance}}">
-                                            <TextBlock Text="{Binding Label}" Style="{StaticResource Label}"
-                                                       Visibility="{Binding IsBoolean, Converter={x:Static v:InverseBoolToVisibilityConverter.Instance}}" />
-                                            <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" c:Ui.Placeholder="{Binding Hint}"
-                                                     Visibility="{Binding IsText, Converter={StaticResource BoolToVisibility}}" />
-                                            <CheckBox IsChecked="{Binding BooleanValue}" Content="{Binding Label}" Margin="0,4,0,0"
-                                                      Visibility="{Binding IsBoolean, Converter={StaticResource BoolToVisibility}}" />
+                                            <TextBlock Text="{Binding Label}" Style="{StaticResource Label}" />
+                                            <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" c:Ui.Placeholder="{Binding Hint}" />
                                         </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <ItemsControl x:Name="AdvancedSwitches" ItemsSource="{Binding Fields}" Focusable="False" Margin="1,0,12,4">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemContainerStyle>
+                                    <Style TargetType="ContentPresenter">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsAdvancedSwitch}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ItemsControl.ItemContainerStyle>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding BooleanValue}" Content="{Binding Label}" Margin="0,0,24,8" ToolTip="{Binding Hint}"
+                                                  ToolTipService.IsEnabled="{Binding Hint, Converter={x:Static v:NotNullConverter.Instance}}" />
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>

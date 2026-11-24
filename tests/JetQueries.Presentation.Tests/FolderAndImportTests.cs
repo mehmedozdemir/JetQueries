@@ -132,4 +132,55 @@ public sealed class FolderAndImportTests
         await import.ChooseSourceCommand.ExecuteAsync(import.Sources[2]);
         Assert.Equal("File", asked);
     }
+
+    [Fact]
+    public async Task Delete_and_F2_act_on_the_selected_connection_or_folder()
+    {
+        await using var env = new TestEnvironment();
+        var (connections, _, names) = await SetUpAsync(env);
+
+        // Del on a connection asks, then deletes it.
+        connections.Selected = connections.Roots.OfType<ConnectionNodeViewModel>().Single();
+        await connections.DeleteSelectedCommand.ExecuteAsync(null);
+        Assert.Contains(env.Dialogs.Asked, static a => a.StartsWith("confirm:", StringComparison.Ordinal) && a.Contains("'C'", StringComparison.Ordinal));
+        Assert.DoesNotContain("C", (await FoldersAsync(env)).Keys);
+
+        // F2 on a folder renames it; Del on a folder removes it (its connections move up).
+        connections.Selected = Folder(connections.Roots, "Müşteri/Test");
+        names.Enqueue("Deneme");
+        await connections.EditSelectedCommand.ExecuteAsync(null);
+        Assert.Equal("Müşteri/Deneme", (await FoldersAsync(env))["B"]);
+        connections.Selected = Folder(connections.Roots, "Müşteri/Deneme");
+        await connections.DeleteSelectedCommand.ExecuteAsync(null);
+        Assert.Equal("Müşteri", (await FoldersAsync(env))["B"]);
+
+        // F2 on a connection opens its editor.
+        connections.Selected = Folder(connections.Roots, "Müşteri").Children.OfType<ConnectionNodeViewModel>().First();
+        await connections.EditSelectedCommand.ExecuteAsync(null);
+        Assert.Contains(env.Dialogs.Asked, static a => a.StartsWith("edit:", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task Picked_connections_move_together_and_the_caption_says_where()
+    {
+        await using var env = new TestEnvironment();
+        var (connections, _, names) = await SetUpAsync(env);
+        names.Enqueue("Arşiv");
+        await connections.NewFolderCommand.ExecuteAsync(null);
+        var archive = Folder(connections.Roots, "Arşiv");
+
+        var a = Folder(connections.Roots, "Müşteri").Children.OfType<ConnectionNodeViewModel>().Single();
+        var c = connections.Roots.OfType<ConnectionNodeViewModel>().Single();
+        a.IsMarked = true;
+        c.IsMarked = true;
+        var picked = connections.MarkedConnections();
+        Assert.Equal(2, picked.Count);
+        Assert.Equal("2 bağlantıyı taşı: Arşiv", ConnectionsViewModel.DropCaption(picked.Count, archive));
+        Assert.Equal("Şuraya taşı: en üst düzey", ConnectionsViewModel.DropCaption(1, null));
+
+        await connections.MoveAsync(picked, archive);
+        var folders = await FoldersAsync(env);
+        Assert.Equal(("Arşiv", "Arşiv", "Müşteri/Test"), (folders["A"], folders["C"], folders["B"]));
+        Assert.Empty(connections.MarkedConnections());
+    }
 }

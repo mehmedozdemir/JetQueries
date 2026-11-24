@@ -130,7 +130,7 @@
   <data name="DocumentsEmptyTitle" xml:space="preserve"><value>Açık sorgu yok</value></data>
   <data name="DocumentsEmptyMessage" xml:space="preserve"><value>SQL yazıp çalıştırmak için yeni bir sorgu sekmesi açın.</value></data>
   <data name="ResultsEmptyTitle" xml:space="preserve"><value>Henüz sonuç yok</value></data>
-  <data name="ResultsEmptyMessage" xml:space="preserve"><value>Bir sorgu yazıp Ctrl+Enter ile çalıştırın.</value></data>
+  <data name="ResultsEmptyMessage" xml:space="preserve"><value>Bir sorgu yazıp çalıştırın.</value></data>
   <data name="SectionConnection" xml:space="preserve"><value>BAĞLANTI</value></data>
   <data name="SectionCredential" xml:space="preserve"><value>OTURUM AÇMA</value></data>
   <data name="SectionOrganisation" xml:space="preserve"><value>DÜZEN VE GÜVENLİK</value></data>
@@ -542,4 +542,13 @@
   <data name="Scheme_Light_Sky" xml:space="preserve"><value>Gökyüzü</value></data>
   <data name="Scheme_Light_Sand" xml:space="preserve"><value>Kum</value></data>
   <data name="Scheme_Light_Contrast" xml:space="preserve"><value>Yüksek kontrast</value></data>
+  <data name="ConnectionEditLong" xml:space="preserve"><value>Bağlantıyı düzenle…</value></data>
+  <data name="ConnectionDeleteLong" xml:space="preserve"><value>Bağlantıyı sil</value></data>
+  <data name="WindowMinimize" xml:space="preserve"><value>Simge durumuna küçült</value></data>
+  <data name="WindowMaximize" xml:space="preserve"><value>Ekranı kapla</value></data>
+  <data name="WindowRestore" xml:space="preserve"><value>Önceki boyuta getir</value></data>
+  <data name="WindowClose" xml:space="preserve"><value>Kapat</value></data>
+  <data name="FolderTopLevel" xml:space="preserve"><value>en üst düzey</value></data>
+  <data name="MoveTo" xml:space="preserve"><value>Şuraya taşı: {0}</value></data>
+  <data name="MoveManyTo" xml:space="preserve"><value>{0} bağlantıyı taşı: {1}</value></data>
 </root>

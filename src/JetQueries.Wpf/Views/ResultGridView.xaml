@@ -52,42 +52,6 @@
             </DockPanel>
         </Border>
 
-        <!-- Result toolbar: how to show the rows (grid / text / record) and the server-side SQL filter -->
-        <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,0,1" Padding="6,4">
-            <StackPanel Orientation="Horizontal">
-                <Border Style="{StaticResource Segmented.Frame}">
-                    <StackPanel Orientation="Horizontal">
-                        <RadioButton x:Name="GridMode" Style="{StaticResource SegmentRadio}" Click="OnModeClick" Tag="Grid"
-                                     ToolTip="{x:Static res:Strings.ViewGrid}" AutomationProperties.Name="{x:Static res:Strings.ViewGridShort}">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="{x:Static c:Icons.Table}" Style="{StaticResource Text.Icon}" FontSize="12" Margin="0,0,6,0" />
-                                <TextBlock Text="{x:Static res:Strings.ViewGridShort}" />
-                            </StackPanel>
-                        </RadioButton>
-                        <RadioButton x:Name="TextMode" Style="{StaticResource SegmentRadio}" Click="OnModeClick" Tag="Text"
-                                     ToolTip="{x:Static res:Strings.ViewText}" AutomationProperties.Name="{x:Static res:Strings.ViewTextShort}">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE8D2;" Style="{StaticResource Text.Icon}" FontSize="12" Margin="0,0,6,0" />
-                                <TextBlock Text="{x:Static res:Strings.ViewTextShort}" />
-                            </StackPanel>
-                        </RadioButton>
-                        <RadioButton x:Name="RecordMode" Style="{StaticResource SegmentRadio}" Click="OnModeClick" Tag="Record"
-                                     ToolTip="{x:Static res:Strings.ViewRecord}" AutomationProperties.Name="{x:Static res:Strings.ViewRecordShort}">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE8A1;" Style="{StaticResource Text.Icon}" FontSize="12" Margin="0,0,6,0" />
-                                <TextBlock Text="{x:Static res:Strings.ViewRecordShort}" />
-                            </StackPanel>
-                        </RadioButton>
-                    </StackPanel>
-                </Border>
-                <Border Style="{StaticResource Separator.Vertical}" Height="18" Margin="8,0" />
-                <!-- The SQL filter bar opens on demand; it stays open while a filter is applied -->
-                <ToggleButton x:Name="SqlFilterToggle" Style="{StaticResource Btn.Footer}" c:Ui.Icon="{x:Static c:Icons.Filter}"
-                              Content="{x:Static res:Strings.SqlFilterToggle}" ToolTip="{x:Static res:Strings.SqlFilterToggleTip}"
-                              Click="OnSqlFilterToggle" />
-            </StackPanel>
-        </Border>
-
         <!-- DBeaver's "Enter a SQL expression to filter results": the query runs again on the server with a WHERE -->
         <Border x:Name="SqlFilterBar" DockPanel.Dock="Top" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,0,1" Padding="6,4"
                 IsEnabled="{Binding CanFilter}" ToolTipService.ShowOnDisabled="True" Visibility="Collapsed">

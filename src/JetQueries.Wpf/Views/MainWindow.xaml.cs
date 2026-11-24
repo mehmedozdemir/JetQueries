@@ -13,6 +13,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         DataContext = viewModel;
         SourceInitialized += (_, _) => ThemeManager.ApplyTitleBar(this);
+        StateChanged += OnStateChanged;
 
         // The theme button shows the theme it switches to.
         ThemeManager.ThemeChanged += UpdateThemeIcon;
@@ -92,6 +93,25 @@ public partial class MainWindow : Window
     }
 
     private void OnExit(object sender, RoutedEventArgs e) => Close();
+
+    private void OnMinimize(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
+
+    private void OnMaximize(object sender, RoutedEventArgs e) =>
+        WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+
+    private void OnCloseWindow(object sender, RoutedEventArgs e) => Close();
+
+    // A maximized window without Windows' frame reaches past the screen by the resize border: the content is
+    // kept inside, and the maximize button shows "restore".
+    private void OnStateChanged(object? sender, EventArgs e)
+    {
+        var border = SystemParameters.WindowResizeBorderThickness;
+        Root.Margin = WindowState == WindowState.Maximized
+            ? new Thickness(border.Left + 2, border.Top + 2, border.Right + 2, border.Bottom + 2)
+            : new Thickness(0);
+        UiKit.Controls.Ui.SetIcon(MaximizeButton, WindowState == WindowState.Maximized ? "\uE923" : "\uE922");
+        MaximizeButton.ToolTip = WindowState == WindowState.Maximized ? Strings.WindowRestore : Strings.WindowMaximize;
+    }
 
     private void OnCommandPalette(object sender, System.Windows.Input.ExecutedRoutedEventArgs e) => ShowCommandPalette();
 

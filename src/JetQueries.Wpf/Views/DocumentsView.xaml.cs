@@ -9,13 +9,19 @@ public partial class DocumentsView : UserControl
 {
     public DocumentsView() => InitializeComponent();
 
-    private void OnCopyPath(object sender, RoutedEventArgs e)
+    /// <summary>The tab menu's "Copy path" (a command: a Click handler there was mistyped by the markup compiler).</summary>
+    public static readonly System.Windows.Input.RoutedUICommand CopyPathCommand = new("Copy path", nameof(CopyPathCommand), typeof(DocumentsView));
+
+    private void OnCopyPath(object sender, System.Windows.Input.ExecutedRoutedEventArgs e)
     {
-        if (sender is MenuItem { DataContext: QueryDocumentViewModel { FilePath: { } path } })
+        if (e.Parameter is QueryDocumentViewModel { FilePath: { } path })
         {
             Clipboard.SetText(path);
         }
     }
+
+    private void OnCanCopyPath(object sender, System.Windows.Input.CanExecuteRoutedEventArgs e) =>
+        e.CanExecute = e.Parameter is QueryDocumentViewModel { FilePath: not null };
 
     private void OnTabMouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {

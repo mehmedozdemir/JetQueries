@@ -64,12 +64,23 @@
                 </Button>
                 <StackPanel Orientation="Horizontal" Visibility="{Binding ShowTransactionButtons, Converter={StaticResource BoolToVisibility}}">
                     <!-- Named, not only coloured: commit and rollback must never be mistaken for each other -->
-                    <Button x:Name="CommitButton" Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.Check}"
-                            Content="{x:Static res:Strings.TransactionCommit}" Foreground="{DynamicResource Brush.Success}"
-                            Command="{Binding CommitCommand}" ToolTip="{x:Static res:Strings.TransactionCommitTip}" />
-                    <Button x:Name="RollbackButton" Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="&#xE7A7;"
-                            Content="{x:Static res:Strings.TransactionRollback}" Foreground="{DynamicResource Brush.Danger}"
-                            Command="{Binding RollbackCommand}" ToolTip="{x:Static res:Strings.TransactionRollbackTip}" />
+                    <!-- Neutral text; only the icons carry green and red, so the bar does not shout -->
+                    <Button x:Name="CommitButton" Style="{StaticResource Btn.Toolbar.Compact}"
+                            Command="{Binding CommitCommand}" ToolTip="{x:Static res:Strings.TransactionCommitTip}"
+                            AutomationProperties.Name="{x:Static res:Strings.TransactionCommit}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{x:Static c:Icons.Check}" Style="{StaticResource Text.Icon}" Foreground="{DynamicResource Brush.Success}" Margin="0,0,8,0" />
+                            <TextBlock Text="{x:Static res:Strings.TransactionCommit}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="RollbackButton" Style="{StaticResource Btn.Toolbar.Compact}"
+                            Command="{Binding RollbackCommand}" ToolTip="{x:Static res:Strings.TransactionRollbackTip}"
+                            AutomationProperties.Name="{x:Static res:Strings.TransactionRollback}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE7A7;" Style="{StaticResource Text.Icon}" Foreground="{DynamicResource Brush.Danger}" Margin="0,0,8,0" />
+                            <TextBlock Text="{x:Static res:Strings.TransactionRollback}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
                 <Border Style="{StaticResource Badge}" Margin="6,0,0,0" Background="{DynamicResource Brush.Chip}" ToolTip="{x:Static res:Strings.TransactionOpenTip}"
                         Visibility="{Binding HasOpenTransaction, Converter={StaticResource BoolToVisibility}}">
@@ -138,6 +149,62 @@
                     </Border>
                     <TextBlock Text="{x:Static res:Strings.ResultsEmptyTitle}" Style="{StaticResource Text.Subtitle}" HorizontalAlignment="Center" Margin="0,14,0,6" />
                     <TextBlock Text="{x:Static res:Strings.ResultsEmptyMessage}" Foreground="{DynamicResource Brush.TextSecondary}" HorizontalAlignment="Center" />
+                    <!-- The run shortcuts, where they matter -->
+                    <ItemsControl x:Name="RunHints" HorizontalAlignment="Center" Margin="0,14,0,0" Focusable="False"
+                                  ItemsSource="{x:Static v:RunHint.All}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Margin="10,0">
+                                    <Border Background="{DynamicResource Brush.Chip}" BorderBrush="{DynamicResource Brush.BorderStrong}" BorderThickness="1,1,1,2"
+                                            CornerRadius="5" Padding="6,1" Margin="0,0,7,0">
+                                        <TextBlock Text="{Binding Keys}" FontFamily="{DynamicResource Font.Code}" FontSize="{DynamicResource FontSize.Caption}" />
+                                    </Border>
+                                    <TextBlock Text="{Binding Text}" Style="{StaticResource Text.Caption}" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
+                <!-- The shown result's view (grid / text / record) and its SQL filter, at the right of the tab row -->
+                <StackPanel x:Name="ResultTools" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,5,10,0"
+                            Panel.ZIndex="1" Visibility="{Binding SelectedTab, Converter={x:Static v:IsResultSetToVisibilityConverter.Instance}}">
+                    <ToggleButton x:Name="SqlFilterToggle" Style="{StaticResource Btn.Footer}" c:Ui.Icon="{x:Static c:Icons.Filter}"
+                                  Content="{x:Static res:Strings.SqlFilterToggle}" ToolTip="{x:Static res:Strings.SqlFilterToggleTip}"
+                                  IsChecked="{Binding SelectedTab.IsSqlFilterOpen}" Margin="0,0,8,0" />
+                    <Border Style="{StaticResource Segmented.Frame}">
+                        <StackPanel Orientation="Horizontal">
+                            <RadioButton x:Name="GridMode" Style="{StaticResource SegmentRadio}" ToolTip="{x:Static res:Strings.ViewGrid}"
+                                         AutomationProperties.Name="{x:Static res:Strings.ViewGridShort}"
+                                         IsChecked="{Binding SelectedTab.ViewMode, Converter={x:Static v:EnumEqualsConverter.Instance}, ConverterParameter={x:Static vm:ResultViewMode.Grid}}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{x:Static c:Icons.Table}" Style="{StaticResource Text.Icon}" FontSize="12" Margin="0,0,6,0" />
+                                    <TextBlock Text="{x:Static res:Strings.ViewGridShort}" />
+                                </StackPanel>
+                            </RadioButton>
+                            <RadioButton x:Name="TextMode" Style="{StaticResource SegmentRadio}" ToolTip="{x:Static res:Strings.ViewText}"
+                                         AutomationProperties.Name="{x:Static res:Strings.ViewTextShort}"
+                                         IsChecked="{Binding SelectedTab.ViewMode, Converter={x:Static v:EnumEqualsConverter.Instance}, ConverterParameter={x:Static vm:ResultViewMode.Text}}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE8D2;" Style="{StaticResource Text.Icon}" FontSize="12" Margin="0,0,6,0" />
+                                    <TextBlock Text="{x:Static res:Strings.ViewTextShort}" />
+                                </StackPanel>
+                            </RadioButton>
+                            <RadioButton x:Name="RecordMode" Style="{StaticResource SegmentRadio}" ToolTip="{x:Static res:Strings.ViewRecord}"
+                                         AutomationProperties.Name="{x:Static res:Strings.ViewRecordShort}"
+                                         IsChecked="{Binding SelectedTab.ViewMode, Converter={x:Static v:EnumEqualsConverter.Instance}, ConverterParameter={x:Static vm:ResultViewMode.Record}}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE8A1;" Style="{StaticResource Text.Icon}" FontSize="12" Margin="0,0,6,0" />
+                                    <TextBlock Text="{x:Static res:Strings.ViewRecordShort}" />
+                                </StackPanel>
+                            </RadioButton>
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
 
                 <TabControl ItemsSource="{Binding Tabs}" SelectedItem="{Binding SelectedTab}" Padding="0" Margin="6,0,6,0"

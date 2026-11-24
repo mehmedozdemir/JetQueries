@@ -72,6 +72,12 @@ public partial class SettingFieldViewModel : ObservableObject
     /// </summary>
     public bool IsAdvanced => !IsRequired && Descriptor.Kind is ConnectionSettingKind.Boolean or ConnectionSettingKind.Number;
 
+    /// <summary>An advanced value (a timeout): shown as a labelled box.</summary>
+    public bool IsAdvancedValue => IsAdvanced && !IsBoolean;
+
+    /// <summary>An advanced switch: shown in the row of check boxes.</summary>
+    public bool IsAdvancedSwitch => IsAdvanced && IsBoolean;
+
     /// <summary>Whether the value differs from the descriptor's default (an advanced field like that opens its section).</summary>
     public bool IsChanged => !string.Equals(Value.Trim(), Descriptor.DefaultValue ?? string.Empty, StringComparison.OrdinalIgnoreCase);
 
