@@ -208,6 +208,12 @@ internal static class ExplorerTree
     /// <summary>The first level under a connection: databases, schemas, or the object groups directly.</summary>
     public static async Task<IReadOnlyList<ExplorerNodeViewModel>> LoadRootAsync(ExplorerContext context, bool refresh)
     {
+        // A key-value database has logical databases and keys instead of a catalog.
+        if (context.Session.IsKeyValue && await KeyValueTree.LoadRootAsync(context).ConfigureAwait(true) is { } spaces)
+        {
+            return spaces;
+        }
+
         var nodes = await LoadRootObjectsAsync(context, refresh).ConfigureAwait(true);
         if (context.Favorites is { } favorites)
         {

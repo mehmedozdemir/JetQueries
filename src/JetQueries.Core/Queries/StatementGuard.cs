@@ -37,6 +37,17 @@ public static class StatementGuard
         "ROLLBACK", "DECLARE", "IF", "WHILE", "BEGIN", "END", "PRINT", "USE", "GRANT", "REVOKE", "DENY", "CALL", "RETURN",
     };
 
+    /// <summary>
+    /// Analyzes the text about to be sent through <paramref name="provider"/>: by the provider when its language is
+    /// not SQL (<see cref="IStatementRiskAnalyzer"/>), else as SQL.
+    /// </summary>
+    /// <param name="sql">The text.</param>
+    /// <param name="provider">The provider it goes to.</param>
+    public static StatementRisk Analyze(string sql, IDatabaseProvider? provider) =>
+        provider is IStatementRiskAnalyzer analyzer && analyzer.AnalyzeRisk(sql) is { } risk
+            ? new StatementRisk(risk.WritesData, risk.DestructiveActions)
+            : Analyze(sql);
+
     /// <summary>Analyzes the SQL text that is about to be sent.</summary>
     /// <param name="sql">The text; may hold several statements.</param>
     public static StatementRisk Analyze(string sql)

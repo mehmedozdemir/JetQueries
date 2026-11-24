@@ -355,6 +355,57 @@
   <data name="SyncFolderPlaceholder" xml:space="preserve"><value>örn. C:\Users\siz\OneDrive\JetQueries</value></data>
   <data name="SyncNow" xml:space="preserve"><value>Şimdi eşitle</value></data>
   <data name="SyncBrowseTitle" xml:space="preserve"><value>Ortak klasörü seçin</value></data>
+  <data name="KeysFiltered" xml:space="preserve"><value>{0} desenine uyan anahtarlar</value></data>
+  <data name="KeysMore" xml:space="preserve"><value>İlk {0:N0} anahtar listelendi; diğerleri için bir desenle filtreleyin (user:*).</value></data>
+  <data name="KeyTtl" xml:space="preserve"><value>TTL:</value></data>
+  <data name="KeyNoTtl" xml:space="preserve"><value>yok</value></data>
+  <data name="KeyDays" xml:space="preserve"><value>{0} g {1} sa</value></data>
+  <data name="KeyHours" xml:space="preserve"><value>{0} sa {1} dk</value></data>
+  <data name="KeyMinutes" xml:space="preserve"><value>{0} dk {1} sn</value></data>
+  <data name="KeySeconds" xml:space="preserve"><value>{0} sn</value></data>
+  <data name="KeyCharacters" xml:space="preserve"><value>{0:N0} karakter</value></data>
+  <data name="KeyItems" xml:space="preserve"><value>{0:N0} öğe</value></data>
+  <data name="KeyTruncated" xml:space="preserve"><value>{1:N0} öğenin ilk {0:N0} tanesi gösteriliyor.</value></data>
+  <data name="KeyField" xml:space="preserve"><value>Alan</value></data>
+  <data name="KeyIndex" xml:space="preserve"><value>Sıra</value></data>
+  <data name="KeyMember" xml:space="preserve"><value>Üye</value></data>
+  <data name="KeyFields" xml:space="preserve"><value>Alanlar</value></data>
+  <data name="KeyValueColumn" xml:space="preserve"><value>Değer</value></data>
+  <data name="KeyScore" xml:space="preserve"><value>Skor</value></data>
+  <data name="KeyGone" xml:space="preserve"><value>Anahtar yok (silinmiş ya da süresi dolmuş).</value></data>
+  <data name="KeyRemoveItemTitle" xml:space="preserve"><value>Öğeyi sil</value></data>
+  <data name="KeyRemoveItemProduction" xml:space="preserve"><value>Canlı ortam bağlantısı {2} üzerinde {1} anahtarından "{0}" silinsin mi?</value></data>
+  <data name="KeyRename" xml:space="preserve"><value>Anahtarı yeniden adlandır</value></data>
+  <data name="KeyRenamePrompt" xml:space="preserve"><value>Yeni ad (bu adda bir anahtar varsa yapılmaz):</value></data>
+  <data name="KeySetTtl" xml:space="preserve"><value>Yaşam süresi (TTL)</value></data>
+  <data name="KeySetTtlPrompt" xml:space="preserve"><value>Anahtarın silinmesine kalan saniye; boş bırakılırsa süresiz kalır:</value></data>
+  <data name="KeyBadTtl" xml:space="preserve"><value>Yaşam süresi tam sayı (saniye) olmalı.</value></data>
+  <data name="KeyDeleteTitle" xml:space="preserve"><value>Anahtarı sil</value></data>
+  <data name="KeyDeleteMessage" xml:space="preserve"><value>"{0}" anahtarı silinsin mi? Bu işlem geri alınamaz.</value></data>
+  <data name="KeyDeleteProduction" xml:space="preserve"><value>Canlı ortam bağlantısı {1} üzerindeki "{0}" anahtarı silinsin mi? Bu işlem geri alınamaz.</value></data>
+  <data name="KeyNotJson" xml:space="preserve"><value>Değer JSON değil.</value></data>
+  <data name="KeyBadScore" xml:space="preserve"><value>Skor bir sayı olmalı.</value></data>
+  <data name="KeyNeedsField" xml:space="preserve"><value>Hash öğesi için alan adı gerekli.</value></data>
+  <data name="KeyNotApplied" xml:space="preserve"><value>Yapılmadı: öğe ya da anahtar bu arada değişmiş veya yeni ad kullanılıyor.</value></data>
+  <data name="KeySaved" xml:space="preserve"><value>Kaydedildi.</value></data>
+  <data name="KeyItemAdded" xml:space="preserve"><value>Öğe eklendi.</value></data>
+  <data name="KeyItemRemoved" xml:space="preserve"><value>Öğe silindi.</value></data>
+  <data name="KeyRenamed" xml:space="preserve"><value>Anahtar yeniden adlandırıldı.</value></data>
+  <data name="KeyDeleted" xml:space="preserve"><value>Anahtar silindi.</value></data>
+  <data name="KeyAdd" xml:space="preserve"><value>Yeni olarak ekle</value></data>
+  <data name="KeySaveItem" xml:space="preserve"><value>Öğeyi kaydet</value></data>
+  <data name="KeyRemove" xml:space="preserve"><value>Sil</value></data>
+  <data name="KeySaveText" xml:space="preserve"><value>Kaydet</value></data>
+  <data name="KeyFormatJson" xml:space="preserve"><value>JSON biçimlendir</value></data>
+  <data name="KeyRefresh" xml:space="preserve"><value>Yenile</value></data>
+  <data name="KeyRenameButton" xml:space="preserve"><value>Yeniden adlandır…</value></data>
+  <data name="KeyTtlButton" xml:space="preserve"><value>TTL…</value></data>
+  <data name="KeyDeleteButton" xml:space="preserve"><value>Anahtarı sil</value></data>
+  <data name="KeyFilter" xml:space="preserve"><value>Anahtarları filtrele…</value></data>
+  <data name="KeyFilterPrompt" xml:space="preserve"><value>Bir desen (* herhangi bir metin, ? tek karakter), örn. user:* — boş bırakılırsa tüm anahtarlar:</value></data>
+  <data name="KeyOpen" xml:space="preserve"><value>Aç</value></data>
+  <data name="KeyItemEditor" xml:space="preserve"><value>Seçili öğe</value></data>
+  <data name="KeyReadOnly" xml:space="preserve"><value>Salt okunur bağlantı: anahtar yalnızca görüntülenebilir.</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Tümünü temizle</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Filtreyi kaldır</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} / {1:N0} satır</value></data>

@@ -190,6 +190,9 @@ public sealed class ConnectionSession : IAsyncDisposable
     /// </summary>
     public bool HasMetadataPerDatabase => Connection is IDatabaseContext { Kind: DatabaseContextKind.Database, MetadataSpansDatabases: false };
 
+    /// <summary>A key-value database (Redis): the explorer lists keys, not tables (<see cref="IKeyValueStore"/>).</summary>
+    public bool IsKeyValue => Connection.Metadata is IKeyValueStore;
+
     /// <summary>
     /// The database whose metadata must be read apart from the session's own: <see langword="null"/> when
     /// <paramref name="database"/> is null, is the database the session is connected to, or the provider's
@@ -390,7 +393,7 @@ public sealed class QueryChannel : IAsyncDisposable
         ArgumentNullException.ThrowIfNull(request);
 
         // Checked here, below every user interface, so that no code path can forget it.
-        if (Session.Definition.IsReadOnly && StatementGuard.Analyze(request.Sql).WritesData)
+        if (Session.Definition.IsReadOnly && StatementGuard.Analyze(request.Sql, Session.Provider).WritesData)
         {
             throw new ReadOnlyConnectionException();
         }

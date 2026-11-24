@@ -54,6 +54,21 @@ public sealed class NotNullToVisibilityConverter : IValueConverter
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
 }
 
+/// <summary>Shows a menu item for one kind of explorer node.</summary>
+public sealed class NodeTypeToVisibilityConverter : IValueConverter
+{
+    public static NodeTypeToVisibilityConverter Instance { get; } = new();
+
+    /// <summary>Visible when the node is of the kind named by the parameter: Key or KeySpace.</summary>
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => (parameter as string, value) switch
+    {
+        ("Key", KeyNodeViewModel) or ("KeySpace", KeySpaceNodeViewModel) => Visibility.Visible,
+        _ => Visibility.Collapsed,
+    };
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
+}
+
 /// <summary>The UiKit icon of an explorer node.</summary>
 public sealed class ExplorerIconConverter : IValueConverter
 {
@@ -85,6 +100,9 @@ public sealed class ExplorerIconConverter : IValueConverter
             _ => Icons.Code,
         },
         MessageNodeViewModel { IsError: true } => Icons.Error,
+        KeySpaceNodeViewModel => Icons.Database,
+        KeyFolderNodeViewModel => Folder,
+        KeyNodeViewModel => Icons.Key,
         _ => null,
     };
 

@@ -60,6 +60,8 @@
                       UndefineProperties="RuntimeIdentifier;SelfContained;PublishReadyToRun" />
     <ProjectReference Include="..\Providers\JetQueries.Provider.Sqlite\JetQueries.Provider.Sqlite.csproj" ReferenceOutputAssembly="false" Private="false"
                       UndefineProperties="RuntimeIdentifier;SelfContained;PublishReadyToRun" />
+    <ProjectReference Include="..\Providers\JetQueries.Provider.Redis\JetQueries.Provider.Redis.csproj" ReferenceOutputAssembly="false" Private="false"
+                      UndefineProperties="RuntimeIdentifier;SelfContained;PublishReadyToRun" />
   </ItemGroup>
   <!-- Each extension's whole output folder, minus symbols and XML docs, goes to extensions/<folder>/. -->
   <!-- Providers target net10.0; this application targets net10.0-windows, so their output folder is named explicitly. -->
@@ -83,6 +85,10 @@
       <_sqliteExtensionFile Include="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Sqlite\bin\$(Configuration)\net10.0\**\*" Exclude="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Sqlite\bin\$(Configuration)\net10.0\**\*.pdb;$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Sqlite\bin\$(Configuration)\net10.0\**\*.xml" />
     </ItemGroup>
     <Copy SourceFiles="@(_sqliteExtensionFile)" DestinationFolder="$(_ExtensionsRoot)sqlite\%(RecursiveDir)" SkipUnchangedFiles="true" />
+    <ItemGroup>
+      <_redisExtensionFile Include="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Redis\bin\$(Configuration)\net10.0\**\*" Exclude="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Redis\bin\$(Configuration)\net10.0\**\*.pdb;$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Redis\bin\$(Configuration)\net10.0\**\*.xml" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_redisExtensionFile)" DestinationFolder="$(_ExtensionsRoot)redis\%(RecursiveDir)" SkipUnchangedFiles="true" />
   </Target>
   <Target Name="PublishBuiltInExtensions" AfterTargets="Publish">
     <PropertyGroup>
@@ -104,5 +110,9 @@
       <_sqlitePublishFile Include="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Sqlite\bin\$(Configuration)\net10.0\**\*" Exclude="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Sqlite\bin\$(Configuration)\net10.0\**\*.pdb;$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Sqlite\bin\$(Configuration)\net10.0\**\*.xml" />
     </ItemGroup>
     <Copy SourceFiles="@(_sqlitePublishFile)" DestinationFolder="$(_ExtensionsRoot)sqlite\%(RecursiveDir)" SkipUnchangedFiles="true" />
+    <ItemGroup>
+      <_redisPublishFile Include="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Redis\bin\$(Configuration)\net10.0\**\*" Exclude="$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Redis\bin\$(Configuration)\net10.0\**\*.pdb;$(MSBuildThisFileDirectory)..\Providers\JetQueries.Provider.Redis\bin\$(Configuration)\net10.0\**\*.xml" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_redisPublishFile)" DestinationFolder="$(_ExtensionsRoot)redis\%(RecursiveDir)" SkipUnchangedFiles="true" />
   </Target>
 </Project>

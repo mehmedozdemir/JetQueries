@@ -267,6 +267,13 @@ public partial class ConnectionsView : UserControl
     // Double-click on a connection connects it; on anything else the tree's own expand/collapse applies.
     private void OnTreeDoubleClick(object sender, MouseButtonEventArgs e)
     {
+        if (DataContext is ConnectionsViewModel { Selected: KeyNodeViewModel } keys && NodeAt(e.OriginalSource as DependencyObject) is KeyNodeViewModel)
+        {
+            keys.OpenKeyCommand.Execute(null);
+            e.Handled = true;
+            return;
+        }
+
         if (DataContext is ConnectionsViewModel { Selected: ConnectionNodeViewModel { IsConnected: false } } viewModel &&
             viewModel.ToggleConnectionCommand.CanExecute(null))
         {

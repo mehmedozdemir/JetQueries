@@ -83,9 +83,12 @@ public sealed class DocumentTemplateSelector : DataTemplateSelector
 
     public DataTemplate? Details { get; set; }
 
+    public DataTemplate? Key { get; set; }
+
     public override DataTemplate? SelectTemplate(object item, DependencyObject container) => item switch
     {
         ObjectDetailsViewModel => Details,
+        KeyValueViewModel => Key,
         _ => Query,
     };
 }
@@ -99,6 +102,7 @@ public sealed class DocumentIconConverter : IValueConverter
     {
         ObjectDetailsViewModel { Target.Kind: Sdk.DatabaseObjectKinds.Table or Sdk.DatabaseObjectKinds.View } => UiKit.Controls.Icons.Table,
         ObjectDetailsViewModel => UiKit.Controls.Icons.Info,
+        KeyValueViewModel => UiKit.Controls.Icons.Key,
         _ => UiKit.Controls.Icons.Code,
     };
 

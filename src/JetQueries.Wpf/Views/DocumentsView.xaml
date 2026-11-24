@@ -36,6 +36,11 @@
                             <v:ObjectDetailsView Margin="0,6,0,0" />
                         </DataTemplate>
                     </v:DocumentTemplateSelector.Details>
+                    <v:DocumentTemplateSelector.Key>
+                        <DataTemplate>
+                            <v:KeyValueView Margin="0,6,0,0" />
+                        </DataTemplate>
+                    </v:DocumentTemplateSelector.Key>
                 </v:DocumentTemplateSelector>
             </TabControl.ContentTemplateSelector>
             <TabControl.ItemContainerStyle>
