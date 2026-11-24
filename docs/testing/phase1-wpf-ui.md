@@ -431,8 +431,7 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] Test connection: the result appears in a card above the footer, green on success, red on failure.
 
 ## Known limits
-- SQLite shows no CHECK constraints; Oracle
-  parameter defaults show only whether there is one; PostgreSQL keeps no created/modified dates.
+- Oracle parameter defaults show only whether there is one; PostgreSQL keeps no created/modified dates.
 - Header sorting and column filters apply to the rows received; the SQL filter box above the grid is the one
   that filters on the server.
 - Nothing stays open on the server between pages (checked on SQL Server and PostgreSQL: DDL on the table is not
@@ -534,4 +533,8 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] A table of another database: Details (F4) and DDL show it; "Select rows" opens a query tab whose database
       selector is that database, and the query runs there.
 - [ ] Refresh on a database node reads it again.
+
+## SQLite CHECK constraints
+- [ ] Details of an SQLite table with CHECK constraints: Constraints lists them as CHECK with their name (when given),
+      the column (for a column constraint) and the condition; the selected one's condition shows under the list.
 
