@@ -54,7 +54,7 @@ internal sealed partial class FunctionCatalog
         for (var i = open; i < line.Length; i++)
         {
             var c = line[i];
-            if (c == ''')
+            if (c == '\'')
             {
                 quoted = !quoted;
             }
