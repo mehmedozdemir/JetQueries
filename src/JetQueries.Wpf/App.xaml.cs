@@ -96,6 +96,23 @@ public partial class App : Application
         updates.RestartRequested += (_, _) => window.Close();
         _ = updates.StartupCheckAsync();
 
+        // Sync: at start-up and every few minutes when it is on; what it brings shows in the explorer and the library.
+        var sync = services.GetRequiredService<SyncViewModel>();
+        var main = services.GetRequiredService<ViewModels.MainWindowViewModel>();
+        sync.Applied += (_, result) =>
+        {
+            if (result.ConnectionsChanged)
+            {
+                main.Connections.RefreshCommand.Execute(null);
+            }
+
+            if (result.QueriesChanged && main.SavedQueries is { } library)
+            {
+                _ = library.LoadAsync();
+            }
+        };
+        _ = sync.StartAsync();
+
         // A diagnostic for the idle-memory budget, only with JETQUERIES_MEMORY_REPORT set.
         Services.MemoryReport.ScheduleIfAsked(Dispatcher);
     }

@@ -339,6 +339,22 @@
   <data name="SaveQueryDescription" xml:space="preserve"><value>Description</value></data>
   <data name="SaveQueryKeepConnection" xml:space="preserve"><value>Open on {0}</value></data>
   <data name="SaveQueryButton" xml:space="preserve"><value>Save</value></data>
+  <data name="SyncNever" xml:space="preserve"><value>Not synced yet.</value></data>
+  <data name="SyncRunning" xml:space="preserve"><value>Syncing…</value></data>
+  <data name="SyncUpToDate" xml:space="preserve"><value>Synced at {0}: nothing new.</value></data>
+  <data name="SyncDone" xml:space="preserve"><value>Synced at {0}: {1} received, {2} sent, {3} removed.</value></data>
+  <data name="SyncCanceled" xml:space="preserve"><value>Sync was canceled.</value></data>
+  <data name="SyncNoFolder" xml:space="preserve"><value>The sync folder is not reachable: {0}</value></data>
+  <data name="SyncFailed" xml:space="preserve"><value>Sync failed: {0}</value></data>
+  <data name="SettingsPageSync" xml:space="preserve"><value>Sync</value></data>
+  <data name="SettingsPageSyncInfo" xml:space="preserve"><value>Connections and saved queries on your other computers</value></data>
+  <data name="FieldSyncEnabled" xml:space="preserve"><value>Sync connections and saved queries</value></data>
+  <data name="SettingSyncEnabledInfo" xml:space="preserve"><value>At start-up and every few minutes. Passwords are never synced: each computer keeps its own in Windows Credential Manager and asks once.</value></data>
+  <data name="FieldSyncFolder" xml:space="preserve"><value>Shared folder</value></data>
+  <data name="SettingSyncFolderInfo" xml:space="preserve"><value>A folder your computers share: OneDrive, Dropbox, a network share. JetQueries keeps one file in it (JetQueries.sync.json) with connection definitions (server, database, user name) and saved queries.</value></data>
+  <data name="SyncFolderPlaceholder" xml:space="preserve"><value>e.g. C:\Users\you\OneDrive\JetQueries</value></data>
+  <data name="SyncNow" xml:space="preserve"><value>Sync now</value></data>
+  <data name="SyncBrowseTitle" xml:space="preserve"><value>Choose the shared folder</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Clear all</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Remove filter</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} of {1:N0} rows</value></data>

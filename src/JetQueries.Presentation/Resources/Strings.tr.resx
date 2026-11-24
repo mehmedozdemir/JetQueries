@@ -339,6 +339,22 @@
   <data name="SaveQueryDescription" xml:space="preserve"><value>Açıklama</value></data>
   <data name="SaveQueryKeepConnection" xml:space="preserve"><value>{0} bağlantısında aç</value></data>
   <data name="SaveQueryButton" xml:space="preserve"><value>Kaydet</value></data>
+  <data name="SyncNever" xml:space="preserve"><value>Henüz eşitlenmedi.</value></data>
+  <data name="SyncRunning" xml:space="preserve"><value>Eşitleniyor…</value></data>
+  <data name="SyncUpToDate" xml:space="preserve"><value>{0} itibarıyla eşit: yeni bir şey yok.</value></data>
+  <data name="SyncDone" xml:space="preserve"><value>{0} eşitlendi: {1} alındı, {2} gönderildi, {3} silindi.</value></data>
+  <data name="SyncCanceled" xml:space="preserve"><value>Eşitleme iptal edildi.</value></data>
+  <data name="SyncNoFolder" xml:space="preserve"><value>Eşitleme klasörüne ulaşılamıyor: {0}</value></data>
+  <data name="SyncFailed" xml:space="preserve"><value>Eşitleme başarısız: {0}</value></data>
+  <data name="SettingsPageSync" xml:space="preserve"><value>Eşitleme</value></data>
+  <data name="SettingsPageSyncInfo" xml:space="preserve"><value>Diğer bilgisayarlarınızdaki bağlantılar ve kayıtlı sorgular</value></data>
+  <data name="FieldSyncEnabled" xml:space="preserve"><value>Bağlantıları ve kayıtlı sorguları eşitle</value></data>
+  <data name="SettingSyncEnabledInfo" xml:space="preserve"><value>Açılışta ve birkaç dakikada bir. Parolalar asla eşitlenmez: her bilgisayar kendi parolasını Windows Kimlik Bilgileri Yöneticisi'nde tutar ve bir kez sorar.</value></data>
+  <data name="FieldSyncFolder" xml:space="preserve"><value>Ortak klasör</value></data>
+  <data name="SettingSyncFolderInfo" xml:space="preserve"><value>Bilgisayarlarınızın paylaştığı bir klasör: OneDrive, Dropbox, bir ağ paylaşımı. JetQueries buraya bağlantı tanımlarını (sunucu, veritabanı, kullanıcı adı) ve kayıtlı sorguları içeren tek bir dosya (JetQueries.sync.json) koyar.</value></data>
+  <data name="SyncFolderPlaceholder" xml:space="preserve"><value>örn. C:\Users\siz\OneDrive\JetQueries</value></data>
+  <data name="SyncNow" xml:space="preserve"><value>Şimdi eşitle</value></data>
+  <data name="SyncBrowseTitle" xml:space="preserve"><value>Ortak klasörü seçin</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Tümünü temizle</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Filtreyi kaldır</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} / {1:N0} satır</value></data>

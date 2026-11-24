@@ -42,6 +42,20 @@ public partial class SettingsWindow : Window
         };
     }
 
+    private void OnBrowseSyncFolder(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not SettingsViewModel { Sync: { } sync })
+        {
+            return;
+        }
+
+        var dialog = new Microsoft.Win32.OpenFolderDialog { Title = Strings.SyncBrowseTitle, InitialDirectory = sync.Folder.Trim().Length > 0 ? sync.Folder.Trim() : null };
+        if (dialog.ShowDialog(this) == true)
+        {
+            sync.Folder = dialog.FolderName;
+        }
+    }
+
     /// <summary>Shows one page and scrolls it to its top.</summary>
     private void ShowPage(string key)
     {
@@ -52,6 +66,7 @@ public partial class SettingsWindow : Window
         FormatPage.Visibility = Show(key == "format");
         SnippetsPage.Visibility = Show(key == "snippets");
         UpdatesPage.Visibility = Show(key == "updates");
+        SyncPage.Visibility = Show(key == "sync");
         Pages.ScrollToTop();
 
         static Visibility Show(bool shown) => shown ? Visibility.Visible : Visibility.Collapsed;

@@ -647,3 +647,14 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
       (asking its parameters); "Düzenle…" (F2) renames or moves it; Delete asks, then removes it.
 - [ ] After a restart the library is still there (%AppData%\JetQueries\saved-queries.json) and a restored tab still
       saves back to its query.
+
+## Sync (two computers, or two Windows users)
+- [ ] Settings > Eşitleme: turn it on, choose a folder both computers see (OneDrive or a share), Kaydet. The status says
+      when it synced; the folder has JetQueries.sync.json. Open it: servers, databases, user names, saved queries; no
+      password.
+- [ ] On the second computer, the same folder: its explorer gets the connections and Kayıtlı sorgular gets the queries
+      without a restart. Connecting asks for the password once (if "save password", it is kept there).
+- [ ] Rename a connection on one, delete a saved query on the other; within about 2 minutes (or "Şimdi eşitle") both
+      show the same. Edit on one while deleting on the other: the edited item stays on both.
+- [ ] Disconnect the share / rename the folder: the status says it is not reachable; nothing local is lost; it syncs
+      again when the folder is back.
