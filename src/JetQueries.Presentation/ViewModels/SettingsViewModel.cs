@@ -207,9 +207,10 @@ public partial class SettingsViewModel : ObservableObject
     /// <param name="snippets">The snippets to edit; the page is empty without.</param>
     public SettingsViewModel(
         ISettingsStore store, IJobQueue jobs, IAppearanceService appearance, IThemeService theme, IEnumerable<string> fonts, ISqlLanguageService? previewLanguage = null,
-        ISnippetService? snippets = null)
+        ISnippetService? snippets = null, UpdatesViewModel? updates = null)
     {
         _snippets = snippets;
+        Updates = updates;
         SnippetItems = [.. (snippets?.Current ?? SqlSnippets.Defaults).Select(SnippetItem.From)];
         SelectedSnippet = SnippetItems.FirstOrDefault();
         ArgumentNullException.ThrowIfNull(appearance);
@@ -233,6 +234,7 @@ public partial class SettingsViewModel : ObservableObject
             new("query", Strings.SettingsPageQuery, Strings.SettingsPageQueryInfo),
             new("format", Strings.SettingsPageFormat, Strings.SettingsPageFormatInfo),
             new("snippets", Strings.SettingsPageSnippets, Strings.SettingsPageSnippetsInfo),
+            .. updates is null ? Array.Empty<SettingsSection>() : [new SettingsSection("updates", Strings.SettingsPageUpdates, Strings.SettingsPageUpdatesInfo)],
         ];
         SelectedSection = Sections[0];
         FormatPreview = FormatSample;
@@ -242,6 +244,9 @@ public partial class SettingsViewModel : ObservableObject
         _originalSchemes = (theme.SchemeOf(true), theme.SchemeOf(false));
         SelectedTheme = Themes.First(t => t.Value == _originalDark);
     }
+
+    /// <summary>The updates page (channel, source, start-up check); null when the host has no updater.</summary>
+    public UpdatesViewModel? Updates { get; }
 
     /// <summary>Raised when the screen should close; true when the settings were saved.</summary>
     public event EventHandler<bool>? CloseRequested;
@@ -500,6 +505,12 @@ public partial class SettingsViewModel : ObservableObject
             var section = new SnippetSettings { Snippets = snippets };
             await _jobs.Enqueue("Save snippets", context => _store.SaveAsync(SnippetSettings.Section, section, context.CancellationToken), JobPriority.High).Completion;
         }
+
+        if (Updates is not null)
+        {
+            await Updates.SaveAsync();
+        }
+
         CloseRequested?.Invoke(this, true);
     }
 
@@ -522,6 +533,8 @@ public partial class SettingsViewModel : ObservableObject
             _theme.SetDark(_originalDark);
         }
 
+        // The update settings go back to what is saved.
+        _ = Updates?.LoadAsync();
         CloseRequested?.Invoke(this, false);
     }
 

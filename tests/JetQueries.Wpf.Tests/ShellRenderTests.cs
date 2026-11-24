@@ -209,7 +209,8 @@ public sealed class ShellRenderTests
             var settings = new SettingsViewModel(
                 new Core.Settings.JsonSettingsStore(new Core.Settings.SettingsStoreOptions(), Microsoft.Extensions.Logging.Abstractions.NullLogger<Core.Settings.JsonSettingsStore>.Instance),
                 env.Jobs, appearance, new TestTheme(), ["Segoe UI", "Segoe UI Variable Text, Segoe UI", "Cascadia Mono, Consolas", "Consolas", "Arial"],
-                new JetQueries.Provider.SqlServer.SqlServerProvider().LanguageService);
+                new JetQueries.Provider.SqlServer.SqlServerProvider().LanguageService,
+                updates: new UpdatesViewModel(new TestUpdates(), env.Jobs) { Source = "https://example.invalid/jetqueries/releases" });
             var settingsWindow = new SettingsWindow(settings) { Left = -20000, Top = 0, ShowActivated = false };
             settingsWindow.Show();
             settings.FormatContentOnNewLine = false;
@@ -266,7 +267,7 @@ public sealed class ShellRenderTests
             return results;
         });
 
-        Assert.Equal(32, colours.Count); // 24 renderings and the 8 colour schemes
+        Assert.Equal(34, colours.Count); // 26 renderings and the 8 colour schemes
         Assert.All(colours, static pair => Assert.True(pair.Value > 12, $"{pair.Key} rendered only {pair.Value} distinct colours."));
     }
 
@@ -326,6 +327,21 @@ public sealed class ShellRenderTests
         var pixels = new uint[bitmap.PixelWidth * bitmap.PixelHeight];
         bitmap.CopyPixels(pixels, bitmap.PixelWidth * 4, 0);
         return pixels.Where(static (_, i) => i % 3 == 0).Distinct().Count();
+    }
+
+    private sealed class TestUpdates : IUpdateService
+    {
+        public bool IsInstalled => true;
+
+        public string CurrentVersion => "0.1.0-alpha.56";
+
+        public Task<AvailableUpdate?> CheckAsync(UpdateSettings settings, CancellationToken cancellationToken) => Task.FromResult<AvailableUpdate?>(null);
+
+        public Task DownloadAsync(UpdateSettings settings, AvailableUpdate update, IProgress<int> progress, CancellationToken cancellationToken) => Task.CompletedTask;
+
+        public void ApplyOnExit(UpdateSettings settings, AvailableUpdate update)
+        {
+        }
     }
 
     private sealed class TestTheme : IThemeService

@@ -65,6 +65,8 @@ internal static class Program
         builder.Services.AddSingleton<IAppearanceService, AppearanceService>();
         builder.Services.AddSingleton<ISnippetService, SnippetService>();
         builder.Services.AddSingleton<ISettingsDialog, SettingsDialog>();
+        builder.Services.AddSingleton<IUpdateService, VelopackUpdateService>();
+        builder.Services.AddSingleton<UpdatesViewModel>();
         builder.Services.AddSingleton<MainWindowViewModel>();
         builder.Services.AddSingleton<MainWindow>();
         builder.Services.AddHostedService<ExtensionStartupService>();

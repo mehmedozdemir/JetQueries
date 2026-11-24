@@ -192,6 +192,29 @@
   <data name="SettingDensityInfo" xml:space="preserve"><value>Compact: lower toolbars, rows, tabs and inputs, as in JetBrains IDEs; text keeps its size.</value></data>
   <data name="DensityNormal" xml:space="preserve"><value>Normal</value></data>
   <data name="DensityCompact" xml:space="preserve"><value>Compact</value></data>
+  <data name="UpdateIdle" xml:space="preserve"><value>Not checked yet.</value></data>
+  <data name="UpdateNotInstalled" xml:space="preserve"><value>Updates work in the installed application (JetQueries Setup); this copy runs from a folder.</value></data>
+  <data name="UpdateNoSource" xml:space="preserve"><value>No update source is set (Settings &gt; Updates).</value></data>
+  <data name="UpdateChecking" xml:space="preserve"><value>Looking for updates…</value></data>
+  <data name="UpdateUpToDate" xml:space="preserve"><value>{0} is the latest version.</value></data>
+  <data name="UpdateAvailable" xml:space="preserve"><value>Version {0} is available.</value></data>
+  <data name="UpdateDownloading" xml:space="preserve"><value>Downloading {0}…</value></data>
+  <data name="UpdateReady" xml:space="preserve"><value>{0} is downloaded: restart to use it.</value></data>
+  <data name="UpdateFailed" xml:space="preserve"><value>Update failed: {0}</value></data>
+  <data name="UpdateDownload" xml:space="preserve"><value>Download</value></data>
+  <data name="UpdateRestart" xml:space="preserve"><value>Restart and update</value></data>
+  <data name="UpdateCheckNow" xml:space="preserve"><value>Check now</value></data>
+  <data name="MenuCheckUpdates" xml:space="preserve"><value>Check for updates</value></data>
+  <data name="SettingsPageUpdates" xml:space="preserve"><value>Updates</value></data>
+  <data name="SettingsPageUpdatesInfo" xml:space="preserve"><value>Channel, source, start-up check</value></data>
+  <data name="FieldUpdateChannel" xml:space="preserve"><value>Channel</value></data>
+  <data name="SettingUpdateChannelInfo" xml:space="preserve"><value>stable: releases; beta: previews; nightly: every build.</value></data>
+  <data name="FieldUpdateSource" xml:space="preserve"><value>Update source</value></data>
+  <data name="SettingUpdateSourceInfo" xml:space="preserve"><value>A web address or a folder with the releases (releases.&lt;channel&gt;.json).</value></data>
+  <data name="FieldUpdateOnStartup" xml:space="preserve"><value>Check at start-up</value></data>
+  <data name="SettingUpdateOnStartupInfo" xml:space="preserve"><value>Looks for a newer version in the background; the status bar says when there is one.</value></data>
+  <data name="FieldCurrentVersion" xml:space="preserve"><value>Running version</value></data>
+  <data name="UpdateSourcePlaceholder" xml:space="preserve"><value>https://… or the releases folder of pack.ps1 (artifacts/releases/win-x64)</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Clear all</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Remove filter</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} of {1:N0} rows</value></data>
