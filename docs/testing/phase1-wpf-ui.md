@@ -441,7 +441,7 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
   of any SELECT. "Next page" and "Fetch all" run the query again: each costs a new execution, and the rows shown
   are those of that execution (they may differ from the first page if the data changed meanwhile).
 - SQL Server: a query starting with WITH is not paged (SQL Server cannot count it) and is read to its end.
-- Filters on several columns are combined with AND; there is no OR (the SQL filter box takes any condition).
+- Column filters are combined all with AND or all with OR (no mixed groups; the SQL filter box takes any condition).
 - Multiple independent cursors (Ctrl+click carets) are not supported by the editor component (AvalonEdit); box
   selection (Alt+drag) covers editing several lines at once.
 - Connection strings: TNS aliases (tnsnames.ora), Azure AD authentication other than integrated, Oracle wallets
@@ -456,7 +456,7 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - Formatting needs a connection (the formatter follows its dialect). A statement it does not recognise (DDL,
   EXEC, SET…) is left as written. The settings previews use the SQL Server language when it is loaded.
 - Ctrl+/ may need another key on keyboards where "/" is typed with Shift (Turkish Q: use the menu, or numpad /).
-- SQL filter: no completion in the box yet. SQL Server cannot wrap a query starting with WITH, nor one whose
+- SQL filter: SQL Server cannot wrap a query starting with WITH, nor one whose
   columns repeat a name (`SELECT a.id, b.id …`): the server's error is shown. A query ordered by an expression
   is wrapped with its ORDER BY inside (SQL Server: `OFFSET 0 ROWS`), where the order is kept in practice but not
   guaranteed by the SQL standard.
@@ -507,3 +507,16 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] Wallet (Autonomous Database / TCPS): point both folders at the unzipped wallet and use a *_high alias.
 - [ ] Paste "User Id=hr;Password=…;Data Source=PRODDB;Tns_Admin=C:\oracle\network\admin" in the connection string
       tab: the form switches to TNS adı with PRODDB and the folder filled in.
+
+## Result filters: SQL box completion and OR
+- [ ] Open the SQL filter box (funnel in the result tab row): it is a one-line SQL box with the code font and
+      colouring; empty, it shows "Enter a SQL expression to filter results".
+- [ ] Ctrl+Space (or typing a letter) at the start lists the result's columns with their types; after a column and
+      a space the list offers AND, OR, NOT, LIKE, IN, IS NULL, IS NOT NULL, BETWEEN; after AND / OR the columns again.
+      A column whose name has spaces is inserted quoted. Nothing is offered inside a 'string'.
+- [ ] Enter applies the filter (with the list open, Enter picks the item instead); Esc puts back the applied
+      filter. Pasting text with line breaks puts it on one line.
+- [ ] Add two column filters (header funnel or "Bu değere göre filtrele"): "Hepsi (VE)" appears before the chips;
+      clicking it turns to "Herhangi biri (VEYA)" and the rows matching either filter show; the row count follows.
+      With one filter the switch is hidden.
+

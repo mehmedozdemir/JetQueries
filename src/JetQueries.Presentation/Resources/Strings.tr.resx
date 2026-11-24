@@ -166,6 +166,9 @@
   <data name="FilterApply" xml:space="preserve"><value>Uygula</value></data>
   <data name="FilterClear" xml:space="preserve"><value>Temizle</value></data>
   <data name="FilterValueRequired" xml:space="preserve"><value>Bir değer girin.</value></data>
+  <data name="FilterMatchAll" xml:space="preserve"><value>Hepsi (VE)</value></data>
+  <data name="FilterMatchAny" xml:space="preserve"><value>Herhangi biri (VEYA)</value></data>
+  <data name="FilterMatchTip" xml:space="preserve"><value>Tüm filtrelere ya da herhangi birine uyan satırları göster</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Tümünü temizle</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Filtreyi kaldır</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} / {1:N0} satır</value></data>

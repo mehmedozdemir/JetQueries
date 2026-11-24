@@ -1250,6 +1250,75 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
     private string? SqlOf(QueryResultSet set, ConnectionSession session) =>
         set.PagedSql is { } sql ? Filtered(session, sql, set.AppliedFilter) : LastSql;
 
+    private static readonly string[] FilterKeywords = ["AND", "OR", "NOT", "LIKE", "IN", "IS NULL", "IS NOT NULL", "BETWEEN"];
+
+    /// <summary>
+    /// Completion in a result's SQL filter box: the result's columns (with their types, quoted by the provider
+    /// when the name needs it) and the words of a condition. After AND, OR, NOT, "(" or at the start only the
+    /// columns are offered; after a column or a value, the words.
+    /// </summary>
+    /// <param name="set">The result the box filters.</param>
+    /// <param name="text">The box's text.</param>
+    /// <param name="offset">The caret.</param>
+    public IReadOnlyList<CompletionItem> FilterCompletions(QueryResultSet set, string text, int offset)
+    {
+        ArgumentNullException.ThrowIfNull(set);
+        ArgumentNullException.ThrowIfNull(text);
+        offset = Math.Clamp(offset, 0, text.Length);
+        var start = offset;
+        while (start > 0 && (char.IsLetterOrDigit(text[start - 1]) || text[start - 1] is '_' or '$' or '#'))
+        {
+            start--;
+        }
+
+        // Inside a string literal nothing is offered.
+        if (text.AsSpan(0, start).Count('\'') % 2 == 1)
+        {
+            return [];
+        }
+
+        var prefix = text[start..offset];
+        var span = new TextSpan(start, offset - start);
+        var before = text[..start].TrimEnd();
+        var lastWord = before.Length == 0 ? string.Empty : before[(before.LastIndexOfAny([' ', '(', '\t']) + 1)..];
+        var wantsColumn = before.Length == 0 || before.EndsWith('(') || lastWord.ToUpperInvariant() is "AND" or "OR" or "NOT";
+        var provider = SelectedSession?.Session.Provider;
+
+        var items = new List<CompletionItem>();
+        if (wantsColumn || prefix.Length > 0)
+        {
+            foreach (var column in set.Columns.DistinctBy(static c => c.Header, StringComparer.Ordinal))
+            {
+                if (column.Header.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    var plain = IsPlainName(column.Header);
+                    items.Add(new CompletionItem(column.Header, CompletionItemKind.Column, span)
+                    {
+                        InsertText = plain || provider is null ? column.Header : provider.QuoteIdentifier(column.Header),
+                        Detail = column.DataType.Length > 0 ? column.DataType : null,
+                    });
+                }
+            }
+        }
+
+        if (!wantsColumn || prefix.Length > 0)
+        {
+            foreach (var keyword in FilterKeywords)
+            {
+                if (keyword.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) && !(before.Length == 0 && keyword is "AND" or "OR"))
+                {
+                    items.Add(new CompletionItem(keyword, CompletionItemKind.Keyword, span) { InsertText = keyword });
+                }
+            }
+        }
+
+        return items;
+
+        static bool IsPlainName(string name) =>
+            name.Length > 0 && (char.IsAsciiLetter(name[0]) || name[0] == '_') && name.All(static c => char.IsAsciiLetterOrDigit(c) || c == '_')
+            && !FilterKeywords.Contains(name, StringComparer.OrdinalIgnoreCase);
+    }
+
     private bool CanApplyFilter(QueryResultSet? set) =>
         !IsRunning && set is { CanFilter: true, PagedSql: not null } && SelectedSession is not null;
 
