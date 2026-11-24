@@ -19,6 +19,22 @@ public partial class PromptDialog : Window
         }
     }
 
+    /// <summary>A question that takes a line of text (a folder name), starting with <paramref name="initial"/>.</summary>
+    public PromptDialog(string title, string message, string initial)
+        : this(title, message, askForSecret: false)
+    {
+        TextAnswer.Visibility = Visibility.Visible;
+        TextAnswer.Text = initial;
+        Loaded += (_, _) =>
+        {
+            TextAnswer.Focus();
+            TextAnswer.SelectAll();
+        };
+    }
+
+    /// <summary>The entered text after OK.</summary>
+    public string Text => TextAnswer.Text;
+
     /// <summary>The entered password after OK; never stored by the dialog itself.</summary>
     public string Secret { get; private set; } = string.Empty;
 

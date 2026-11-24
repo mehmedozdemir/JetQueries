@@ -124,6 +124,27 @@ public sealed class ShellRenderTests
                 results[$"dialog-{suffix}"] = Capture(dialog, Path.Combine(directory, $"wpf-dialog-{suffix}.png"));
             }
 
+            // Every colour scheme of both themes: its tokens reach the window (and a rendering of each).
+            foreach (var (theme, schemes) in new[] { (AppTheme.Dark, ThemeManager.DarkSchemes), (AppTheme.Light, ThemeManager.LightSchemes) })
+            {
+                ThemeManager.Apply(theme, save: false);
+                foreach (var scheme in schemes)
+                {
+                    ThemeManager.SetScheme(theme, scheme, save: false);
+                    await Idle();
+                    results[$"scheme-{theme}-{scheme}"] = Capture(window, Path.Combine(directory, $"wpf-scheme-{theme}-{scheme}.png".ToLowerInvariant()));
+                }
+
+                ThemeManager.SetScheme(theme, schemes[0], save: false);
+            }
+
+            ThemeManager.Apply(AppTheme.Dark, save: false);
+            ThemeManager.SetScheme(AppTheme.Dark, "Ocean", save: false);
+            Assert.Equal(System.Windows.Media.Color.FromRgb(0x0B, 0x14, 0x1D), (System.Windows.Media.Color)Application.Current.FindResource("Color.Window"));
+            ThemeManager.SetScheme(AppTheme.Dark, "Graphite", save: false);
+            Assert.Equal(System.Windows.Media.Color.FromRgb(0x15, 0x17, 0x1C), (System.Windows.Media.Color)Application.Current.FindResource("Color.Window"));
+            ThemeManager.SetScheme(AppTheme.Dark, "Midnight", save: false);
+
             dialog.Close();
             historyWindow.Close();
 
@@ -202,7 +223,7 @@ public sealed class ShellRenderTests
             return results;
         });
 
-        Assert.Equal(22, colours.Count);
+        Assert.Equal(30, colours.Count); // 22 renderings and the 8 colour schemes
         Assert.All(colours, static pair => Assert.True(pair.Value > 12, $"{pair.Key} rendered only {pair.Value} distinct colours."));
     }
 

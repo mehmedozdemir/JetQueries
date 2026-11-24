@@ -3,52 +3,105 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:c="clr-namespace:UiKit.Controls;assembly=UiKit.Wpf"
         xmlns:res="clr-namespace:JetQueries.Presentation.Resources;assembly=JetQueries.Presentation"
-        Title="{x:Static res:Strings.ImportTitle}" Width="820" Height="560" MinWidth="620" MinHeight="380"
+        Title="{x:Static res:Strings.ImportTitle}" Width="820" Height="580" MinWidth="620" MinHeight="420"
         ShowInTaskbar="False" WindowStartupLocation="CenterOwner"
         Style="{StaticResource Window.App}">
-    <DockPanel Margin="20,16,20,14">
-        <!-- What was read, and where more can come from -->
-        <DockPanel DockPanel.Dock="Top">
-            <Button DockPanel.Dock="Right" c:Ui.Icon="{x:Static c:Icons.OpenFile}" Content="{x:Static res:Strings.ImportChooseFile}"
-                    Click="OnChooseFile" VerticalAlignment="Top" />
-            <StackPanel Margin="0,0,16,0">
-                <TextBlock Text="{x:Static res:Strings.ImportInfo}" Foreground="{DynamicResource Brush.TextSecondary}" TextWrapping="Wrap" />
-                <TextBlock Text="{Binding SourcesText}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="0,6,0,0" />
+    <Grid>
+        <!-- ============ Step 1: where from ============ -->
+        <DockPanel Margin="22,18,22,16" Visibility="{Binding IsChoosingSource, Converter={StaticResource BoolToVisibility}}">
+            <StackPanel DockPanel.Dock="Top" Margin="0,0,0,16">
+                <TextBlock Text="{x:Static res:Strings.ImportChooseSourceTitle}" Style="{StaticResource Text.Subtitle}" />
+                <TextBlock Text="{x:Static res:Strings.ImportChooseSourceInfo}" Foreground="{DynamicResource Brush.TextSecondary}" TextWrapping="Wrap" Margin="0,3,0,0" />
             </StackPanel>
-        </DockPanel>
-
-        <DockPanel DockPanel.Dock="Bottom" Margin="0,12,0,0">
-            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
-                <Button Style="{StaticResource Btn.Link}" Content="{x:Static res:Strings.ImportSelectAll}" Command="{Binding SelectAllCommand}" />
-                <Button Style="{StaticResource Btn.Link}" Content="{x:Static res:Strings.ImportSelectNone}" Command="{Binding SelectNoneCommand}" Margin="12,0,0,0" />
+            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+                <Button Content="{x:Static res:Strings.ButtonCancel}" Command="{Binding CancelCommand}" IsCancel="True" MinWidth="92" />
             </StackPanel>
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Content="{x:Static res:Strings.ButtonCancel}" Command="{Binding CancelCommand}" IsCancel="True" MinWidth="92" Margin="0,0,8,0" />
-                <Button Style="{StaticResource Btn.Primary}" Content="{x:Static res:Strings.ImportButton}" Command="{Binding ImportCommand}" MinWidth="92" />
-            </StackPanel>
-        </DockPanel>
-
-        <Border Style="{StaticResource Card.Surface}" Margin="0,12,0,0">
-            <ListBox ItemsSource="{Binding Items}" Padding="4" ItemContainerStyle="{StaticResource ListBoxItem.Plain}">
-                <ListBox.ItemTemplate>
+            <ItemsControl x:Name="SourceList" ItemsSource="{Binding Sources}" Focusable="False" VerticalAlignment="Top">
+                <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <DockPanel Margin="2,2">
-                            <CheckBox DockPanel.Dock="Left" IsChecked="{Binding IsSelected}" IsEnabled="{Binding CanImport}" VerticalAlignment="Center" Margin="0,0,10,0" />
-                            <Border DockPanel.Dock="Right" Style="{StaticResource Badge}" Margin="8,0,0,0" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding Candidate.Source}" FontSize="{DynamicResource FontSize.Small}" />
-                            </Border>
-                            <TextBlock DockPanel.Dock="Right" Text="{Binding Note}" Style="{StaticResource Text.Caption}" VerticalAlignment="Center" Margin="8,0,0,0" />
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{Binding Candidate.Name}" FontWeight="SemiBold" />
-                                    <TextBlock Text="{Binding Candidate.ProviderId}" Style="{StaticResource Text.Caption}" Margin="8,1,0,0" />
+                        <Button Style="{StaticResource TypeCard}" Margin="0,0,0,10" AutomationProperties.Name="{Binding Title}"
+                                Command="{Binding DataContext.ChooseSourceCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                CommandParameter="{Binding}">
+                            <DockPanel>
+                                <Border DockPanel.Dock="Left" Width="40" Height="40" CornerRadius="10" Background="{DynamicResource Brush.AccentSoft}" Margin="0,0,14,0">
+                                    <TextBlock Text="{Binding Icon}" Style="{StaticResource Text.Icon}" FontSize="18" Foreground="{DynamicResource Brush.Accent}" />
+                                </Border>
+                                <TextBlock x:Name="Found" DockPanel.Dock="Right" Text="{Binding FoundText}" Style="{StaticResource Text.Caption}" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource Brush.Accent}" Margin="12,0,0,0" />
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding Description}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="0,2,0,0" />
                                 </StackPanel>
-                                <TextBlock Text="{Binding Candidate.Details}" Style="{StaticResource Text.Caption}" TextTrimming="CharacterEllipsis" />
-                            </StackPanel>
-                        </DockPanel>
+                            </DockPanel>
+                        </Button>
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding WasFound}" Value="True">
+                                <Setter TargetName="Found" Property="Foreground" Value="{DynamicResource Brush.Success}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsAvailable}" Value="False">
+                                <Setter TargetName="Found" Property="Foreground" Value="{DynamicResource Brush.TextMuted}" />
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
                     </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-        </Border>
-    </DockPanel>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </DockPanel>
+
+        <!-- ============ Step 2: which connections, and how ============ -->
+        <DockPanel Margin="20,14,20,14" Visibility="{Binding IsChoosingConnections, Converter={StaticResource BoolToVisibility}}">
+            <DockPanel DockPanel.Dock="Top">
+                <Button DockPanel.Dock="Right" c:Ui.Icon="{x:Static c:Icons.OpenFile}" Content="{x:Static res:Strings.ImportChooseFile}"
+                        Command="{Binding ChooseFileCommand}" VerticalAlignment="Top" />
+                <Button DockPanel.Dock="Left" Style="{StaticResource Btn.Link}" c:Ui.Icon="&#xE72B;" Content="{x:Static res:Strings.ImportBack}"
+                        Command="{Binding BackCommand}" VerticalAlignment="Top" Margin="0,0,12,0" />
+                <StackPanel Margin="0,0,16,0">
+                    <TextBlock Text="{Binding SelectedSource.Title}" FontWeight="SemiBold" FontSize="{DynamicResource FontSize.Subtitle}" />
+                    <TextBlock Text="{Binding SourcesText}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="0,4,0,0" />
+                </StackPanel>
+            </DockPanel>
+
+            <DockPanel DockPanel.Dock="Bottom" Margin="0,12,0,0">
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Style="{StaticResource Btn.Link}" Content="{x:Static res:Strings.ImportSelectAll}" Command="{Binding SelectAllCommand}" />
+                    <Button Style="{StaticResource Btn.Link}" Content="{x:Static res:Strings.ImportSelectNone}" Command="{Binding SelectNoneCommand}" Margin="12,0,0,0" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="{x:Static res:Strings.ButtonCancel}" Command="{Binding CancelCommand}" IsCancel="True" MinWidth="92" Margin="0,0,8,0" />
+                    <Button Style="{StaticResource Btn.Primary}" Content="{x:Static res:Strings.ImportButton}" Command="{Binding ImportCommand}" MinWidth="92" />
+                </StackPanel>
+            </DockPanel>
+
+            <!-- Options: where the connections go -->
+            <Border DockPanel.Dock="Bottom" Margin="0,10,0,0" Padding="12,8" CornerRadius="{StaticResource Radius.Control}" Background="{DynamicResource Brush.SurfaceAlt}">
+                <DockPanel>
+                    <CheckBox x:Name="KeepFolders" DockPanel.Dock="Left" Content="{x:Static res:Strings.ImportKeepFolders}" IsChecked="{Binding KeepFolders}"
+                              VerticalAlignment="Center" Margin="0,0,24,0" />
+                    <TextBlock DockPanel.Dock="Left" Text="{x:Static res:Strings.ImportTargetFolder}" Foreground="{DynamicResource Brush.TextSecondary}"
+                               VerticalAlignment="Center" Margin="0,0,10,0" />
+                    <TextBox x:Name="TargetFolder" Text="{Binding TargetFolder, UpdateSourceTrigger=PropertyChanged}" MaxWidth="300" HorizontalAlignment="Left"
+                             c:Ui.Placeholder="{x:Static res:Strings.ImportTargetFolderHint}" Width="260" />
+                </DockPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card.Surface}" Margin="0,12,0,0">
+                <ListBox ItemsSource="{Binding Items}" Padding="4" ItemContainerStyle="{StaticResource ListBoxItem.Plain}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <DockPanel Margin="2,2">
+                                <CheckBox DockPanel.Dock="Left" IsChecked="{Binding IsSelected}" IsEnabled="{Binding CanImport}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                                <TextBlock DockPanel.Dock="Right" Text="{Binding Note}" Style="{StaticResource Text.Caption}" VerticalAlignment="Center" Margin="8,0,0,0" />
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding Candidate.Name}" FontWeight="SemiBold" />
+                                        <TextBlock Text="{Binding Candidate.ProviderId}" Style="{StaticResource Text.Caption}" Margin="8,1,0,0" />
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding Candidate.Details}" Style="{StaticResource Text.Caption}" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                            </DockPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Border>
+        </DockPanel>
+    </Grid>
 </Window>

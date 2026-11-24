@@ -141,3 +141,40 @@ public sealed class ZoomBadgeVisibilityConverter : IValueConverter
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
 }
+
+/// <summary>Visible for a folder node.</summary>
+public sealed class IsFolderToVisibilityConverter : IValueConverter
+{
+    public static IsFolderToVisibilityConverter Instance { get; } = new();
+
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value is FolderNodeViewModel ? Visibility.Visible : Visibility.Collapsed;
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
+}
+
+/// <summary>Visible for a folder or a connection node (where a new folder can be made).</summary>
+public sealed class IsFolderOrConnectionToVisibilityConverter : IValueConverter
+{
+    public static IsFolderOrConnectionToVisibilityConverter Instance { get; } = new();
+
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value is FolderNodeViewModel or ConnectionNodeViewModel ? Visibility.Visible : Visibility.Collapsed;
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
+}
+
+/// <summary>The frame of a query in its connection's environment colour; transparent for an unmarked connection.</summary>
+public sealed class EnvironmentFrameConverter : IValueConverter
+{
+    public static EnvironmentFrameConverter Instance { get; } = new();
+
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value switch
+    {
+        ConnectionEnvironment.Development or ConnectionEnvironment.Test or ConnectionEnvironment.Production =>
+            EnvironmentBrushConverter.Instance.Convert(value, targetType, parameter, culture),
+        _ => System.Windows.Media.Brushes.Transparent,
+    };
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
+}

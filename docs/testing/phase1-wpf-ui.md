@@ -357,6 +357,26 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] Keyboard only (Tab): type cards, segments, switches, check boxes, the Advanced toggle and tabs show an
       accent focus ring when reached with the keyboard (not on mouse clicks).
 
+## Round 2 (frame, splitter, folders, import, colour schemes)
+- [ ] A query on a Development / Test / Production connection is framed (toolbar, editor and results) in
+      green / amber / red; there is no "TEST · name" strip and no connection name on the toolbar. Hovering the
+      frame says "TEST · name". An unmarked connection: no frame. Switching the tab's connection changes it.
+- [ ] Between editor and results: the cursor turns ↕ over the gap, a small grip is visible, dragging up and
+      down resizes both (down to 60 px each).
+- [ ] Explorer: the folder icon in the toolbar (or right-click → New folder) asks a name and adds an empty
+      folder under the selected folder (or at the top); it stays after a restart. A name with "/" is refused.
+- [ ] Drag a connection onto a folder: it moves there (the folder is highlighted while over it); onto another
+      connection: into that connection's folder; onto empty space: to the top. Drag a folder into another: it
+      moves with everything inside; never into itself or its own subfolder (no highlight, no drop).
+- [ ] Right-click a folder → Rename folder: connections and subfolders follow. Delete folder asks first; what
+      was inside moves up one level, no connection is deleted.
+- [ ] Connection → Import connections: three cards (DBeaver, SQL Server Management Studio, Dosyadan) saying
+      whether settings were found here; choosing one lists only its connections; "Kaynaklar" goes back. "Klasörlerini
+      koru" off and "Hedef klasör: DBeaver" puts every imported connection directly into "DBeaver".
+- [ ] Settings → Görünüm: under the theme, colour schemes with a small picture each — dark: Gece (default),
+      Grafit, Okyanus, Yüksek kontrast; light: Kağıt (default), Gökyüzü, Kum, Yüksek kontrast. A click applies at
+      once (title bar too); Vazgeç puts back the previous scheme; the choice survives a restart.
+
 ## Connection editor (compact)
 - [ ] The form is two columns: Name + Environment (with its colour) on top, the type's main settings two to a
       row, user and password side by side, "Save password" and "Read-only" switches, then "Advanced" (folder,

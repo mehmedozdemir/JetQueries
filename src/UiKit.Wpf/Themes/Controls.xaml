@@ -941,22 +941,37 @@
         </Setter>
     </Style>
 
-    <!-- ========== GridSplitter (invisible hit area, accent line on hover/drag) ========== -->
+    <!-- ========== GridSplitter (invisible hit area; a resize cursor, and an accent line on hover/drag) ==========
+         Columns: a vertical line and the ↔ cursor. Rows (ResizeDirection="Rows", or a stretched horizontal
+         splitter): a horizontal line and the ↕ cursor, with a small grip in the middle so it can be found. -->
     <Style TargetType="GridSplitter">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Focusable" Value="False" />
+        <Setter Property="Cursor" Value="SizeWE" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="GridSplitter">
                     <Grid Background="Transparent">
                         <Border x:Name="Line" Background="Transparent" Width="2" HorizontalAlignment="Center" CornerRadius="1" />
+                        <Border x:Name="Grip" Visibility="Collapsed" Width="36" Height="3" CornerRadius="1.5" HorizontalAlignment="Center"
+                                VerticalAlignment="Center" Background="{DynamicResource Brush.BorderStrong}" />
                     </Grid>
                     <ControlTemplate.Triggers>
+                        <Trigger Property="ResizeDirection" Value="Rows">
+                            <Setter TargetName="Line" Property="Width" Value="NaN" />
+                            <Setter TargetName="Line" Property="Height" Value="2" />
+                            <Setter TargetName="Line" Property="HorizontalAlignment" Value="Stretch" />
+                            <Setter TargetName="Line" Property="VerticalAlignment" Value="Center" />
+                            <Setter TargetName="Grip" Property="Visibility" Value="Visible" />
+                            <Setter Property="Cursor" Value="SizeNS" />
+                        </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Line" Property="Background" Value="{DynamicResource Brush.Accent}" />
+                            <Setter TargetName="Grip" Property="Background" Value="{DynamicResource Brush.Accent}" />
                         </Trigger>
                         <Trigger Property="IsDragging" Value="True">
                             <Setter TargetName="Line" Property="Background" Value="{DynamicResource Brush.Accent}" />
+                            <Setter TargetName="Grip" Property="Background" Value="{DynamicResource Brush.Accent}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

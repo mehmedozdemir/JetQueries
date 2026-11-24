@@ -187,6 +187,15 @@ internal sealed class FakeDialogs : IDialogService
 
     public TransactionChoice TransactionChoice { get; set; } = TransactionChoice.Cancel;
 
+    /// <summary>Answers to text prompts, in order (an empty queue answers Cancel).</summary>
+    public Queue<string?> TextAnswers { get; set; } = new();
+
+    public Task<string?> PromptTextAsync(string title, string message, string initial)
+    {
+        Asked.Add("text:" + title);
+        return Task.FromResult(TextAnswers.Count > 0 ? TextAnswers.Dequeue() : null);
+    }
+
     public Task<bool> ImportConnectionsAsync()
     {
         Asked.Add("import");

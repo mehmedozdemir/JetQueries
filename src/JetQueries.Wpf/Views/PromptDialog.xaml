@@ -8,6 +8,7 @@
     <StackPanel Margin="20,18,20,18">
         <TextBlock x:Name="Message" TextWrapping="Wrap" />
         <PasswordBox x:Name="SecretInput" Margin="0,12,0,0" />
+        <TextBox x:Name="TextAnswer" Margin="0,12,0,0" Visibility="Collapsed" />
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
             <Button Content="{x:Static res:Strings.ButtonCancel}" IsCancel="True" MinWidth="88" Margin="0,0,8,0" />
             <Button Style="{StaticResource Btn.Primary}" Content="{x:Static res:Strings.ButtonOk}" IsDefault="True" MinWidth="88" Click="OnOk" />

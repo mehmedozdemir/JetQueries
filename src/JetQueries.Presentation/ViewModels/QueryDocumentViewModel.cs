@@ -405,7 +405,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(RunCommand), nameof(RunInNewTabCommand), nameof(RunStatementCommand))]
-    [NotifyPropertyChangedFor(nameof(LanguageService), nameof(ToolTip), nameof(Environment), nameof(EnvironmentName), nameof(IsMarkedEnvironment))]
+    [NotifyPropertyChangedFor(nameof(LanguageService), nameof(ToolTip), nameof(Environment), nameof(EnvironmentName), nameof(IsMarkedEnvironment), nameof(EnvironmentFrameTip))]
     public partial SessionOption? SelectedSession { get; set; }
 
     /// <summary>The environment of the tab's connection (drawn on the tab and above the editor); null with no connection.</summary>
@@ -414,7 +414,10 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
     /// <summary>Test and production connections are marked with a coloured strip and their name.</summary>
     public bool IsMarkedEnvironment => Environment is ConnectionEnvironment.Test or ConnectionEnvironment.Production;
 
-    /// <summary>The environment's name as the strip shows it ("PRODUCTION"); null when not marked.</summary>
+    /// <summary>The frame's tooltip: "PRODUCTION · connection name"; null without an environment.</summary>
+    public string? EnvironmentFrameTip => EnvironmentName is { } name ? name + " · " + SelectedSession!.Name : null;
+
+    /// <summary>The environment's name ("PRODUCTION"); null when not marked.</summary>
     public string? EnvironmentName => Environment switch
     {
         ConnectionEnvironment.Production => Strings.EnvironmentProduction.ToUpper(CultureInfo.CurrentCulture),

@@ -41,6 +41,10 @@ public abstract partial class ExplorerNodeViewModel(string name) : ObservableObj
     [ObservableProperty]
     public partial bool IsVisible { get; set; } = true;
 
+    /// <summary>A dragged connection or folder would land here (drawn highlighted).</summary>
+    [ObservableProperty]
+    public partial bool IsDropTarget { get; set; }
+
     /// <summary>Called when the node is expanded or collapsed, by the user or by code.</summary>
     protected virtual void OnExpanded(bool expanded)
     {
@@ -65,7 +69,11 @@ public sealed record NewQueryRequest(Guid ConnectionId, string? Database)
 }
 
 /// <summary>A folder grouping connections.</summary>
-public sealed class FolderNodeViewModel(string name) : ExplorerNodeViewModel(name);
+public sealed class FolderNodeViewModel(string name, string path) : ExplorerNodeViewModel(name)
+{
+    /// <summary>The folder's full path ("Customer A/Test").</summary>
+    public string Path { get; } = path;
+}
 
 /// <summary>A saved connection and its live state.</summary>
 public sealed partial class ConnectionNodeViewModel(ConnectionDefinition definition) : LazyNodeViewModel(definition.Name, expandable: false)
@@ -135,8 +143,140 @@ public partial class ConnectionsViewModel(
     IMetadataService metadata,
     IJobQueue jobs,
     IDialogService dialogs,
-    FavoriteObjects? favorites = null) : ObservableObject
+    FavoriteObjects? favorites = null,
+    ConnectionFolders? folders = null) : ObservableObject
 {
+    /// <summary>The folder a new folder or a drop goes into: a folder itself, a connection's folder, or the top.</summary>
+    private static string FolderOf(ExplorerNodeViewModel? node) => node switch
+    {
+        FolderNodeViewModel folder => folder.Path,
+        ConnectionNodeViewModel connection => FolderPath.Normalize(connection.Definition.Folder),
+        _ => string.Empty,
+    };
+
+    /// <summary>Asks for a name and adds an (empty) folder under the selected folder, or at the top.</summary>
+    [RelayCommand]
+    private async Task NewFolderAsync(ExplorerNodeViewModel? node)
+    {
+        var parent = FolderOf(node ?? Selected);
+        var name = await AskFolderNameAsync(Strings.FolderNewTitle, string.Empty);
+        if (name is null)
+        {
+            return;
+        }
+
+        var path = FolderPath.Combine(parent, name);
+        folders?.Add(path);
+        await LoadAsync(select: path);
+    }
+
+    /// <summary>Renames a folder; its connections and subfolders follow.</summary>
+    [RelayCommand]
+    private async Task RenameFolderAsync(ExplorerNodeViewModel? node)
+    {
+        if ((node ?? Selected) is not FolderNodeViewModel folder || await AskFolderNameAsync(Strings.FolderRenameTitle, folder.Name) is not { } name ||
+            string.Equals(name, folder.Name, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        var target = FolderPath.Combine(FolderPath.Parent(folder.Path), name);
+        await MoveFolderAsync(folder.Path, target);
+        await LoadAsync(select: target);
+    }
+
+    /// <summary>Removes a folder; what was inside moves up to the folder's parent (nothing is deleted).</summary>
+    [RelayCommand]
+    private async Task DeleteFolderAsync(ExplorerNodeViewModel? node)
+    {
+        if ((node ?? Selected) is not FolderNodeViewModel folder ||
+            !await dialogs.ConfirmAsync(Strings.FolderDeleteTitle, Format(Strings.FolderDeleteMessage, folder.Name)))
+        {
+            return;
+        }
+
+        var parent = FolderPath.Parent(folder.Path);
+        var definitions = await jobs.Enqueue("Load connections", context => store.GetAllAsync(context.CancellationToken), JobPriority.High).Completion;
+        foreach (var definition in definitions.Where(d => FolderPath.IsSameOrUnder(FolderPath.Normalize(d.Folder), folder.Path)))
+        {
+            var rest = FolderPath.Normalize(definition.Folder)[folder.Path.Length..].TrimStart('/');
+            await SaveFolderAsync(definition, rest.Length == 0 ? parent : FolderPath.Combine(parent, rest));
+        }
+
+        folders?.Move(folder.Path, parent);
+        folders?.Remove(folder.Path);
+        await LoadAsync();
+    }
+
+    /// <summary>Whether <paramref name="dragged"/> may be dropped on <paramref name="target"/> (null: the top level).</summary>
+    public static bool CanMove(ExplorerNodeViewModel? dragged, ExplorerNodeViewModel? target)
+    {
+        var into = FolderOf(target);
+        return dragged switch
+        {
+            ConnectionNodeViewModel connection => !string.Equals(FolderPath.Normalize(connection.Definition.Folder), into, StringComparison.OrdinalIgnoreCase),
+
+            // A folder goes anywhere but into itself or below itself, and not where it already is.
+            FolderNodeViewModel folder => !FolderPath.IsSameOrUnder(into, folder.Path) &&
+                                          !string.Equals(FolderPath.Parent(folder.Path), into, StringComparison.OrdinalIgnoreCase),
+            _ => false,
+        };
+    }
+
+    /// <summary>Moves a connection or a folder onto a folder (or a connection's folder, or the top level).</summary>
+    public async Task MoveAsync(ExplorerNodeViewModel dragged, ExplorerNodeViewModel? target)
+    {
+        ArgumentNullException.ThrowIfNull(dragged);
+        if (!CanMove(dragged, target))
+        {
+            return;
+        }
+
+        var into = FolderOf(target);
+        switch (dragged)
+        {
+            case ConnectionNodeViewModel connection:
+                await SaveFolderAsync(connection.Definition, into);
+                await LoadAsync();
+                break;
+            case FolderNodeViewModel folder:
+                var moved = FolderPath.Combine(into, folder.Name);
+                await MoveFolderAsync(folder.Path, moved);
+                await LoadAsync(select: moved);
+                break;
+            default:
+                break;
+        }
+    }
+
+    private async Task MoveFolderAsync(string from, string to)
+    {
+        var definitions = await jobs.Enqueue("Load connections", context => store.GetAllAsync(context.CancellationToken), JobPriority.High).Completion;
+        foreach (var definition in definitions.Where(d => FolderPath.IsSameOrUnder(FolderPath.Normalize(d.Folder), from)))
+        {
+            await SaveFolderAsync(definition, to + FolderPath.Normalize(definition.Folder)[from.Length..]);
+        }
+
+        folders?.Move(from, to);
+        folders?.Add(to);
+    }
+
+    private Task SaveFolderAsync(ConnectionDefinition definition, string folder)
+    {
+        var moved = definition with { Folder = folder };
+        return jobs.Enqueue("Save connection", context => store.SaveAsync(moved, context.CancellationToken), JobPriority.High).Completion;
+    }
+
+    private async Task<string?> AskFolderNameAsync(string title, string initial)
+    {
+        var name = await dialogs.PromptTextAsync(title, Strings.FolderNameMessage, initial);
+        name = name?.Trim();
+        return string.IsNullOrEmpty(name) || name.Contains('/', StringComparison.Ordinal) ? null : name;
+    }
+
+    private static string Format(string format, object? argument) =>
+        string.Format(CultureInfo.CurrentCulture, CompositeFormat.Parse(format), argument);
+
     /// <summary>Pins the selected object under its connection's favourites, or unpins it.</summary>
     [RelayCommand]
     private void ToggleFavorite(ExplorerNodeViewModel? node)
@@ -423,31 +563,63 @@ public partial class ConnectionsViewModel(
     }
 
     /// <summary>Reads the saved connections and rebuilds the tree, keeping live state where the connection still exists.</summary>
-    public async Task LoadAsync()
+    public Task LoadAsync() => LoadAsync(select: null);
+
+    /// <param name="select">A folder path to select afterwards (a new, renamed or moved folder).</param>
+    private async Task LoadAsync(string? select)
     {
         var job = jobs.Enqueue("Load connections", context => store.GetAllAsync(context.CancellationToken), JobPriority.High);
         var definitions = await job.Completion;
+        if (folders is not null)
+        {
+            await folders.LoadAsync();
+        }
 
         var open = manager.Sessions.ToDictionary(static s => s.Definition.Id);
         var selectedId = (Selected as ConnectionNodeViewModel)?.Definition.Id;
+        var selectedFolder = select ?? (Selected as FolderNodeViewModel)?.Path;
+
+        // Collapsed folders stay collapsed through a rebuild.
+        var collapsed = AllFolders(Roots).Where(static f => !f.IsExpanded).Select(static f => f.Path).ToHashSet(StringComparer.OrdinalIgnoreCase);
         Roots.Clear();
         ExplorerNodeViewModel? reselect = null;
-        foreach (var definition in definitions)
+        ObservableCollection<ExplorerNodeViewModel> FolderChildren(string path)
         {
             var siblings = Roots;
-            foreach (var part in definition.Folder.Split('/', StringSplitOptions.RemoveEmptyEntries))
+            var current = string.Empty;
+            foreach (var part in path.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
             {
+                current = FolderPath.Combine(current, part);
                 var folder = siblings.OfType<FolderNodeViewModel>().FirstOrDefault(f => string.Equals(f.Name, part, StringComparison.OrdinalIgnoreCase));
                 if (folder is null)
                 {
-                    folder = new FolderNodeViewModel(part);
+                    folder = new FolderNodeViewModel(part, current) { IsExpanded = !collapsed.Contains(current) };
 
-                    // Folders stay above connections at every level.
-                    siblings.Insert(siblings.Count(static n => n is FolderNodeViewModel), folder);
+                    // Folders stay above connections at every level, in name order.
+                    var folderCount = siblings.Count(static n => n is FolderNodeViewModel);
+                    var index = siblings.Take(folderCount).Count(f => StringComparer.CurrentCultureIgnoreCase.Compare(f.Name, part) < 0);
+                    siblings.Insert(index, folder);
+                }
+
+                if (string.Equals(current, selectedFolder, StringComparison.OrdinalIgnoreCase))
+                {
+                    reselect = folder;
                 }
 
                 siblings = folder.Children;
             }
+
+            return siblings;
+        }
+
+        foreach (var path in folders?.Paths ?? [])
+        {
+            FolderChildren(path);
+        }
+
+        foreach (var definition in definitions)
+        {
+            var siblings = FolderChildren(definition.Folder);
 
             var node = new ConnectionNodeViewModel(definition) { Mark = MarkOf(definition) };
             siblings.Add(node);
@@ -463,9 +635,16 @@ public partial class ConnectionsViewModel(
         }
 
         Selected = reselect;
-        IsEmpty = definitions.Count == 0;
+        IsEmpty = definitions.Count == 0 && Roots.Count == 0;
         ApplyFilter();
+        if (select is not null && reselect is not null)
+        {
+            RevealRequested?.Invoke(this, reselect);
+        }
     }
+
+    private static IEnumerable<FolderNodeViewModel> AllFolders(IEnumerable<ExplorerNodeViewModel> nodes) =>
+        nodes.OfType<FolderNodeViewModel>().SelectMany(static f => (IEnumerable<FolderNodeViewModel>)[f, .. AllFolders(f.Children)]);
 
     [RelayCommand]
     private Task RefreshAsync() => LoadAsync();

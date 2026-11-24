@@ -15,7 +15,7 @@ public sealed class ConnectionImportTests
         CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
     }
 
-    private const string DBeaver = """
+    internal const string DBeaver = """
         {
           "folders": { "Müşteri A": {}, "Müşteri A/Canlı": { "parent": "Müşteri A" } },
           "connections": {

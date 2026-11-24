@@ -510,4 +510,36 @@
   <data name="ExplorerFavorites" xml:space="preserve"><value>Favoriler</value></data>
   <data name="ExplorerAddFavorite" xml:space="preserve"><value>Favorilere ekle</value></data>
   <data name="ExplorerRemoveFavorite" xml:space="preserve"><value>Favorilerden çıkar</value></data>
+  <data name="FolderNew" xml:space="preserve"><value>Yeni klasör</value></data>
+  <data name="FolderRename" xml:space="preserve"><value>Klasörü yeniden adlandır</value></data>
+  <data name="FolderDelete" xml:space="preserve"><value>Klasörü sil</value></data>
+  <data name="FolderNewTitle" xml:space="preserve"><value>Yeni klasör</value></data>
+  <data name="FolderRenameTitle" xml:space="preserve"><value>Klasörü yeniden adlandır</value></data>
+  <data name="FolderNameMessage" xml:space="preserve"><value>Klasör adı (/ olmadan):</value></data>
+  <data name="FolderDeleteTitle" xml:space="preserve"><value>Klasörü sil</value></data>
+  <data name="FolderDeleteMessage" xml:space="preserve"><value>"{0}" klasörü silinsin mi? İçindeki bağlantılar ve klasörler bir üst düzeye taşınır; hiçbiri silinmez.</value></data>
+  <data name="ExplorerDragHint" xml:space="preserve"><value>Bağlantıları taşımak için klasörlerin üzerine sürükleyin</value></data>
+  <data name="ImportChooseSourceTitle" xml:space="preserve"><value>Nereden aktarılsın?</value></data>
+  <data name="ImportChooseSourceInfo" xml:space="preserve"><value>Bağlantılarını almak istediğiniz aracı seçin. Parolalar hiçbir zaman aktarılmaz.</value></data>
+  <data name="ImportSourceDBeaver" xml:space="preserve"><value>DBeaver çalışma alanının bağlantıları (data-sources.json)</value></data>
+  <data name="ImportSourceSsms" xml:space="preserve"><value>SSMS'in kayıtlı sunucuları (RegSrvr.xml)</value></data>
+  <data name="ImportSourceFile" xml:space="preserve"><value>Dosyadan</value></data>
+  <data name="ImportSourceFileInfo" xml:space="preserve"><value>Başka yerden kopyalanmış bir DBeaver data-sources.json ya da SSMS RegSrvr.xml</value></data>
+  <data name="ImportSourceFileHint" xml:space="preserve"><value>Dosya seçin…</value></data>
+  <data name="ImportSourceNotFound" xml:space="preserve"><value>Bu bilgisayarda bulunamadı</value></data>
+  <data name="ImportSourceFound" xml:space="preserve"><value>{0} ayar dosyası bulundu</value></data>
+  <data name="ImportSourceNotFoundLong" xml:space="preserve"><value>Ayarları bu bilgisayarda bulunamadı. "Dosya seç" ile dosyasını gösterin.</value></data>
+  <data name="ImportKeepFolders" xml:space="preserve"><value>Klasörlerini koru</value></data>
+  <data name="ImportTargetFolder" xml:space="preserve"><value>Hedef klasör</value></data>
+  <data name="ImportTargetFolderHint" xml:space="preserve"><value>en üst düzey</value></data>
+  <data name="ImportBack" xml:space="preserve"><value>Kaynaklar</value></data>
+  <data name="SettingSchemeInfo" xml:space="preserve"><value>Yukarıda seçilen temanın renkleri; hemen uygulanır.</value></data>
+  <data name="Scheme_Dark_Midnight" xml:space="preserve"><value>Gece</value></data>
+  <data name="Scheme_Dark_Graphite" xml:space="preserve"><value>Grafit</value></data>
+  <data name="Scheme_Dark_Ocean" xml:space="preserve"><value>Okyanus</value></data>
+  <data name="Scheme_Dark_Contrast" xml:space="preserve"><value>Yüksek kontrast</value></data>
+  <data name="Scheme_Light_Paper" xml:space="preserve"><value>Kağıt</value></data>
+  <data name="Scheme_Light_Sky" xml:space="preserve"><value>Gökyüzü</value></data>
+  <data name="Scheme_Light_Sand" xml:space="preserve"><value>Kum</value></data>
+  <data name="Scheme_Light_Contrast" xml:space="preserve"><value>Yüksek kontrast</value></data>
 </root>

@@ -6,31 +6,21 @@
              xmlns:vm="clr-namespace:JetQueries.Presentation.ViewModels;assembly=JetQueries.Presentation"
              xmlns:e="clr-namespace:JetQueries.Wpf.Editor"
              xmlns:v="clr-namespace:JetQueries.Wpf.Views">
+    <!-- The whole query is framed in its connection's environment colour (development, test, production); an
+         unmarked connection has no frame. The tab carries the same colour as a dot. -->
+    <Border x:Name="EnvironmentFrame" BorderThickness="2" CornerRadius="12" Padding="6,4,6,6"
+            BorderBrush="{Binding Environment, Converter={x:Static v:EnvironmentFrameConverter.Instance}}"
+            ToolTip="{Binding EnvironmentFrameTip}" ToolTipService.InitialShowDelay="1200">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" MinHeight="80" />
+            <RowDefinition Height="*" MinHeight="60" />
             <RowDefinition Height="8" />
-            <RowDefinition Height="*" MinHeight="80" />
+            <RowDefinition Height="*" MinHeight="60" />
         </Grid.RowDefinitions>
 
         <!-- Connection of this query and what the last run did -->
         <DockPanel Margin="0,0,0,6">
-            <!-- Test and production connections: a strip in the environment's colour across the tab, so that a
-                 query is never run on the wrong server by mistake -->
-            <Border x:Name="EnvironmentStrip" DockPanel.Dock="Top" Margin="0,0,0,6" Padding="10,4" CornerRadius="{StaticResource Radius.Control}"
-                    BorderThickness="4,0,0,0" Background="{DynamicResource Brush.SurfaceAlt}"
-                    BorderBrush="{Binding Environment, Converter={x:Static v:EnvironmentBrushConverter.Instance}}"
-                    Visibility="{Binding IsMarkedEnvironment, Converter={StaticResource BoolToVisibility}}">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="{x:Static c:Icons.Warning}" Style="{StaticResource Text.Icon}" FontSize="12" Margin="0,0,8,0"
-                               Foreground="{Binding Environment, Converter={x:Static v:EnvironmentBrushConverter.Instance}}" />
-                    <TextBlock Text="{Binding EnvironmentName}" FontWeight="Bold" FontSize="{DynamicResource FontSize.Small}" VerticalAlignment="Center"
-                               Foreground="{Binding Environment, Converter={x:Static v:EnvironmentBrushConverter.Instance}}" />
-                    <TextBlock Text="·" Margin="8,0" Foreground="{DynamicResource Brush.TextMuted}" VerticalAlignment="Center" />
-                    <TextBlock Text="{Binding SelectedSession.Name}" FontSize="{DynamicResource FontSize.Small}" FontWeight="SemiBold" VerticalAlignment="Center" />
-                </StackPanel>
-            </Border>
 
             <!-- Run, Cancel, Save as icons (Settings can move them to the main toolbar) -->
             <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Margin="0,0,8,0" Visibility="{DynamicResource QueryButtons.Tab}">
@@ -44,14 +34,6 @@
                         Command="{Binding DataContext.SaveCommand, RelativeSource={RelativeSource AncestorType=v:DocumentsView}}"
                         ToolTip="{x:Static res:Strings.FileSaveShortTip}" />
                 <Border Style="{StaticResource Separator.Vertical}" Margin="6,0" />
-            </StackPanel>
-
-            <!-- The tab's connection, with its environment colour -->
-            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Margin="0,0,10,0" ToolTip="{x:Static res:Strings.QueryConnectionTip}"
-                        Visibility="{Binding SelectedSession, Converter={x:Static v:NotNullToVisibilityConverter.Instance}}">
-                <Ellipse Width="8" Height="8" Margin="0,0,7,0" VerticalAlignment="Center"
-                         Fill="{Binding Environment, Converter={x:Static v:EnvironmentBrushConverter.Instance}}" />
-                <TextBlock x:Name="ConnectionName" Text="{Binding SelectedSession.Name}" VerticalAlignment="Center" MaxWidth="220" TextTrimming="CharacterEllipsis" />
             </StackPanel>
 
             <!-- The window's current database (schema for Oracle), as SSMS shows it -->
@@ -207,4 +189,5 @@
             </Grid>
         </Border>
     </Grid>
+    </Border>
 </UserControl>

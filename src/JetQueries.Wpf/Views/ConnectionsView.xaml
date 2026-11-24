@@ -13,6 +13,8 @@
             <WrapPanel x:Name="Actions" Orientation="Horizontal">
                 <Button Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="{x:Static c:Icons.Add}"
                         Command="{Binding NewCommand}" ToolTip="{x:Static res:Strings.ConnectionNew}" />
+                <Button x:Name="NewFolderButton" Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="&#xE8F4;"
+                        Command="{Binding NewFolderCommand}" CommandParameter="{Binding Selected}" ToolTip="{x:Static res:Strings.FolderNew}" />
                 <Button Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="{x:Static c:Icons.Edit}"
                         Command="{Binding EditCommand}" ToolTip="{x:Static res:Strings.ConnectionEdit}" />
                 <Button Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="{x:Static c:Icons.Delete}"
@@ -64,7 +66,9 @@
 
             <TreeView x:Name="Tree" ItemsSource="{Binding Roots}" BorderThickness="0" Background="Transparent" Padding="4,6"
                       Visibility="{Binding IsEmpty, Converter={x:Static v:InverseBoolToVisibilityConverter.Instance}}"
-                      SelectedItemChanged="OnSelectedItemChanged" MouseDoubleClick="OnTreeDoubleClick">
+                      SelectedItemChanged="OnSelectedItemChanged" MouseDoubleClick="OnTreeDoubleClick"
+                      AllowDrop="True" DragOver="OnTreeDragOver" Drop="OnTreeDrop" DragLeave="OnTreeDragLeave"
+                      PreviewMouseLeftButtonDown="OnTreeMouseDown" PreviewMouseMove="OnTreeMouseMove">
                 <TreeView.InputBindings>
                     <KeyBinding Key="F4" Command="{Binding OpenDetailsCommand}" />
                 </TreeView.InputBindings>
@@ -81,6 +85,14 @@
                         <Setter Property="ContextMenu">
                             <Setter.Value>
                                 <ContextMenu DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
+                                    <!-- Folders: a subfolder, rename, delete (what is inside moves up) -->
+                                    <MenuItem Header="{x:Static res:Strings.FolderNew}" c:Ui.Icon="&#xE8F4;" Command="{Binding NewFolderCommand}" CommandParameter="{Binding Selected}"
+                                              Visibility="{Binding Selected, Converter={x:Static v:IsFolderOrConnectionToVisibilityConverter.Instance}}" />
+                                    <MenuItem Header="{x:Static res:Strings.FolderRename}" c:Ui.Icon="{x:Static c:Icons.Edit}" Command="{Binding RenameFolderCommand}" CommandParameter="{Binding Selected}"
+                                              Visibility="{Binding Selected, Converter={x:Static v:IsFolderToVisibilityConverter.Instance}}" />
+                                    <MenuItem Header="{x:Static res:Strings.FolderDelete}" c:Ui.Icon="{x:Static c:Icons.Delete}" Command="{Binding DeleteFolderCommand}" CommandParameter="{Binding Selected}"
+                                              Visibility="{Binding Selected, Converter={x:Static v:IsFolderToVisibilityConverter.Instance}}" />
+                                    <Separator Visibility="{Binding Selected, Converter={x:Static v:IsFolderOrConnectionToVisibilityConverter.Instance}}" />
                                     <MenuItem Header="{x:Static res:Strings.QueryNew}" c:Ui.Icon="{x:Static c:Icons.Add}"
                                               Command="{Binding NewQueryCommand}" CommandParameter="{Binding Selected}" />
                                     <MenuItem Header="{Binding ToggleConnectionText}" c:Ui.Icon="{x:Static c:Icons.Plug}" Command="{Binding ToggleConnectionCommand}" />
@@ -124,6 +136,13 @@
                                 </ContextMenu>
                             </Setter.Value>
                         </Setter>
+                        <Style.Triggers>
+                            <!-- Where a dragged connection or folder would land -->
+                            <DataTrigger Binding="{Binding IsDropTarget}" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource Brush.AccentSoft}" />
+                                <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
+                            </DataTrigger>
+                        </Style.Triggers>
                     </Style>
                 </TreeView.ItemContainerStyle>
                 <TreeView.Resources>

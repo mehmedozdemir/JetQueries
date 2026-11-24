@@ -35,6 +35,16 @@ public sealed class ImportWindowTests
             // Never this computer's own DBeaver / SSMS settings in a test.
             var window = new ImportConnectionsWindow(viewModel, discover: false) { Left = -20000, Top = 0, ShowActivated = false, ShowInTaskbar = false };
             window.Show();
+
+            // Step one: the sources, from a stand-in discovery (never this computer's own tools).
+            var sources = new ImportConnectionsViewModel([new JetQueries.Provider.SqlServer.SqlServerProvider()], env.Store, env.Jobs, () => [("DBeaver", file)]);
+            var first = new ImportConnectionsWindow(sources, discover: false) { Left = -20000, Top = 0, ShowActivated = false, ShowInTaskbar = false };
+            first.Show();
+            await sources.DiscoverAsync();
+            await EditorActionsTests.Idle();
+            ResultGridViewTests.Capture(first, Path.Combine(directory, "wpf-import-sources.png"));
+            first.Close();
+
             await viewModel.AddFileAsync(file, "DBeaver");
             Assert.Equal(2, viewModel.SelectedCount);
             var results = new Dictionary<string, int>();

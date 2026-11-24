@@ -16,13 +16,42 @@ public enum AppTheme
 
 /// <summary>
 /// Swaps the UiKit color dictionary at runtime, persists the choice and keeps the native
-/// Windows title bar (dark mode + caption color) in sync with the theme.
+/// Windows title bar (dark mode + caption color) in sync with the theme. Each theme has colour schemes:
+/// a scheme is a dictionary of the tokens it changes (<c>Themes/Schemes/Dark.Midnight.xaml</c>) laid over the
+/// theme's base dictionary; the base scheme (Graphite for dark, Paper for light) has none.
 /// </summary>
 public static class ThemeManager
 {
+    /// <summary>The dark schemes; the first is the default.</summary>
+    public static IReadOnlyList<string> DarkSchemes { get; } = ["Midnight", "Graphite", "Ocean", "Contrast"];
+
+    /// <summary>The light schemes; the first is the default.</summary>
+    public static IReadOnlyList<string> LightSchemes { get; } = ["Paper", "Sky", "Sand", "Contrast"];
+
+    private const string DarkBase = "Graphite";
+    private const string LightBase = "Paper";
+
     private static string? _settingsPath;
 
     public static AppTheme Current { get; private set; } = AppTheme.Dark;
+
+    /// <summary>The scheme the dark theme shows.</summary>
+    public static string DarkScheme { get; private set; } = "Midnight";
+
+    /// <summary>The scheme the light theme shows.</summary>
+    public static string LightScheme { get; private set; } = "Paper";
+
+    /// <summary>Chooses the scheme of a theme (shown at once when that theme is showing) and remembers it.</summary>
+    public static void SetScheme(AppTheme theme, string scheme, bool save = true)
+    {
+        var schemes = theme == AppTheme.Dark ? DarkSchemes : LightSchemes;
+        if (!schemes.Contains(scheme))
+            return;
+        if (theme == AppTheme.Dark) DarkScheme = scheme;
+        else LightScheme = scheme;
+        if (theme == Current) Apply(theme, save);
+        else if (save) SaveTheme(Current);
+    }
 
     public static event Action? ThemeChanged;
 
@@ -33,6 +62,7 @@ public static class ThemeManager
     {
         _settingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), appName, "theme.json");
         var theme = LoadSavedTheme() ?? defaultTheme ?? (SystemUsesLightTheme() ? AppTheme.Light : AppTheme.Dark);
+        LoadSavedSchemes();
         Apply(theme, save: false);
     }
 
@@ -55,7 +85,26 @@ public static class ThemeManager
             }
         }
         if (index >= 0) dictionaries[index] = colors;
-        else dictionaries.Insert(0, colors);
+        else
+        {
+            dictionaries.Insert(0, colors);
+            index = 0;
+        }
+
+        // The scheme's tokens go right after the base colours, before the control styles.
+        for (int i = dictionaries.Count - 1; i >= 0; i--)
+        {
+            if (dictionaries[i].Source?.OriginalString.Contains("/Themes/Schemes/", StringComparison.OrdinalIgnoreCase) == true)
+                dictionaries.RemoveAt(i);
+        }
+        var scheme = theme == AppTheme.Dark ? DarkScheme : LightScheme;
+        if (scheme != (theme == AppTheme.Dark ? DarkBase : LightBase))
+        {
+            dictionaries.Insert(index + 1, new ResourceDictionary
+            {
+                Source = new Uri($"pack://application:,,,/UiKit.Wpf;component/Themes/Schemes/{theme}.{scheme}.xaml"),
+            });
+        }
 
         Current = theme;
         foreach (Window window in Application.Current.Windows)
@@ -106,13 +155,28 @@ public static class ThemeManager
         }
     }
 
+    private static void LoadSavedSchemes()
+    {
+        try
+        {
+            if (_settingsPath is null || !File.Exists(_settingsPath)) return;
+            using var doc = JsonDocument.Parse(File.ReadAllText(_settingsPath));
+            if (doc.RootElement.TryGetProperty("darkScheme", out var dark) && dark.GetString() is { } d && DarkSchemes.Contains(d)) DarkScheme = d;
+            if (doc.RootElement.TryGetProperty("lightScheme", out var light) && light.GetString() is { } l && LightSchemes.Contains(l)) LightScheme = l;
+        }
+        catch (Exception)
+        {
+            // An unreadable file keeps the default schemes.
+        }
+    }
+
     private static void SaveTheme(AppTheme theme)
     {
         if (_settingsPath is null) return;
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(_settingsPath)!);
-            File.WriteAllText(_settingsPath, JsonSerializer.Serialize(new { theme = theme.ToString() }));
+            File.WriteAllText(_settingsPath, JsonSerializer.Serialize(new { theme = theme.ToString(), darkScheme = DarkScheme, lightScheme = LightScheme }));
         }
         catch (Exception)
         {

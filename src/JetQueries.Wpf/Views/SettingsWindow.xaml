@@ -118,6 +118,40 @@
                                         </DataTemplate>
                                     </ListBox.ItemTemplate>
                                 </ListBox>
+
+                                <!-- Colour schemes of the chosen theme: a small picture of each -->
+                                <TextBlock Text="{x:Static res:Strings.SettingSchemeInfo}" Style="{StaticResource Settings.RowInfo}" Margin="0,18,0,12" />
+                                <ListBox x:Name="SchemeList" ItemsSource="{Binding Schemes}" SelectedItem="{Binding SelectedScheme}">
+                                    <ListBox.ItemContainerStyle>
+                                        <Style TargetType="ListBoxItem" BasedOn="{StaticResource ChoiceCard}">
+                                            <Setter Property="Margin" Value="0,0,12,12" />
+                                        </Style>
+                                    </ListBox.ItemContainerStyle>
+                                    <ListBox.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel Orientation="Horizontal" />
+                                        </ItemsPanelTemplate>
+                                    </ListBox.ItemsPanel>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Width="126">
+                                                <!-- Window, a panel with two text lines and an accent button -->
+                                                <Border Height="46" CornerRadius="6" Background="{Binding Window}" Padding="6" BorderThickness="1" BorderBrush="#33808080">
+                                                    <Border CornerRadius="4" Background="{Binding Surface}" Padding="6,5">
+                                                        <DockPanel>
+                                                            <Border DockPanel.Dock="Right" Width="18" Height="10" CornerRadius="3" Background="{Binding Accent}" VerticalAlignment="Bottom" />
+                                                            <StackPanel>
+                                                                <Border Height="4" Width="44" CornerRadius="2" Background="{Binding Text}" HorizontalAlignment="Left" />
+                                                                <Border Height="4" Width="30" CornerRadius="2" Background="{Binding Text}" Opacity="0.55" HorizontalAlignment="Left" Margin="0,5,0,0" />
+                                                            </StackPanel>
+                                                        </DockPanel>
+                                                    </Border>
+                                                </Border>
+                                                <TextBlock Text="{Binding Name}" HorizontalAlignment="Center" Margin="0,7,0,0" FontWeight="SemiBold" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
                             </StackPanel>
                         </Border>
 

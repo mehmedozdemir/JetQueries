@@ -1,0 +1,52 @@
+<!-- UiKit colour scheme Light.Contrast: laid over Themes/Light.xaml; only the tokens it changes. -->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Color x:Key="Color.Window">#FFFFFFFF</Color>
+    <SolidColorBrush x:Key="Brush.Window" Color="#FFFFFFFF" />
+    <Color x:Key="Color.Surface">#FFFFFFFF</Color>
+    <SolidColorBrush x:Key="Brush.Surface" Color="#FFFFFFFF" />
+    <Color x:Key="Color.SurfaceAlt">#FFF5F5F5</Color>
+    <SolidColorBrush x:Key="Brush.SurfaceAlt" Color="#FFF5F5F5" />
+    <Color x:Key="Color.Header">#FFF0F0F0</Color>
+    <SolidColorBrush x:Key="Brush.Header" Color="#FFF0F0F0" />
+    <Color x:Key="Color.Card">#FFFFFFFF</Color>
+    <SolidColorBrush x:Key="Brush.Card" Color="#FFFFFFFF" />
+    <Color x:Key="Color.Input">#FFFFFFFF</Color>
+    <SolidColorBrush x:Key="Brush.Input" Color="#FFFFFFFF" />
+    <Color x:Key="Color.Chip">#FFEBEBEB</Color>
+    <SolidColorBrush x:Key="Brush.Chip" Color="#FFEBEBEB" />
+    <Color x:Key="Color.Border">#FF9CA3AF</Color>
+    <SolidColorBrush x:Key="Brush.Border" Color="#FF9CA3AF" />
+    <Color x:Key="Color.BorderStrong">#FF6B7280</Color>
+    <SolidColorBrush x:Key="Brush.BorderStrong" Color="#FF6B7280" />
+    <Color x:Key="Color.GridLine">#FFD1D5DB</Color>
+    <SolidColorBrush x:Key="Brush.GridLine" Color="#FFD1D5DB" />
+    <Color x:Key="Color.Text">#FF000000</Color>
+    <SolidColorBrush x:Key="Brush.Text" Color="#FF000000" />
+    <Color x:Key="Color.TextSecondary">#FF1F2937</Color>
+    <SolidColorBrush x:Key="Brush.TextSecondary" Color="#FF1F2937" />
+    <Color x:Key="Color.TextMuted">#FF374151</Color>
+    <SolidColorBrush x:Key="Brush.TextMuted" Color="#FF374151" />
+    <Color x:Key="Color.Hover">#14000000</Color>
+    <SolidColorBrush x:Key="Brush.Hover" Color="#14000000" />
+    <Color x:Key="Color.Pressed">#22000000</Color>
+    <SolidColorBrush x:Key="Brush.Pressed" Color="#22000000" />
+    <Color x:Key="Color.Accent">#FF0047B3</Color>
+    <SolidColorBrush x:Key="Brush.Accent" Color="#FF0047B3" />
+    <Color x:Key="Color.AccentHover">#FF0A5AD0</Color>
+    <SolidColorBrush x:Key="Brush.AccentHover" Color="#FF0A5AD0" />
+    <Color x:Key="Color.AccentSoft">#260047B3</Color>
+    <SolidColorBrush x:Key="Brush.AccentSoft" Color="#260047B3" />
+    <Color x:Key="Color.Selection">#330047B3</Color>
+    <SolidColorBrush x:Key="Brush.Selection" Color="#330047B3" />
+    <Color x:Key="Color.SelectionBorder">#FF0047B3</Color>
+    <SolidColorBrush x:Key="Brush.SelectionBorder" Color="#FF0047B3" />
+    <Color x:Key="Color.Syntax.Keyword">#FF0041A8</Color>
+    <SolidColorBrush x:Key="Brush.Syntax.Keyword" Color="#FF0041A8" />
+    <Color x:Key="Color.Syntax.Identifier">#FF000000</Color>
+    <SolidColorBrush x:Key="Brush.Syntax.Identifier" Color="#FF000000" />
+    <Color x:Key="Color.Syntax.Comment">#FF4B5563</Color>
+    <SolidColorBrush x:Key="Brush.Syntax.Comment" Color="#FF4B5563" />
+    <Color x:Key="Color.Syntax.Operator">#FF1F2937</Color>
+    <SolidColorBrush x:Key="Brush.Syntax.Operator" Color="#FF1F2937" />
+</ResourceDictionary>

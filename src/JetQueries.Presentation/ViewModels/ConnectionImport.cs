@@ -190,6 +190,30 @@ public static class ConnectionImporter
             : null;
 }
 
+/// <summary>Where connections can be imported from: a tool found on this computer, or a file.</summary>
+/// <param name="Key">DBeaver, SSMS or File.</param>
+/// <param name="Title">The source's name.</param>
+/// <param name="Description">What is read.</param>
+/// <param name="Icon">A Segoe Fluent glyph.</param>
+/// <param name="Files">The settings files found for it on this computer.</param>
+public sealed record ImportSource(string Key, string Title, string Description, string Icon, IReadOnlyList<string> Files)
+{
+    public const string DBeaver = "DBeaver";
+    public const string Ssms = "SSMS";
+    public const string File = "File";
+
+    /// <summary>"2 files found", "Not found on this computer", or the file hint (worded once, when the source is made).</summary>
+    public string FoundText { get; } = Key == File
+        ? Strings.ImportSourceFileHint
+        : Files.Count == 0 ? Strings.ImportSourceNotFound : string.Format(CultureInfo.CurrentCulture, System.Text.CompositeFormat.Parse(Strings.ImportSourceFound), Files.Count);
+
+    /// <summary>Settings of this tool are on this computer (or it is the file source).</summary>
+    public bool IsAvailable => Key == File || Files.Count > 0;
+
+    /// <summary>Settings of this tool were found (not the file source).</summary>
+    public bool WasFound => Key != File && Files.Count > 0;
+}
+
 /// <summary>A connection in the import list.</summary>
 public sealed partial class ImportItem(ImportCandidate candidate, bool exists, bool supported) : ObservableObject
 {
@@ -238,6 +262,77 @@ public sealed partial class ImportConnectionsViewModel : ObservableObject
     /// <summary>Raised when the window should close; true when something was imported.</summary>
     public event EventHandler<bool>? CloseRequested;
 
+    /// <summary>Raised to pick a file of a source (its key: DBeaver, SSMS or File).</summary>
+    public event EventHandler<string>? FileRequested;
+
+    /// <summary>The sources to choose from (step one).</summary>
+    public ObservableCollection<ImportSource> Sources { get; } = [];
+
+    /// <summary>Step one: which tool to import from.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsChoosingConnections))]
+    public partial bool IsChoosingSource { get; set; } = true;
+
+    /// <summary>Step two: which connections.</summary>
+    public bool IsChoosingConnections => !IsChoosingSource;
+
+    /// <summary>The source chosen in step one.</summary>
+    [ObservableProperty]
+    public partial ImportSource? SelectedSource { get; set; }
+
+    /// <summary>Keep the folders the other tool had (under <see cref="TargetFolder"/>).</summary>
+    [ObservableProperty]
+    public partial bool KeepFolders { get; set; } = true;
+
+    /// <summary>A folder the imported connections go into ("" for the top level).</summary>
+    [ObservableProperty]
+    public partial string TargetFolder { get; set; } = string.Empty;
+
+    /// <summary>Opens a source: reads the files found for it, or asks for a file.</summary>
+    [RelayCommand]
+    private async Task ChooseSourceAsync(ImportSource? source)
+    {
+        if (source is null)
+        {
+            return;
+        }
+
+        SelectedSource = source;
+        IsChoosingSource = false;
+        Items.Clear();
+        SourcesText = string.Empty;
+        Count();
+        if (source.Key == ImportSource.File)
+        {
+            FileRequested?.Invoke(this, source.Key);
+            return;
+        }
+
+        if (source.Files.Count == 0)
+        {
+            SourcesText = Strings.ImportSourceNotFoundLong;
+        }
+
+        foreach (var file in source.Files)
+        {
+            await AddFileAsync(file, source.Title);
+        }
+    }
+
+    /// <summary>Picks another file of the chosen source.</summary>
+    [RelayCommand]
+    private void ChooseFile() => FileRequested?.Invoke(this, SelectedSource?.Key ?? ImportSource.File);
+
+    /// <summary>Back to the sources.</summary>
+    [RelayCommand]
+    private void Back()
+    {
+        Items.Clear();
+        SourcesText = string.Empty;
+        Count();
+        IsChoosingSource = true;
+    }
+
     public ObservableCollection<ImportItem> Items { get; } = [];
 
     /// <summary>Which files were read ("DBeaver: …data-sources.json").</summary>
@@ -248,25 +343,23 @@ public sealed partial class ImportConnectionsViewModel : ObservableObject
     [NotifyCanExecuteChangedFor(nameof(ImportCommand))]
     public partial int SelectedCount { get; set; }
 
-    /// <summary>Reads the settings of the tools found on the machine.</summary>
+    /// <summary>Finds the tools' settings on the machine (the sources of step one); nothing is read yet.</summary>
     public async Task DiscoverAsync()
     {
         _existing = [.. await _jobs.Enqueue("Read connections", context => _store.GetAllAsync(context.CancellationToken), JobPriority.High).Completion];
-        foreach (var (source, path) in await _jobs.Enqueue("Find other tools", _ => Task.FromResult(_discover()), JobPriority.High).Completion)
-        {
-            await AddFileAsync(path, source);
-        }
-
-        if (Items.Count == 0)
-        {
-            SourcesText = Strings.ImportNothingFound;
-        }
+        var found = await _jobs.Enqueue("Find other tools", _ => Task.FromResult(_discover()), JobPriority.High).Completion;
+        IReadOnlyList<string> Of(string key) => [.. found.Where(f => f.Source == key).Select(static f => f.Path)];
+        Sources.Clear();
+        Sources.Add(new ImportSource(ImportSource.DBeaver, "DBeaver", Strings.ImportSourceDBeaver, "\uE8F1", Of(ImportSource.DBeaver)));
+        Sources.Add(new ImportSource(ImportSource.Ssms, "SQL Server Management Studio", Strings.ImportSourceSsms, "\uE968", Of(ImportSource.Ssms)));
+        Sources.Add(new ImportSource(ImportSource.File, Strings.ImportSourceFile, Strings.ImportSourceFileInfo, "\uE8E5", []));
     }
 
     /// <summary>Reads one file (DBeaver's JSON or SSMS's XML) the user chose.</summary>
     public async Task AddFileAsync(string path, string? source = null)
     {
         ArgumentNullException.ThrowIfNull(path);
+        IsChoosingSource = false;
         IReadOnlyList<ImportCandidate> candidates;
         try
         {
@@ -316,7 +409,7 @@ public sealed partial class ImportConnectionsViewModel : ObservableObject
                 Name = candidate.Name,
                 ProviderId = candidate.ProviderId,
                 Settings = new Dictionary<string, string>(provider.ToSettings(candidate.Endpoint)),
-                Folder = candidate.Folder,
+                Folder = FolderPath.Combine(FolderPath.Normalize(TargetFolder), KeepFolders ? FolderPath.Normalize(candidate.Folder) : string.Empty).Trim('/'),
                 Environment = candidate.Environment,
                 UserName = candidate.UserName,
                 IsReadOnly = candidate.Environment == ConnectionEnvironment.Production,

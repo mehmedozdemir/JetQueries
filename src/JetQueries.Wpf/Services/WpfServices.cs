@@ -33,6 +33,10 @@ internal sealed class ThemeService : IThemeService
     public void Toggle() => ThemeManager.Toggle();
 
     public void SetDark(bool dark) => ThemeManager.Apply(dark ? AppTheme.Dark : AppTheme.Light);
+
+    public string SchemeOf(bool dark) => dark ? ThemeManager.DarkScheme : ThemeManager.LightScheme;
+
+    public void SetScheme(bool dark, string scheme) => ThemeManager.SetScheme(dark ? AppTheme.Dark : AppTheme.Light, scheme);
 }
 
 /// <summary>
@@ -146,6 +150,12 @@ internal sealed class WpfDialogService(IServiceProvider services) : IDialogServi
             string.Format(CultureInfo.CurrentCulture, CompositeFormat.Parse(Strings.PasswordPromptMessage), connectionName),
             askForSecret: true) { Owner = Owner };
         return Task.FromResult(dialog.ShowDialog() == true ? dialog.Secret : null);
+    }
+
+    public Task<string?> PromptTextAsync(string title, string message, string initial)
+    {
+        var dialog = new PromptDialog(title, message, initial) { Owner = Owner };
+        return Task.FromResult(dialog.ShowDialog() == true ? dialog.Text : null);
     }
 
     public Task<bool> ConfirmAsync(string title, string message) =>

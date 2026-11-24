@@ -88,6 +88,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 - `docs/ux-review.md`: a UX review of the whole application with prioritised findings.
 - Keyboard shortcuts overview (Tools → Keyboard shortcuts, F1), searchable.
 - Command palette (Ctrl+Shift+P): every menu command by name.
+- Connection folders in the explorer: new, rename, delete (contents move up), drag and drop of connections and folders; empty folders are kept (settings section `folders`).
+- Import starts with the source (DBeaver, SSMS, a file), reads only that one, and can keep the tool's folders or put everything into one folder.
+- Colour schemes for both themes (UiKit `Themes/Schemes`): dark Midnight (new default), Graphite, Ocean, High contrast; light Paper, Sky, Sand, High contrast; chosen in Settings → Appearance.
 - Explorer favourites: pin tables, views and routines; they appear under "Favourites" at the top of the connection. Object groups show their count once loaded.
 - Setting: data types under result headers can be turned off. The explorer's visibility and width are remembered.
 - Object details open as document tabs beside the queries instead of separate windows.
@@ -135,6 +138,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
   (mark as SVG path data, colour, description).
 
 ### Changed
+- A query is framed in its connection's environment colour instead of the environment strip and the toolbar's connection name.
 - The connection editor's environment is a row of coloured chips; the query toolbar no longer repeats the status bar; the editor's zoom badge shows only away from 100 %; loading rows in the explorer show a small spinner instead of a progress bar; keyboard focus is visible on custom controls.
 - A result set may hold up to 1,000,000 rows (was 100,000), fetched page by page.
 - View models, their service contracts and strings moved to `JetQueries.Presentation`, shared by both interfaces.
@@ -142,6 +146,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 - Accessibility: icon buttons give screen readers their tooltip as name; muted text is darker in both themes (≥ 4.5:1 for small text).
 
 ### Fixed
+- The editor/results splitter had no resize cursor or visible line for rows (UiKit splitter template), so the results could not be found to drag up.
 - The explorer's toolbar was cut off at the default panel width; its actions are icons that wrap.
 - Connection editor choices, hints and Oracle's field labels were English in the Turkish UI.
 - Submenus did not open (UiKit menu item had no submenu popup): the explorer's Script, the grid's Copy as and the editor's Insert snippet now work.
