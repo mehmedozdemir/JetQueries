@@ -164,7 +164,7 @@ internal static class SqlCallHelp
     {
         if (call.Parts.Count == 1 && !call.IsExec && dialect.Catalog?.Find(call.Parts[0]) is { Count: > 0 } builtIn)
         {
-            return [.. builtIn.Select(static f => f.ToSignature())];
+            return [.. builtIn.Where(static f => !f.IsNiladic).Select(static f => f.ToSignature())];
         }
 
         if (document.Metadata is not IRoutineMetadataProvider routines)

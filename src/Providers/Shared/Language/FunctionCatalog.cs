@@ -17,6 +17,8 @@ namespace JetQueries.Providers.Language;
 /// </code>
 /// A parameter is "name type"; "[ … ]" makes it optional; "..." repeats the one before it; a type "@set"
 /// takes the values of that set. Descriptions are "English ~ Türkçe"; the user's language picks one.
+/// A function written without brackets (<c>SYSDATE : date -- Current date ~ Şu anki tarih</c>) is called
+/// without them, and is inserted so.
 /// </summary>
 internal sealed partial class FunctionCatalog
 {
@@ -36,6 +38,10 @@ internal sealed partial class FunctionCatalog
 
     [GeneratedRegex(@"^\s*(?::\s*(?<ret>.+?))?\s*(?:--\s*(?<doc>.*))?$", RegexOptions.CultureInvariant)]
     private static partial Regex FunctionTail();
+
+    // "SYSDATE : date -- doc": a name, then the return type, the description or nothing (no bracket).
+    [GeneratedRegex(@"^(?<name>[A-Za-z_][\w$#]*)(?<tail>\s*(?::.*|--.*)?)$", RegexOptions.CultureInvariant)]
+    private static partial Regex NiladicLine();
 
     /// <summary>
     /// "NAME(params) : type -- doc": the parameter list ends at the bracket that closes the first one (a
@@ -102,6 +108,26 @@ internal sealed partial class FunctionCatalog
                 }
 
                 sets[line[1..colon].Trim()] = [.. SplitTop(line[(colon + 1)..], ';').Select(ParseValue).Where(static v => v.Text.Length > 0)];
+                continue;
+            }
+
+            if (NiladicLine().Match(line) is { Success: true } niladic && FunctionTail().Match(niladic.Groups["tail"].Value) is { Success: true } niladicTail)
+            {
+                var constant = new CatalogFunction(
+                    niladic.Groups["name"].Value,
+                    [],
+                    false,
+                    niladicTail.Groups["ret"].Success ? niladicTail.Groups["ret"].Value.Trim() : null,
+                    Bilingual.Read(niladicTail.Groups["doc"].Value))
+                {
+                    IsNiladic = true,
+                };
+                if (!functions.TryGetValue(constant.Name, out var existing))
+                {
+                    functions[constant.Name] = existing = [];
+                }
+
+                existing.Add(constant);
                 continue;
             }
 
@@ -231,8 +257,11 @@ internal sealed record CatalogParameter(string Name, string? Type, bool IsOption
 /// <summary>One overload of a built-in function.</summary>
 internal sealed record CatalogFunction(string Name, IReadOnlyList<CatalogParameter> Parameters, bool IsVariadic, string? ReturnType, Bilingual Documentation)
 {
-    /// <summary>"DATEADD(datepart, number, date)" — the list's short form.</summary>
-    public string ShortSignature =>
+    /// <summary>Called without brackets (SYSDATE, CURRENT_TIMESTAMP).</summary>
+    public bool IsNiladic { get; init; }
+
+    /// <summary>"DATEADD(datepart, number, date)" — the list's short form; the bare name for a niladic one.</summary>
+    public string ShortSignature => IsNiladic ? Name :
         Name + "(" + string.Join(", ", Parameters.Select(static p => p.IsOptional ? "[" + p.Name + "]" : p.Name)) + (IsVariadic ? ", …" : string.Empty) + ")";
 
     /// <summary>As the SDK's signature.</summary>

@@ -144,5 +144,11 @@ internal static class TSqlFunctions
         DECOMPRESS(expression varbinary) : varbinary -- Decompresses a GZIP value ~ GZIP değeri açar
         ERROR_MESSAGE() : nvarchar -- Message of the error caught by CATCH ~ CATCH ile yakalanan hatanın mesajı
         ERROR_NUMBER() : int -- Number of the error caught by CATCH ~ CATCH ile yakalanan hatanın numarası
+        # ---- Called without brackets ----
+        CURRENT_TIMESTAMP : datetime -- Current date and time of the server (ANSI form of GETDATE) ~ Sunucunun şu anki tarih ve saati (GETDATE'in ANSI biçimi)
+        CURRENT_USER : sysname -- Name of the current database user ~ Geçerli veritabanı kullanıcısının adı
+        SESSION_USER : sysname -- Name of the current database user ~ Geçerli veritabanı kullanıcısının adı
+        SYSTEM_USER : sysname -- Login name of the session ~ Oturumun giriş adı
+        USER : sysname -- Name of the current database user ~ Geçerli veritabanı kullanıcısının adı
         """;
 }

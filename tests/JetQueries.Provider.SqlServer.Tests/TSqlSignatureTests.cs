@@ -165,4 +165,18 @@ public sealed class TSqlSignatureTests
 
         public Task<string?> GetDefinitionAsync(DatabaseObject target, CancellationToken cancellationToken) => Task.FromResult<string?>(null);
     }
+
+    [Fact]
+    public async Task A_function_called_without_brackets_is_inserted_without_them()
+    {
+        var items = await CompleteAsync("SELECT CURRENT_TIM|");
+
+        var item = Assert.Single(items, static i => i.Label == "CURRENT_TIMESTAMP");
+        Assert.Equal(CompletionItemKind.Function, item.Kind);
+        Assert.Equal("CURRENT_TIMESTAMP", item.InsertText);
+        Assert.False(item.OpensCall);
+        Assert.Equal("CURRENT_TIMESTAMP", item.Detail);
+        Assert.NotNull(item.Documentation);
+        Assert.Null(await HelpAsync("SELECT CURRENT_TIMESTAMP(|"));
+    }
 }

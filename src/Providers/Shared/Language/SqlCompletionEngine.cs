@@ -208,6 +208,7 @@ internal static class SqlCompletionEngine
         // Keywords and functions only once something has been typed: an empty list is better than 300 keywords.
         if (prefix.Length > 0)
         {
+            var described = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             if (expectsExpression)
             {
                 // Built-ins of the catalog come with their signature and what they do, and are inserted with
@@ -227,11 +228,13 @@ internal static class SqlCompletionEngine
                         continue;
                     }
 
+                    // A niladic built-in (SYSDATE, CURRENT_TIMESTAMP) is written without brackets.
                     var first = overloads[0];
                     var takesArguments = overloads.Any(static o => o.Parameters.Count > 0 || o.IsVariadic);
+                    described.Add(first.Name);
                     items.Add(new CompletionItem(first.Name, CompletionItemKind.Function, replace)
                     {
-                        InsertText = first.Name + "()",
+                        InsertText = first.IsNiladic ? first.Name : first.Name + "()",
                         OpensCall = takesArguments,
                         Detail = first.ShortSignature + (overloads.Count > 1 ? $" +{overloads.Count - 1}" : string.Empty),
                         Documentation = string.Join(
@@ -243,7 +246,11 @@ internal static class SqlCompletionEngine
 
             foreach (var keyword in dialect.Keywords)
             {
-                context.Add(items, keyword, CompletionItemKind.Keyword, null, quote: false);
+                // CURRENT_DATE and the like are keywords too; the described function is enough.
+                if (!described.Contains(keyword))
+                {
+                    context.Add(items, keyword, CompletionItemKind.Keyword, null, quote: false);
+                }
             }
         }
 
