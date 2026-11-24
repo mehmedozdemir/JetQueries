@@ -75,6 +75,19 @@ internal static class Program
         builder.Services.AddSingleton<DocumentsViewModel>();
         builder.Services.AddSingleton<HistoryViewModel>();
 
+        // Sync of connections and saved queries through a shared folder; its base stays on this machine.
+        builder.Services.AddSingleton<Core.Sync.ISyncService>(services => new Core.Sync.FolderSyncService(
+            services.GetRequiredService<Core.Connections.IConnectionStore>(),
+            services.GetRequiredService<Core.Library.ISavedQueryStore>(),
+            new Core.Sync.FolderSyncOptions { StatePath = Path.Combine(localData, "sync-state.json") },
+            TimeProvider.System,
+            services.GetRequiredService<Microsoft.Extensions.Logging.ILogger<Core.Sync.FolderSyncService>>()));
+        builder.Services.AddSingleton(services => new SyncViewModel(
+            services.GetRequiredService<Core.Sync.ISyncService>(),
+            services.GetRequiredService<Core.Jobs.IJobQueue>(),
+            services.GetRequiredService<IUiDispatcher>(),
+            services.GetRequiredService<Core.Settings.ISettingsStore>()));
+
         // The library of saved queries: next to the connections, in the roaming profile (no secrets in it).
         builder.Services.AddSingleton<Core.Library.ISavedQueryStore>(services => new Core.Library.JsonSavedQueryStore(
             new Core.Library.SavedQueryStoreOptions { FilePath = Path.Combine(userData, "saved-queries.json") },
