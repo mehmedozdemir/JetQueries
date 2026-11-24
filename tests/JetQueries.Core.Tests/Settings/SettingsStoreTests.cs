@@ -43,4 +43,54 @@ public sealed class SettingsStoreTests
         Assert.Equal(new Sample(), await store.LoadAsync("appearance", new Sample(), Token));
         Assert.Equal("{ not json", await File.ReadAllTextAsync(path, Token));
     }
+
+    [Fact]
+    public async Task A_protected_section_is_written_encrypted_and_a_plain_one_is_moved_over()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        var directory = Path.Combine(AppContext.BaseDirectory, "settings-tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        var options = new SettingsStoreOptions { Directory = directory, Protector = new WindowsDataProtector() };
+        options.ProtectedSections.Add("workspace");
+        var store = new JsonSettingsStore(options, NullLogger<JsonSettingsStore>.Instance);
+
+        // A workspace saved by an earlier version, in plain text, is still read…
+        var plain = Path.Combine(directory, "workspace.json");
+        await File.WriteAllTextAsync(plain, "{\"font\": \"IDENTIFIED BY Gizli123\"}", Token);
+        Assert.Equal("IDENTIFIED BY Gizli123", (await store.LoadAsync("workspace", new Sample(), Token)).Font);
+
+        // …and the next save encrypts it and removes the plain file.
+        await store.SaveAsync("workspace", new Sample { Font = "IDENTIFIED BY Gizli123" }, Token);
+        Assert.False(File.Exists(plain));
+        var bytes = await File.ReadAllBytesAsync(Path.Combine(directory, "workspace.bin"), Token);
+        Assert.DoesNotContain("Gizli123", System.Text.Encoding.UTF8.GetString(bytes), StringComparison.Ordinal);
+        Assert.DoesNotContain("Gizli123", System.Text.Encoding.Unicode.GetString(bytes), StringComparison.Ordinal);
+        Assert.Equal("IDENTIFIED BY Gizli123", (await store.LoadAsync("workspace", new Sample(), Token)).Font);
+
+        // Other sections stay plain JSON.
+        await store.SaveAsync("appearance", new Sample(), Token);
+        Assert.True(File.Exists(Path.Combine(directory, "appearance.json")));
+
+        // A damaged file gives the defaults.
+        await File.WriteAllBytesAsync(Path.Combine(directory, "workspace.bin"), [1, 2, 3], Token);
+        Assert.Equal(new Sample(), await store.LoadAsync("workspace", new Sample(), Token));
+    }
+
+    [Fact]
+    public async Task Without_a_protector_a_protected_section_never_reaches_the_disk()
+    {
+        var directory = Path.Combine(AppContext.BaseDirectory, "settings-tests", Guid.NewGuid().ToString("N"));
+        var options = new SettingsStoreOptions { Directory = directory };
+        options.ProtectedSections.Add("workspace");
+        var store = new JsonSettingsStore(options, NullLogger<JsonSettingsStore>.Instance);
+
+        await store.SaveAsync("workspace", new Sample { Size = 20 }, Token);
+
+        Assert.False(File.Exists(Path.Combine(directory, "workspace.json")));
+        Assert.False(File.Exists(Path.Combine(directory, "workspace.bin")));
+    }
 }

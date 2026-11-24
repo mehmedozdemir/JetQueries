@@ -479,3 +479,9 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] The second look at the same table (Refresh, or Ctrl+Click again) is near instant.
 - [ ] The PK/FK marks in the Columns tab appear (a moment after the columns on a large dictionary).
 - [ ] In the query editor the text has a clear gap from the dotted rule after the line numbers.
+
+## Workspace encryption
+- [ ] Type a query in a tab and close the app: %AppData%\JetQueries has workspace.bin (unreadable bytes) and no
+      workspace.json; at the next start the tab and its text are back.
+- [ ] Starting a build after this change with an old workspace.json: the tabs come back and workspace.json is gone
+      after the first change.

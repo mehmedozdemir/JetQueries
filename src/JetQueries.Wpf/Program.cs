@@ -47,7 +47,13 @@ internal static class Program
             // on uninstall, and the user's connections and history must survive that (ADR 0005).
             connections => connections.FilePath = Path.Combine(userData, "connections.json"),
             history => history.DatabasePath = Path.Combine(userData, "history.db"),
-            settings => settings.Directory = userData);
+            settings =>
+            {
+                settings.Directory = userData;
+
+                // The open tabs' text may hold anything typed, passwords included: encrypted for this Windows user.
+                settings.ProtectedSections.Add(Presentation.ViewModels.WorkspaceState.Section);
+            });
         builder.Services.AddSingleton<IDialogService, WpfDialogService>();
         builder.Services.AddSingleton<IUiDispatcher, WpfUiDispatcher>();
         builder.Services.AddSingleton<FavoriteObjects>();
