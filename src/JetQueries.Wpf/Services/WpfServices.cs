@@ -52,6 +52,12 @@ public sealed class AppearanceService : IAppearanceService
     /// <summary>Whether result headers show the data type under the column name.</summary>
     public static bool ShowColumnTypes { get; private set; } = true;
 
+    /// <summary>Whether the editor adds = '' after a text column in a condition (Settings, SQL editor).</summary>
+    public static bool ValueSnippets { get; private set; } = true;
+
+    /// <summary>Whether the editor shows a table's or column's details on hover.</summary>
+    public static bool HoverInfo { get; private set; } = true;
+
     /// <summary>Whether the compact density is in effect (result rows are lower too).</summary>
     public static bool Compact { get; private set; }
 
@@ -78,6 +84,8 @@ public sealed class AppearanceService : IAppearanceService
         resources["FontSize.Code"] = settings.EditorFontSize;
         GridScale = settings.GridFontSize / 13;
         ShowColumnTypes = settings.ShowColumnTypes;
+        ValueSnippets = settings.ValueSnippets;
+        HoverInfo = settings.HoverInfo;
 
         // Density: UiKit's control sizes, then the application's own tighter ones, one step smaller in compact.
         Compact = settings.CompactMode;

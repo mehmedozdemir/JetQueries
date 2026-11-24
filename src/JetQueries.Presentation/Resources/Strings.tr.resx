@@ -406,6 +406,17 @@
   <data name="KeyOpen" xml:space="preserve"><value>Aç</value></data>
   <data name="KeyItemEditor" xml:space="preserve"><value>Seçili öğe</value></data>
   <data name="KeyReadOnly" xml:space="preserve"><value>Salt okunur bağlantı: anahtar yalnızca görüntülenebilir.</value></data>
+  <data name="HoverColumn" xml:space="preserve"><value>Sütun</value></data>
+  <data name="HoverColumns" xml:space="preserve"><value>{0} sütun</value></data>
+  <data name="HoverMoreColumns" xml:space="preserve"><value>… ve {0} sütun daha</value></data>
+  <data name="HoverPrimaryKey" xml:space="preserve"><value>Birincil anahtar</value></data>
+  <data name="HoverNullable" xml:space="preserve"><value>NULL olabilir</value></data>
+  <data name="HoverNotNull" xml:space="preserve"><value>NOT NULL</value></data>
+  <data name="SettingsGroupAssist" xml:space="preserve"><value>Yardımcılar</value></data>
+  <data name="FieldValueSnippets" xml:space="preserve"><value>Sütundan sonra karşılaştırma</value></data>
+  <data name="SettingValueSnippetsInfo" xml:space="preserve"><value>WHERE, AND, OR, ON sonrasında ya da UPDATE … SET içinde listeden seçilen metin veya tarih sütununa = '' eklenir ve imleç tırnakların arasına gelir (Unicode sütunlarda N'').</value></data>
+  <data name="FieldHoverInfo" xml:space="preserve"><value>Üzerine gelince tablo ve sütun bilgisi</value></data>
+  <data name="SettingHoverInfoInfo" xml:space="preserve"><value>Fare bir tablo, görünüm ya da sütunun üzerinde durunca sütunlarını, türünü ve anahtarını gösterir.</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Tümünü temizle</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Filtreyi kaldır</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} / {1:N0} satır</value></data>

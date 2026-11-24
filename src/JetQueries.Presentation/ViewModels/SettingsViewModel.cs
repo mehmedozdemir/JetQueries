@@ -39,6 +39,12 @@ public sealed record AppearanceSettings
     /// <summary>Result headers show each column's data type on a second line.</summary>
     public bool ShowColumnTypes { get; init; } = true;
 
+    /// <summary>A text or date column chosen after WHERE, AND, SET… gets <c> = ''</c> with the caret in the quotes.</summary>
+    public bool ValueSnippets { get; init; } = true;
+
+    /// <summary>Resting the mouse on a table or column in the editor shows its details.</summary>
+    public bool HoverInfo { get; init; } = true;
+
     /// <summary>
     /// The compact interface density (JetBrains' compact mode): lower toolbars, rows, tabs and inputs with tighter
     /// padding; text keeps its size.
@@ -454,6 +460,16 @@ public partial class SettingsViewModel : ObservableObject
 
     partial void OnShowColumnTypesChanged(bool value) => Preview();
 
+    [ObservableProperty]
+    public partial bool ValueSnippets { get; set; }
+
+    partial void OnValueSnippetsChanged(bool value) => Preview();
+
+    [ObservableProperty]
+    public partial bool HoverInfo { get; set; }
+
+    partial void OnHoverInfoChanged(bool value) => Preview();
+
     partial void OnQueryButtonPlaceChanged(SettingChoice<bool>? value) => Preview();
 
     partial void OnFetchSizeChanged(int value) => Preview();
@@ -471,6 +487,8 @@ public partial class SettingsViewModel : ObservableObject
         HardwareRendering = HardwareRendering,
         FetchSize = FetchSize,
         ShowColumnTypes = ShowColumnTypes,
+        ValueSnippets = ValueSnippets,
+        HoverInfo = HoverInfo,
         FormatKeywordCase = FormatKeywordCase?.Value ?? SqlKeywordCase.Upper,
         FormatIndent = FormatIndent?.Value ?? 4,
         FormatContentOnNewLine = FormatContentOnNewLine,
@@ -589,6 +607,8 @@ public partial class SettingsViewModel : ObservableObject
             HardwareRendering = settings.HardwareRendering;
             FetchSize = settings.FetchSize;
             ShowColumnTypes = settings.ShowColumnTypes;
+            ValueSnippets = settings.ValueSnippets;
+            HoverInfo = settings.HoverInfo;
             FormatKeywordCase = KeywordCases.FirstOrDefault(c => c.Value == settings.FormatKeywordCase) ?? KeywordCases[0];
             FormatIndent = Indents.FirstOrDefault(c => c.Value == settings.FormatIndent) ?? Indents[1];
             FormatContentOnNewLine = settings.FormatContentOnNewLine;

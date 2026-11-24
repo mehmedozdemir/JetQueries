@@ -576,6 +576,70 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
     }
 
     /// <summary>
+    /// What the editor shows when the mouse rests on a name: a table's or view's columns, a column's type and
+    /// table, or what kind of object it is. Resolved as Ctrl+Click resolves it (aliases too), from cached metadata.
+    /// Null for anything else (keywords, literals) or when the window has no connection.
+    /// </summary>
+    public async Task<SqlHoverInfo?> HoverAsync(string text, int offset, CancellationToken cancellationToken)
+    {
+        if (SelectedSession?.Session is not { Provider.LanguageService: { } service } session)
+        {
+            return null;
+        }
+
+        var metadata = SessionMetadata(session);
+        var document = Document(text, metadata);
+        try
+        {
+            return await _jobs.Enqueue(
+                "Hover",
+                async context =>
+                {
+                    using var linked = CancellationTokenSource.CreateLinkedTokenSource(context.CancellationToken, cancellationToken);
+                    var token = linked.Token;
+                    var definition = await service.GetDefinitionAsync(document, offset, token).ConfigureAwait(false);
+                    if (definition?.Target is not { } target)
+                    {
+                        return null;
+                    }
+
+                    var kind = ObjectDetailsViewModel.KindName(target.Kind);
+                    if (target.Kind is not (DatabaseObjectKinds.Table or DatabaseObjectKinds.View))
+                    {
+                        return new SqlHoverInfo(target.Name.ToString(), kind, definition.MemberName);
+                    }
+
+                    var columns = await metadata.GetColumnsAsync(target.Name, token).ConfigureAwait(false);
+                    if (definition.MemberName is { } member)
+                    {
+                        var column = columns.FirstOrDefault(c => string.Equals(c.Name, member, StringComparison.OrdinalIgnoreCase));
+                        return column is null
+                            ? null
+                            : new SqlHoverInfo(column.Name, Strings.HoverColumn, column.DataType + " · " + target.Name) { Column = column };
+                    }
+
+                    return new SqlHoverInfo(target.Name.ToString(), kind, Format(Strings.HoverColumns, columns.Count))
+                    {
+                        Columns = [.. columns.Take(SqlHoverInfo.MaxColumns)],
+                        MoreColumns = Math.Max(0, columns.Count - SqlHoverInfo.MaxColumns),
+                    };
+                },
+                JobPriority.High,
+                cancellationToken).Completion;
+        }
+        catch (OperationCanceledException)
+        {
+            return null;
+        }
+#pragma warning disable CA1031 // A hover is a convenience: nothing is shown when the lookup fails.
+        catch (Exception)
+#pragma warning restore CA1031
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
     /// What a definition opens: its object, or — for a routine pointed at inside a package (<c>pkg.member</c>) —
     /// that routine, as the package lists it (the package itself when it does not).
     /// </summary>

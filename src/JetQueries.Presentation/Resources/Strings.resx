@@ -406,6 +406,17 @@
   <data name="KeyOpen" xml:space="preserve"><value>Open</value></data>
   <data name="KeyItemEditor" xml:space="preserve"><value>Selected item</value></data>
   <data name="KeyReadOnly" xml:space="preserve"><value>Read-only connection: the key can be viewed only.</value></data>
+  <data name="HoverColumn" xml:space="preserve"><value>Column</value></data>
+  <data name="HoverColumns" xml:space="preserve"><value>{0} columns</value></data>
+  <data name="HoverMoreColumns" xml:space="preserve"><value>… and {0} more</value></data>
+  <data name="HoverPrimaryKey" xml:space="preserve"><value>Primary key</value></data>
+  <data name="HoverNullable" xml:space="preserve"><value>Nullable</value></data>
+  <data name="HoverNotNull" xml:space="preserve"><value>NOT NULL</value></data>
+  <data name="SettingsGroupAssist" xml:space="preserve"><value>Assistance</value></data>
+  <data name="FieldValueSnippets" xml:space="preserve"><value>Comparison after a column</value></data>
+  <data name="SettingValueSnippetsInfo" xml:space="preserve"><value>A text or date column chosen from the list after WHERE, AND, OR, ON or in UPDATE … SET gets = '' with the cursor between the quotes (N'' for Unicode columns).</value></data>
+  <data name="FieldHoverInfo" xml:space="preserve"><value>Table and column details on hover</value></data>
+  <data name="SettingHoverInfoInfo" xml:space="preserve"><value>Resting the mouse on a table, view or column shows its columns, type and key.</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Clear all</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Remove filter</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} of {1:N0} rows</value></data>

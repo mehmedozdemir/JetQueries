@@ -135,7 +135,7 @@ public partial class SqlEditor : UserControl
             _editor.TextArea.TextView.InvalidateLayer(KnownLayer.Selection);
         };
         _editor.MouseHover += OnMouseHover;
-        _editor.MouseHoverStopped += (_, _) => _toolTip.IsOpen = false;
+        _editor.MouseHoverStopped += (_, _) => StopHover();
         _editor.TextArea.PreviewMouseLeftButtonDown += OnPreviewMouseDown;
 
         // A right click outside the selection moves the caret there first, so the menu acts where it was opened.
@@ -163,6 +163,15 @@ public partial class SqlEditor : UserControl
     /// the editor offers no completion.
     /// </summary>
     public Func<string, int, CancellationToken, Task<IReadOnlyList<CompletionItem>>>? CompletionSource { get; set; }
+
+    /// <summary>What the name at an offset is (table, view, column), shown in a card on hover; null shows nothing.</summary>
+    public Func<string, int, CancellationToken, Task<SqlHoverInfo?>>? HoverSource { get; set; }
+
+    /// <summary>
+    /// What to add after a completion was put in (text, column start, end, item): <c> = ''</c> after a column in a
+    /// condition, with where the caret goes; null adds nothing.
+    /// </summary>
+    public Func<string, int, int, CompletionItem, (string Text, int Caret)?>? CompletionSuffix { get; set; }
 
     /// <summary>Raised with a text offset when the user asks to go to the definition of what is there (Ctrl+Click, F12).</summary>
     public event EventHandler<int>? NavigationRequested;
@@ -702,11 +711,19 @@ public partial class SqlEditor : UserControl
 
     private void OnMouseHover(object sender, MouseEventArgs e)
     {
-        var message = OffsetAt(e) is { } offset
+        var at = OffsetAt(e);
+        var message = at is { } offset
             ? _diagnostics.FirstOrDefault(d => d.Span.Start <= offset && offset < Math.Max(d.Span.End, d.Span.Start + 1))?.Message
             : null;
         if (message is null)
         {
+            // No problem here: what the name under the mouse is, when the host can tell.
+            if (at is { } position && HoverSource is not null)
+            {
+                _ = ShowHoverAsync(position);
+                e.Handled = true;
+            }
+
             return;
         }
 
