@@ -462,8 +462,8 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - Idle memory of the WPF application is about 370 MB (budget: 200 MB); not investigated yet.
 - The editor's zoom is shared by the query tabs (one editor view shows the selected tab).
 - The explorer filter searches what has been loaded (expanded) so far, not the whole catalog.
-- PostgreSQL: the explorer shows the connection's own database only; completion, Ctrl+Click and details follow
-  the database a tab selected (a metadata connection per database, kept for the session).
+- PostgreSQL: each database read (explorer, completion, details) holds a metadata connection to it for the rest of
+  the session.
 - Each query tab after the first holds its own server connection while it is open (as in SSMS).
 - The workspace (`%AppData%\JetQueries\workspace.bin`) holds the open tabs' texts as typed, encrypted for the
   current Windows user (DPAPI). Query history masks password literals; the workspace does not change the user's text.
@@ -527,4 +527,11 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
       "-- PACKAGE BODY OWNER.PKG" and the implementation(s); the other routines of the package are not there.
 - [ ] In the explorer, expand a package: its routines open their own details (Details / F4) and DDL tab.
 - [ ] Signature help on `pkg.proc(` still shows each overload.
+
+## PostgreSQL explorer: databases
+- [ ] Expand a PostgreSQL connection: its first level is the server's databases (templates and those you may not
+      connect to are left out). Expanding one shows its schemas, then Tables, Views, Functions… of that database.
+- [ ] A table of another database: Details (F4) and DDL show it; "Select rows" opens a query tab whose database
+      selector is that database, and the query runs there.
+- [ ] Refresh on a database node reads it again.
 

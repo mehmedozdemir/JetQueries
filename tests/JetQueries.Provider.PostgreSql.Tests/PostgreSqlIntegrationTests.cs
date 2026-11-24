@@ -423,6 +423,17 @@ public sealed class PostgreSqlIntegrationTests(PostgreSqlFixture fixture) : ICla
         Assert.Equal("jq_other", table.Name.Database);
         var details = await session.UseMetadataAsync(table.Name.Database, (provider, token) => ((IObjectDetailsProvider)provider).GetDetailsAsync(table with { Name = table.Name with { Database = null } }, token), Token);
         Assert.NotNull(details);
+
+        // The explorer: the server's databases, then under one of them its schemas and tables, read there.
+        var databases = await service.GetObjectsAsync(session, null, DatabaseObjectKinds.Database, refresh: false, Token);
+        Assert.Contains(databases, static d => d.Name.Name == "jq_other");
+        Assert.Contains(databases, static d => d.Name.Name == "postgres");
+        var otherDatabase = databases.Single(static d => d.Name.Name == "jq_other");
+        var schemas = await service.GetObjectsAsync(session, otherDatabase, DatabaseObjectKinds.Schema, refresh: false, Token, "jq_other");
+        var publicSchema = Assert.Single(schemas, static s => s.Name.Name == "public");
+        var tables = await service.GetObjectsAsync(session, publicSchema with { Name = publicSchema.Name with { Database = "jq_other" } }, DatabaseObjectKinds.Table, refresh: false, Token, "jq_other");
+        Assert.Contains(tables, static t => t.Name.Name == "only_here");
+        Assert.True(new PostgreSqlProvider().Capabilities.HasFlag(ProviderCapabilities.MultipleDatabases));
     }
 
     [Fact]

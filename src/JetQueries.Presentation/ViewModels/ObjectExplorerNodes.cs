@@ -161,7 +161,7 @@ public sealed class DatabaseObjectNodeViewModel(ExplorerContext context, Databas
             ExplorerTree.LoadObjectsAsync(context, Target, DatabaseObjectKinds.Schema, refresh),
         DatabaseObjectKinds.Database or DatabaseObjectKinds.Schema =>
             Task.FromResult(ExplorerTree.Categories(context, Target)),
-        DatabaseObjectKinds.Table or DatabaseObjectKinds.View => ExplorerTree.LoadColumnsAsync(context, Target.Name, refresh),
+        DatabaseObjectKinds.Table or DatabaseObjectKinds.View => ExplorerTree.LoadColumnsAsync(context, Target.Name, refresh, Target.Name.Database),
         _ => Task.FromResult<IReadOnlyList<ExplorerNodeViewModel>>([]),
     };
 }
@@ -268,18 +268,26 @@ internal static class ExplorerTree
     public static async Task<IReadOnlyList<ExplorerNodeViewModel>> LoadObjectsAsync(
         ExplorerContext context, DatabaseObject? parent, DatabaseObjectKinds kinds, bool refresh)
     {
+        // A provider whose metadata sees one database (PostgreSQL) reads under a database node on a connection to
+        // it; what is found there carries the database, so details, scripts and query tabs go there too.
+        var database = parent is { Kind: DatabaseObjectKinds.Database } ? parent.Name.Name : parent?.Name.Database;
+        var perDatabase = context.Session.HasMetadataPerDatabase && database is not null;
         var job = context.Jobs.Enqueue(
             "Load objects",
-            job => context.Metadata.GetObjectsAsync(context.Session, parent, kinds, refresh, job.CancellationToken));
+            job => context.Metadata.GetObjectsAsync(context.Session, parent, kinds, refresh, job.CancellationToken, perDatabase ? database : null));
         var objects = await job.Completion;
-        return [.. objects.Select(o => new DatabaseObjectNodeViewModel(context, o))];
+        return [.. objects.Select(o => new DatabaseObjectNodeViewModel(
+            context,
+            perDatabase && o.Kind != DatabaseObjectKinds.Database && o.Name.Database is null ? o with { Name = o.Name with { Database = database } } : o))];
     }
 
-    public static async Task<IReadOnlyList<ExplorerNodeViewModel>> LoadColumnsAsync(ExplorerContext context, DatabaseObjectName table, bool refresh)
+    public static async Task<IReadOnlyList<ExplorerNodeViewModel>> LoadColumnsAsync(ExplorerContext context, DatabaseObjectName table, bool refresh, string? database = null)
     {
+        var perDatabase = context.Session.HasMetadataPerDatabase && database is not null;
+        var asked = perDatabase ? table with { Database = null } : table;
         var job = context.Jobs.Enqueue(
             "Load columns",
-            job => context.Metadata.GetColumnsAsync(context.Session, table, refresh, job.CancellationToken));
+            job => context.Metadata.GetColumnsAsync(context.Session, asked, refresh, job.CancellationToken, perDatabase ? database : null));
         var columns = await job.Completion;
         return [.. columns.Select(static c => new ColumnNodeViewModel(c))];
     }

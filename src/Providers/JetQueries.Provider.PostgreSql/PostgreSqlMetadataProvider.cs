@@ -32,6 +32,28 @@ internal sealed partial class PostgreSqlMetadataProvider(Func<NpgsqlConnection> 
         DatabaseObjectKinds kinds,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
+        // The databases of the server the user may connect to (the explorer's first level).
+        if (parent is null && kinds.HasFlag(DatabaseObjectKinds.Database))
+        {
+            const string Databases = """
+                SELECT d.datname FROM pg_database d
+                WHERE d.datallowconn AND NOT d.datistemplate AND has_database_privilege(d.datname, 'CONNECT')
+                ORDER BY d.datname
+                """;
+            await foreach (var name in QueryAsync(Databases, [], static r => r.GetString(0), cancellationToken).ConfigureAwait(false))
+            {
+                yield return new DatabaseObject(new DatabaseObjectName(null, null, name), DatabaseObjectKinds.Database);
+            }
+
+            yield break;
+        }
+
+        // Under a database: the connection is the database's own (the host switches it), so its root.
+        if (parent is { Kind: DatabaseObjectKinds.Database })
+        {
+            parent = null;
+        }
+
         if (parent is null && kinds.HasFlag(DatabaseObjectKinds.Schema))
         {
             // The system schemas are left out; the current one is always shown.
