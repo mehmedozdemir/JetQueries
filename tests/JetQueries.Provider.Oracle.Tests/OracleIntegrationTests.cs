@@ -504,6 +504,22 @@ public sealed class OracleIntegrationTests(OracleFixture fixture) : IClassFixtur
 
         var function = new DatabaseObject(new DatabaseObjectName(null, user, "JQ_EXEC_FN"), DatabaseObjectKinds.Function);
         Assert.Contains(await RunAsync(function, [new RoutineArgument("P_A", RoutineArgumentKind.Value, "5")]), static m => m.Contains("Result = n=5", StringComparison.Ordinal));
+
+        // A ref cursor OUT parameter comes back as a result set (DBMS_SQL.RETURN_RESULT).
+        await ToListAsync(connection.Executor.ExecuteAsync(
+            new QueryRequest("CREATE OR REPLACE PROCEDURE jq_exec_cur(p_min IN NUMBER, p_rows OUT SYS_REFCURSOR) IS BEGIN OPEN p_rows FOR SELECT LEVEL + p_min AS n FROM dual CONNECT BY LEVEL <= 3; END;"),
+            Token));
+        var cursor = new DatabaseObject(new DatabaseObjectName(null, user, "JQ_EXEC_CUR"), DatabaseObjectKinds.Procedure);
+        var cursorScript = provider.ScriptExecute(cursor, Assert.Single(await routines.GetSignaturesAsync(cursor, Token)), [new RoutineArgument("P_MIN", RoutineArgumentKind.Value, "10")]);
+        Assert.Contains("SYS_REFCURSOR", cursorScript, StringComparison.Ordinal);
+        var events = new List<QueryEvent>();
+        foreach (var batch in provider.SplitBatches(cursorScript!))
+        {
+            events.AddRange(await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest(batch.Text), Token)));
+        }
+
+        var rows = events.OfType<RowBatch>().SelectMany(static b => b.Rows).Select(static r => Convert.ToInt32(r[0], System.Globalization.CultureInfo.InvariantCulture)).ToList();
+        Assert.Equal([11, 12, 13], rows);
     }
 
     [Fact]
