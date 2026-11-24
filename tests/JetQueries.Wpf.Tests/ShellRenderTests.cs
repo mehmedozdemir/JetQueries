@@ -132,6 +132,42 @@ public sealed class ShellRenderTests
             window.ApplyLayout(new ShellLayout());
             await Idle();
 
+            // The result tools are no taller than the result tab row.
+            Assert.True(((FrameworkElement)queryView.FindName("ResultTools")).ActualHeight <= 26);
+
+            // Collapse all closes every level; expand all opens what is loaded, and loads nothing more.
+            static IEnumerable<ExplorerNodeViewModel> Tree(IEnumerable<ExplorerNodeViewModel> nodes) => nodes.SelectMany(static n => (IEnumerable<ExplorerNodeViewModel>)[n, .. Tree(n.Children)]);
+            connections.CollapseAllCommand.Execute(null);
+            Assert.All(Tree(connections.Roots), static n => Assert.False(n.IsExpanded));
+            var unloaded = Tree(connections.Roots).OfType<LazyNodeViewModel>().Where(static n => !n.IsLoaded).ToList();
+            connections.ExpandAllCommand.Execute(null);
+            Assert.All(Tree(connections.Roots).OfType<FolderNodeViewModel>(), static n => Assert.True(n.IsExpanded));
+            Assert.All(unloaded, static n => Assert.False(n.IsExpanded || n.IsLoading));
+            await Idle();
+
+            // Unpinned, the explorer gives its room to the tabs and opens from a rail over them; pinned, it is back.
+            var explorerPanel = (FrameworkElement)window.FindName("ExplorerPanel");
+            var rail = (FrameworkElement)window.FindName("ExplorerRail");
+            Assert.True(window.IsExplorerPinned);
+            window.SetExplorerPinned(false);
+            await Idle();
+            Assert.False(window.CurrentLayout().ExplorerPinned);
+            Assert.Equal(Visibility.Collapsed, explorerPanel.Visibility);
+            Assert.Equal(Visibility.Visible, rail.Visibility);
+            window.SetExplorerFlyout(true);
+            await Idle();
+            Assert.Equal(Visibility.Visible, explorerPanel.Visibility);
+            Assert.Equal(3, Grid.GetColumnSpan(explorerPanel));
+            results["wpf-explorer-unpinned.png"] = ResultGridViewTests.Capture(window, Path.Combine(directory, "wpf-explorer-unpinned.png"));
+            window.SetExplorerFlyout(false);
+            await Idle();
+            Assert.Equal(Visibility.Collapsed, explorerPanel.Visibility);
+            window.SetExplorerPinned(true);
+            await Idle();
+            Assert.Equal(Visibility.Visible, explorerPanel.Visibility);
+            Assert.Equal(Visibility.Collapsed, rail.Visibility);
+            Assert.True(window.CurrentLayout().ExplorerPinned);
+
             // The history has its own window (Tools, Query history), opened once and reused.
             var historyWindow = window.ShowHistory(shell);
             historyWindow.Left = -20000;
@@ -267,7 +303,7 @@ public sealed class ShellRenderTests
             return results;
         });
 
-        Assert.Equal(34, colours.Count); // 26 renderings and the 8 colour schemes
+        Assert.Equal(35, colours.Count); // 27 renderings and the 8 colour schemes
         Assert.All(colours, static pair => Assert.True(pair.Value > 12, $"{pair.Key} rendered only {pair.Value} distinct colours."));
     }
 

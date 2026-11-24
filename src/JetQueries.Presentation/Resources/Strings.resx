@@ -417,6 +417,11 @@
   <data name="SettingValueSnippetsInfo" xml:space="preserve"><value>A text or date column chosen from the list after WHERE, AND, OR, ON or in UPDATE … SET gets = '' with the cursor between the quotes (N'' for Unicode columns).</value></data>
   <data name="FieldHoverInfo" xml:space="preserve"><value>Table and column details on hover</value></data>
   <data name="SettingHoverInfoInfo" xml:space="preserve"><value>Resting the mouse on a table, view or column shows its columns, type and key.</value></data>
+  <data name="ExplorerExpandAll" xml:space="preserve"><value>Expand all (what is loaded)</value></data>
+  <data name="ExplorerCollapseAll" xml:space="preserve"><value>Collapse all</value></data>
+  <data name="ExplorerPinTip" xml:space="preserve"><value>Pin the explorer beside the tabs</value></data>
+  <data name="ExplorerUnpinTip" xml:space="preserve"><value>Unpin: hide the explorer behind a rail at the left edge</value></data>
+  <data name="ExplorerShowTip" xml:space="preserve"><value>Show the explorer</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Clear all</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Remove filter</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} of {1:N0} rows</value></data>

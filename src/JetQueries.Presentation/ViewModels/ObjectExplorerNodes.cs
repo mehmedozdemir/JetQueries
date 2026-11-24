@@ -59,6 +59,9 @@ public abstract partial class LazyNodeViewModel : ExplorerNodeViewModel
     /// <summary>Whether there is anything to load right now.</summary>
     public virtual bool CanLoad => true;
 
+    /// <summary>Whether the children were loaded (expanding it shows them without asking the database).</summary>
+    public bool IsLoaded => _loaded;
+
     /// <summary>Loads the children, or reloads them from the database when <paramref name="refresh"/> is set.</summary>
     public async Task LoadAsync(bool refresh = false)
     {

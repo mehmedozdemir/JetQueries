@@ -457,6 +457,54 @@ public partial class ConnectionsViewModel(
         }
     }
 
+    /// <summary>
+    /// Expands every folder and every node whose children are already loaded; nothing new is read from a
+    /// database (a closed connection stays closed, an unopened table stays as it is).
+    /// </summary>
+    [RelayCommand]
+    private void ExpandAll()
+    {
+        foreach (var root in Roots)
+        {
+            Expand(root);
+        }
+
+        static void Expand(ExplorerNodeViewModel node)
+        {
+            if (node is MessageNodeViewModel || (node is LazyNodeViewModel lazy && !lazy.IsLoaded) ||
+                !node.Children.Any(static c => c is not MessageNodeViewModel))
+            {
+                return;
+            }
+
+            node.IsExpanded = true;
+            foreach (var child in node.Children)
+            {
+                Expand(child);
+            }
+        }
+    }
+
+    /// <summary>Collapses every node, down to the deepest, so that the tree shows its top level only.</summary>
+    [RelayCommand]
+    private void CollapseAll()
+    {
+        foreach (var root in Roots)
+        {
+            Collapse(root);
+        }
+
+        static void Collapse(ExplorerNodeViewModel node)
+        {
+            foreach (var child in node.Children)
+            {
+                Collapse(child);
+            }
+
+            node.IsExpanded = false;
+        }
+    }
+
     private readonly HashSet<LazyNodeViewModel> _watched = [];
 
     private bool Filter(ExplorerNodeViewModel node, string filter, bool ancestorMatched)
