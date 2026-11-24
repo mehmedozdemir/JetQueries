@@ -466,9 +466,8 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - PostgreSQL: after switching a tab's database, completion and the explorer still read the connection's own
   database (their metadata connection is not switched).
 - Each query tab after the first holds its own server connection while it is open (as in SSMS).
-- The workspace (`%AppData%\JetQueries\workspace.json`) holds the open tabs' texts as typed, like an editor's
-  recovery file: anything typed into a query (including a password) is stored there in plain text until the tab
-  is closed. Query history masks password literals; the workspace does not change the user's text.
+- The workspace (`%AppData%\JetQueries\workspace.bin`) holds the open tabs' texts as typed, encrypted for the
+  current Windows user (DPAPI). Query history masks password literals; the workspace does not change the user's text.
 - Files larger than 50 MB are not opened in an editor tab.
 - The Avalonia application still builds (`JetQueries.Avalonia.exe`) but is no longer packaged or developed.
 
