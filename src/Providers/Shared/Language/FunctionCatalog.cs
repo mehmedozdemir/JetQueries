@@ -31,8 +31,51 @@ internal sealed partial class FunctionCatalog
     /// <summary>The overloads of a function; empty when the catalog does not know it.</summary>
     public IReadOnlyList<CatalogFunction> Find(string name) => _functions.TryGetValue(name, out var found) ? found : [];
 
-    [GeneratedRegex(@"^(?<name>[A-Za-z_][\w$#]*(?:\.[A-Za-z_][\w$#]*)*)\s*\((?<params>.*)\)\s*(?::\s*(?<ret>[^-]+?))?\s*(?:--\s*(?<doc>.*))?$", RegexOptions.CultureInvariant)]
-    private static partial Regex FunctionLine();
+    [GeneratedRegex(@"^(?<name>[A-Za-z_][\w$#]*(?:\.[A-Za-z_][\w$#]*)*)\s*\($", RegexOptions.CultureInvariant)]
+    private static partial Regex FunctionName();
+
+    [GeneratedRegex(@"^\s*(?::\s*(?<ret>.+?))?\s*(?:--\s*(?<doc>.*))?$", RegexOptions.CultureInvariant)]
+    private static partial Regex FunctionTail();
+
+    /// <summary>
+    /// "NAME(params) : type -- doc": the parameter list ends at the bracket that closes the first one (a
+    /// description may hold brackets of its own).
+    /// </summary>
+    private static (string Name, string Parameters, string? Returns, string Documentation)? SplitFunction(string line)
+    {
+        var open = line.IndexOf('(', StringComparison.Ordinal);
+        if (open < 0 || !FunctionName().IsMatch(line[..(open + 1)]))
+        {
+            return null;
+        }
+
+        var depth = 0;
+        var quoted = false;
+        for (var i = open; i < line.Length; i++)
+        {
+            var c = line[i];
+            if (c == ''')
+            {
+                quoted = !quoted;
+            }
+            else if (!quoted && c == '(')
+            {
+                depth++;
+            }
+            else if (!quoted && c == ')' && --depth == 0)
+            {
+                var tail = FunctionTail().Match(line[(i + 1)..]);
+                if (!tail.Success)
+                {
+                    return null;
+                }
+
+                return (line[..open].Trim(), line[(open + 1)..i], tail.Groups["ret"].Success ? tail.Groups["ret"].Value.Trim() : null, tail.Groups["doc"].Value);
+            }
+        }
+
+        return null;
+    }
 
     /// <summary>Reads a catalog written as described above.</summary>
     /// <exception cref="FormatException">A line is not understood (a mistake in the provider's catalog).</exception>
@@ -62,15 +105,14 @@ internal sealed partial class FunctionCatalog
                 continue;
             }
 
-            var match = FunctionLine().Match(line);
-            if (!match.Success)
+            if (SplitFunction(line) is not { } match)
             {
                 throw new FormatException($"Line {number + 1}: '{line}' is not a function.");
             }
 
             var parameters = new List<CatalogParameter>();
             var variadic = false;
-            foreach (var part in SplitTop(match.Groups["params"].Value, ','))
+            foreach (var part in SplitTop(match.Parameters, ','))
             {
                 var p = part.Trim();
                 if (p.Length == 0)
@@ -99,8 +141,7 @@ internal sealed partial class FunctionCatalog
                 parameters.Add(new CatalogParameter(name, type is { Length: > 0 } && type[0] == '@' ? type[1..] : type, optional, values));
             }
 
-            var function = new CatalogFunction(
-                match.Groups["name"].Value, parameters, variadic, match.Groups["ret"].Success ? match.Groups["ret"].Value.Trim() : null, Bilingual.Read(match.Groups["doc"].Value));
+            var function = new CatalogFunction(match.Name, parameters, variadic, match.Returns, Bilingual.Read(match.Documentation));
             if (!functions.TryGetValue(function.Name, out var overloads))
             {
                 functions[function.Name] = overloads = [];

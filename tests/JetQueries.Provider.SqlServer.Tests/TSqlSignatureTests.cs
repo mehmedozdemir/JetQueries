@@ -132,6 +132,18 @@ public sealed class TSqlSignatureTests
         Assert.Equal(DatabaseObjectKinds.Function, metadata.Asked!.Kind);
     }
 
+    [Theory]
+    [InlineData("SELECT DATENAME(|", "DATENAME", "Tarihin bir parçasını metin olarak verir (ay adı…)")]
+    [InlineData("SELECT LEN(|", "LEN", "Karakter sayısı (sondaki boşluklar sayılmaz)")]
+    [InlineData("SELECT CHOOSE(|", "CHOOSE", "Verilen sıradaki değer (1'den başlar)")]
+    public async Task A_description_with_brackets_stays_out_of_the_parameters(string marked, string name, string documentation)
+    {
+        var signature = (await HelpAsync(marked))!.Signatures[0];
+        Assert.Equal(name, signature.Name);
+        Assert.Equal(documentation, signature.Documentation);
+        Assert.All(signature.Parameters, static p => Assert.DoesNotContain(")", p.DataType ?? string.Empty, StringComparison.Ordinal));
+    }
+
     private sealed class Routines : IMetadataProvider, IRoutineMetadataProvider
     {
         public DatabaseObject? Asked { get; private set; }
