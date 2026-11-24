@@ -10,8 +10,51 @@ namespace JetQueries.Provider.SqlServer;
 /// The object details view for SQL Server: catalog views only (no DMVs, no table scans), every query
 /// parameterized on the bracket-quoted name, the database part as a bracket-quoted catalog prefix.
 /// </summary>
-internal sealed partial class SqlServerMetadataProvider
+internal sealed partial class SqlServerMetadataProvider : IRoutineMetadataProvider
 {
+    /// <summary>The parameters of a user function or procedure, for signature help (one signature: T-SQL has no overloads).</summary>
+    public async Task<IReadOnlyList<SqlSignature>> GetSignaturesAsync(DatabaseObject routine, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(routine);
+        var p = SqlServerNames.CatalogPrefix(routine.Name.Database);
+        var sql = $"""
+            DECLARE @id int = OBJECT_ID(@name);
+            SELECT o.name, RTRIM(o.type), pa.parameter_id, pa.name, t.name, bt.name, t.is_user_defined, pa.max_length, pa.precision, pa.scale,
+                   pa.is_output, pa.has_default_value
+            FROM {p}sys.objects o
+            LEFT JOIN {p}sys.parameters pa ON pa.object_id = o.object_id
+            LEFT JOIN {p}sys.types t ON t.user_type_id = pa.user_type_id
+            LEFT JOIN {p}sys.types bt ON bt.user_type_id = pa.system_type_id
+            WHERE o.object_id = @id AND RTRIM(o.type) IN ('P', 'PC', 'X', 'FN', 'IF', 'TF', 'FS', 'FT', 'AF')
+            ORDER BY pa.parameter_id;
+            """;
+        var rows = await RowsAsync(sql, SqlServerNames.Quote(routine.Name), cancellationToken).ConfigureAwait(false);
+        if (rows.Count == 0)
+        {
+            return [];
+        }
+
+        string? returns = null;
+        var parameters = new List<SqlParameterInfo>();
+        foreach (var r in rows.Where(static r => r[2] is not null))
+        {
+            var type = SqlServerTypeFormatter.Format(
+                Text(r[4]) ?? string.Empty, Text(r[5]), Convert.ToInt16(r[7], CultureInfo.InvariantCulture), Convert.ToByte(r[8], CultureInfo.InvariantCulture),
+                Convert.ToByte(r[9], CultureInfo.InvariantCulture), Bool(r[6]));
+            if (Convert.ToInt32(r[2], CultureInfo.InvariantCulture) == 0)
+            {
+                returns = type;
+                continue;
+            }
+
+            parameters.Add(new SqlParameterInfo(Text(r[3])!, type, IsOptional: Bool(r[11])) { Direction = Bool(r[10]) ? "OUT" : null });
+        }
+
+        var kind = Text(rows[0][1]);
+        returns ??= kind is "IF" or "TF" or "FT" ? "table" : null;
+        return [new SqlSignature(Text(rows[0][0])!, parameters, returns)];
+    }
+
     public async Task<ObjectDetails?> GetDetailsAsync(DatabaseObject target, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(target);

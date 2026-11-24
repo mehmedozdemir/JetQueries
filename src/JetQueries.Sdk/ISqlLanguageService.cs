@@ -150,6 +150,83 @@ public sealed record CompletionItem(string Label, CompletionItemKind Kind, TextS
 
     /// <summary>Short secondary text shown next to the label (data type, schema, signature).</summary>
     public string? Detail { get; init; }
+
+    /// <summary>A longer explanation shown beside the list for the selected proposal (what a function does).</summary>
+    public string? Documentation { get; init; }
+
+    /// <summary>
+    /// For a function inserted with its parentheses (<see cref="InsertText"/> ends with "()"): the caret goes
+    /// between them and the host asks for signature help.
+    /// </summary>
+    public bool OpensCall { get; init; }
+}
+
+/// <summary>
+/// Optional for an <see cref="ISqlLanguageService"/>: the parameters of the call the caret is in (signature
+/// help), with the one being typed highlighted.
+/// </summary>
+/// <remarks>Preview contract: may change until SDK 1.0.</remarks>
+public interface ISignatureHelpProvider
+{
+    /// <summary>The signatures of the function or procedure call around <paramref name="offset"/>.</summary>
+    /// <param name="document">The document being edited.</param>
+    /// <param name="offset">Zero-based caret offset.</param>
+    /// <param name="cancellationToken">Cancels the request.</param>
+    /// <returns>The help, or <see langword="null"/> when the caret is not inside a known call.</returns>
+    Task<SignatureHelp?> GetSignatureHelpAsync(SqlDocument document, int offset, CancellationToken cancellationToken);
+}
+
+/// <summary>Signature help for a call.</summary>
+/// <param name="Signatures">The overloads, best match first.</param>
+/// <param name="ActiveSignature">Index of the overload that fits what is typed.</param>
+/// <param name="ActiveParameter">Index of the parameter the caret is on.</param>
+/// <param name="CallStart">Offset of the call's name (where the help is anchored).</param>
+public sealed record SignatureHelp(IReadOnlyList<SqlSignature> Signatures, int ActiveSignature, int ActiveParameter, int CallStart);
+
+/// <summary>One overload of a function or procedure.</summary>
+/// <param name="Name">The routine's name as written.</param>
+/// <param name="Parameters">Its parameters in order.</param>
+/// <param name="ReturnType">What a function returns; null for a procedure.</param>
+/// <param name="Documentation">What it does; null when unknown.</param>
+public sealed record SqlSignature(string Name, IReadOnlyList<SqlParameterInfo> Parameters, string? ReturnType = null, string? Documentation = null)
+{
+    /// <summary>Whether the last parameter repeats (CONCAT(a, b, …)).</summary>
+    public bool IsVariadic { get; init; }
+}
+
+/// <summary>A parameter of a <see cref="SqlSignature"/>.</summary>
+/// <param name="Name">Its name.</param>
+/// <param name="DataType">Its type, if known.</param>
+/// <param name="Documentation">What it is for; null when unknown.</param>
+/// <param name="IsOptional">Whether it may be left out.</param>
+public sealed record SqlParameterInfo(string Name, string? DataType = null, string? Documentation = null, bool IsOptional = false)
+{
+    /// <summary>
+    /// The values the parameter takes, when they are a fixed set (DATEADD's datepart, CONVERT's styles, TO_CHAR's
+    /// formats); offered as completions when the caret is on this parameter.
+    /// </summary>
+    public IReadOnlyList<SqlParameterValue> Values { get; init; } = [];
+
+    /// <summary>"OUT", "IN OUT" or null for an input parameter (procedures).</summary>
+    public string? Direction { get; init; }
+}
+
+/// <summary>A value a parameter takes.</summary>
+/// <param name="Text">What is inserted (with quotes when it is a string).</param>
+/// <param name="Description">What the value means.</param>
+public sealed record SqlParameterValue(string Text, string? Description = null);
+
+/// <summary>
+/// Optional for an <see cref="IMetadataProvider"/>: the parameters of user-defined functions and procedures,
+/// for signature help.
+/// </summary>
+/// <remarks>Preview contract: may change until SDK 1.0.</remarks>
+public interface IRoutineMetadataProvider
+{
+    /// <summary>The signatures of a function or procedure (several for overloads; empty when it does not exist).</summary>
+    /// <param name="routine">The routine (a package member is named package.routine in <see cref="DatabaseObjectName.Name"/>).</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    Task<IReadOnlyList<SqlSignature>> GetSignaturesAsync(DatabaseObject routine, CancellationToken cancellationToken);
 }
 
 /// <summary>Kinds of completion proposals.</summary>
@@ -193,6 +270,9 @@ public enum CompletionItemKind
 
     /// <summary>A multi-token snippet (for example a generated <c>JOIN … ON</c> clause).</summary>
     Snippet,
+
+    /// <summary>A value a function parameter takes (a datepart, a format, a style code).</summary>
+    Value,
 }
 
 /// <summary>

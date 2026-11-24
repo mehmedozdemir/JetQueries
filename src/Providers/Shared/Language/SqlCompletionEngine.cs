@@ -21,6 +21,9 @@ internal abstract class SqlDialect
 
     public abstract IReadOnlyCollection<string> Functions { get; }
 
+    /// <summary>Signatures and parameter values of the built-in functions; null when the dialect has none.</summary>
+    public virtual FunctionCatalog? Catalog => null;
+
     /// <summary>Keywords after which a procedure name is expected (T-SQL's EXEC).</summary>
     public virtual IReadOnlyCollection<string> ProcedureCallKeywords => [];
 
@@ -89,7 +92,14 @@ internal static class SqlCompletionEngine
         offset = Math.Clamp(offset, 0, text.Length);
         var all = dialect.Tokenize(text);
 
-        // Nothing is offered inside a comment or a string.
+        // On a parameter that takes a fixed set of values (a datepart, a format): those values, also inside a string.
+        var inComment = all.Any(t => t.Kind == SqlTokenKind.Comment && t.Start < offset && offset < t.End);
+        if (!inComment && SqlCallHelp.ValueCompletions(dialect, text, all, offset) is { Count: > 0 } values)
+        {
+            return values;
+        }
+
+        // Nothing else is offered inside a comment or a string.
         foreach (var token in all)
         {
             if (token.Kind is not (SqlTokenKind.Comment or SqlTokenKind.StringLiteral) || token.Start >= offset || offset > token.End)
@@ -200,9 +210,34 @@ internal static class SqlCompletionEngine
         {
             if (expectsExpression)
             {
-                foreach (var function in dialect.Functions)
+                // Built-ins of the catalog come with their signature and what they do, and are inserted with
+                // their parentheses (the caret between them, signature help open).
+                var catalog = dialect.Catalog;
+                foreach (var function in dialect.Functions.Concat(catalog?.Names ?? []).Distinct(StringComparer.OrdinalIgnoreCase))
                 {
-                    context.Add(items, function, CompletionItemKind.Function, null, quote: false);
+                    if (!function.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    var overloads = catalog?.Find(function) ?? [];
+                    if (overloads.Count == 0)
+                    {
+                        context.Add(items, function, CompletionItemKind.Function, null, quote: false);
+                        continue;
+                    }
+
+                    var first = overloads[0];
+                    var takesArguments = overloads.Any(static o => o.Parameters.Count > 0 || o.IsVariadic);
+                    items.Add(new CompletionItem(first.Name, CompletionItemKind.Function, replace)
+                    {
+                        InsertText = first.Name + "()",
+                        OpensCall = takesArguments,
+                        Detail = first.ShortSignature + (overloads.Count > 1 ? $" +{overloads.Count - 1}" : string.Empty),
+                        Documentation = string.Join(
+                            "\n",
+                            new[] { first.Documentation.Text, first.ReturnType is { } returns ? "→ " + returns : null }.Where(static t => t is not null)),
+                    });
                 }
             }
 

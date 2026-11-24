@@ -14,6 +14,8 @@ internal sealed class TSqlDialect : SqlDialect
 
     public override IReadOnlyCollection<string> Functions => TSqlLexer.AllFunctions;
 
+    public override FunctionCatalog Catalog => TSqlFunctions.Catalog;
+
     public override IReadOnlyCollection<string> ProcedureCallKeywords => CallKeywords;
 
     public override bool QualifierMayBeDatabase => true;

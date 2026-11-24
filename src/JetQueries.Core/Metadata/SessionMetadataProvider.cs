@@ -11,7 +11,7 @@ namespace JetQueries.Core.Metadata;
 /// </summary>
 /// <param name="session">The open session.</param>
 /// <param name="metadata">The cache-backed metadata service.</param>
-public sealed class SessionMetadataProvider(ConnectionSession session, IMetadataService metadata) : IMetadataProvider
+public sealed class SessionMetadataProvider(ConnectionSession session, IMetadataService metadata) : IMetadataProvider, IRoutineMetadataProvider
 {
     /// <inheritdoc />
     public async IAsyncEnumerable<DatabaseObject> GetObjectsAsync(
@@ -30,4 +30,11 @@ public sealed class SessionMetadataProvider(ConnectionSession session, IMetadata
     /// <inheritdoc />
     public Task<string?> GetDefinitionAsync(DatabaseObject target, CancellationToken cancellationToken) =>
         session.UseMetadataAsync((provider, token) => provider.GetDefinitionAsync(target, token), cancellationToken);
+
+    /// <inheritdoc />
+    /// <remarks>Read on the session's metadata connection; a provider without routine metadata gives none.</remarks>
+    public Task<IReadOnlyList<SqlSignature>> GetSignaturesAsync(DatabaseObject routine, CancellationToken cancellationToken) =>
+        session.UseMetadataAsync(
+            (provider, token) => provider is IRoutineMetadataProvider routines ? routines.GetSignaturesAsync(routine, token) : Task.FromResult<IReadOnlyList<SqlSignature>>([]),
+            cancellationToken);
 }
