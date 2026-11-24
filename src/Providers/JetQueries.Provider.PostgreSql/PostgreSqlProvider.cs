@@ -32,8 +32,9 @@ public sealed class PostgreSqlProvider : IDatabaseProvider, IConnectionSettingsP
     public string DisplayName => "PostgreSQL";
 
     /// <inheritdoc />
+    // Several databases per server; the host reads each on a connection to it (MetadataSpansDatabases is false).
     public ProviderCapabilities Capabilities =>
-        ProviderCapabilities.Schemas | ProviderCapabilities.MultipleResultSets | ProviderCapabilities.Transactions |
+        ProviderCapabilities.MultipleDatabases | ProviderCapabilities.Schemas | ProviderCapabilities.MultipleResultSets | ProviderCapabilities.Transactions |
         ProviderCapabilities.ServerSideCancel | ProviderCapabilities.Routines | ProviderCapabilities.Sequences | ProviderCapabilities.UserTypes;
 
     /// <inheritdoc />
