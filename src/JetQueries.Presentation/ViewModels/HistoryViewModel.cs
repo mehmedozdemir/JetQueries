@@ -41,7 +41,7 @@ public sealed class HistoryEntryViewModel(QueryHistoryEntry entry)
             ? duration.TotalSeconds.ToString("0.00", CultureInfo.CurrentCulture) + " s"
             : duration.TotalMilliseconds.ToString("0", CultureInfo.CurrentCulture) + " ms";
 
-    private static string Summarize(string sql)
+    internal static string Summarize(string sql)
     {
         foreach (var line in sql.AsSpan().EnumerateLines())
         {

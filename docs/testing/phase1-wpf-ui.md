@@ -627,3 +627,23 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] Change a row, delete it from another tab, then save: an error names the key ("id = …") and nothing is written.
 - [ ] With unsaved changes, Next page / All / Refresh / a SQL filter ask before dropping them; "Değişiklikleri geri al"
       puts the read values back and removes added rows.
+
+## Parameterized queries
+- [ ] Run `SELECT * FROM <table> WHERE <column> = :value`: "Sorgu parametreleri" asks for `:value`; Otomatik sends 42 as
+      a number, "0532…" and "İstanbul" as text; the result is filtered. Vazgeç sends nothing.
+- [ ] `${table}` asks for text that goes into the SQL as typed (e.g. `SELECT * FROM ${table}`).
+- [ ] The same name twice is asked once; running again offers the last values. Refresh / Next page / Count / Export
+      do not ask again and use the same values.
+- [ ] Not asked for: `':x'` in a string, `-- :x` in a comment, PostgreSQL `x::date`, Oracle `v := 1`, a trigger's
+      `:new.col`.
+
+## Saved queries
+- [ ] Sorgu > Kütüphaneye kaydet (Ctrl+Shift+K): name, folder (existing ones offered, "a/b" for sub folders),
+      description and "<connection> bağlantısında aç". The tab takes the name; saving again updates the same query
+      without asking; "Kütüphaneye yeni olarak kaydet…" always asks.
+- [ ] Araçlar > Kayıtlı sorgular (Ctrl+Shift+Q): queries grouped by folder, a pencil mark on those with parameters;
+      the search finds any word of name, folder, description or SQL ("istanbul" finds "İstanbul").
+- [ ] Enter / double-click / "Aç" opens it in a new tab on its connection; "Çalıştır" (Ctrl+Enter) opens and runs it
+      (asking its parameters); "Düzenle…" (F2) renames or moves it; Delete asks, then removes it.
+- [ ] After a restart the library is still there (%AppData%\JetQueries\saved-queries.json) and a restored tab still
+      saves back to its query.

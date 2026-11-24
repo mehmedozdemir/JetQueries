@@ -72,6 +72,14 @@ public interface IDialogService
     /// <param name="routine">The dialog's view model.</param>
     Task<ViewModels.RoutineExecutionChoice> ExecuteRoutineAsync(ViewModels.ExecuteRoutineViewModel routine) =>
         Task.FromResult(ViewModels.RoutineExecutionChoice.Cancel);
+
+    /// <summary>Asks for the values of a parameterized query before it runs; false when the user cancels.</summary>
+    /// <param name="parameters">The dialog's view model; its values are filled in.</param>
+    Task<bool> AskQueryParametersAsync(ViewModels.QueryParametersViewModel parameters) => Task.FromResult(false);
+
+    /// <summary>Asks for the name, folder and description of a query saved to the library; false when canceled.</summary>
+    /// <param name="query">The dialog's view model.</param>
+    Task<bool> EditSavedQueryAsync(ViewModels.SavedQueryEditViewModel query) => Task.FromResult(false);
 }
 
 /// <summary>The answer to "save changes?".</summary>

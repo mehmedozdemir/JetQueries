@@ -142,6 +142,16 @@ internal sealed class FakeDialogs : IDialogService
 
     public Task<bool> ExportResultAsync(ExportResultViewModel options) => Task.FromResult(Export?.Invoke(options) ?? false);
 
+    /// <summary>What the parameters dialog answers (it fills the values first); null cancels.</summary>
+    public Func<QueryParametersViewModel, bool>? Parameters { get; set; }
+
+    public Task<bool> AskQueryParametersAsync(QueryParametersViewModel parameters) => Task.FromResult(Parameters?.Invoke(parameters) ?? false);
+
+    /// <summary>What the Save to library dialog answers (it may change the fields first); null cancels.</summary>
+    public Func<SavedQueryEditViewModel, bool>? SaveQuery { get; set; }
+
+    public Task<bool> EditSavedQueryAsync(SavedQueryEditViewModel query) => Task.FromResult(SaveQuery?.Invoke(query) ?? false);
+
     public void OpenWithShell(string path) => Opened.Add(path);
 
     public string DocumentsFolder => System.IO.Path.Combine(AppContext.BaseDirectory, "exports");
@@ -239,8 +249,10 @@ internal sealed class FakeExtensions(IDatabaseProvider provider) : IExtensionHos
 }
 
 /// <summary>A provider with SQL Server-like settings that connects to nothing.</summary>
-internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvider, IRoutineExecutionScripting, IRowCountQueryBuilder, IResultFilterQueryBuilder
+internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvider, IRoutineExecutionScripting, IRowCountQueryBuilder, IResultFilterQueryBuilder, IQueryParameterSyntax
 {
+    public string ParameterReference(string name) => "@" + name;
+
     public string? OpenError { get; set; }
 
     public (string? User, string? Password)? LastCredential { get; private set; }

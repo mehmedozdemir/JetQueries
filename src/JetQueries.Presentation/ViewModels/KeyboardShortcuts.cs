@@ -57,6 +57,8 @@ public partial class KeyboardShortcutsViewModel : ObservableObject
             new(general, "Ctrl+Shift+S", Strings.MenuSaveAs),
             new(general, "Ctrl+Shift+N", Strings.MenuGoToObject),
             new(general, "Ctrl+Shift+H", Strings.MenuHistory),
+            new(general, "Ctrl+Shift+Q", Strings.MenuSavedQueries),
+            new(general, "Ctrl+Shift+K", Strings.MenuSaveToLibrary),
             new(general, "F1", Strings.MenuShortcuts),
             new(editor, "F5", Strings.EditorRun),
             new(editor, "Ctrl+Enter", Strings.EditorRunStatement),

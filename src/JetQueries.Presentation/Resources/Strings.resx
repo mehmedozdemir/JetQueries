@@ -306,6 +306,39 @@
   <data name="EditNoTable" xml:space="preserve"><value>The table of this SELECT was not found.</value></data>
   <data name="EditEditable" xml:space="preserve"><value>Double-click, F2 or type to edit a cell; empty is NULL</value></data>
   <data name="EditReadOnlyConnection" xml:space="preserve"><value>The connection is read-only: rows cannot be changed.</value></data>
+  <data name="ParametersBadValue" xml:space="preserve"><value>{0}: "{1}" is not a value of the chosen type.</value></data>
+  <data name="ParameterAuto" xml:space="preserve"><value>Automatic</value></data>
+  <data name="ParameterText" xml:space="preserve"><value>Text</value></data>
+  <data name="ParameterNumber" xml:space="preserve"><value>Number</value></data>
+  <data name="ParameterDate" xml:space="preserve"><value>Date</value></data>
+  <data name="ParametersTitle" xml:space="preserve"><value>Query parameters</value></data>
+  <data name="ParametersIntro" xml:space="preserve"><value>Values of :name are sent as parameters; the text of ${name} is put into the SQL as typed.</value></data>
+  <data name="ParametersRun" xml:space="preserve"><value>Run</value></data>
+  <data name="ParameterHeaderName" xml:space="preserve"><value>Parameter</value></data>
+  <data name="ParameterHeaderKind" xml:space="preserve"><value>Type</value></data>
+  <data name="ParameterHeaderValue" xml:space="preserve"><value>Value</value></data>
+  <data name="ParameterSqlText" xml:space="preserve"><value>SQL text</value></data>
+  <data name="SavedQueriesTitle" xml:space="preserve"><value>Saved queries</value></data>
+  <data name="SavedQueriesSearch" xml:space="preserve"><value>Search name, folder, text…</value></data>
+  <data name="SavedQueriesEmpty" xml:space="preserve"><value>No saved queries yet. In a query window, Query &gt; Save to library (Ctrl+Shift+K) keeps the query here.</value></data>
+  <data name="SavedQueriesNoMatch" xml:space="preserve"><value>No saved query matches the search.</value></data>
+  <data name="SavedQueriesNoFolder" xml:space="preserve"><value>(No folder)</value></data>
+  <data name="SavedQueryOpen" xml:space="preserve"><value>Open</value></data>
+  <data name="SavedQueryRun" xml:space="preserve"><value>Run</value></data>
+  <data name="SavedQueryEdit" xml:space="preserve"><value>Edit…</value></data>
+  <data name="SavedQueryHasParameters" xml:space="preserve"><value>Asks for parameters when run</value></data>
+  <data name="SavedQueryDeleteTitle" xml:space="preserve"><value>Delete saved query</value></data>
+  <data name="SavedQueryDeleteMessage" xml:space="preserve"><value>Delete "{0}" from the library?</value></data>
+  <data name="SavedQuerySaved" xml:space="preserve"><value>"{0}" saved to the library.</value></data>
+  <data name="MenuSavedQueries" xml:space="preserve"><value>Saved queries</value></data>
+  <data name="MenuSaveToLibrary" xml:space="preserve"><value>Save to library…</value></data>
+  <data name="MenuSaveToLibraryAsNew" xml:space="preserve"><value>Save to library as new…</value></data>
+  <data name="SaveQueryDialogTitle" xml:space="preserve"><value>Save query to the library</value></data>
+  <data name="SaveQueryName" xml:space="preserve"><value>Name</value></data>
+  <data name="SaveQueryFolder" xml:space="preserve"><value>Folder (sub folders with /)</value></data>
+  <data name="SaveQueryDescription" xml:space="preserve"><value>Description</value></data>
+  <data name="SaveQueryKeepConnection" xml:space="preserve"><value>Open on {0}</value></data>
+  <data name="SaveQueryButton" xml:space="preserve"><value>Save</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Clear all</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Remove filter</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} of {1:N0} rows</value></data>

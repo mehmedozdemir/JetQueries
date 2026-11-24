@@ -17,7 +17,7 @@ public sealed class SqlServerExtension : IExtension
 }
 
 /// <summary>Database provider for Microsoft SQL Server and Azure SQL, on Microsoft.Data.SqlClient.</summary>
-public sealed class SqlServerProvider : IDatabaseProvider, IBulkInsertScripting, IRowEditScripting, IRoutineExecutionScripting, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport,
+public sealed class SqlServerProvider : IDatabaseProvider, IBulkInsertScripting, IRowEditScripting, IQueryParameterSyntax, IRoutineExecutionScripting, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport,
     IConnectionStringImport, IProviderAppearance, IObjectScripting
 {
     /// <summary>The provider identifier stored in connection profiles.</summary>
@@ -187,6 +187,9 @@ public sealed class SqlServerProvider : IDatabaseProvider, IBulkInsertScripting,
     /// <inheritdoc />
     /// <remarks>2100 parameters a statement and 1000 rows in a VALUES list.</remarks>
     public int RowsPerStatement(int columnCount) => Providers.Metadata.BulkInsert.Rows(columnCount, 2000, 1000);
+
+    /// <inheritdoc />
+    public string ParameterReference(string name) => "@" + name;
 
     /// <inheritdoc />
     public string ScriptUpdate(DatabaseObjectName table, IReadOnlyList<string> columns, IReadOnlyList<string> keyColumns)

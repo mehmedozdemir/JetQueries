@@ -18,7 +18,7 @@ public sealed class SqliteExtension : IExtension
 }
 
 /// <summary>Database provider for SQLite database files, on Microsoft.Data.Sqlite.</summary>
-public sealed class SqliteProvider : IDatabaseProvider, IBulkInsertScripting, IRowEditScripting, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport,
+public sealed class SqliteProvider : IDatabaseProvider, IBulkInsertScripting, IRowEditScripting, IQueryParameterSyntax, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport,
     IConnectionStringImport, IProviderAppearance, IObjectScripting
 {
     /// <summary>The provider identifier stored in connection profiles.</summary>
@@ -111,6 +111,9 @@ public sealed class SqliteProvider : IDatabaseProvider, IBulkInsertScripting, IR
 
     /// <inheritdoc />
     public int RowsPerStatement(int columnCount) => Providers.Metadata.BulkInsert.Rows(columnCount, 30000, 500);
+
+    /// <inheritdoc />
+    public string ParameterReference(string name) => "@" + name;
 
     /// <inheritdoc />
     public string ScriptUpdate(DatabaseObjectName table, IReadOnlyList<string> columns, IReadOnlyList<string> keyColumns)

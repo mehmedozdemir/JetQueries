@@ -25,9 +25,11 @@ public partial class MainWindowViewModel : ObservableObject
     public MainWindowViewModel(
         IThemeService themeService, IUiDispatcher ui, ConnectionsViewModel connections, DocumentsViewModel documents, HistoryViewModel history,
         ISettingsDialog? settings = null, IConnectionManager? manager = null, IMetadataService? metadata = null, IJobQueue? jobs = null,
-        Core.Settings.ISettingsStore? store = null, IAppearanceService? appearance = null, UpdatesViewModel? updates = null)
+        Core.Settings.ISettingsStore? store = null, IAppearanceService? appearance = null, UpdatesViewModel? updates = null,
+        SavedQueriesViewModel? savedQueries = null)
     {
         Updates = updates;
+        SavedQueries = savedQueries;
         _store = store;
         _appearance = appearance;
         Services.AppearanceService.Changed += (_, _) => OnPropertyChanged(nameof(IsCompact));
@@ -64,6 +66,16 @@ public partial class MainWindowViewModel : ObservableObject
 
     /// <summary>The queries that were run.</summary>
     public HistoryViewModel History { get; }
+
+    /// <summary>The library of saved queries; null in tests that do not need it.</summary>
+    public SavedQueriesViewModel? SavedQueries { get; }
+
+    /// <summary>Raised to show the saved queries window.</summary>
+    public event EventHandler? SavedQueriesRequested;
+
+    /// <summary>Main menu: Tools, Saved queries.</summary>
+    [RelayCommand]
+    private void ShowSavedQueries() => SavedQueriesRequested?.Invoke(this, EventArgs.Empty);
 
     /// <summary>The open query tabs.</summary>
     public DocumentsViewModel Documents { get; }
