@@ -52,6 +52,9 @@ public sealed class AppearanceService : IAppearanceService
     /// <summary>Whether result headers show the data type under the column name.</summary>
     public static bool ShowColumnTypes { get; private set; } = true;
 
+    /// <summary>Whether the compact density is in effect (result rows are lower too).</summary>
+    public static bool Compact { get; private set; }
+
     /// <summary>Raised on the UI thread after the appearance changed.</summary>
     public static event EventHandler? Changed;
 
@@ -75,6 +78,17 @@ public sealed class AppearanceService : IAppearanceService
         resources["FontSize.Code"] = settings.EditorFontSize;
         GridScale = settings.GridFontSize / 13;
         ShowColumnTypes = settings.ShowColumnTypes;
+
+        // Density: UiKit's control sizes, then the application's own tighter ones, one step smaller in compact.
+        Compact = settings.CompactMode;
+        UiKit.Theming.Density.Apply(Compact ? UiKit.Theming.UiDensity.Compact : UiKit.Theming.UiDensity.Normal);
+        resources["Pad.AppToolbar"] = Compact ? new Thickness(8, 3, 8, 3) : new Thickness(10, 5, 10, 5);
+        resources["Size.AppToolbarButton"] = Compact ? 26.0 : 30.0;
+        resources["Size.AppIcon"] = Compact ? 26.0 : 30.0;
+        resources["Size.Footer"] = Compact ? 22.0 : 26.0;
+        resources["Pad.AppTab"] = Compact ? new Thickness(8, 3, 8, 3) : new Thickness(10, 6, 10, 6);
+        resources["Pad.AppTreeItem"] = Compact ? new Thickness(2, 1, 8, 1) : new Thickness(2, 2, 8, 2);
+        resources["Space.Page.Compact"] = Compact ? new Thickness(6, 4, 6, 0) : new Thickness(8, 6, 8, 0);
 
         // Run, Cancel, Save: icons in each tab, or text buttons in the main toolbar.
         resources["QueryButtons.Tab"] = settings.QueryButtonsInTab ? Visibility.Visible : Visibility.Collapsed;

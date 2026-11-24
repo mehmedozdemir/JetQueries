@@ -187,6 +187,11 @@
   <data name="ExecuteRun" xml:space="preserve"><value>Çalıştır</value></data>
   <data name="ExecuteHint" xml:space="preserve"><value>Değer, parametrenin tipine uygun bir sabit olarak yazılır (tarih yyyy-aa-gg); ifade olduğu gibi yazılır. OUT parametreler ve sonuç çağrıdan sonra gösterilir.</value></data>
   <data name="ExecuteParametersFailed" xml:space="preserve"><value>Parametreler okunamadı: {0}</value></data>
+  <data name="MenuCompactMode" xml:space="preserve"><value>Kompakt mod</value></data>
+  <data name="FieldDensity" xml:space="preserve"><value>Arayüz yoğunluğu</value></data>
+  <data name="SettingDensityInfo" xml:space="preserve"><value>Kompakt: JetBrains IDE'lerindeki gibi daha alçak araç çubukları, satırlar, sekmeler ve kutular; yazı boyutu değişmez.</value></data>
+  <data name="DensityNormal" xml:space="preserve"><value>Normal</value></data>
+  <data name="DensityCompact" xml:space="preserve"><value>Kompakt</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Tümünü temizle</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Filtreyi kaldır</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} / {1:N0} satır</value></data>

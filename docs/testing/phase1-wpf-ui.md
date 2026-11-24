@@ -556,3 +556,11 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] A routine with overloads (Oracle, PostgreSQL) has a "Biçim" list in the header; each form has its own rows.
 - [ ] "Betiği aç" only opens the script; Vazgeç / Esc does nothing. The details view of a routine has "Çalıştır" too.
 
+## Compact mode
+- [ ] Görünüm > Kompakt mod: at once the toolbars, the explorer rows, the query and result tabs, the inputs, the menus
+      and the result grid rows become lower; the text size stays. The menu item shows a tick; clicking again goes back.
+- [ ] Ayarlar > Görünüm > Arayüz yoğunluğu shows Normal / Kompakt (the same setting); the preview follows; Kaydet keeps
+      it, Vazgeç puts the previous one back.
+- [ ] Restart the application: the chosen density is back.
+- [ ] Both themes and every colour scheme look right in compact mode (no clipped text in buttons, combos, tabs).
+

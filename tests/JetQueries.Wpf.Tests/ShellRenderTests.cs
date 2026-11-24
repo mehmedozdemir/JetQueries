@@ -188,6 +188,23 @@ public sealed class ShellRenderTests
             Assert.Equal(15d, (double)Application.Current.Resources["FontSize.Body"]);
             results["window-large"] = Capture(window, Path.Combine(directory, "wpf-window-large-dark.png"));
 
+            // Compact density: the same window, lower controls and rows, the same text size.
+            appearance.Apply(new AppearanceSettings());
+            connections.FilterText = string.Empty;
+            await Idle();
+            var normalHeight = Find<System.Windows.Controls.TreeView>(window).Items.Count > 0 ? ((FrameworkElement)Find<System.Windows.Controls.TreeView>(window).ItemContainerGenerator.ContainerFromIndex(0)).ActualHeight : 0;
+            results["window-normal"] = Capture(window, Path.Combine(directory, "wpf-window-normal-dark.png"));
+            appearance.Apply(new AppearanceSettings { CompactMode = true });
+            await Idle();
+            Assert.Equal(28d, (double)Application.Current.Resources["Size.Control"]);
+            Assert.Equal(13d, (double)Application.Current.Resources["FontSize.Body"]);
+            var compactHeight = ((FrameworkElement)Find<System.Windows.Controls.TreeView>(window).ItemContainerGenerator.ContainerFromIndex(0)).ActualHeight;
+            Assert.True(compactHeight < normalHeight, $"tree row {compactHeight} is not lower than {normalHeight}");
+            results["window-compact"] = Capture(window, Path.Combine(directory, "wpf-window-compact-dark.png"));
+            appearance.Apply(new AppearanceSettings { UiFontSize = 15, EditorFontSize = 14, GridFontSize = 15 });
+            connections.FilterText = "Cards";
+            await Idle();
+
             // The settings screen; closing it without saving puts the defaults back.
             var settings = new SettingsViewModel(
                 new Core.Settings.JsonSettingsStore(new Core.Settings.SettingsStoreOptions(), Microsoft.Extensions.Logging.Abstractions.NullLogger<Core.Settings.JsonSettingsStore>.Instance),
@@ -249,7 +266,7 @@ public sealed class ShellRenderTests
             return results;
         });
 
-        Assert.Equal(30, colours.Count); // 22 renderings and the 8 colour schemes
+        Assert.Equal(32, colours.Count); // 24 renderings and the 8 colour schemes
         Assert.All(colours, static pair => Assert.True(pair.Value > 12, $"{pair.Key} rendered only {pair.Value} distinct colours."));
     }
 

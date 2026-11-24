@@ -80,6 +80,7 @@
                         <MenuItem Header="{x:Static res:Strings.MenuView}">
                             <MenuItem x:Name="ExplorerMenuItem" Header="{x:Static res:Strings.MenuExplorer}" IsCheckable="True" IsChecked="True" Click="OnToggleExplorer" />
                             <MenuItem Header="{x:Static res:Strings.MenuTheme}" IsCheckable="True" IsChecked="{Binding IsDark, Mode=OneWay}" Command="{Binding ToggleThemeCommand}" />
+                            <MenuItem Header="{x:Static res:Strings.MenuCompactMode}" IsCheckable="True" IsChecked="{Binding IsCompact, Mode=OneWay}" Command="{Binding ToggleCompactCommand}" />
                         </MenuItem>
                         <MenuItem Header="{x:Static res:Strings.MenuTools}">
                             <MenuItem Header="{x:Static res:Strings.MenuHistory}" c:Ui.Icon="{x:Static c:Icons.History}" InputGestureText="Ctrl+Shift+H" Command="{Binding ShowHistoryCommand}" />
@@ -125,7 +126,7 @@
         </Border>
 
         <!-- ================= Body ================= -->
-        <Grid Grid.Row="1" Margin="{StaticResource Space.Page.Compact}">
+        <Grid Grid.Row="1" Margin="{DynamicResource Space.Page.Compact}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition x:Name="ExplorerColumn" Width="280" MinWidth="200" />
                 <ColumnDefinition Width="8" />

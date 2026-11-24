@@ -15,13 +15,20 @@
     <Visibility x:Key="QueryButtons.Tab">Visible</Visibility>
     <Visibility x:Key="QueryButtons.Toolbar">Collapsed</Visibility>
 
-    <!-- Tighter than UiKit's defaults: more room for data. -->
+    <!-- Tighter than UiKit's defaults: more room for data. The sizes are tokens: the compact density (Settings,
+         View > Compact mode) makes them one step smaller (Services/AppearanceService). -->
     <Thickness x:Key="Space.Page.Compact">8,6,8,0</Thickness>
+    <Thickness x:Key="Pad.AppToolbar">10,5</Thickness>
+    <sys:Double x:Key="Size.AppToolbarButton">30</sys:Double>
+    <sys:Double x:Key="Size.AppIcon">30</sys:Double>
+    <sys:Double x:Key="Size.Footer">26</sys:Double>
+    <Thickness x:Key="Pad.AppTab">10,6</Thickness>
+    <Thickness x:Key="Pad.AppTreeItem">2,2,8,2</Thickness>
     <Style x:Key="Toolbar.Compact" TargetType="Border" BasedOn="{StaticResource Toolbar}">
-        <Setter Property="Padding" Value="10,5" />
+        <Setter Property="Padding" Value="{DynamicResource Pad.AppToolbar}" />
     </Style>
     <Style x:Key="Btn.Toolbar.Compact" TargetType="ButtonBase" BasedOn="{StaticResource Btn.Toolbar}">
-        <Setter Property="Height" Value="30" />
+        <Setter Property="Height" Value="{DynamicResource Size.AppToolbarButton}" />
         <Setter Property="Padding" Value="8,0" />
     </Style>
     <!-- A row of the editor's completion list: roomy, rounded; the selected row in the accent's soft colour
@@ -70,7 +77,7 @@
 
     <!-- Small labelled buttons of the result footer and toolbar: an icon and a short word -->
     <Style x:Key="Btn.Footer" TargetType="ButtonBase" BasedOn="{StaticResource Btn.Toolbar}">
-        <Setter Property="Height" Value="26" />
+        <Setter Property="Height" Value="{DynamicResource Size.Footer}" />
         <Setter Property="Padding" Value="6,0" />
         <Setter Property="FontSize" Value="{DynamicResource FontSize.Small}" />
         <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
@@ -93,14 +100,14 @@
     </Style>
 
     <Style x:Key="Btn.Icon.Compact" TargetType="ButtonBase" BasedOn="{StaticResource Btn.Icon}">
-        <Setter Property="Width" Value="30" />
-        <Setter Property="Height" Value="30" />
+        <Setter Property="Width" Value="{DynamicResource Size.AppIcon}" />
+        <Setter Property="Height" Value="{DynamicResource Size.AppIcon}" />
     </Style>
     <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
-        <Setter Property="Padding" Value="10,6" />
+        <Setter Property="Padding" Value="{DynamicResource Pad.AppTab}" />
     </Style>
     <Style TargetType="TreeViewItem" BasedOn="{StaticResource {x:Type TreeViewItem}}">
-        <Setter Property="Padding" Value="2,2,8,2" />
+        <Setter Property="Padding" Value="{DynamicResource Pad.AppTreeItem}" />
     </Style>
 
     <!-- Windows of the application. -->

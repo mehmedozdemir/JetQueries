@@ -39,6 +39,12 @@ public sealed record AppearanceSettings
     /// <summary>Result headers show each column's data type on a second line.</summary>
     public bool ShowColumnTypes { get; init; } = true;
 
+    /// <summary>
+    /// The compact interface density (JetBrains' compact mode): lower toolbars, rows, tabs and inputs with tighter
+    /// padding; text keeps its size.
+    /// </summary>
+    public bool CompactMode { get; init; }
+
     /// <summary>How Format SQL writes keywords.</summary>
     public SqlKeywordCase FormatKeywordCase { get; init; } = SqlKeywordCase.Upper;
 
@@ -301,6 +307,15 @@ public partial class SettingsViewModel : ObservableObject
     public IReadOnlyList<SettingChoice<bool>> QueryButtonPlaces { get; } =
         [new(true, Strings.QueryButtonsInTab), new(false, Strings.QueryButtonsInToolbar)];
 
+    /// <summary>Normal or compact interface density.</summary>
+    public IReadOnlyList<SettingChoice<bool>> Densities { get; } =
+        [new(false, Strings.DensityNormal), new(true, Strings.DensityCompact)];
+
+    [ObservableProperty]
+    public partial SettingChoice<bool>? Density { get; set; }
+
+    partial void OnDensityChanged(SettingChoice<bool>? value) => Preview();
+
     [ObservableProperty]
     public partial SettingChoice<bool>? QueryButtonPlace { get; set; }
 
@@ -432,6 +447,7 @@ public partial class SettingsViewModel : ObservableObject
         EditorFontSize = EditorFontSize,
         GridFontSize = GridFontSize,
         QueryButtonsInTab = QueryButtonPlace?.Value ?? true,
+        CompactMode = Density?.Value ?? false,
         FetchSize = FetchSize,
         ShowColumnTypes = ShowColumnTypes,
         FormatKeywordCase = FormatKeywordCase?.Value ?? SqlKeywordCase.Upper,
@@ -533,6 +549,7 @@ public partial class SettingsViewModel : ObservableObject
             EditorFontSize = settings.EditorFontSize;
             GridFontSize = settings.GridFontSize;
             QueryButtonPlace = QueryButtonPlaces.First(p => p.Value == settings.QueryButtonsInTab);
+            Density = Densities.First(d => d.Value == settings.CompactMode);
             FetchSize = settings.FetchSize;
             ShowColumnTypes = settings.ShowColumnTypes;
             FormatKeywordCase = KeywordCases.FirstOrDefault(c => c.Value == settings.FormatKeywordCase) ?? KeywordCases[0];

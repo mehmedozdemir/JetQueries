@@ -101,6 +101,9 @@ public partial class ResultGridView : UserControl
     private void ApplyScale()
     {
         var scale = Services.AppearanceService.GridScale * _zoom;
+
+        // Compact density: lower rows, the same text.
+        Grid.RowHeight = Services.AppearanceService.Compact ? 23 : 28;
         Grid.LayoutTransform = Math.Abs(scale - 1) < 0.001 ? Transform.Identity : new ScaleTransform(scale, scale);
         ZoomBadge.Content = ZoomTextConverter.Text(_zoom);
         ZoomBadge.Visibility = Math.Abs(_zoom - 1) < 0.001 ? Visibility.Collapsed : Visibility.Visible;
