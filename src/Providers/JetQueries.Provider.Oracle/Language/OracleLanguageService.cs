@@ -12,6 +12,8 @@ internal sealed class OracleDialect : SqlDialect
 
     public override IReadOnlyCollection<string> Functions => PlSqlTokenizer.AllFunctions;
 
+    public override FunctionCatalog Catalog => OracleFunctions.Catalog;
+
     public override DatabaseObjectKinds ResolvableKinds =>
         DatabaseObjectKinds.Table | DatabaseObjectKinds.View | DatabaseObjectKinds.Procedure | DatabaseObjectKinds.Function |
         DatabaseObjectKinds.Package | DatabaseObjectKinds.Sequence;

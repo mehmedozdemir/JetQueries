@@ -508,6 +508,63 @@ public sealed class OracleIntegrationTests(OracleFixture fixture) : IClassFixtur
         Assert.Contains(qualified, static t => t.Label == "JQ2_CARDS");
     }
 
+    [Fact]
+    public async Task Signatures_of_routines_and_package_members_come_from_the_dictionary()
+    {
+        await using var connection = await OpenAsync();
+        foreach (var sql in new[]
+                 {
+                     "CREATE OR REPLACE FUNCTION jq3_add(a IN NUMBER, b IN NUMBER DEFAULT 1) RETURN NUMBER IS BEGIN RETURN a + b; END;",
+                     "CREATE OR REPLACE PROCEDURE jq3_ping IS BEGIN NULL; END;",
+                     "CREATE OR REPLACE PACKAGE jq3_ops AS PROCEDURE open_card(p_id IN NUMBER, p_no OUT VARCHAR2, p_log IN OUT CLOB); " +
+                     "FUNCTION balance_of(p_id IN NUMBER) RETURN NUMBER; FUNCTION balance_of(p_no IN VARCHAR2, p_at IN DATE DEFAULT SYSDATE) RETURN NUMBER; END jq3_ops;",
+                 })
+        {
+            await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest(sql), Token));
+        }
+
+        var routines = Assert.IsAssignableFrom<IRoutineMetadataProvider>(connection.Metadata);
+        var user = fixture.Credential.UserName!.ToUpperInvariant();
+        Task<IReadOnlyList<SqlSignature>> Signatures(string? schema, string name) =>
+            routines.GetSignaturesAsync(new DatabaseObject(new DatabaseObjectName(null, schema, name), DatabaseObjectKinds.Function), Token);
+
+        // A standalone function, in the current schema and with the schema written out.
+        var add = Assert.Single(await Signatures(null, "JQ3_ADD"));
+        Assert.Equal("JQ3_ADD", add.Name);
+        Assert.Equal("NUMBER", add.ReturnType);
+        Assert.Equal(["A", "B"], add.Parameters.Select(static p => p.Name));
+        Assert.False(add.Parameters[0].IsOptional);
+        Assert.True(add.Parameters[1].IsOptional);
+        Assert.Single(await Signatures(user, "JQ3_ADD"));
+
+        // A procedure without parameters still has a signature.
+        var ping = Assert.Single(await Signatures(null, "JQ3_PING"));
+        Assert.Empty(ping.Parameters);
+        Assert.Null(ping.ReturnType);
+
+        // pkg.member( in the editor: the "schema" is the package. Overloads each get a signature.
+        var open = Assert.Single(await Signatures("JQ3_OPS", "OPEN_CARD"));
+        Assert.Equal("JQ3_OPS.OPEN_CARD", open.Name);
+        Assert.Equal([null, "OUT", "IN OUT"], open.Parameters.Select(static p => p.Direction));
+        Assert.Equal(["NUMBER", "VARCHAR2", "CLOB"], open.Parameters.Select(static p => p.DataType));
+
+        var balance = await Signatures(user, "JQ3_OPS.BALANCE_OF");
+        Assert.Equal(2, balance.Count);
+        Assert.All(balance, static s => Assert.Equal("NUMBER", s.ReturnType));
+        Assert.Equal(["P_NO", "P_AT"], balance[1].Parameters.Select(static p => p.Name));
+        Assert.True(balance[1].Parameters[1].IsOptional);
+
+        Assert.Empty(await Signatures(null, "JQ3_MISSING"));
+
+        // Through the language service: the help for a package member call.
+        var service = (ISignatureHelpProvider)new OracleProvider().LanguageService!;
+        const string Text = "BEGIN jq3_ops.open_card(1, ";
+        var help = await service.GetSignatureHelpAsync(new SqlDocument(Text, connection.Metadata), Text.Length, Token);
+        Assert.NotNull(help);
+        Assert.Equal(1, help.ActiveParameter);
+        Assert.Equal("P_NO", help.Signatures[0].Parameters[1].Name);
+    }
+
     private ConnectionDefinition Definition() => new()
     {
         Id = Guid.NewGuid(),
