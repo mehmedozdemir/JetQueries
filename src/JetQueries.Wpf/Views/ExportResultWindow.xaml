@@ -1,0 +1,67 @@
+<Window x:Class="JetQueries.Wpf.Views.ExportResultWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:c="clr-namespace:UiKit.Controls;assembly=UiKit.Wpf"
+        xmlns:res="clr-namespace:JetQueries.Presentation.Resources;assembly=JetQueries.Presentation"
+        Title="{x:Static res:Strings.ExportDialogTitle}" Width="580" SizeToContent="Height" ResizeMode="NoResize"
+        ShowInTaskbar="False" WindowStartupLocation="CenterOwner"
+        Style="{StaticResource Window.App}">
+    <Window.Resources>
+        <Style x:Key="Label" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+            <Setter Property="FontSize" Value="{DynamicResource FontSize.Small}" />
+            <Setter Property="Margin" Value="1,0,0,4" />
+        </Style>
+        <Style TargetType="RadioButton" BasedOn="{StaticResource {x:Type RadioButton}}">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+            <Setter Property="Margin" Value="0,0,0,6" />
+        </Style>
+    </Window.Resources>
+
+    <DockPanel>
+        <Border DockPanel.Dock="Bottom" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,1,0,0" Padding="20,10"
+                Background="{DynamicResource Brush.SurfaceAlt}">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="{x:Static res:Strings.ButtonCancel}" IsCancel="True" MinWidth="84" Margin="0,0,8,0" />
+                <Button x:Name="ExportButton" Style="{StaticResource Btn.Primary}" Content="{x:Static res:Strings.ExportButton}" IsDefault="True" MinWidth="96"
+                        Click="OnExport" />
+            </StackPanel>
+        </Border>
+
+        <StackPanel Margin="20,16,20,12">
+            <!-- Format -->
+            <TextBlock Text="{x:Static res:Strings.ExportFormat}" Style="{StaticResource Label}" />
+            <ComboBox x:Name="FormatBox" ItemsSource="{Binding Formats}" SelectedItem="{Binding SelectedFormat}" DisplayMemberPath="Text" Margin="0,0,0,12" />
+
+            <!-- CSV: separator, header -->
+            <StackPanel Visibility="{Binding IsCsv, Converter={StaticResource BoolToVisibility}}">
+                <TextBlock Text="{x:Static res:Strings.ExportDelimiter}" Style="{StaticResource Label}" />
+                <ComboBox ItemsSource="{Binding Delimiters}" SelectedItem="{Binding Delimiter}" DisplayMemberPath="Text" Margin="0,0,0,8" />
+                <CheckBox Content="{x:Static res:Strings.ExportHeader}" IsChecked="{Binding Header}" Margin="1,0,0,6" />
+            </StackPanel>
+            <CheckBox Content="{x:Static res:Strings.ExportNullAsText}" IsChecked="{Binding NullAsText}" Margin="1,0,0,10"
+                      Visibility="{Binding IsText, Converter={StaticResource BoolToVisibility}}" />
+
+            <!-- SQL: table name -->
+            <StackPanel Visibility="{Binding IsSql, Converter={StaticResource BoolToVisibility}}">
+                <TextBlock Text="{x:Static res:Strings.ExportTableName}" Style="{StaticResource Label}" />
+                <TextBox Text="{Binding TableName, UpdateSourceTrigger=PropertyChanged}" FontFamily="{DynamicResource Font.Code}" Margin="0,0,0,12" />
+            </StackPanel>
+
+            <!-- Rows -->
+            <TextBlock Text="{x:Static res:Strings.ExportRows}" Style="{StaticResource Label}" Margin="1,4,0,6" />
+            <RadioButton x:Name="ShownChoice" Content="{Binding ShownRowsText}" GroupName="Rows"
+                         IsChecked="{Binding AllRows, Converter={x:Static v:NotConverter.Instance}}" xmlns:v="clr-namespace:JetQueries.Wpf.Views" />
+            <RadioButton x:Name="AllChoice" Content="{x:Static res:Strings.ExportAllRows}" GroupName="Rows" IsChecked="{Binding AllRows}"
+                         IsEnabled="{Binding CanReadAll}" Margin="0,0,0,12" />
+
+            <!-- File -->
+            <TextBlock Text="{x:Static res:Strings.ExportFile}" Style="{StaticResource Label}" />
+            <DockPanel Margin="0,0,0,10">
+                <Button DockPanel.Dock="Right" Margin="8,0,0,0" Content="{x:Static res:Strings.Browse}" Click="OnBrowse" />
+                <TextBox x:Name="PathBox" Text="{Binding Path, UpdateSourceTrigger=PropertyChanged}" />
+            </DockPanel>
+            <CheckBox Content="{x:Static res:Strings.ExportOpenWhenDone}" IsChecked="{Binding OpenWhenDone}" Margin="1,0,0,4" />
+        </StackPanel>
+    </DockPanel>
+</Window>

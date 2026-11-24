@@ -156,4 +156,43 @@ public sealed class SqlFilterTests
         Assert.Equal(env.Provider.QuoteIdentifier("City Name"), city.InsertText);
         Assert.Equal("Balance", Assert.Single(query.FilterCompletions(set, "Bal", 3)).InsertText);
     }
+
+    [Fact]
+    public async Task A_result_is_exported_as_shown_or_read_again_in_full()
+    {
+        await using var env = new TestEnvironment();
+        await env.OpenAsync(TestEnvironment.Definition("Cards"));
+        env.Provider.ReturnRows(500);
+        var query = env.Query();
+        query.FetchSize = 50;
+        query.Text = Query;
+        await query.RunCommand.ExecuteAsync(null);
+        var result = Assert.IsType<QueryResultSet>(query.Tabs[0]);
+        await Until(() => result.RowCount == 50);
+        Directory.CreateDirectory(env.Dialogs.DocumentsFolder);
+
+        // The rows shown: 50, after the grid's own filter only those passing it.
+        await result.View.SetFilterAsync(0, new ResultFilter(0, ResultFilterOperator.LessOrEqual, "10"));
+        env.Dialogs.Export = static options => true;
+        await query.ExportCommand.ExecuteAsync(result);
+        var shown = Path.Combine(env.Dialogs.DocumentsFolder, "Query 1.csv");
+        Assert.Equal(11, File.ReadAllLines(shown).Length);
+        Assert.Equal([shown], env.Dialogs.Opened);
+
+        // The whole result: the query runs again and all 500 rows are written (the grid still holds 50).
+        var full = Path.Combine(env.Dialogs.DocumentsFolder, "all.json");
+        env.Dialogs.Export = options =>
+        {
+            Assert.True(options.CanReadAll);
+            options.AllRows = true;
+            options.SelectedFormat = options.Formats.Single(static f => f.Value == ResultExportFormat.Json);
+            options.Path = full;
+            options.OpenWhenDone = false;
+            return true;
+        };
+        await query.ExportCommand.ExecuteAsync(result);
+        Assert.Equal(500, System.Text.Json.JsonDocument.Parse(File.ReadAllText(full)).RootElement.GetArrayLength());
+        Assert.Equal(50, result.RowCount);
+        Assert.StartsWith("500", query.Status, StringComparison.Ordinal);
+    }
 }

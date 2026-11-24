@@ -58,6 +58,9 @@
                     <Border Style="{StaticResource Badge}" Margin="4,0,8,0" ToolTip="{x:Static res:Strings.CountRowsTip}">
                         <TextBlock Text="{Binding RowsText}" FontSize="{DynamicResource FontSize.Small}" Foreground="{DynamicResource Brush.TextSecondary}" />
                     </Border>
+                    <Button x:Name="ExportButton" Style="{StaticResource Btn.Footer}" c:Ui.Icon="&#xEDE1;" Content="{x:Static res:Strings.ExportMenu}"
+                            Command="{Binding DataContext.ExportCommand, RelativeSource={RelativeSource AncestorType=v:QueryDocumentView}}"
+                            CommandParameter="{Binding}" Margin="0,0,6,0" />
                     <ToggleButton x:Name="ValuePanelToggle" Style="{StaticResource Btn.Footer}" c:Ui.Icon="&#xE7B3;" Content="{x:Static res:Strings.ValueShort}"
                                   ToolTip="{x:Static res:Strings.ValuePanelTip}" Click="OnValuePanelToggle" Margin="0,0,6,0" />
                     <ProgressBar IsIndeterminate="{Binding IsCounting}" Width="40" VerticalAlignment="Center" Margin="0,0,8,0"

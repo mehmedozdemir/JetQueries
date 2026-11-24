@@ -234,6 +234,28 @@
   <data name="SshSavePassword" xml:space="preserve"><value>SSH parolasını sistemin kimlik bilgisi deposunda sakla</value></data>
   <data name="SshHint" xml:space="preserve"><value>Yukarıdaki veritabanı sunucusu ve portu SSH sunucusunun gördüğü adrestir (çoğu zaman localhost). Sunucu anahtarı ilk bağlantıda hatırlanır; değişirse bağlantı reddedilir.</value></data>
   <data name="BrowseKeyFile" xml:space="preserve"><value>Özel anahtar seçin</value></data>
+  <data name="ExportDialogTitle" xml:space="preserve"><value>Sonucu dışa aktar</value></data>
+  <data name="ExportFormat" xml:space="preserve"><value>Biçim</value></data>
+  <data name="ExportRows" xml:space="preserve"><value>Satırlar</value></data>
+  <data name="ExportShownRows" xml:space="preserve"><value>Gösterilen satırlar ({0:N0}), tablonun sırası ve kolonlarıyla</value></data>
+  <data name="ExportAllRows" xml:space="preserve"><value>Tüm sonuç: sorgu yeniden çalışır ve bütün satırlar yazılır</value></data>
+  <data name="ExportFile" xml:space="preserve"><value>Dosya</value></data>
+  <data name="ExportDelimiter" xml:space="preserve"><value>Ayırıcı</value></data>
+  <data name="ExportDelimiterComma" xml:space="preserve"><value>Virgül (,)</value></data>
+  <data name="ExportDelimiterSemicolon" xml:space="preserve"><value>Noktalı virgül (;) — Türkçe ayarlı Excel</value></data>
+  <data name="ExportDelimiterTab" xml:space="preserve"><value>Sekme</value></data>
+  <data name="ExportHeader" xml:space="preserve"><value>İlk satırda kolon adları</value></data>
+  <data name="ExportNullAsText" xml:space="preserve"><value>NULL değerleri NULL olarak yaz (yoksa boş)</value></data>
+  <data name="ExportTableName" xml:space="preserve"><value>INSERT içindeki tablo adı</value></data>
+  <data name="ExportOpenWhenDone" xml:space="preserve"><value>Bitince dosyayı aç</value></data>
+  <data name="ExportButton" xml:space="preserve"><value>Dışa aktar</value></data>
+  <data name="ExportMenu" xml:space="preserve"><value>Dışa aktar…</value></data>
+  <data name="ExportRunning" xml:space="preserve"><value>Dışa aktarılıyor… {0:N0} satır</value></data>
+  <data name="ExportDone" xml:space="preserve"><value>{0:N0} satır {1} dosyasına yazıldı</value></data>
+  <data name="ExportCanceled" xml:space="preserve"><value>Dışa aktarma iptal edildi.</value></data>
+  <data name="ExportFailed" xml:space="preserve"><value>Dışa aktarılamadı: {0}</value></data>
+  <data name="ExportExcelTruncated" xml:space="preserve"><value>Bir Excel sayfası {0:N0} satır alır; fazlası yazılmadı.</value></data>
+  <data name="ExportBrowseTitle" xml:space="preserve"><value>Dışa aktarılacak dosya</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Tümünü temizle</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Filtreyi kaldır</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} / {1:N0} satır</value></data>
