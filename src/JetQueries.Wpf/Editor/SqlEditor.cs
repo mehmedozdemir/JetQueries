@@ -17,7 +17,7 @@ namespace JetQueries.Wpf.Editor;
 /// <see cref="ISqlLanguageService"/>. The control knows no SQL dialect itself; colours come from the brush
 /// properties, which the application binds to UiKit's syntax tokens.
 /// </summary>
-public class SqlEditor : UserControl
+public partial class SqlEditor : UserControl
 {
     /// <summary>The text. Two-way: typing updates it, setting it replaces the document.</summary>
     public static readonly DependencyProperty TextProperty = DependencyProperty.Register(
@@ -145,7 +145,7 @@ public class SqlEditor : UserControl
             _diagnosticTimer.Stop();
             _ = RefreshDiagnosticsAsync();
         };
-        Content = _editor;
+        SetUpAssist();
     }
 
     /// <summary>
@@ -586,6 +586,8 @@ public class SqlEditor : UserControl
 
     private void OnTextEntered(object? sender, TextCompositionEventArgs e)
     {
+        OnTextEnteredForAssist(e.Text);
+
         // While the list is open it filters itself as the user types. Otherwise a new word, a "." or a space
         // (after FROM, JOIN, …) may call for one; the source decides whether there is anything to offer.
         if (_completionWindow is null && e.Text is [var c] && (char.IsLetter(c) || c is '_' or '.' or ' ' or '[' or '"'))
@@ -596,7 +598,21 @@ public class SqlEditor : UserControl
 
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key == Key.Tab && Keyboard.Modifiers == ModifierKeys.None && _completionWindow is null && ExpandSnippetAtCaret())
+        if (e.Key is Key.LeftCtrl or Key.RightCtrl)
+        {
+            UpdateLinkFromKeyboard();
+        }
+
+        if (HandleSignatureKey(e.Key))
+        {
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Space && Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift))
+        {
+            _ = ShowSignatureHelpAsync();
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Tab && Keyboard.Modifiers == ModifierKeys.None && _completionWindow is null && ExpandSnippetAtCaret())
         {
             e.Handled = true;
         }
@@ -644,6 +660,7 @@ public class SqlEditor : UserControl
     {
         if (Keyboard.Modifiers == ModifierKeys.Control && OffsetAt(e) is { } offset)
         {
+            SetLink(null);
             NavigationRequested?.Invoke(this, offset);
             e.Handled = true;
         }
@@ -665,7 +682,8 @@ public class SqlEditor : UserControl
         e.Handled = true;
     }
 
-    private async Task RequestCompletionAsync()
+    /// <param name="valuesOnly">Open the list only for a parameter's values (after "(" and ",").</param>
+    private async Task RequestCompletionAsync(bool valuesOnly = false)
     {
         var source = CompletionSource;
         if (source is null)
@@ -693,6 +711,11 @@ public class SqlEditor : UserControl
             return;
         }
 
+        if (valuesOnly)
+        {
+            items = [.. items.Where(static i => i.Kind == CompletionItemKind.Value)];
+        }
+
         // The caret moved on while the answer was on its way: a newer request covers the new position.
         if (version != _completionVersion || items.Count == 0 || _editor.CaretOffset != offset || _completionWindow is not null)
         {
@@ -708,16 +731,20 @@ public class SqlEditor : UserControl
             ResizeMode = ResizeMode.NoResize,
             AllowsTransparency = false,
         };
-        window.SetResourceReference(BackgroundProperty, "Brush.Card");
         window.SetResourceReference(ForegroundProperty, "Brush.Text");
-        window.SetResourceReference(BorderBrushProperty, "Brush.BorderStrong");
-        window.BorderThickness = new Thickness(1);
-        window.CompletionList.ListBox.SetResourceReference(BackgroundProperty, "Brush.Card");
+        window.CompletionList.ListBox.Background = Brushes.Transparent;
         window.CompletionList.ListBox.SetResourceReference(ForegroundProperty, "Brush.Text");
         window.CompletionList.ListBox.BorderThickness = new Thickness(0);
+        StyleCompletionWindow(window);
         foreach (var item in items)
         {
-            window.CompletionList.CompletionData.Add(new CompletionData(item));
+            window.CompletionList.CompletionData.Add(new CompletionData(this, item));
+        }
+
+        // The first row is ready for Enter, as in other editors.
+        if (window.CompletionList.ListBox.Items.Count > 0)
+        {
+            window.CompletionList.SelectedItem = window.CompletionList.CompletionData[0];
         }
 
         window.Closed += (_, _) =>
@@ -822,7 +849,7 @@ public class SqlEditor : UserControl
             }
         }
 
-        private int StateBefore(int lineNumber) => lineNumber <= 1 ? 0 : _endStates[lineNumber - 2];
+        internal int StateBefore(int lineNumber) => lineNumber <= 1 || lineNumber - 2 >= _endStates.Count ? 0 : _endStates[lineNumber - 2];
 
         private void Store(int lineNumber, int endState)
         {
@@ -886,41 +913,6 @@ public class SqlEditor : UserControl
                 }
             }
         }
-    }
-
-    /// <summary>One row of the completion list: the name, then what it is in a muted colour.</summary>
-    private sealed class CompletionData(CompletionItem item) : ICompletionData
-    {
-        public ImageSource? Image => null;
-
-        public string Text => item.Label;
-
-        public object Content
-        {
-            get
-            {
-                var panel = new DockPanel { LastChildFill = true };
-                var detail = new TextBlock { Text = item.Detail ?? Kind(item.Kind), Margin = new Thickness(16, 0, 0, 0), FontSize = 11.5 };
-                detail.SetResourceReference(TextBlock.ForegroundProperty, "Brush.TextMuted");
-                DockPanel.SetDock(detail, Dock.Right);
-                panel.Children.Add(detail);
-                panel.Children.Add(new TextBlock { Text = item.Label });
-                return panel;
-            }
-        }
-
-        public object? Description => item.Detail;
-
-        public double Priority => 0;
-
-        public void Complete(TextArea textArea, ISegment completionSegment, EventArgs insertionRequestEventArgs) =>
-            textArea.Document.Replace(completionSegment, item.InsertText ?? item.Label);
-
-        private static string Kind(CompletionItemKind kind) => kind switch
-        {
-            CompletionItemKind.Keyword => string.Empty,
-            var other => other.ToString().ToLowerInvariant(),
-        };
     }
 
     /// <summary>Paints the flashed range in the selection colour, softly.</summary>

@@ -396,6 +396,30 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] Connection editor → Gelişmiş: the timeout box, then the switches on one row, without gaps.
 - [ ] Settings → Görünüm: each scheme card shows a line of SQL in the scheme's keyword and string colours.
 
+## IntelliSense: list, signature help, parameter values, Ctrl+Click feedback
+- [ ] Typing "SELECT DATEA" opens the list as a card: each row has a coloured badge for its kind (function,
+      table, column, keyword…), the name in the code font and, at the right, the signature or type. The first row
+      is selected; the selected row has an accent bar. A card beside the list explains the selected function
+      ("Tarihe verilen birimden belirtilen kadar ekler", → datetime). The hint line says ↑↓ / Enter / Tab / Esc.
+- [ ] Enter on DATEADD inserts "DATEADD()" with the caret between the brackets; a card above the line shows
+      DATEADD(datepart datepart, number int, date datetime) → datetime with the current parameter underlined, and
+      the list of dateparts (year, quarter, month…) with their meaning opens at once.
+- [ ] Typing "," moves the underline to the next parameter; "(" inside an argument (ABS(…)) shows that call;
+      leaving the call (")" or moving the caret out) closes the card; Esc closes it; Ctrl+Shift+Space (or the
+      editor menu "Parameter info") opens it again.
+- [ ] Values: CONVERT(varchar(10), GETDATE(), ‸ offers the date styles (104 = dd.mm.yyyy …); FORMAT(x, '‸ offers
+      quoted formats; ROUND's third argument 0 / 1; JSON_VALUE paths; HASHBYTES algorithms.
+- [ ] Overloads (functions with several forms, e.g. in PostgreSQL/Oracle catalogs): ▲▼ 1/2 in the card; ↑↓ switch
+      while no list is open.
+- [ ] User routines: "EXEC dbo.SomeProc " then "," shows the procedure's parameters (OUT marked); "SELECT
+      dbo.SomeFunction(" shows the function's parameters and return type (read from the database).
+- [ ] Oracle: TO_CHAR(d, '‸ offers date masks; TRUNC(d, '‸ units; SYS_CONTEXT('USERENV', '‸ parameters; a package
+      function's parameters. PostgreSQL: date_trunc('‸ fields, to_char formats, overloads of a function.
+      SQLite: strftime formats, date() modifiers.
+- [ ] Ctrl over a name: the name is underlined in the accent colour and the cursor is a hand (keywords and
+      strings are not). Ctrl+Click: a chip "Nesne aranıyor…" with a turning arrow at the editor's top right and a
+      waiting cursor until the details tab opens; for a name that is not found the chip says so for 3 s.
+
 ## Connection editor (compact)
 - [ ] The form is two columns: Name + Environment (with its colour) on top, the type's main settings two to a
       row, user and password side by side, "Save password" and "Read-only" switches, then "Advanced" (folder,

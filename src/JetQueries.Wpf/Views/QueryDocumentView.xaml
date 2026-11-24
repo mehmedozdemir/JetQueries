@@ -102,7 +102,8 @@
         <!-- Editor -->
         <Border Grid.Row="1" Style="{StaticResource Card.Surface}">
             <Grid>
-                <e:SqlEditor x:Name="Editor" Margin="0,6,0,2" Text="{Binding Text}" LanguageService="{Binding LanguageService}">
+                <e:SqlEditor x:Name="Editor" Margin="0,6,0,2" Text="{Binding Text}" LanguageService="{Binding LanguageService}"
+                             BusyText="{Binding NavigationText}" IsBusy="{Binding IsNavigating}">
                     <e:SqlEditor.ContextMenu>
                         <ContextMenu x:Name="EditorMenu" Opened="OnEditorMenuOpened">
                             <MenuItem Header="{x:Static res:Strings.EditorRunStatement}" c:Ui.Icon="{x:Static c:Icons.Play}" InputGestureText="Ctrl+Enter" Click="OnMenuRun" Tag="Statement" />
@@ -123,6 +124,7 @@
                             <MenuItem Header="{x:Static res:Strings.EditorShowDetails}" c:Ui.Icon="{x:Static c:Icons.Info}" InputGestureText="Ctrl+Click, F12" Click="OnMenuEdit" Tag="Details" />
                             <MenuItem Header="{x:Static res:Strings.EditorGoToDefinition}" Click="OnMenuEdit" Tag="Definition" />
                             <MenuItem Header="{x:Static res:Strings.EditorCompletion}" InputGestureText="Ctrl+Space" Click="OnMenuEdit" Tag="Completion" />
+                            <MenuItem Header="{x:Static res:Strings.EditorSignatureHelp}" InputGestureText="Ctrl+Shift+Space" Click="OnMenuEdit" Tag="Signature" />
                             <Separator />
                             <MenuItem x:Name="UndoItem" Header="{x:Static res:Strings.EditorUndo}" c:Ui.Icon="&#xE7A7;" InputGestureText="Ctrl+Z" Click="OnMenuEdit" Tag="Undo" />
                             <MenuItem x:Name="RedoItem" Header="{x:Static res:Strings.EditorRedo}" c:Ui.Icon="&#xE7A6;" InputGestureText="Ctrl+Y" Click="OnMenuEdit" Tag="Redo" />

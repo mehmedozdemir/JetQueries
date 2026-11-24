@@ -88,6 +88,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 - `docs/ux-review.md`: a UX review of the whole application with prioritised findings.
 - Keyboard shortcuts overview (Tools → Keyboard shortcuts, F1), searchable.
 - Command palette (Ctrl+Shift+P): every menu command by name.
+- IntelliSense: built-in function catalogs with signatures and descriptions (English/Turkish) for SQL Server, Oracle, PostgreSQL and SQLite; signature help (Ctrl+Shift+Space, and on "(" / ","), with the current parameter highlighted and overloads; values offered for parameters that take a fixed set (dateparts, styles, formats, units…); user function and procedure parameters read from the database. SDK (preview): `ISignatureHelpProvider`, `IRoutineMetadataProvider`, `SqlSignature`, `CompletionItem.Documentation` / `OpensCall`, `CompletionItemKind.Value`.
+- Completion list redesigned (kind badges, signatures at the right, a description card, hint line); Ctrl+hover underlines names; Ctrl+Click shows a "finding the object" chip and a waiting cursor.
 - Connection folders in the explorer: new, rename, delete (contents move up), drag and drop of connections and folders; empty folders are kept (settings section `folders`).
 - Import starts with the source (DBeaver, SSMS, a file), reads only that one, and can keep the tool's folders or put everything into one folder.
 - Colour schemes for both themes (UiKit `Themes/Schemes`): dark Midnight (new default), Graphite, Ocean, High contrast; light Paper, Sky, Sand, High contrast; chosen in Settings → Appearance.

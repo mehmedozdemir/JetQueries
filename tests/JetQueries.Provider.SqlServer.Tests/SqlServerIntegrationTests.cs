@@ -294,6 +294,13 @@ public sealed class SqlServerIntegrationTests(SqlServerFixture fixture) : IClass
         Assert.Equal(["1|@no|varchar(19)|IN|", "2|@adet|int|OUT|"], parameters.Rows.Select(static r => string.Join('|', r.Cells)));
         Assert.Contains(Section(procedure!, ObjectDetailKeys.Dependencies).Rows, static r => r.Cells[0] == "uses" && r.Cells[1] == "dbo.Kart");
 
+        // Signature help reads the same parameters.
+        var signature = Assert.Single(await ((IRoutineMetadataProvider)connection.Metadata).GetSignaturesAsync(
+            new DatabaseObject(new DatabaseObjectName(database, "dbo", "KartBul"), DatabaseObjectKinds.Procedure), Token));
+        Assert.Equal(["@no varchar(19) ", "@adet int OUT"], signature.Parameters.Select(static p => $"{p.Name} {p.DataType} {p.Direction}"));
+        Assert.Empty(await ((IRoutineMetadataProvider)connection.Metadata).GetSignaturesAsync(
+            new DatabaseObject(new DatabaseObjectName(database, "dbo", "Kart"), DatabaseObjectKinds.Procedure), Token));
+
         var sequence = await details.GetDetailsAsync(new DatabaseObject(new DatabaseObjectName(database, "dbo", "Sira"), DatabaseObjectKinds.Sequence), Token);
         Assert.Equal("100", sequence!.Properties.Single(static p => p.Key == "start").Value);
         Assert.Equal("5", sequence.Properties.Single(static p => p.Key == "increment").Value);

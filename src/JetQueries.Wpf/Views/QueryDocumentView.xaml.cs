@@ -24,6 +24,9 @@ public partial class QueryDocumentView : UserControl
         Editor.DiagnosticSource = (text, token) => DataContext is QueryDocumentViewModel viewModel
             ? viewModel.DiagnoseAsync(text, token)
             : Task.FromResult<IReadOnlyList<SqlDiagnostic>>([]);
+        Editor.SignatureSource = (text, offset, token) => DataContext is QueryDocumentViewModel viewModel
+            ? viewModel.SignatureHelpAsync(text, offset, token)
+            : Task.FromResult<SignatureHelp?>(null);
         Editor.SnippetLookup = shortcut => (DataContext as QueryDocumentViewModel)?.Snippets?.Find(shortcut)?.Text;
         Editor.NavigationRequested += (_, offset) =>
         {
@@ -168,6 +171,9 @@ public partial class QueryDocumentView : UserControl
                 break;
             case "Completion":
                 _ = Editor.ShowCompletionAsync();
+                break;
+            case "Signature":
+                _ = Editor.ShowSignatureHelpAsync();
                 break;
             default:
                 break;
