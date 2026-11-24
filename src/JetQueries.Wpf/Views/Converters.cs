@@ -222,3 +222,14 @@ public sealed record RunHint(string Keys, string Text)
         new("Ctrl+Shift+Enter", Strings.EditorRunInNewTab),
     ];
 }
+
+/// <summary>Visible when the value's text equals the parameter (an enum member's name, for example).</summary>
+public sealed class EqualsToVisibilityConverter : IValueConverter
+{
+    public static EqualsToVisibilityConverter Instance { get; } = new();
+
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        string.Equals(value?.ToString(), parameter?.ToString(), StringComparison.Ordinal) ? Visibility.Visible : Visibility.Collapsed;
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => Binding.DoNothing;
+}

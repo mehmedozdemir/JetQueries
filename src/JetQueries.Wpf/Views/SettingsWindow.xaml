@@ -63,6 +63,9 @@
                             <DataTrigger Binding="{Binding Key}" Value="snippets">
                                 <Setter TargetName="Icon" Property="Text" Value="&#xE8EC;" />
                             </DataTrigger>
+                            <DataTrigger Binding="{Binding Key}" Value="updates">
+                                <Setter TargetName="Icon" Property="Text" Value="&#xE896;" />
+                            </DataTrigger>
                         </DataTemplate.Triggers>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
@@ -287,6 +290,62 @@
                                              ItemsSource="{Binding QueryButtonPlaces}" SelectedItem="{Binding QueryButtonPlace}" />
                                 </StackPanel>
                             </Border>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Updates: channel, feed, start-up check, check now -->
+                    <StackPanel x:Name="UpdatesPage" Style="{StaticResource Page}" DataContext="{Binding Updates}">
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <Border Style="{StaticResource Settings.Row}" BorderThickness="0">
+                                    <DockPanel>
+                                        <ComboBox x:Name="UpdateChannelBox" DockPanel.Dock="Right" Width="160" Margin="24,0,0,0" VerticalAlignment="Center"
+                                                  ItemsSource="{Binding Channels}" SelectedItem="{Binding Channel}" />
+                                        <StackPanel>
+                                            <TextBlock Text="{x:Static res:Strings.FieldUpdateChannel}" Style="{StaticResource Settings.RowTitle}" />
+                                            <TextBlock Text="{x:Static res:Strings.SettingUpdateChannelInfo}" Style="{StaticResource Settings.RowInfo}" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
+                                <Border Style="{StaticResource Settings.Row}">
+                                    <StackPanel>
+                                        <TextBlock Text="{x:Static res:Strings.FieldUpdateSource}" Style="{StaticResource Settings.RowTitle}" />
+                                        <TextBlock Text="{x:Static res:Strings.SettingUpdateSourceInfo}" Style="{StaticResource Settings.RowInfo}" />
+                                        <TextBox x:Name="UpdateSourceBox" Margin="0,10,0,0" Text="{Binding Source, UpdateSourceTrigger=PropertyChanged}"
+                                                 c:Ui.Placeholder="{x:Static res:Strings.UpdateSourcePlaceholder}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource Settings.Row}">
+                                    <DockPanel>
+                                        <CheckBox DockPanel.Dock="Right" Style="{StaticResource Switch}" Margin="24,0,0,0" VerticalAlignment="Center"
+                                                  IsChecked="{Binding CheckOnStartup}" />
+                                        <StackPanel>
+                                            <TextBlock Text="{x:Static res:Strings.FieldUpdateOnStartup}" Style="{StaticResource Settings.RowTitle}" />
+                                            <TextBlock Text="{x:Static res:Strings.SettingUpdateOnStartupInfo}" Style="{StaticResource Settings.RowInfo}" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
+                                <Border Style="{StaticResource Settings.Row}">
+                                    <DockPanel>
+                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="24,0,0,0" VerticalAlignment="Center">
+                                            <Button Content="{x:Static res:Strings.UpdateDownload}" Command="{Binding DownloadCommand}" Margin="0,0,8,0"
+                                                    Visibility="{Binding CanDownload, Converter={StaticResource BoolToVisibility}}" />
+                                            <Button Content="{x:Static res:Strings.UpdateRestart}" Style="{StaticResource Btn.Primary}" Command="{Binding RestartCommand}" Margin="0,0,8,0"
+                                                    Visibility="{Binding CanRestart, Converter={StaticResource BoolToVisibility}}" />
+                                            <Button Content="{x:Static res:Strings.UpdateCheckNow}" Command="{Binding CheckCommand}" />
+                                        </StackPanel>
+                                        <StackPanel>
+                                            <TextBlock Style="{StaticResource Settings.RowTitle}">
+                                                <Run Text="{x:Static res:Strings.FieldCurrentVersion}" />
+                                                <Run Text="{Binding CurrentVersion, Mode=OneWay}" FontWeight="SemiBold" />
+                                            </TextBlock>
+                                            <TextBlock Text="{Binding Status}" Style="{StaticResource Settings.RowInfo}" TextWrapping="Wrap" />
+                                            <ProgressBar Value="{Binding Progress}" Maximum="100" Height="4" Margin="0,8,0,0"
+                                                         Visibility="{Binding State, Converter={x:Static v:EqualsToVisibilityConverter.Instance}, ConverterParameter=Downloading}" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
+                            </StackPanel>
                         </Border>
                     </StackPanel>
 

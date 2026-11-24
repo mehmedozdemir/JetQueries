@@ -119,7 +119,8 @@ internal sealed class SettingsDialog(IServiceProvider services) : ISettingsDialo
             services.GetRequiredService<IThemeService>(),
             fonts,
             PreviewLanguage(),
-            services.GetService<ISnippetService>());
+            services.GetService<ISnippetService>(),
+            services.GetService<UpdatesViewModel>());
         new SettingsWindow(viewModel) { Owner = services.GetRequiredService<MainWindow>() }.ShowDialog();
     }
 

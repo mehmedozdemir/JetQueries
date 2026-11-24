@@ -25,8 +25,9 @@ public partial class MainWindowViewModel : ObservableObject
     public MainWindowViewModel(
         IThemeService themeService, IUiDispatcher ui, ConnectionsViewModel connections, DocumentsViewModel documents, HistoryViewModel history,
         ISettingsDialog? settings = null, IConnectionManager? manager = null, IMetadataService? metadata = null, IJobQueue? jobs = null,
-        Core.Settings.ISettingsStore? store = null, IAppearanceService? appearance = null)
+        Core.Settings.ISettingsStore? store = null, IAppearanceService? appearance = null, UpdatesViewModel? updates = null)
     {
+        Updates = updates;
         _store = store;
         _appearance = appearance;
         Services.AppearanceService.Changed += (_, _) => OnPropertyChanged(nameof(IsCompact));
@@ -171,6 +172,9 @@ public partial class MainWindowViewModel : ObservableObject
     private void ToggleTheme() => _themeService.Toggle();
 
     private readonly IAppearanceService? _appearance;
+
+    /// <summary>The application's updates (status bar chip, Tools > Check for updates); null in tests without one.</summary>
+    public UpdatesViewModel? Updates { get; }
 
     /// <summary>Whether the compact density is in effect (View > Compact mode).</summary>
     public bool IsCompact => _appearance?.Current.CompactMode == true;

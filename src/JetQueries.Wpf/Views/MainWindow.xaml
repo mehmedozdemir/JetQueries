@@ -86,6 +86,7 @@
                             <MenuItem Header="{x:Static res:Strings.MenuHistory}" c:Ui.Icon="{x:Static c:Icons.History}" InputGestureText="Ctrl+Shift+H" Command="{Binding ShowHistoryCommand}" />
                             <MenuItem Header="{x:Static res:Strings.MenuCommandPalette}" c:Ui.Icon="&#xE721;" InputGestureText="Ctrl+Shift+P" Click="OnCommandPaletteClick" />
                             <MenuItem Header="{x:Static res:Strings.MenuShortcuts}" c:Ui.Icon="&#xE765;" InputGestureText="F1" Command="{Binding ShowShortcutsCommand}" />
+                            <MenuItem Header="{x:Static res:Strings.MenuCheckUpdates}" c:Ui.Icon="&#xE896;" Command="{Binding Updates.CheckCommand}" />
                             <Separator />
                             <MenuItem Header="{x:Static res:Strings.MenuSettings}" c:Ui.Icon="{x:Static c:Icons.Settings}" Command="{Binding OpenSettingsCommand}" />
                         </MenuItem>
@@ -150,6 +151,18 @@
                 <TextBlock Text="{Binding Documents.Selected.Status}" Style="{StaticResource Text.Status}" Foreground="{DynamicResource Brush.Text}" />
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <!-- An update found, downloading or ready: what to do next -->
+                <Border Style="{StaticResource Chip}" Margin="0,0,16,0" Padding="8,0,4,0" Height="22"
+                        Visibility="{Binding Updates.ShowsInStatusBar, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE896;" Style="{StaticResource Text.Icon}" FontSize="12" Foreground="{DynamicResource Brush.Accent}" Margin="0,0,6,0" />
+                        <TextBlock Text="{Binding Updates.Status}" Style="{StaticResource Text.Status}" Foreground="{DynamicResource Brush.Text}" />
+                        <Button Style="{StaticResource Btn.Link}" Content="{x:Static res:Strings.UpdateDownload}" Command="{Binding Updates.DownloadCommand}"
+                                Visibility="{Binding Updates.CanDownload, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
+                        <Button Style="{StaticResource Btn.Link}" Content="{x:Static res:Strings.UpdateRestart}" Command="{Binding Updates.RestartCommand}"
+                                Visibility="{Binding Updates.CanRestart, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
+                    </StackPanel>
+                </Border>
                 <TextBlock Text="{Binding Documents.Selected.SelectedSession.Name}" Style="{StaticResource Text.Status}" Margin="0,0,16,0" />
                 <TextBlock Text="{Binding ExtensionStatus}" Style="{StaticResource Text.Status}" Foreground="{DynamicResource Brush.TextMuted}" />
             </StackPanel>

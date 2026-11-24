@@ -192,6 +192,29 @@
   <data name="SettingDensityInfo" xml:space="preserve"><value>Kompakt: JetBrains IDE'lerindeki gibi daha alçak araç çubukları, satırlar, sekmeler ve kutular; yazı boyutu değişmez.</value></data>
   <data name="DensityNormal" xml:space="preserve"><value>Normal</value></data>
   <data name="DensityCompact" xml:space="preserve"><value>Kompakt</value></data>
+  <data name="UpdateIdle" xml:space="preserve"><value>Henüz denetlenmedi.</value></data>
+  <data name="UpdateNotInstalled" xml:space="preserve"><value>Güncellemeler kurulumla (JetQueries Setup) yüklenen uygulamada çalışır; bu kopya bir klasörden çalışıyor.</value></data>
+  <data name="UpdateNoSource" xml:space="preserve"><value>Güncelleme kaynağı belirtilmemiş (Ayarlar &gt; Güncellemeler).</value></data>
+  <data name="UpdateChecking" xml:space="preserve"><value>Güncellemeler aranıyor…</value></data>
+  <data name="UpdateUpToDate" xml:space="preserve"><value>{0} en son sürüm.</value></data>
+  <data name="UpdateAvailable" xml:space="preserve"><value>{0} sürümü hazır.</value></data>
+  <data name="UpdateDownloading" xml:space="preserve"><value>{0} indiriliyor…</value></data>
+  <data name="UpdateReady" xml:space="preserve"><value>{0} indirildi: kullanmak için yeniden başlatın.</value></data>
+  <data name="UpdateFailed" xml:space="preserve"><value>Güncelleme yapılamadı: {0}</value></data>
+  <data name="UpdateDownload" xml:space="preserve"><value>İndir</value></data>
+  <data name="UpdateRestart" xml:space="preserve"><value>Yeniden başlat ve güncelle</value></data>
+  <data name="UpdateCheckNow" xml:space="preserve"><value>Şimdi denetle</value></data>
+  <data name="MenuCheckUpdates" xml:space="preserve"><value>Güncellemeleri denetle</value></data>
+  <data name="SettingsPageUpdates" xml:space="preserve"><value>Güncellemeler</value></data>
+  <data name="SettingsPageUpdatesInfo" xml:space="preserve"><value>Kanal, kaynak, açılışta denetleme</value></data>
+  <data name="FieldUpdateChannel" xml:space="preserve"><value>Kanal</value></data>
+  <data name="SettingUpdateChannelInfo" xml:space="preserve"><value>stable: sürümler; beta: ön sürümler; nightly: her derleme.</value></data>
+  <data name="FieldUpdateSource" xml:space="preserve"><value>Güncelleme kaynağı</value></data>
+  <data name="SettingUpdateSourceInfo" xml:space="preserve"><value>Sürümlerin bulunduğu bir web adresi ya da klasör (releases.&lt;kanal&gt;.json).</value></data>
+  <data name="FieldUpdateOnStartup" xml:space="preserve"><value>Açılışta denetle</value></data>
+  <data name="SettingUpdateOnStartupInfo" xml:space="preserve"><value>Arka planda yeni sürüm arar; varsa durum çubuğunda görünür.</value></data>
+  <data name="FieldCurrentVersion" xml:space="preserve"><value>Çalışan sürüm</value></data>
+  <data name="UpdateSourcePlaceholder" xml:space="preserve"><value>https://… ya da pack.ps1'in sürüm klasörü (artifacts/releases/win-x64)</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Tümünü temizle</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Filtreyi kaldır</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} / {1:N0} satır</value></data>

@@ -82,6 +82,12 @@ public partial class App : Application
         // The tabs of the last run come back (they reconnect when their connections are opened).
         await services.GetRequiredService<DocumentsViewModel>().RestoreAsync();
         await StartHostAsync();
+
+        // Updates: a quiet look at the feed when the settings ask for it; "restart" closes the window the normal
+        // way (the open tabs are saved) and Velopack applies the update after the process exits.
+        var updates = services.GetRequiredService<UpdatesViewModel>();
+        updates.RestartRequested += (_, _) => window.Close();
+        _ = updates.StartupCheckAsync();
     }
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Appearance settings could not be read; defaults are used.")]

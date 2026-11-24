@@ -564,3 +564,12 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] Restart the application: the chosen density is back.
 - [ ] Both themes and every colour scheme look right in compact mode (no clipped text in buttons, combos, tabs).
 
+## In-app updates
+- [ ] Ayarlar > Güncellemeler: Kanal, Güncelleme kaynağı, Açılışta denetle, the running version and "Şimdi denetle".
+- [ ] Running from artifacts/publish (not installed): "Şimdi denetle" says updates work in the installed application.
+- [ ] Installed with artifacts/releases/win-x64/JetQueries-win-stable-Setup.exe: set the source to that releases folder,
+      then build a newer one (`scripts/pack.ps1 -Version 0.1.1`): "Şimdi denetle" says 0.1.1 is available; the status
+      bar chip shows it with "İndir"; after the download "Yeniden başlat ve güncelle" closes the window, the update is
+      applied and 0.1.1 starts with the same tabs.
+- [ ] With "Açılışta denetle" on, a newer release shows in the status bar shortly after start; with none, nothing shows.
+
