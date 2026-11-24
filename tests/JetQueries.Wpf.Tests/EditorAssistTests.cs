@@ -80,4 +80,56 @@ public sealed class EditorAssistTests
 
         Assert.All(colours, static pair => Assert.True(pair.Value > 8, $"{pair.Key} rendered only {pair.Value} distinct colours."));
     }
+
+    [Fact]
+    public async Task A_dot_or_a_filter_with_no_match_never_leaves_an_empty_list_open()
+    {
+        await WpfTestHost.RunAsync(async () =>
+        {
+            // Words offer tables; after "ts." the alias's columns.
+            static Task<IReadOnlyList<CompletionItem>> Source(string text, int offset, CancellationToken token)
+            {
+                var start = offset;
+                while (start > 0 && char.IsLetterOrDigit(text[start - 1]))
+                {
+                    start--;
+                }
+
+                var span = new TextSpan(start, offset - start);
+                IReadOnlyList<CompletionItem> items = start > 0 && text[start - 1] == '.'
+                    ? [new CompletionItem("MIFAREID", CompletionItemKind.Column, span), new CompletionItem("AMOUNT", CompletionItemKind.Column, span)]
+                    : [new CompletionItem("TS_TABLE", CompletionItemKind.Table, span), new CompletionItem("TSQL_LOG", CompletionItemKind.Table, span)];
+                return Task.FromResult(items);
+            }
+
+            var editor = new SqlEditor { CompletionSource = Source };
+            var window = new Window { Content = editor, Width = 700, Height = 300, Left = -20000, Top = 0, ShowActivated = false, ShowInTaskbar = false };
+            window.Show();
+            editor.Text = "SELECT * FROM T ts WHERE ts";
+            editor.MoveCaret(editor.Text.Length);
+            await EditorActionsTests.Idle();
+            await editor.ShowCompletionAsync();
+            await EditorActionsTests.Idle();
+            Assert.True(editor.IsCompletionOpen);
+
+            // "." closes the word list and opens the columns.
+            editor.TypeText(".");
+            for (var i = 0; i < 50 && !editor.CompletionLabels.Contains("MIFAREID"); i++)
+            {
+                await Task.Delay(20);
+                await EditorActionsTests.Idle();
+            }
+
+            Assert.Equal(["MIFAREID", "AMOUNT"], editor.CompletionLabels);
+
+            // Typing what no column matches closes the list instead of leaving an empty card.
+            editor.TypeText("x");
+            editor.TypeText("y");
+            await EditorActionsTests.Idle();
+            Assert.False(editor.IsCompletionOpen);
+
+            window.Close();
+            return 0;
+        });
+    }
 }

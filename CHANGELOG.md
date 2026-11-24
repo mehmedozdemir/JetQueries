@@ -152,6 +152,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 - Accessibility: icon buttons give screen readers their tooltip as name; muted text is darker in both themes (≥ 4.5:1 for small text).
 
 ### Fixed
+- An empty completion card (only the hint line) stayed open after "." or after typing what no row matched; "." now opens the columns of the alias, and a list filtered to nothing closes.
 - The editor/results splitter had no resize cursor or visible line for rows (UiKit splitter template), so the results could not be found to drag up.
 - The explorer's toolbar was cut off at the default panel width; its actions are icons that wrap.
 - Connection editor choices, hints and Oracle's field labels were English in the Turkish UI.

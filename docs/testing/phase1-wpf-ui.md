@@ -401,6 +401,8 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
       table, column, keyword…), the name in the code font and, at the right, the signature or type. The first row
       is selected; the selected row has an accent bar. A card beside the list explains the selected function
       ("Tarihe verilen birimden belirtilen kadar ekler", → datetime). The hint line says ↑↓ / Enter / Tab / Esc.
+- [ ] With the list open after "AND ts", typing "." closes it and opens the alias's columns; typing letters no
+      row matches closes the list (no empty card with only the hint line is ever left).
 - [ ] Enter on DATEADD inserts "DATEADD()" with the caret between the brackets; a card above the line shows
       DATEADD(datepart datepart, number int, date datetime) → datetime with the current parameter underlined, and
       the list of dateparts (year, quarter, month…) with their meaning opens at once.

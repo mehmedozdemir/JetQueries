@@ -487,6 +487,9 @@ public partial class SqlEditor : UserControl
     /// <summary>Opens the completion list at the caret, as Ctrl+Space does.</summary>
     public Task ShowCompletionAsync() => RequestCompletionAsync();
 
+    /// <summary>Types text at the caret as the keyboard would (for tests).</summary>
+    internal void TypeText(string text) => _editor.TextArea.PerformTextInput(text);
+
     /// <summary>Asks the <see cref="DiagnosticSource"/> now, without waiting for a pause in typing.</summary>
     public async Task RefreshDiagnosticsAsync()
     {
@@ -588,8 +591,32 @@ public partial class SqlEditor : UserControl
     {
         OnTextEnteredForAssist(e.Text);
 
-        // While the list is open it filters itself as the user types. Otherwise a new word, a "." or a space
-        // (after FROM, JOIN, …) may call for one; the source decides whether there is anything to offer.
+        // While the list is open it filters itself as the user types. A "." starts a new context (the columns
+        // of "ts."), and a list filtered down to nothing is only an empty card in the way: both close it, so
+        // a fresh request below can open the right one.
+        if (_completionWindow is { } open)
+        {
+            if (e.Text == ".")
+            {
+                _completionWindow = null;
+                open.Close();
+            }
+            else
+            {
+                // The list applies its filter once the caret has settled; look after that.
+                Dispatcher.BeginInvoke(DispatcherPriority.Input, () =>
+                {
+                    if (ReferenceEquals(_completionWindow, open) && open.CompletionList.ListBox.Items.Count == 0)
+                    {
+                        _completionWindow = null;
+                        open.Close();
+                    }
+                });
+            }
+        }
+
+        // Otherwise a new word, a "." or a space (after FROM, JOIN, …) may call for one; the source decides
+        // whether there is anything to offer.
         if (_completionWindow is null && e.Text is [var c] && (char.IsLetter(c) || c is '_' or '.' or ' ' or '[' or '"'))
         {
             _ = RequestCompletionAsync();
