@@ -462,6 +462,8 @@
   <data name="Setting_walletLocation" xml:space="preserve"><value>Wallet klasörü</value></data>
   <data name="SettingHint_walletLocation" xml:space="preserve"><value>TCPS ya da Autonomous Database için Oracle wallet (cwallet.sso); çoğu zaman aynı klasör</value></data>
   <data name="BrowseFolder" xml:space="preserve"><value>Klasör seçin</value></data>
+  <data name="Setting_walletCredentials" xml:space="preserve"><value>Kullanıcı ve parola wallet'tan</value></data>
+  <data name="SettingHint_walletCredentials" xml:space="preserve"><value>güvenli harici parola deposu (mkstore): wallet bu ad için kimlik bilgisini tutar</value></data>
   <data name="Setting_serviceName" xml:space="preserve"><value>Servis adı</value></data>
   <data name="Setting_sid" xml:space="preserve"><value>SID</value></data>
   <data name="Setting_role" xml:space="preserve"><value>Bağlanma rolü</value></data>

@@ -462,6 +462,8 @@
   <data name="Setting_walletLocation" xml:space="preserve"><value>Wallet folder</value></data>
   <data name="SettingHint_walletLocation" xml:space="preserve"><value>an Oracle wallet (cwallet.sso) for TCPS or Autonomous Database; often the same folder</value></data>
   <data name="BrowseFolder" xml:space="preserve"><value>Choose a folder</value></data>
+  <data name="Setting_walletCredentials" xml:space="preserve"><value>User and password from the wallet</value></data>
+  <data name="SettingHint_walletCredentials" xml:space="preserve"><value>secure external password store (mkstore): the wallet holds the credential for the alias</value></data>
   <data name="Setting_serviceName" xml:space="preserve"><value>Service name</value></data>
   <data name="Setting_sid" xml:space="preserve"><value>SID</value></data>
   <data name="Setting_role" xml:space="preserve"><value>Connect as</value></data>

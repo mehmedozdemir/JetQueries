@@ -88,5 +88,35 @@ public sealed class OracleTnsTests
         Assert.Equal(ConnectionSettingKind.FolderPath, descriptors["tnsAdmin"].Kind);
     }
 
+    [Fact]
+    public void The_wallet_can_hold_the_user_and_password_of_a_tns_alias()
+    {
+        var provider = new OracleProvider();
+        var settings = new Dictionary<string, string> { ["connectionType"] = "tns", ["tnsAlias"] = "PRODDB", ["walletLocation"] = @"C:\wallet", ["walletCredentials"] = "true" };
+
+        Assert.False(provider.RequiresCredential(settings));
+        Assert.True(provider.RequiresCredential(new Dictionary<string, string>(settings) { ["walletCredentials"] = "false" }));
+
+        // Without a credential at all: the connection logs on as "/" and no password is sent.
+        var builder = new OracleConnectionStringBuilder(OracleConnectionSettings.BuildConnectionString(Profile(settings), null));
+        Assert.Equal("/", builder.UserID);
+        Assert.True(string.IsNullOrEmpty(builder.Password));
+
+        // Only with a TNS alias.
+        Assert.True(provider.RequiresCredential(new Dictionary<string, string> { ["host"] = "db", ["serviceName"] = "X", ["walletCredentials"] = "true" }));
+    }
+
+    [Fact]
+    public void A_pasted_slash_user_with_an_alias_means_the_wallet()
+    {
+        var parsed = OracleConnectionStringParser.Parse(@"User Id=/;Data Source=PRODDB;Wallet_Location=C:\wallet");
+        Assert.Equal("true", parsed.Settings["walletCredentials"]);
+        Assert.Null(parsed.UserName);
+
+        var basic = OracleConnectionStringParser.Parse("User Id=/;Data Source=db:1521/X");
+        Assert.False(basic.Settings.ContainsKey("walletCredentials"));
+        Assert.Contains("User Id", basic.Ignored);
+    }
+
     private static ConnectionProfile Profile(Dictionary<string, string> settings) => new(Guid.NewGuid(), "t", OracleProvider.ProviderId, settings);
 }

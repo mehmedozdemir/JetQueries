@@ -75,6 +75,12 @@ public sealed class OracleProvider : IDatabaseProvider, IConnectionSettingsProvi
             Hint = "an Oracle wallet (cwallet.sso) for TCPS or Autonomous Database; often the same folder",
             VisibleWhen = TnsOnly,
         },
+        new(OracleConnectionSettings.WalletCredentials, "User and password from the wallet", ConnectionSettingKind.Boolean)
+        {
+            DefaultValue = "false",
+            Hint = "secure external password store (mkstore): the wallet holds the credential for the alias",
+            VisibleWhen = TnsOnly,
+        },
         new(OracleConnectionSettings.Role, "Connect as", ConnectionSettingKind.Choice)
         {
             DefaultValue = "normal",
@@ -87,7 +93,12 @@ public sealed class OracleProvider : IDatabaseProvider, IConnectionSettingsProvi
     private static readonly ConnectionSettingCondition TnsOnly = new(OracleConnectionSettings.ConnectionType, OracleConnectionSettings.Tns);
 
     /// <inheritdoc />
-    public bool RequiresCredential(IReadOnlyDictionary<string, string> settings) => true;
+    /// <remarks>Not with a TNS alias whose credential is in the wallet (secure external password store).</remarks>
+    public bool RequiresCredential(IReadOnlyDictionary<string, string> settings)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        return !OracleConnectionSettings.UsesWalletCredentials(settings);
+    }
 
     /// <inheritdoc />
     /// <remarks>The aliases of the tnsnames.ora the connection would read, with where each one points.</remarks>
@@ -462,6 +473,7 @@ internal static class OracleConnectionSettings
     public const string TnsAlias = "tnsAlias";
     public const string TnsAdmin = "tnsAdmin";
     public const string WalletLocation = "walletLocation";
+    public const string WalletCredentials = "walletCredentials";
     public const string Host = "host";
     public const string Port = "port";
     public const string ServiceName = "serviceName";
@@ -478,6 +490,10 @@ internal static class OracleConnectionSettings
 
     public static bool IsTns(IReadOnlyDictionary<string, string> settings) =>
         string.Equals(settings.GetValueOrDefault(ConnectionType)?.Trim(), Tns, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>A TNS alias whose user and password the wallet holds: the connection logs on as "/".</summary>
+    public static bool UsesWalletCredentials(IReadOnlyDictionary<string, string> settings) =>
+        IsTns(settings) && bool.TryParse(settings.GetValueOrDefault(WalletCredentials)?.Trim(), out var flag) && flag;
 
     /// <summary>The folder of tnsnames.ora: the setting, else TNS_ADMIN, else ORACLE_HOME\network\admin; null when none is known.</summary>
     public static string? TnsFolder(IReadOnlyDictionary<string, string> settings)
@@ -502,13 +518,21 @@ internal static class OracleConnectionSettings
         ArgumentNullException.ThrowIfNull(profile);
         var settings = profile.Settings;
         var builder = IsTns(settings) ? TnsBuilder(settings) : BasicBuilder(settings);
-        if (string.IsNullOrEmpty(credential?.UserName))
+        if (UsesWalletCredentials(settings))
+        {
+            // Secure external password store: ODP.NET finds the credential for the alias in the wallet.
+            builder.UserID = "/";
+        }
+        else if (string.IsNullOrEmpty(credential?.UserName))
         {
             throw new ArgumentException("An Oracle connection needs a user name.", nameof(credential));
         }
+        else
+        {
+            builder.UserID = credential.UserName;
+            builder.Password = credential.Password ?? string.Empty;
+        }
 
-        builder.UserID = credential.UserName;
-        builder.Password = credential.Password ?? string.Empty;
         builder.PersistSecurityInfo = false;
         builder.ConnectionTimeout = 15;
         return Finish(builder, settings);

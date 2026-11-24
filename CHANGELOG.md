@@ -6,6 +6,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 ## [Unreleased]
 
 ### Added
+- Oracle: "User and password from the wallet" for a TNS alias (secure external password store): no user or password is asked; the connection logs on as "/" and ODP.NET takes the credential from the wallet. A pasted `User Id=/` with an alias is read as such.
 - SQLite: the details' Constraints tab lists CHECK constraints (column and table ones, with their names and conditions), read from the CREATE TABLE text.
 - PostgreSQL: the explorer lists the server's databases (those the user may connect to); each one opens its schemas and objects, read on a connection to that database. Details, scripts and new query tabs opened from them start in that database.
 - Oracle: a routine declared in a package has details and source of its own. Ctrl+Click / F12 on `pkg.member` (or the explorer's package member) opens its parameters (with an Overload column when it has several), the package's owner, status and dates, and its source: the declaration from the specification and the implementation from the body. SDK (preview): `DatabaseObjectName.Container`.
