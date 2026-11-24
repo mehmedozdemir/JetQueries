@@ -6,6 +6,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 ## [Unreleased]
 
 ### Added
+- Settings > Appearance > Hardware acceleration (GPU): off draws in software, about 160 MB less memory at idle (measured: private memory 91 MB in software, about 240–300 MB with the GPU; the managed heap is under 10 MB either way). Takes effect at the next start; `JETQUERIES_RENDER=software` does the same for one run.
+- Performance budgets as tests: the published application is started with its data in a folder of its own and must show its window within 1.5 s and idle under 200 MB (software rendering); CI runs them after packaging. `JETQUERIES_MEMORY_REPORT` writes a memory report of a run.
 - In-app updates (Velopack): Settings > Updates (channel stable / beta / nightly, the release feed as a URL or a folder, check at start-up), Tools > Check for updates, and a status bar chip when a version is found: Download, then "Restart and update" (the window closes the normal way, the open tabs are saved, Velopack applies the update and starts the new version). Only the installed application (Setup.exe) can update itself.
 - Compact mode (JetBrains' compact UI): View > Compact mode, or Settings > Appearance > Interface density. Toolbars, explorer and grid rows, tabs, inputs and menus become one step lower with tighter padding; text keeps its size. Switches at once and is remembered.
 - UiKit: density tokens (`Size.Control`, `Size.Input`, `Pad.*`) used by its control styles, and `UiKit.Theming.Density` to switch them between Normal and Compact at runtime.

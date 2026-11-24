@@ -458,7 +458,8 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
   columns repeat a name (`SELECT a.id, b.id …`): the server's error is shown. A query ordered by an expression
   is wrapped with its ORDER BY inside (SQL Server: `OFFSET 0 ROWS`), where the order is kept in practice but not
   guaranteed by the SQL standard.
-- Idle memory of the WPF application is about 370 MB (budget: 200 MB); not investigated yet.
+- Idle memory: with the GPU about 240–300 MB private (mostly the graphics driver's surfaces; the managed heap is
+  under 10 MB), in software rendering about 90 MB. The 200 MB budget is met with hardware acceleration off.
 - The editor's zoom is shared by the query tabs (one editor view shows the selected tab).
 - The explorer filter searches what has been loaded (expanded) so far, not the whole catalog.
 - PostgreSQL: each database read (explorer, completion, details) holds a metadata connection to it for the rest of
@@ -573,3 +574,8 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
       applied and 0.1.1 starts with the same tabs.
 - [ ] With "Açılışta denetle" on, a newer release shows in the status bar shortly after start; with none, nothing shows.
 
+## Memory and start-up
+- [ ] Ayarlar > Görünüm > Donanım hızlandırma (GPU) off, restart: Task Manager shows much less memory (about 150 MB
+      working set instead of 300+); scrolling a large result is still usable. On again after a restart.
+- [ ] `$env:JETQUERIES_BUDGET_EXE="…\artifacts\publish\win-x64\JetQueries.exe"; dotnet test tests/JetQueries.Wpf.Tests --filter BudgetTests`
+      passes (window under 1.5 s, idle under 200 MB in software rendering).

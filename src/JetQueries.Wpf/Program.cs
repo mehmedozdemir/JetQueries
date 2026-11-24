@@ -19,6 +19,12 @@ internal static class Program
         // with hook arguments, handles them here and exits. In a normal start it returns immediately.
         VelopackApp.Build().Run();
 
+        // JETQUERIES_RENDER=software draws without the GPU (remote desktops, virtual machines, driver trouble).
+        if (string.Equals(Environment.GetEnvironmentVariable("JETQUERIES_RENDER"), "software", StringComparison.OrdinalIgnoreCase))
+        {
+            System.Windows.Media.RenderOptions.ProcessRenderMode = System.Windows.Interop.RenderMode.SoftwareOnly;
+        }
+
         using var host = CreateHost(args);
         var app = new App { Host = host };
         app.InitializeComponent();
@@ -34,6 +40,13 @@ internal static class Program
 
         var localData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "JetQueries");
         var userData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "JetQueries");
+
+        // JETQUERIES_DATA_DIR keeps everything a run writes in one folder (the budget tests; never the user's data).
+        if (Environment.GetEnvironmentVariable("JETQUERIES_DATA_DIR") is { Length: > 0 } dataDirectory)
+        {
+            localData = Path.Combine(dataDirectory, "local");
+            userData = Path.Combine(dataDirectory, "user");
+        }
         builder.Services.AddJetQueriesCore(
             extensions =>
             {

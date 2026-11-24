@@ -64,6 +64,12 @@ public partial class App : Application
             var store = services.GetRequiredService<Core.Settings.ISettingsStore>();
             var settings = await Task.Run(() => store.LoadAsync(AppearanceSettings.Section, new AppearanceSettings(), CancellationToken.None));
             services.GetRequiredService<IAppearanceService>().Apply(settings);
+
+            // Software drawing (setting, or JETQUERIES_RENDER=software): set before the first window exists.
+            if (!settings.HardwareRendering)
+            {
+                System.Windows.Media.RenderOptions.ProcessRenderMode = System.Windows.Interop.RenderMode.SoftwareOnly;
+            }
             var snippets = await Task.Run(() => store.LoadAsync(SnippetSettings.Section, new SnippetSettings(), CancellationToken.None));
             services.GetRequiredService<ISnippetService>().Apply(snippets.Snippets);
         }
@@ -78,6 +84,7 @@ public partial class App : Application
         MainWindow = window;
         window.Closing += OnMainWindowClosing;
         window.Show();
+        Services.MemoryReport.WindowShown();
 
         // The tabs of the last run come back (they reconnect when their connections are opened).
         await services.GetRequiredService<DocumentsViewModel>().RestoreAsync();
@@ -88,6 +95,9 @@ public partial class App : Application
         var updates = services.GetRequiredService<UpdatesViewModel>();
         updates.RestartRequested += (_, _) => window.Close();
         _ = updates.StartupCheckAsync();
+
+        // A diagnostic for the idle-memory budget, only with JETQUERIES_MEMORY_REPORT set.
+        Services.MemoryReport.ScheduleIfAsked(Dispatcher);
     }
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Appearance settings could not be read; defaults are used.")]

@@ -45,6 +45,12 @@ public sealed record AppearanceSettings
     /// </summary>
     public bool CompactMode { get; init; }
 
+    /// <summary>
+    /// Draw with the GPU (smoother scrolling). Off draws in software: about 160 MB less memory, more CPU while
+    /// drawing. Takes effect at the next start.
+    /// </summary>
+    public bool HardwareRendering { get; init; } = true;
+
     /// <summary>How Format SQL writes keywords.</summary>
     public SqlKeywordCase FormatKeywordCase { get; init; } = SqlKeywordCase.Upper;
 
@@ -321,6 +327,10 @@ public partial class SettingsViewModel : ObservableObject
 
     partial void OnDensityChanged(SettingChoice<bool>? value) => Preview();
 
+    /// <summary>Draw with the GPU; applies at the next start.</summary>
+    [ObservableProperty]
+    public partial bool HardwareRendering { get; set; } = true;
+
     [ObservableProperty]
     public partial SettingChoice<bool>? QueryButtonPlace { get; set; }
 
@@ -453,6 +463,7 @@ public partial class SettingsViewModel : ObservableObject
         GridFontSize = GridFontSize,
         QueryButtonsInTab = QueryButtonPlace?.Value ?? true,
         CompactMode = Density?.Value ?? false,
+        HardwareRendering = HardwareRendering,
         FetchSize = FetchSize,
         ShowColumnTypes = ShowColumnTypes,
         FormatKeywordCase = FormatKeywordCase?.Value ?? SqlKeywordCase.Upper,
@@ -563,6 +574,7 @@ public partial class SettingsViewModel : ObservableObject
             GridFontSize = settings.GridFontSize;
             QueryButtonPlace = QueryButtonPlaces.First(p => p.Value == settings.QueryButtonsInTab);
             Density = Densities.First(d => d.Value == settings.CompactMode);
+            HardwareRendering = settings.HardwareRendering;
             FetchSize = settings.FetchSize;
             ShowColumnTypes = settings.ShowColumnTypes;
             FormatKeywordCase = KeywordCases.FirstOrDefault(c => c.Value == settings.FormatKeywordCase) ?? KeywordCases[0];

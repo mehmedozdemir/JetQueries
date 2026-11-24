@@ -162,6 +162,8 @@ public static class Strings
     public static string FilterClear => Get(nameof(FilterClear));
     public static string FilterValueRequired => Get(nameof(FilterValueRequired));
     public static string FilterClearAll => Get(nameof(FilterClearAll));
+    public static string FieldHardwareRendering => Get(nameof(FieldHardwareRendering));
+    public static string SettingHardwareRenderingInfo => Get(nameof(SettingHardwareRenderingInfo));
     public static string UpdateSourcePlaceholder => Get(nameof(UpdateSourcePlaceholder));
     public static string UpdateIdle => Get(nameof(UpdateIdle));
     public static string UpdateNotInstalled => Get(nameof(UpdateNotInstalled));

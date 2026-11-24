@@ -215,6 +215,8 @@
   <data name="SettingUpdateOnStartupInfo" xml:space="preserve"><value>Arka planda yeni sürüm arar; varsa durum çubuğunda görünür.</value></data>
   <data name="FieldCurrentVersion" xml:space="preserve"><value>Çalışan sürüm</value></data>
   <data name="UpdateSourcePlaceholder" xml:space="preserve"><value>https://… ya da pack.ps1'in sürüm klasörü (artifacts/releases/win-x64)</value></data>
+  <data name="FieldHardwareRendering" xml:space="preserve"><value>Donanım hızlandırma (GPU)</value></data>
+  <data name="SettingHardwareRenderingInfo" xml:space="preserve"><value>Açık: daha akıcı kaydırma. Kapalı: işlemci çizer, yaklaşık 160 MB daha az bellek. Uygulama yeniden açılınca geçerli olur.</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Tümünü temizle</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Filtreyi kaldır</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} / {1:N0} satır</value></data>
