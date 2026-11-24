@@ -225,4 +225,7 @@ public sealed record ShellLayout
 
     /// <summary>The explorer panel's width.</summary>
     public double ExplorerWidth { get; init; } = 280;
+
+    /// <summary>Whether the explorer stays beside the tabs (true) or hides behind a rail at the left edge.</summary>
+    public bool ExplorerPinned { get; init; } = true;
 }

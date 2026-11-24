@@ -688,3 +688,13 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] Rest the mouse on a table name or alias: a card with "TABLO", its name and columns (key icon, types,
       NOT NULL). On a column: its type and table, primary key and NULL / NOT NULL. Keywords and strings show nothing.
 - [ ] Settings > SQL editor > Yardımcılar: turning either off stops it at once; both are on in a new installation.
+
+## Explorer pin, expand / collapse, compact result tools
+- [ ] The explorer's filter box is smaller; the clear (x) button stays inside it.
+- [ ] Expand all (down chevron beside the filter): folders and every already loaded node open; closed connections stay closed, unopened tables are not loaded.
+- [ ] Collapse all (up chevron): the whole tree closes; opening a connection again shows its first level only.
+- [ ] The pin (right of the filter) is on by default. Click it: the explorer disappears, the tabs take the room, a "Gezgin" rail stays at the left edge.
+- [ ] Click the rail: the explorer opens over the tabs with a shadow; double-click a table, work in it; click in the editor or press Esc: it closes.
+- [ ] Restart the app: it comes back unpinned; pin it again: it sits beside the tabs at its former width.
+- [ ] View > Gezgin hides both the panel and the rail.
+- [ ] Results: the filter icon and the grid / text / record icons sit inside the result tab row and do not cover the column headers; tooltips name them; the chosen view is highlighted.

@@ -162,6 +162,11 @@ public static class Strings
     public static string FilterClear => Get(nameof(FilterClear));
     public static string FilterValueRequired => Get(nameof(FilterValueRequired));
     public static string FilterClearAll => Get(nameof(FilterClearAll));
+    public static string ExplorerExpandAll => Get(nameof(ExplorerExpandAll));
+    public static string ExplorerCollapseAll => Get(nameof(ExplorerCollapseAll));
+    public static string ExplorerPinTip => Get(nameof(ExplorerPinTip));
+    public static string ExplorerUnpinTip => Get(nameof(ExplorerUnpinTip));
+    public static string ExplorerShowTip => Get(nameof(ExplorerShowTip));
     public static string HoverColumn => Get(nameof(HoverColumn));
     public static string HoverColumns => Get(nameof(HoverColumns));
     public static string HoverMoreColumns => Get(nameof(HoverMoreColumns));

@@ -6,6 +6,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 ## [Unreleased]
 
 ### Added
+- Explorer: "Tümünü genişlet" opens every folder and every node already loaded (nothing new is read from a database), "Tümünü daralt" closes the tree to its top level. Both sit beside the filter box, which is now smaller (26 px, small text).
+- Explorer pin: pinned by default, beside the tabs. Unpinned, the tabs get its room and a narrow "Gezgin" rail stays at the left edge; clicking it opens the explorer over the tabs, and a click elsewhere or Esc closes it. Remembered with the layout.
 - SQL editor: a text, date, time or identifier column chosen from the completion list after WHERE, AND, OR, NOT, ON, HAVING, WHEN or in UPDATE … SET (also after a comma there) gets ` = ''` with the caret between the quotes; Unicode columns (nvarchar, nchar, ntext, nvarchar2, nclob) get ` = N''`. Numbers, bits and binary columns, the select list, ORDER BY and INSERT column lists are left alone.
 - SQL editor: resting the mouse on a table, view or alias shows a card with its kind and columns (types, primary key, NOT NULL); on a column, its type, table, key and nullability. Resolved as Ctrl+Click is, from cached metadata.
 - Settings > SQL editor > Yardımcılar: both can be turned off (on by default).
@@ -171,6 +173,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
   (mark as SVG path data, colour, description).
 
 ### Changed
+- Results: the filter and the grid / text / record switch beside the result tabs are icons only and no taller than the tab row, so they no longer reach over the grid's header.
+- UiKit: SearchBox's clear button is 22 px, so a smaller search box keeps it inside.
 - One title bar: the main window draws its own caption (WindowChrome) with the menu in it; the toolbar's new connection / new query / open icons are gone and a "+" ends the query tab row.
 - Results: the view modes and the SQL filter toggle moved into the result tab row (QueryResultSet.IsSqlFilterOpen); Commit / Rollback are neutral with coloured icons; the empty results area shows the run shortcuts.
 - Explorer: Ctrl+click multi-select for moving connections, a drop caption while dragging; Edit / Delete connection in the context menu, the Connection menu, F2 and Del.

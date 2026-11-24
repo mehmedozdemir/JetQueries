@@ -174,37 +174,24 @@
                 </StackPanel>
 
                 <!-- The shown result's view (grid / text / record) and its SQL filter, at the right of the tab row -->
-                <StackPanel x:Name="ResultTools" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,5,10,0"
+                <!-- Icons only and no taller than the tab row, so that nothing reaches over the grid's header -->
+                <StackPanel x:Name="ResultTools" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,4,10,0"
                             Panel.ZIndex="1" Visibility="{Binding SelectedTab, Converter={x:Static v:IsResultSetToVisibilityConverter.Instance}}">
-                    <ToggleButton x:Name="SqlFilterToggle" Style="{StaticResource Btn.Footer}" c:Ui.Icon="{x:Static c:Icons.Filter}"
-                                  Content="{x:Static res:Strings.SqlFilterToggle}" ToolTip="{x:Static res:Strings.SqlFilterToggleTip}"
-                                  IsChecked="{Binding SelectedTab.IsSqlFilterOpen}" Margin="0,0,8,0" />
-                    <Border Style="{StaticResource Segmented.Frame}">
+                    <ToggleButton x:Name="SqlFilterToggle" Style="{StaticResource Btn.Icon}" Width="26" Height="24" c:Ui.Icon="{x:Static c:Icons.Filter}"
+                                  ToolTip="{x:Static res:Strings.SqlFilterToggleTip}" AutomationProperties.Name="{x:Static res:Strings.SqlFilterToggle}"
+                                  IsChecked="{Binding SelectedTab.IsSqlFilterOpen}" />
+                    <Border Style="{StaticResource Separator.Vertical}" Height="14" Margin="5,0" />
+                    <Border Style="{StaticResource Segmented.Frame.Compact}">
                         <StackPanel Orientation="Horizontal">
-                            <RadioButton x:Name="GridMode" Style="{StaticResource SegmentRadio}" ToolTip="{x:Static res:Strings.ViewGrid}"
-                                         AutomationProperties.Name="{x:Static res:Strings.ViewGridShort}"
-                                         IsChecked="{Binding SelectedTab.ViewMode, Converter={x:Static v:EnumEqualsConverter.Instance}, ConverterParameter={x:Static vm:ResultViewMode.Grid}}">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{x:Static c:Icons.Table}" Style="{StaticResource Text.Icon}" FontSize="12" Margin="0,0,6,0" />
-                                    <TextBlock Text="{x:Static res:Strings.ViewGridShort}" />
-                                </StackPanel>
-                            </RadioButton>
-                            <RadioButton x:Name="TextMode" Style="{StaticResource SegmentRadio}" ToolTip="{x:Static res:Strings.ViewText}"
-                                         AutomationProperties.Name="{x:Static res:Strings.ViewTextShort}"
-                                         IsChecked="{Binding SelectedTab.ViewMode, Converter={x:Static v:EnumEqualsConverter.Instance}, ConverterParameter={x:Static vm:ResultViewMode.Text}}">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="&#xE8D2;" Style="{StaticResource Text.Icon}" FontSize="12" Margin="0,0,6,0" />
-                                    <TextBlock Text="{x:Static res:Strings.ViewTextShort}" />
-                                </StackPanel>
-                            </RadioButton>
-                            <RadioButton x:Name="RecordMode" Style="{StaticResource SegmentRadio}" ToolTip="{x:Static res:Strings.ViewRecord}"
-                                         AutomationProperties.Name="{x:Static res:Strings.ViewRecordShort}"
-                                         IsChecked="{Binding SelectedTab.ViewMode, Converter={x:Static v:EnumEqualsConverter.Instance}, ConverterParameter={x:Static vm:ResultViewMode.Record}}">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="&#xE8A1;" Style="{StaticResource Text.Icon}" FontSize="12" Margin="0,0,6,0" />
-                                    <TextBlock Text="{x:Static res:Strings.ViewRecordShort}" />
-                                </StackPanel>
-                            </RadioButton>
+                            <RadioButton x:Name="GridMode" Style="{StaticResource SegmentRadio.Icon}" ToolTip="{x:Static res:Strings.ViewGrid}"
+                                         Content="{x:Static c:Icons.Table}"
+                                         IsChecked="{Binding SelectedTab.ViewMode, Converter={x:Static v:EnumEqualsConverter.Instance}, ConverterParameter={x:Static vm:ResultViewMode.Grid}}" />
+                            <RadioButton x:Name="TextMode" Style="{StaticResource SegmentRadio.Icon}" ToolTip="{x:Static res:Strings.ViewText}"
+                                         Content="&#xE8D2;"
+                                         IsChecked="{Binding SelectedTab.ViewMode, Converter={x:Static v:EnumEqualsConverter.Instance}, ConverterParameter={x:Static vm:ResultViewMode.Text}}" />
+                            <RadioButton x:Name="RecordMode" Style="{StaticResource SegmentRadio.Icon}" ToolTip="{x:Static res:Strings.ViewRecord}"
+                                         Content="&#xE8A1;"
+                                         IsChecked="{Binding SelectedTab.ViewMode, Converter={x:Static v:EnumEqualsConverter.Instance}, ConverterParameter={x:Static vm:ResultViewMode.Record}}" />
                         </StackPanel>
                     </Border>
                 </StackPanel>

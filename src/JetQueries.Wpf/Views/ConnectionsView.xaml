@@ -31,10 +31,21 @@
                         Command="{Binding DataContext.GoToObjectCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                         ToolTip="{x:Static res:Strings.GoToObjectTip}" />
             </WrapPanel>
-            <!-- Filter by name over what is loaded (Esc clears) -->
-            <c:SearchBox x:Name="Filter" Margin="0,4,0,2" Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged, Delay=200}"
-                         c:Ui.Placeholder="{x:Static res:Strings.ExplorerFilter}"
-                         Visibility="{Binding IsEmpty, Converter={x:Static v:InverseBoolToVisibilityConverter.Instance}}" />
+            <!-- Filter by name over what is loaded (Esc clears); expand, collapse, pin the panel -->
+            <DockPanel Margin="0,4,0,2">
+                <ToggleButton x:Name="PinButton" DockPanel.Dock="Right" Style="{StaticResource Btn.Icon}" Width="24" Height="24" Margin="2,0,0,0"
+                              c:Ui.Icon="&#xE718;" IsChecked="True" ToolTip="{x:Static res:Strings.ExplorerUnpinTip}" />
+                <Button x:Name="CollapseAllButton" DockPanel.Dock="Right" Style="{StaticResource Btn.Icon}" Width="24" Height="24" Margin="2,0,0,0"
+                        c:Ui.Icon="&#xE70E;" Command="{Binding CollapseAllCommand}" ToolTip="{x:Static res:Strings.ExplorerCollapseAll}"
+                        Visibility="{Binding IsEmpty, Converter={x:Static v:InverseBoolToVisibilityConverter.Instance}}" />
+                <Button x:Name="ExpandAllButton" DockPanel.Dock="Right" Style="{StaticResource Btn.Icon}" Width="24" Height="24" Margin="4,0,0,0"
+                        c:Ui.Icon="&#xE70D;" Command="{Binding ExpandAllCommand}" ToolTip="{x:Static res:Strings.ExplorerExpandAll}"
+                        Visibility="{Binding IsEmpty, Converter={x:Static v:InverseBoolToVisibilityConverter.Instance}}" />
+                <c:SearchBox x:Name="Filter" Height="26" FontSize="{DynamicResource FontSize.Small}"
+                             Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged, Delay=200}"
+                             c:Ui.Placeholder="{x:Static res:Strings.ExplorerFilter}"
+                             Visibility="{Binding IsEmpty, Converter={x:Static v:InverseBoolToVisibilityConverter.Instance}}" />
+            </DockPanel>
           </StackPanel>
         </Border>
 

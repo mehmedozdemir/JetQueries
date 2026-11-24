@@ -417,6 +417,11 @@
   <data name="SettingValueSnippetsInfo" xml:space="preserve"><value>WHERE, AND, OR, ON sonrasında ya da UPDATE … SET içinde listeden seçilen metin veya tarih sütununa = '' eklenir ve imleç tırnakların arasına gelir (Unicode sütunlarda N'').</value></data>
   <data name="FieldHoverInfo" xml:space="preserve"><value>Üzerine gelince tablo ve sütun bilgisi</value></data>
   <data name="SettingHoverInfoInfo" xml:space="preserve"><value>Fare bir tablo, görünüm ya da sütunun üzerinde durunca sütunlarını, türünü ve anahtarını gösterir.</value></data>
+  <data name="ExplorerExpandAll" xml:space="preserve"><value>Tümünü genişlet (yüklenenler)</value></data>
+  <data name="ExplorerCollapseAll" xml:space="preserve"><value>Tümünü daralt</value></data>
+  <data name="ExplorerPinTip" xml:space="preserve"><value>Gezgini sekmelerin yanına sabitle</value></data>
+  <data name="ExplorerUnpinTip" xml:space="preserve"><value>Sabitlemeyi kaldır: gezgini sol kenardaki şeride gizle</value></data>
+  <data name="ExplorerShowTip" xml:space="preserve"><value>Gezgini göster</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Tümünü temizle</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Filtreyi kaldır</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} / {1:N0} satır</value></data>

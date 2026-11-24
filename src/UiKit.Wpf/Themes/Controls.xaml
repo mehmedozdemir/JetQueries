@@ -786,7 +786,7 @@
                             BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{StaticResource Radius.Search}" Padding="10,0,4,0">
                         <DockPanel>
                             <TextBlock Text="&#xE721;" Style="{StaticResource Text.Icon}" FontSize="13" Foreground="{DynamicResource Brush.TextMuted}" Margin="0,0,8,0" />
-                            <Button x:Name="PART_Clear" DockPanel.Dock="Right" Style="{StaticResource Btn.Icon}" Width="26" Height="26"
+                            <Button x:Name="PART_Clear" DockPanel.Dock="Right" Style="{StaticResource Btn.Icon}" Width="22" Height="22"
                                     c:Ui.Icon="&#xE711;" ToolTip="Temizle" Focusable="False" />
                             <Grid VerticalAlignment="Center">
                                 <TextBlock x:Name="Placeholder" Text="{TemplateBinding c:Ui.Placeholder}" Foreground="{DynamicResource Brush.TextMuted}"
