@@ -267,6 +267,33 @@ public sealed partial class QueryResultSet : ObservableObject, IResultTab
     /// <summary>The value of a cell as the provider returned it.</summary>
     public object? GetValue(int row, int column) => _rows[row][column];
 
+    /// <summary>The grid's data editor: set when the rows come from one table with a key; null when read-only.</summary>
+    [ObservableProperty]
+    public partial ResultEditor? Editor { get; set; }
+
+    /// <summary>Why the rows cannot be edited, when they cannot (the read-only mark's tip).</summary>
+    [ObservableProperty]
+    public partial string? ReadOnlyReason { get; set; }
+
+    /// <summary>The values of a row (the array itself, for the editor to copy).</summary>
+    internal object?[] Row(int row) => _rows[row];
+
+    /// <summary>Sets a cell (the data editor).</summary>
+    internal void SetValue(int row, int column, object? value) => _rows[row][column] = value;
+
+    /// <summary>Drops the rows from <paramref name="first"/> on (rows the data editor added).</summary>
+    internal void RemoveRowsFrom(int first)
+    {
+        if (first < 0 || first >= _rows.Count)
+        {
+            return;
+        }
+
+        _rows.RemoveRange(first, _rows.Count - first);
+        RowCountChanged?.Invoke(this, EventArgs.Empty);
+        OnPropertyChanged(nameof(RowsText));
+    }
+
     /// <summary>The rows received so far, as a list that later rows do not change.</summary>
     internal object?[][] SnapshotRows() => [.. _rows];
 
@@ -277,6 +304,7 @@ public sealed partial class QueryResultSet : ObservableObject, IResultTab
     public void ReplaceRows(IReadOnlyList<object?[]> rows)
     {
         ArgumentNullException.ThrowIfNull(rows);
+        Editor?.Clear();
         _rows.Clear();
         _rows.AddRange(rows);
         RowCountChanged?.Invoke(this, EventArgs.Empty);
@@ -674,7 +702,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
     public partial IResultTab? SelectedTab { get; set; }
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(RunCommand), nameof(RunInNewTabCommand), nameof(RunStatementCommand), nameof(CancelCommand), nameof(RefreshCommand), nameof(CloseResultCommand))]
+    [NotifyCanExecuteChangedFor(nameof(RunCommand), nameof(RunInNewTabCommand), nameof(RunStatementCommand), nameof(CancelCommand), nameof(RefreshCommand), nameof(CloseResultCommand), nameof(SaveChangesCommand))]
     public partial bool IsRunning { get; set; }
 
     [ObservableProperty]
@@ -1264,6 +1292,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
             set.CanFilter = session.Provider is IResultFilterQueryBuilder;
             set.AppliedFilter = filter;
             set.SqlFilter = filter ?? string.Empty;
+            await PrepareEditorAsync(set, session, sql);
             FetchNextPageCommand.NotifyCanExecuteChanged();
             FetchAllCommand.NotifyCanExecuteChanged();
             ApplyFilterCommand.NotifyCanExecuteChanged();
@@ -1414,7 +1443,19 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
     /// <returns>Whether the rows were replaced.</returns>
     private async Task<bool> RefetchAsync(QueryResultSet set, int target, string? sqlToRun = null)
     {
-        if (SelectedSession?.Session is not { } session || (sqlToRun ?? SqlOf(set, session)) is not { } sql || await EnsureChannelAsync() is not { } channel)
+        if (SelectedSession?.Session is not { } session || (sqlToRun ?? SqlOf(set, session)) is not { } sql)
+        {
+            return false;
+        }
+
+        // Rows read again replace the edited ones: the user says whether the changes may go.
+        if (set.Editor is { HasChanges: true } editor &&
+            !await _dialogs.ConfirmAsync(Strings.EditDiscardTitle, Format(Strings.EditDiscard, editor.ChangeCount)))
+        {
+            return false;
+        }
+
+        if (await EnsureChannelAsync() is not { } channel)
         {
             return false;
         }
@@ -1899,6 +1940,156 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
             FetchNextPageCommand.NotifyCanExecuteChanged();
             FetchAllCommand.NotifyCanExecuteChanged();
         });
+    }
+
+    /// <summary>
+    /// Makes the result of a single SELECT editable when its rows come from one table whose primary key the result
+    /// has (the table resolved as Ctrl+Click resolves it, its key read from the catalog); else says why not.
+    /// </summary>
+    private async Task PrepareEditorAsync(QueryResultSet set, ConnectionSession session, string sql)
+    {
+        if (session.Provider is not IRowEditScripting || session.Provider.LanguageService is not { } service)
+        {
+            return;
+        }
+
+        if (session.Definition.IsReadOnly)
+        {
+            set.ReadOnlyReason = Strings.EditReadOnlyConnection;
+            return;
+        }
+
+        if (EditableSelect.Analyze(sql) is not { } shape)
+        {
+            set.ReadOnlyReason = Strings.EditNotSingleTable;
+            return;
+        }
+
+        var metadata = SessionMetadata(session);
+        var document = Document(sql, metadata);
+        var selected = _channel?.ContextKind == DatabaseContextKind.Database ? SelectedDatabase : null;
+        try
+        {
+            var found = await _jobs.Enqueue(
+                "Find the table to edit",
+                async context =>
+                {
+                    var definition = await service.GetDefinitionAsync(document, shape.TableOffset, context.CancellationToken).ConfigureAwait(false);
+                    if (definition?.Target is not { Kind: DatabaseObjectKinds.Table } table)
+                    {
+                        return ((DatabaseObjectName, IReadOnlyList<ColumnInfo>)?)null;
+                    }
+
+                    var name = session.HasMetadataPerDatabase ? table.Name with { Database = null } : table.Name;
+                    var database = session.HasMetadataPerDatabase ? table.Name.Database ?? selected : null;
+                    var columns = await _metadata.GetColumnsAsync(session, name, refresh: false, context.CancellationToken, database).ConfigureAwait(false);
+                    return (name, columns);
+                },
+                JobPriority.Low).Completion;
+            if (found is not var (table, columns) || columns.Count == 0)
+            {
+                set.ReadOnlyReason = Strings.EditNoTable;
+                return;
+            }
+
+            // Each result column shows the table column of its name, when the select list has it plain (or *).
+            var byName = columns.GroupBy(static c => c.Name, StringComparer.OrdinalIgnoreCase).ToDictionary(static g => g.Key, static g => g.First(), StringComparer.OrdinalIgnoreCase);
+            var headers = set.Columns.Select(static c => c.Header).ToArray();
+            var duplicated = headers.GroupBy(static h => h, StringComparer.OrdinalIgnoreCase).Where(static g => g.Count() > 1).Select(static g => g.Key).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var targets = headers.Select(h =>
+                duplicated.Contains(h) ? null
+                : shape.Plain.TryGetValue(h, out var source) ? byName.GetValueOrDefault(source)
+                : shape.AllColumns ? byName.GetValueOrDefault(h)
+                : null).ToArray();
+            var keys = columns.Where(static c => c.IsPrimaryKey).Select(k => Array.FindIndex(targets, t => t is not null && string.Equals(t.Name, k.Name, StringComparison.OrdinalIgnoreCase))).ToArray();
+            if (keys.Length == 0 || keys.Any(static k => k < 0))
+            {
+                set.ReadOnlyReason = Strings.EditNoKey;
+                return;
+            }
+
+            var editor = new ResultEditor(set, table, selected, targets, keys, session.Provider is IBulkInsertScripting);
+            editor.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(ResultEditor.ChangeCount))
+                {
+                    SaveChangesCommand.NotifyCanExecuteChanged();
+                }
+            };
+            set.ReadOnlyReason = null;
+            set.Editor = editor;
+        }
+        catch (OperationCanceledException)
+        {
+        }
+#pragma warning disable CA1031 // Editing is an extra: the rows stay read-only and say why.
+        catch (Exception ex)
+#pragma warning restore CA1031
+        {
+            set.ReadOnlyReason = ex.Message;
+        }
+    }
+
+    private bool CanSaveChanges(QueryResultSet? set) => !IsRunning && set?.Editor is { HasChanges: true } && SelectedSession is not null;
+
+    /// <summary>
+    /// Saves the result's changes to its table in one transaction on a connection of its own (a production
+    /// connection asks first), then reads the rows again; on an error nothing is kept and the changes stay.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanSaveChanges))]
+    private async Task SaveChangesAsync(QueryResultSet? set)
+    {
+        if (set?.Editor is not { HasChanges: true } editor || SelectedSession?.Session is not { } session)
+        {
+            return;
+        }
+
+        var table = editor.Table.Name;
+        if (session.Definition.Environment == ConnectionEnvironment.Production &&
+            !await _dialogs.ConfirmAsync(Strings.EditConfirmTitle, Format(Strings.EditConfirmProduction, editor.ChangeCount, table, session.Definition.Name)))
+        {
+            return;
+        }
+
+        // The open cursor of the result is closed first: it may hold a lock on the rows being written.
+        await CloseCursorAsync();
+        var changes = editor.Changes();
+        IsRunning = true;
+        Status = Strings.EditSaving;
+        try
+        {
+            var saved = await _jobs.Enqueue(
+                "Save changes",
+                context => ResultEditor.SaveAsync(session, editor.Table, editor.Database, changes, context.CancellationToken),
+                JobPriority.High).Completion;
+            editor.Clear();
+            AddMessage(Format(Strings.EditSaved, saved, table), isError: false);
+        }
+        catch (OperationCanceledException)
+        {
+            Status = Strings.EditSaveFailed;
+            return;
+        }
+#pragma warning disable CA1031 // The server's reason is shown; the changes stay to be fixed or undone.
+        catch (Exception ex)
+#pragma warning restore CA1031
+        {
+            AddMessage(ex.Message, isError: true);
+            AddMessage(Strings.EditSaveFailed, isError: true);
+            Status = Strings.EditSaveFailed;
+            return;
+        }
+        finally
+        {
+            IsRunning = false;
+        }
+
+        if (await RefetchAsync(set, Math.Max(Math.Max(1, FetchSize), set.RowCount)))
+        {
+            set.TotalRows = null;
+        }
+
+        Status = Format(Strings.EditSaved, changes.Count, table);
     }
 
     /// <summary>Closes the open cursor of a paged result, if there is one; its rows stay.</summary>

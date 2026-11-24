@@ -88,3 +88,31 @@ public sealed class ArrayGridDataSource : IGridDataSource
 
     public bool IsNull(int row, int column) => _cell(row, column) is null;
 }
+
+/// <summary>Whether a row of an editable source is as read, added or about to be deleted.</summary>
+public enum GridRowState
+{
+    Normal,
+    Inserted,
+    Deleted,
+}
+
+/// <summary>
+/// Optional for a <see cref="IGridDataSource"/>: cells the user may edit in the grid (F2, a double click, or typing),
+/// and the marks of what changed. The grid only edits text; the host turns it into values and keeps the changes.
+/// Members are called on the UI thread and must be fast.
+/// </summary>
+public interface IEditableGridDataSource
+{
+    /// <summary>Whether the cell can be edited.</summary>
+    bool CanEdit(int row, int column);
+
+    /// <summary>The text the editor starts with (the value as it would be typed); null or empty for NULL.</summary>
+    string? GetEditText(int row, int column);
+
+    /// <summary>Whether the cell holds a change not saved yet.</summary>
+    bool IsModified(int row, int column);
+
+    /// <summary>Whether the row was added or is to be deleted.</summary>
+    GridRowState GetRowState(int row);
+}

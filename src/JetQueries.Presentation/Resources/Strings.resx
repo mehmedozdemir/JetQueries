@@ -282,6 +282,30 @@
   <data name="ImportConfirmProduction" xml:space="preserve"><value>Rows will be added to {0} on {1}, a production connection. Go on?</value></data>
   <data name="ImportBrowseTitle" xml:space="preserve"><value>Choose a file to import</value></data>
   <data name="ImportTextFiles" xml:space="preserve"><value>Text files</value></data>
+  <data name="EditBadValue" xml:space="preserve"><value>"{0}" is not a value of {1} ({2}).</value></data>
+  <data name="EditNotSupported" xml:space="preserve"><value>This connection cannot save changes to rows.</value></data>
+  <data name="EditRowsAffected" xml:space="preserve"><value>{0} rows matched {1}; nothing was saved (the row changed or is gone).</value></data>
+  <data name="EditSave" xml:space="preserve"><value>Save</value></data>
+  <data name="EditSaveTip" xml:space="preserve"><value>Save the changes to the table in one transaction (Ctrl+S in the grid)</value></data>
+  <data name="EditRevert" xml:space="preserve"><value>Undo changes</value></data>
+  <data name="EditAddRow" xml:space="preserve"><value>Add row</value></data>
+  <data name="EditDeleteRow" xml:space="preserve"><value>Delete row</value></data>
+  <data name="EditDeleteRowTip" xml:space="preserve"><value>Mark the selected rows for deletion (Delete); again to unmark</value></data>
+  <data name="EditSetNull" xml:space="preserve"><value>Set to NULL</value></data>
+  <data name="EditChanges" xml:space="preserve"><value>{0} changes</value></data>
+  <data name="EditConfirmTitle" xml:space="preserve"><value>Save changes</value></data>
+  <data name="EditConfirmProduction" xml:space="preserve"><value>{0} changes will be written to {1} on {2}, a production connection. Save?</value></data>
+  <data name="EditSaving" xml:space="preserve"><value>Saving changes…</value></data>
+  <data name="EditSaved" xml:space="preserve"><value>{0} changes saved to {1}.</value></data>
+  <data name="EditSaveFailed" xml:space="preserve"><value>The changes were not saved; nothing was written.</value></data>
+  <data name="EditDiscardTitle" xml:space="preserve"><value>Unsaved changes</value></data>
+  <data name="EditDiscard" xml:space="preserve"><value>The result has {0} unsaved changes. Read the rows again and drop them?</value></data>
+  <data name="EditReadOnly" xml:space="preserve"><value>Read-only</value></data>
+  <data name="EditNotSingleTable" xml:space="preserve"><value>Rows can be edited for a SELECT of one table (no join, union, grouping or DISTINCT).</value></data>
+  <data name="EditNoKey" xml:space="preserve"><value>Rows can be edited when the table has a primary key and the result has all its columns.</value></data>
+  <data name="EditNoTable" xml:space="preserve"><value>The table of this SELECT was not found.</value></data>
+  <data name="EditEditable" xml:space="preserve"><value>Double-click, F2 or type to edit a cell; empty is NULL</value></data>
+  <data name="EditReadOnlyConnection" xml:space="preserve"><value>The connection is read-only: rows cannot be changed.</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Clear all</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Remove filter</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} of {1:N0} rows</value></data>
