@@ -24,6 +24,42 @@
         <Setter Property="Height" Value="30" />
         <Setter Property="Padding" Value="8,0" />
     </Style>
+    <!-- A row of the editor's completion list: roomy, rounded; the selected row in the accent's soft colour
+         with a bar on its left -->
+    <Style x:Key="Completion.Row" TargetType="ListBoxItem">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Grid Margin="0,1">
+                        <Border x:Name="Root" CornerRadius="5" Padding="6,3,8,3" Background="Transparent">
+                            <ContentPresenter VerticalAlignment="Center" />
+                        </Border>
+                        <Border x:Name="Bar" Width="3" CornerRadius="1.5" HorizontalAlignment="Left" Margin="0,4" Background="{DynamicResource Brush.Accent}"
+                                Visibility="Collapsed" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Hover}" />
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.AccentSoft}" />
+                            <Setter TargetName="Bar" Property="Visibility" Value="Visible" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- The completion row's content as is (AvalonEdit's own template puts it in a horizontal panel, which does
+         not stretch: the detail could not sit at the right) -->
+    <DataTemplate x:Key="Completion.Item">
+        <ContentPresenter Content="{Binding Content}" HorizontalAlignment="Stretch" />
+    </DataTemplate>
+
     <!-- A small turning arrow while something loads (quieter than a progress bar in a tree row); turned by
          Views/Spinner, which stops when hidden or unloaded (a storyboard trigger keeps running on removed rows) -->
     <Style x:Key="Spinner" TargetType="TextBlock" BasedOn="{StaticResource Text.Icon}">

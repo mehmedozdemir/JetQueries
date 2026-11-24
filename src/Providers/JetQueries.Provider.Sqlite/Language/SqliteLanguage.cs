@@ -49,6 +49,8 @@ internal sealed class SqliteDialect() : GenericSqlDialect(SqliteSyntax.Tokenizer
 {
     public static SqliteDialect Instance { get; } = new();
 
+    public override FunctionCatalog Catalog => SqliteFunctions.Catalog;
+
     public override DatabaseObjectKinds ResolvableKinds => DatabaseObjectKinds.Table | DatabaseObjectKinds.View;
 
     /// <summary>SQLite keeps names as written and compares them without regard to case.</summary>

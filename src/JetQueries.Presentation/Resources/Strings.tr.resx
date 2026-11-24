@@ -551,4 +551,21 @@
   <data name="FolderTopLevel" xml:space="preserve"><value>en üst düzey</value></data>
   <data name="MoveTo" xml:space="preserve"><value>Şuraya taşı: {0}</value></data>
   <data name="MoveManyTo" xml:space="preserve"><value>{0} bağlantıyı taşı: {1}</value></data>
+  <data name="CompletionHint" xml:space="preserve"><value>↑↓ seç · Enter ya da Tab ekle · Esc kapat</value></data>
+  <data name="CompletionKind_Table" xml:space="preserve"><value>tablo</value></data>
+  <data name="CompletionKind_View" xml:space="preserve"><value>görünüm</value></data>
+  <data name="CompletionKind_Column" xml:space="preserve"><value>kolon</value></data>
+  <data name="CompletionKind_Function" xml:space="preserve"><value>fonksiyon</value></data>
+  <data name="CompletionKind_Procedure" xml:space="preserve"><value>prosedür</value></data>
+  <data name="CompletionKind_Package" xml:space="preserve"><value>paket</value></data>
+  <data name="CompletionKind_Sequence" xml:space="preserve"><value>sekans</value></data>
+  <data name="CompletionKind_Schema" xml:space="preserve"><value>şema</value></data>
+  <data name="CompletionKind_Database" xml:space="preserve"><value>veritabanı</value></data>
+  <data name="CompletionKind_Alias" xml:space="preserve"><value>takma ad</value></data>
+  <data name="CompletionKind_Variable" xml:space="preserve"><value>değişken</value></data>
+  <data name="CompletionKind_Snippet" xml:space="preserve"><value>kod parçası</value></data>
+  <data name="CompletionKind_Value" xml:space="preserve"><value>değer</value></data>
+  <data name="NavigationFinding" xml:space="preserve"><value>Nesne aranıyor…</value></data>
+  <data name="NavigationOpening" xml:space="preserve"><value>{0} açılıyor…</value></data>
+  <data name="EditorSignatureHelp" xml:space="preserve"><value>Parametre bilgisi</value></data>
 </root>

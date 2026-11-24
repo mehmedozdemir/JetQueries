@@ -12,6 +12,8 @@ internal sealed class OracleDialect : SqlDialect
 
     public override IReadOnlyCollection<string> Functions => PlSqlTokenizer.AllFunctions;
 
+    public override FunctionCatalog Catalog => OracleFunctions.Catalog;
+
     public override DatabaseObjectKinds ResolvableKinds =>
         DatabaseObjectKinds.Table | DatabaseObjectKinds.View | DatabaseObjectKinds.Procedure | DatabaseObjectKinds.Function |
         DatabaseObjectKinds.Package | DatabaseObjectKinds.Sequence;
@@ -134,7 +136,7 @@ internal sealed class OracleDialect : SqlDialect
 /// structural parser chosen in ADR 0003. Expression and SQL syntax is not checked here: Oracle reports that
 /// when the code is compiled or run.
 /// </summary>
-internal sealed class OracleLanguageService : ISqlLanguageService, ISqlFormatter
+internal sealed class OracleLanguageService : ISqlLanguageService, ISqlFormatter, ISignatureHelpProvider
 {
     /// <inheritdoc />
     public string Format(string sql, SqlFormatOptions options) => SqlLayout.Format(sql, PlSqlTokenizer.Tokenize, options);
@@ -187,6 +189,9 @@ internal sealed class OracleLanguageService : ISqlLanguageService, ISqlFormatter
         ArgumentNullException.ThrowIfNull(document);
         return SqlCompletionEngine.CompleteAsync(OracleDialect.Instance, document, offset, cancellationToken);
     }
+
+    public Task<SignatureHelp?> GetSignatureHelpAsync(SqlDocument document, int offset, CancellationToken cancellationToken) =>
+        SqlCallHelp.GetSignatureHelpAsync(OracleDialect.Instance, document, offset, cancellationToken);
 
     public Task<SqlDefinition?> GetDefinitionAsync(SqlDocument document, int offset, CancellationToken cancellationToken)
     {

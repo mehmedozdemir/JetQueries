@@ -67,6 +67,8 @@ internal sealed class PostgreSqlDialect() : GenericSqlDialect(PostgreSqlSyntax.T
 
     public override IReadOnlyCollection<string> ProcedureCallKeywords { get; } = ["CALL"];
 
+    public override FunctionCatalog Catalog => PostgreSqlFunctions.Catalog;
+
     public override DatabaseObjectKinds ResolvableKinds =>
         DatabaseObjectKinds.Table | DatabaseObjectKinds.View | DatabaseObjectKinds.Procedure | DatabaseObjectKinds.Function | DatabaseObjectKinds.Sequence;
 

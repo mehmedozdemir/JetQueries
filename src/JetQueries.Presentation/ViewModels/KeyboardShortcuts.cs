@@ -63,6 +63,7 @@ public partial class KeyboardShortcutsViewModel : ObservableObject
             new(editor, "Ctrl+Shift+Enter, Ctrl+\\", Strings.EditorRunInNewTab),
             new(editor, "Esc", Strings.QueryCancel),
             new(editor, "Ctrl+Space", Strings.EditorCompletion),
+            new(editor, "Ctrl+Shift+Space", Strings.EditorSignatureHelp),
             new(editor, "Ctrl+Click, F12", Strings.EditorShowDetails),
             new(editor, "Ctrl+Shift+F", Strings.EditorFormat),
             new(editor, "Ctrl+/", Strings.EditorToggleComment),

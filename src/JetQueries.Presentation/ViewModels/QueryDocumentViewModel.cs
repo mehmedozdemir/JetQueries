@@ -487,6 +487,11 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
             return;
         }
 
+        // A chip over the editor says something is happening ("Finding the object…"), then what came of it.
+        var version = ++_navigationVersion;
+        NavigationText = Strings.NavigationFinding;
+        IsNavigating = true;
+        string? outcome = null;
         try
         {
             var document = Document(text, new SessionMetadataProvider(session, _metadata));
@@ -497,7 +502,8 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
             }
             else
             {
-                Status = Strings.DefinitionNotFound;
+                outcome = Strings.DefinitionNotFound;
+                Status = outcome;
             }
         }
         catch (OperationCanceledException)
@@ -507,8 +513,53 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
         catch (Exception ex)
 #pragma warning restore CA1031
         {
-            Status = ex.Message;
+            outcome = ex.Message;
+            Status = outcome;
         }
+        finally
+        {
+            if (version == _navigationVersion)
+            {
+                IsNavigating = false;
+                NavigationText = outcome;
+            }
+        }
+
+        // A "not found" stays a moment, then goes.
+        if (outcome is not null)
+        {
+            await Task.Delay(NavigationMessageTime);
+            if (version == _navigationVersion)
+            {
+                NavigationText = null;
+            }
+        }
+    }
+
+    /// <summary>How long a navigation message ("not found") stays over the editor.</summary>
+    internal static TimeSpan NavigationMessageTime { get; set; } = TimeSpan.FromSeconds(3);
+
+    private int _navigationVersion;
+
+    /// <summary>The chip over the editor while Ctrl+Click looks an object up, or what came of it; null hides it.</summary>
+    [ObservableProperty]
+    public partial string? NavigationText { get; set; }
+
+    /// <summary>Ctrl+Click is looking an object up (the chip turns, the cursor waits).</summary>
+    [ObservableProperty]
+    public partial bool IsNavigating { get; set; }
+
+    /// <summary>Signature help at a caret position, computed as a background job against cached metadata.</summary>
+    public Task<SignatureHelp?> SignatureHelpAsync(string text, int offset, CancellationToken cancellationToken)
+    {
+        if (SelectedSession?.Session is not { Provider.LanguageService: ISignatureHelpProvider service } session)
+        {
+            return Task.FromResult<SignatureHelp?>(null);
+        }
+
+        var document = Document(text, new SessionMetadataProvider(session, _metadata));
+        return _jobs.Enqueue("Signature help", context => service.GetSignatureHelpAsync(document, offset, context.CancellationToken), JobPriority.High, cancellationToken)
+            .Completion;
     }
 
     /// <summary>Finds what the name at <paramref name="offset"/> refers to and opens its source in a new tab.</summary>

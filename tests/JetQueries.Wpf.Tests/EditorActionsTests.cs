@@ -139,7 +139,7 @@ public sealed class EditorActionsTests
             var headers = menu.Items.OfType<MenuItem>().Select(static m => (string)m.Header).ToList();
             Assert.Equal(
                 ["Run statement", "Run", "Run in new tab", "Cut", "Copy", "Paste", "Select all", "Insert snippet", "Format SQL", "Comment / uncomment lines", "Upper case", "Lower case",
-                 "Object details", "Open source in a new tab", "Show completion", "Undo", "Redo"],
+                 "Object details", "Open source in a new tab", "Show completion", "Parameter info", "Undo", "Redo"],
                 headers);
 
             query.Text = "select 1";

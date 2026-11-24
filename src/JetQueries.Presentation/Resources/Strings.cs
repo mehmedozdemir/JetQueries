@@ -456,4 +456,8 @@ public static class Strings
     public static string FolderTopLevel => Get(nameof(FolderTopLevel));
     public static string MoveTo => Get(nameof(MoveTo));
     public static string MoveManyTo => Get(nameof(MoveManyTo));
+    public static string CompletionHint => Get(nameof(CompletionHint));
+    public static string NavigationFinding => Get(nameof(NavigationFinding));
+    public static string NavigationOpening => Get(nameof(NavigationOpening));
+    public static string EditorSignatureHelp => Get(nameof(EditorSignatureHelp));
 }
