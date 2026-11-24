@@ -592,3 +592,13 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
       connections.json; delete its line to trust the new key).
 - [ ] Deleting the connection removes its SSH password from Windows Credential Manager too.
 
+## Export a result
+- [ ] Run a SELECT, then "Dışa aktar…" in the result footer (or Sorgu > Dışa aktar…): the dialog offers CSV, Excel,
+      JSON, SQL INSERT, Markdown, HTML; changing the format changes the file's extension; CSV shows separator, header
+      and NULL options, SQL INSERT the table name.
+- [ ] "Gösterilen satırlar": the file has the rows of the grid in its order, with its filters and only the visible
+      columns. "Tüm sonuç" (single SELECT only): the query runs again and every row is written, even beyond the page
+      fetched; the status bar counts the rows.
+- [ ] CSV with ";" opens in Turkish Excel with columns split and Turkish characters right; the .xlsx opens with numbers
+      as numbers, dates as dates, the header row frozen; "Bitince dosyayı aç" opens it.
+

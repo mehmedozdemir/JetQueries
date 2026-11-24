@@ -186,9 +186,7 @@ public static class ResultExporter
     private static string Markdown(string value) =>
         value.Replace("|", "\\|", StringComparison.Ordinal).Replace("\r\n", " ", StringComparison.Ordinal).Replace('\n', ' ');
 
-    private static string Html(string value) => WebUtility(value);
-
-    private static string WebUtility(string value) => System.Net.WebUtility.HtmlEncode(value).Replace("\n", "<br>", StringComparison.Ordinal);
+    private static string Html(string value) => System.Net.WebUtility.HtmlEncode(value).Replace("\n", "<br>", StringComparison.Ordinal);
 
     private static object? JsonValue(object? value) => value switch
     {
