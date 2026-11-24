@@ -154,5 +154,16 @@ internal static class OracleFunctions
         SYS_CONNECT_BY_PATH(column any, separator VARCHAR2) : VARCHAR2 -- The path from the root in a CONNECT BY query ~ CONNECT BY sorgusunda kökten gelen yol
         EMPTY_CLOB() : CLOB -- An empty CLOB to write into ~ İçine yazılacak boş CLOB
         EMPTY_BLOB() : BLOB -- An empty BLOB to write into ~ İçine yazılacak boş BLOB
+        # ---- Called without brackets ----
+        SYSDATE : date -- Current date and time of the database server ~ Veritabanı sunucusunun şu anki tarih ve saati
+        SYSTIMESTAMP : timestamp with time zone -- Current timestamp of the server, with fractions and time zone ~ Sunucunun kesirli ve saat dilimli şu anki zamanı
+        CURRENT_DATE : date -- Current date and time in the session time zone ~ Oturum saat diliminde şu anki tarih ve saat
+        CURRENT_TIMESTAMP : timestamp with time zone -- Current timestamp in the session time zone ~ Oturum saat diliminde şu anki zaman damgası
+        LOCALTIMESTAMP : timestamp -- Current timestamp in the session time zone, without the zone ~ Oturum saat diliminde, dilimsiz şu anki zaman damgası
+        SESSIONTIMEZONE : varchar2 -- Time zone of the session ~ Oturumun saat dilimi
+        DBTIMEZONE : varchar2 -- Time zone of the database ~ Veritabanının saat dilimi
+        USER : varchar2 -- Name of the session user ~ Oturum kullanıcısının adı
+        UID : number -- Id of the session user ~ Oturum kullanıcısının kimliği
+        ROWNUM : number -- Order in which a row was selected (1, 2, …) ~ Satırın seçilme sırası (1, 2, …)
         """;
 }

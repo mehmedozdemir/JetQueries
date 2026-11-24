@@ -6,6 +6,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 ## [Unreleased]
 
 ### Added
+- Completion: built-ins called without brackets (Oracle SYSDATE, SYSTIMESTAMP, USER, ROWNUM…; CURRENT_TIMESTAMP, CURRENT_USER… in every dialect) come with their type and description and are inserted without brackets.
 - SDK (preview): `IProgressiveObjectDetailsProvider` reports object details as they are read; the details view shows the properties and columns first and adds the other tabs as they arrive (Oracle).
 - Repository foundation: CLAUDE.md, product analysis, build props.
 - Solution skeleton (`JetQueries.slnx`): Desktop, Core, Sdk, Editor, DataGrid, SQL Server and Oracle provider projects, Core and Sdk test projects.

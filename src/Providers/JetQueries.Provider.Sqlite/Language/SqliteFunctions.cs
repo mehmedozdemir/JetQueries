@@ -112,5 +112,9 @@ internal static class SqliteFunctions
         json_tree(json text, [path @jsonpath]) : table -- A row per element or property, every level ~ Her öğe ya da özellik için bir satır, tüm düzeyler
         json_group_array(value any) : text -- The values of a group as a JSON array ~ Grubun değerlerini JSON dizisi yapar
         json_group_object(label text, value any) : text -- Labels and values of a group as a JSON object ~ Grubun etiket ve değerlerini JSON nesnesi yapar
+        # ---- Called without brackets ----
+        current_date : text -- Current date, UTC, as YYYY-MM-DD ~ UTC olarak bugünün tarihi, YYYY-AA-GG
+        current_time : text -- Current time, UTC, as HH:MM:SS ~ UTC olarak şu anki saat, SS:DD:sn
+        current_timestamp : text -- Current date and time, UTC, as YYYY-MM-DD HH:MM:SS ~ UTC olarak şu anki tarih ve saat
         """;
 }

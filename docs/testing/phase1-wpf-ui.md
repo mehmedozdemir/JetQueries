@@ -484,3 +484,9 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
       workspace.json; at the next start the tab and its text are back.
 - [ ] Starting a build after this change with an old workspace.json: the tabs come back and workspace.json is gone
       after the first change.
+
+## Functions without brackets
+- [ ] Oracle: "SELECT SYSD" offers SYSDATE as a function (badge, "Veritabanı sunucusunun şu anki tarih ve saati");
+      Enter inserts SYSDATE with no brackets and no parameter card. Same for SYSTIMESTAMP, USER, ROWNUM.
+- [ ] SQL Server CURRENT_TIMESTAMP, PostgreSQL current_date / current_user, SQLite current_timestamp: one row each
+      (no second "keyword" row), inserted without brackets.

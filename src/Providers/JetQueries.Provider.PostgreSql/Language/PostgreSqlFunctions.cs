@@ -202,5 +202,16 @@ internal static class PostgreSqlFunctions
         pg_get_functiondef(func oid) : text -- CREATE statement of a function ~ Fonksiyonun CREATE komutu
         has_table_privilege(table text, privilege @privilege) : boolean -- Whether the current user has a privilege on a table ~ Geçerli kullanıcının tabloda yetkisi var mı
         inet_client_addr() : inet -- Address of the client ~ İstemcinin adresi
+        # ---- Called without brackets ----
+        current_date : date -- Current date ~ Bugünün tarihi
+        current_time : time with time zone -- Current time of day, with time zone ~ Saat dilimli şu anki saat
+        current_timestamp : timestamp with time zone -- Start time of the current transaction ~ Geçerli işlemin başlangıç zamanı
+        localtime : time -- Current time of day, without time zone ~ Saat dilimsiz şu anki saat
+        localtimestamp : timestamp -- Start time of the current transaction, without time zone ~ Geçerli işlemin saat dilimsiz başlangıç zamanı
+        current_user : name -- Name of the current role ~ Geçerli rolün adı
+        current_role : name -- Name of the current role ~ Geçerli rolün adı
+        session_user : name -- Name of the session user ~ Oturum kullanıcısının adı
+        user : name -- Name of the current role ~ Geçerli rolün adı
+        current_catalog : name -- Name of the current database ~ Geçerli veritabanının adı
         """;
 }
