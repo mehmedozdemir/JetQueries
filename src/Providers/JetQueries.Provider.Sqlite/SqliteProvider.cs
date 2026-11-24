@@ -18,7 +18,7 @@ public sealed class SqliteExtension : IExtension
 }
 
 /// <summary>Database provider for SQLite database files, on Microsoft.Data.Sqlite.</summary>
-public sealed class SqliteProvider : IDatabaseProvider, IBulkInsertScripting, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport,
+public sealed class SqliteProvider : IDatabaseProvider, IBulkInsertScripting, IRowEditScripting, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport,
     IConnectionStringImport, IProviderAppearance, IObjectScripting
 {
     /// <summary>The provider identifier stored in connection profiles.</summary>
@@ -111,6 +111,22 @@ public sealed class SqliteProvider : IDatabaseProvider, IBulkInsertScripting, IC
 
     /// <inheritdoc />
     public int RowsPerStatement(int columnCount) => Providers.Metadata.BulkInsert.Rows(columnCount, 30000, 500);
+
+    /// <inheritdoc />
+    public string ScriptUpdate(DatabaseObjectName table, IReadOnlyList<string> columns, IReadOnlyList<string> keyColumns)
+    {
+        ArgumentNullException.ThrowIfNull(table);
+        return Providers.Metadata.RowEdit.Update(QuoteIdentifier, '@', RowEditTable(table), columns, keyColumns);
+    }
+
+    /// <inheritdoc />
+    public string ScriptDelete(DatabaseObjectName table, IReadOnlyList<string> keyColumns)
+    {
+        ArgumentNullException.ThrowIfNull(table);
+        return Providers.Metadata.RowEdit.Delete(QuoteIdentifier, '@', RowEditTable(table), keyColumns);
+    }
+
+    private string RowEditTable(DatabaseObjectName table) => (table.Schema is { Length: > 0 } schema && schema != "main" ? QuoteIdentifier(schema) + "." : string.Empty) + QuoteIdentifier(table.Name);
 
     /// <inheritdoc />
     public string ScriptInsert(DatabaseObjectName table, IReadOnlyList<string> columns, int rowCount)

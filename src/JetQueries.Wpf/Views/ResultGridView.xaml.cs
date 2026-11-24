@@ -53,6 +53,8 @@ public partial class ResultGridView : UserControl
         Grid.CellMenuOpening += AddCellMenuItems;
         Grid.SelectionChanged += () => _ = ShowSelectionStatsAsync();
         Grid.CurrentCellChanged += ShowValue;
+        Grid.CellEdited += OnCellEdited;
+        Grid.PreviewKeyDown += OnGridEditKeys;
 
         // Ctrl+wheel zooms the grid, Ctrl+0 goes back to 100 %; the base size comes from the settings.
         PreviewMouseWheel += (_, e) =>
@@ -201,6 +203,142 @@ public partial class ResultGridView : UserControl
         // After "Copy" and "Copy with headers".
         menu.Items.Insert(Math.Min(2, menu.Items.Count), copyAs);
         menu.Items.Insert(Math.Min(3, menu.Items.Count), show);
+
+        // The data editor: NULL for the cell, delete (or keep) the selected rows, add a row.
+        if (_set.Editor is { } editor && Grid.Source is ResultGridSource source && row >= 0 && row < source.RowCount)
+        {
+            menu.Items.Add(new Separator());
+            var setNull = new MenuItem { Header = Strings.EditSetNull, IsEnabled = column >= 0 && source.CanEdit(row, column) };
+            setNull.Click += (_, _) =>
+            {
+                editor.SetText(source.SourceRow(row), column, string.Empty);
+                Grid.InvalidateVisual();
+            };
+            menu.Items.Add(setNull);
+            var delete = new MenuItem { Header = Strings.EditDeleteRow, InputGestureText = "Delete" };
+            Ui.SetIcon(delete, "\uE74D");
+            delete.Click += (_, _) => ToggleDeleteSelected();
+            menu.Items.Add(delete);
+            if (editor.CanInsert)
+            {
+                var add = new MenuItem { Header = Strings.EditAddRow, InputGestureText = "Alt+Insert" };
+                Ui.SetIcon(add, "\uE710");
+                add.Click += (_, _) => AddRow();
+                menu.Items.Add(add);
+            }
+        }
+    }
+
+    private ResultEditor? _editor;
+
+    private void AttachEditor(ResultEditor? editor)
+    {
+        if (_editor is not null)
+        {
+            _editor.Changed -= OnEditorChanged;
+        }
+
+        _editor = editor;
+        if (editor is not null)
+        {
+            editor.Changed += OnEditorChanged;
+        }
+
+        Grid.InvalidateVisual();
+    }
+
+    private void OnEditorChanged(object? sender, EventArgs e) => Grid.InvalidateVisual();
+
+    private void OnCellEdited(int row, int column, string text)
+    {
+        if (_set?.Editor is { } editor && Grid.Source is ResultGridSource source && row < source.RowCount)
+        {
+            editor.SetText(source.SourceRow(row), column, text);
+            ShowValue();
+        }
+    }
+
+    // Delete marks the selected rows, Alt+Insert adds one, Ctrl+S saves (when the grid has the data editor).
+    private void OnGridEditKeys(object sender, KeyEventArgs e)
+    {
+        if (_set?.Editor is null || Grid.IsEditing)
+        {
+            return;
+        }
+
+        if (e.Key == Key.Delete && Keyboard.Modifiers == ModifierKeys.None)
+        {
+            ToggleDeleteSelected();
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Insert && Keyboard.Modifiers == ModifierKeys.Alt || e.SystemKey == Key.Insert && Keyboard.Modifiers == ModifierKeys.Alt)
+        {
+            AddRow();
+            e.Handled = true;
+        }
+        else if (e.Key == Key.S && Keyboard.Modifiers == ModifierKeys.Control && _set.Editor.HasChanges)
+        {
+            SaveChanges();
+            e.Handled = true;
+        }
+    }
+
+    /// <summary>Marks the selected rows for deletion (or unmarks them).</summary>
+    internal void ToggleDeleteSelected()
+    {
+        if (_set?.Editor is not { } editor || Grid.Source is not ResultGridSource source)
+        {
+            return;
+        }
+
+        var rows = Grid.Selection is { } selection
+            ? Enumerable.Range(selection.FirstRow, selection.LastRow - selection.FirstRow + 1).Select(source.SourceRow).ToArray()
+            : Grid.CurrentRow >= 0 && Grid.CurrentRow < source.RowCount ? [source.SourceRow(Grid.CurrentRow)] : [];
+        editor.ToggleDelete(rows);
+    }
+
+    /// <summary>Adds a row at the end and starts editing its first editable cell.</summary>
+    internal void AddRow()
+    {
+        if (_set?.Editor is not { CanInsert: true } editor)
+        {
+            return;
+        }
+
+        var added = editor.AddRow();
+        ShowView();
+        if (Grid.Source is ResultGridSource source && source.GridRow(added) is var row and >= 0)
+        {
+            var column = Enumerable.Range(0, _set.Columns.Count).FirstOrDefault(c => editor.CanEdit(added, c));
+            Grid.MoveTo(row, column);
+            Grid.Focus();
+            Grid.BeginEdit();
+        }
+    }
+
+    private void SaveChanges()
+    {
+        if (DataContextOwner() is { } document && document.SaveChangesCommand.CanExecute(_set))
+        {
+            document.SaveChangesCommand.Execute(_set);
+        }
+    }
+
+    private void OnAddRow(object sender, RoutedEventArgs e) => AddRow();
+
+    private void OnDeleteRows(object sender, RoutedEventArgs e) => ToggleDeleteSelected();
+
+    private QueryDocumentViewModel? DataContextOwner()
+    {
+        for (DependencyObject? node = this; node is not null; node = VisualTreeHelper.GetParent(node))
+        {
+            if (node is QueryDocumentView { DataContext: QueryDocumentViewModel document })
+            {
+                return document;
+            }
+        }
+
+        return null;
     }
 
     /// <summary>The selected cells in a format, on the clipboard.</summary>
@@ -343,6 +481,7 @@ public partial class ResultGridView : UserControl
             _set.RowCountChanged -= OnRowCountChanged;
             _set.View.Changed -= OnViewChanged;
             _set.PropertyChanged -= OnSetPropertyChanged;
+            AttachEditor(null);
         }
 
         _set = set;
@@ -358,6 +497,7 @@ public partial class ResultGridView : UserControl
         set.RowCountChanged += OnRowCountChanged;
         set.View.Changed += OnViewChanged;
         set.PropertyChanged += OnSetPropertyChanged;
+        AttachEditor(set.Editor);
         ApplyVisibleColumns();
         ShowView();
         ApplyMode(previous: ResultViewMode.Grid);
@@ -434,6 +574,10 @@ public partial class ResultGridView : UserControl
         else if (e.PropertyName == nameof(QueryResultSet.IsFiltered))
         {
             UpdateSqlFilterBar();
+        }
+        else if (e.PropertyName == nameof(QueryResultSet.Editor))
+        {
+            AttachEditor(_set?.Editor);
         }
         else if (e.PropertyName == nameof(QueryResultSet.IsSqlFilterOpen))
         {

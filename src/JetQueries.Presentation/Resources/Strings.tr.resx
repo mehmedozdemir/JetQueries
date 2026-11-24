@@ -282,6 +282,30 @@
   <data name="ImportConfirmProduction" xml:space="preserve"><value>{1} bir üretim bağlantısı; {0} tablosuna satır eklenecek. Devam edilsin mi?</value></data>
   <data name="ImportBrowseTitle" xml:space="preserve"><value>İçe aktarılacak dosyayı seçin</value></data>
   <data name="ImportTextFiles" xml:space="preserve"><value>Metin dosyaları</value></data>
+  <data name="EditBadValue" xml:space="preserve"><value>"{0}", {1} sütunu için geçerli bir değer değil ({2}).</value></data>
+  <data name="EditNotSupported" xml:space="preserve"><value>Bu bağlantı satır değişikliklerini kaydedemiyor.</value></data>
+  <data name="EditRowsAffected" xml:space="preserve"><value>{1} için {0} satır bulundu; hiçbir şey kaydedilmedi (satır değişmiş ya da silinmiş).</value></data>
+  <data name="EditSave" xml:space="preserve"><value>Kaydet</value></data>
+  <data name="EditSaveTip" xml:space="preserve"><value>Değişiklikleri tek işlemde tabloya kaydet (tabloda Ctrl+S)</value></data>
+  <data name="EditRevert" xml:space="preserve"><value>Değişiklikleri geri al</value></data>
+  <data name="EditAddRow" xml:space="preserve"><value>Satır ekle</value></data>
+  <data name="EditDeleteRow" xml:space="preserve"><value>Satır sil</value></data>
+  <data name="EditDeleteRowTip" xml:space="preserve"><value>Seçili satırları silinecek olarak işaretle (Delete); tekrar basınca işaret kalkar</value></data>
+  <data name="EditSetNull" xml:space="preserve"><value>NULL yap</value></data>
+  <data name="EditChanges" xml:space="preserve"><value>{0} değişiklik</value></data>
+  <data name="EditConfirmTitle" xml:space="preserve"><value>Değişiklikleri kaydet</value></data>
+  <data name="EditConfirmProduction" xml:space="preserve"><value>{0} değişiklik, canlı ortam bağlantısı {2} üzerindeki {1} tablosuna yazılacak. Kaydedilsin mi?</value></data>
+  <data name="EditSaving" xml:space="preserve"><value>Değişiklikler kaydediliyor…</value></data>
+  <data name="EditSaved" xml:space="preserve"><value>{0} değişiklik {1} tablosuna kaydedildi.</value></data>
+  <data name="EditSaveFailed" xml:space="preserve"><value>Değişiklikler kaydedilmedi; hiçbir şey yazılmadı.</value></data>
+  <data name="EditDiscardTitle" xml:space="preserve"><value>Kaydedilmemiş değişiklikler</value></data>
+  <data name="EditDiscard" xml:space="preserve"><value>Sonuçta kaydedilmemiş {0} değişiklik var. Satırlar yeniden okunup değişiklikler atılsın mı?</value></data>
+  <data name="EditReadOnly" xml:space="preserve"><value>Salt okunur</value></data>
+  <data name="EditNotSingleTable" xml:space="preserve"><value>Satırlar yalnızca tek tablodan yapılan bir SELECT için düzenlenebilir (JOIN, UNION, gruplama, DISTINCT olmadan).</value></data>
+  <data name="EditNoKey" xml:space="preserve"><value>Satırlar, tablonun birincil anahtarı varsa ve sonuç tüm anahtar sütunlarını içeriyorsa düzenlenebilir.</value></data>
+  <data name="EditNoTable" xml:space="preserve"><value>Bu SELECT'in tablosu bulunamadı.</value></data>
+  <data name="EditEditable" xml:space="preserve"><value>Hücreyi düzenlemek için çift tıklayın, F2'ye basın ya da yazmaya başlayın; boş değer NULL'dır</value></data>
+  <data name="EditReadOnlyConnection" xml:space="preserve"><value>Bağlantı salt okunur: satırlar değiştirilemez.</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Tümünü temizle</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Filtreyi kaldır</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} / {1:N0} satır</value></data>

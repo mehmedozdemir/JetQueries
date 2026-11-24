@@ -472,6 +472,34 @@ public sealed class PostgreSqlIntegrationTests(PostgreSqlFixture fixture) : ICla
     }
 
     [Fact]
+    public async Task A_row_is_updated_and_deleted_by_its_key()
+    {
+        if (fixture.SkipReason is { } reason)
+        {
+            Assert.Skip(reason);
+        }
+
+        await using var connection = await OpenAsync();
+        await Collect(connection.Executor.ExecuteAsync(new QueryRequest("DROP TABLE IF EXISTS jq_edit; CREATE TABLE jq_edit (id integer PRIMARY KEY, ad text, tutar numeric(12,2)); INSERT INTO jq_edit VALUES (1, 'Bir', 1), (2, 'İki', 2)"), Token));
+        var provider = new PostgreSqlProvider();
+        var table = new DatabaseObjectName(null, "public", "jq_edit");
+
+        // The editor converts whole numbers to long: an integer column takes them.
+        var update = provider.ScriptUpdate(table, ["ad", "tutar"], ["id"]);
+        Assert.Equal("UPDATE \"public\".\"jq_edit\"\nSET \"ad\" = @s0, \"tutar\" = @s1\nWHERE \"id\" = @k0", update);
+        var events = await Collect(connection.Executor.ExecuteAsync(new QueryRequest(update) { Parameters = [new("s0", "Müşteri"), new("s1", 12.5m), new("k0", 1)] }, Token));
+        Assert.Equal(1, events.OfType<StatementCompleted>().First().RowsAffected);
+        events = await Collect(connection.Executor.ExecuteAsync(new QueryRequest(provider.ScriptUpdate(table, ["id"], ["id"])) { Parameters = [new("s0", 7L), new("k0", 2)] }, Token));
+        Assert.Equal(1, events.OfType<StatementCompleted>().First().RowsAffected);
+        events = await Collect(connection.Executor.ExecuteAsync(new QueryRequest(provider.ScriptDelete(table, ["id"])) { Parameters = [new("k0", 7)] }, Token));
+        Assert.Equal(1, events.OfType<StatementCompleted>().First().RowsAffected);
+
+        var rows = (await Collect(connection.Executor.ExecuteAsync(new QueryRequest("SELECT ad, tutar FROM jq_edit"), Token))).OfType<RowBatch>().SelectMany(static b => b.Rows).ToList();
+        Assert.Equal("Müşteri", Assert.Single(rows)[0]);
+        Assert.Equal(12.5m, rows[0][1]);
+    }
+
+    [Fact]
     public async Task A_multi_row_insert_takes_typed_parameters()
     {
         if (fixture.SkipReason is { } reason)

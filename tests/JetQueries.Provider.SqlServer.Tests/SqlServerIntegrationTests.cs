@@ -618,6 +618,27 @@ public sealed class SqlServerIntegrationTests(SqlServerFixture fixture) : IClass
         Assert.Null(rows[1][0]);
     }
 
+    [Fact]
+    public async Task A_row_is_updated_and_deleted_by_its_key()
+    {
+        await using var connection = await OpenAsync();
+        await RunAsync(connection, "DROP TABLE IF EXISTS dbo.jq_edit; CREATE TABLE dbo.jq_edit (id int NOT NULL, kod char(2) NOT NULL, ad nvarchar(40), PRIMARY KEY (id, kod)); INSERT dbo.jq_edit VALUES (1, 'TR', N'Bir'), (2, 'TR', N'İki')");
+        var provider = new SqlServerProvider();
+        var table = new DatabaseObjectName(null, "dbo", "jq_edit");
+
+        var update = provider.ScriptUpdate(table, ["ad"], ["id", "kod"]);
+        Assert.Equal("UPDATE [dbo].[jq_edit]\nSET [ad] = @s0\nWHERE [id] = @k0 AND [kod] = @k1", update);
+        var updated = (await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest(update) { Parameters = [new("s0", "Müşteri İşlemleri"), new("k0", 1), new("k1", "TR")] }, Token)))
+            .OfType<StatementCompleted>().First().RowsAffected;
+        var deleted = (await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest(provider.ScriptDelete(table, ["id", "kod"])) { Parameters = [new("k0", 2), new("k1", "TR")] }, Token)))
+            .OfType<StatementCompleted>().First().RowsAffected;
+
+        Assert.Equal(1, updated);
+        Assert.Equal(1, deleted);
+        var rows = (await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest("SELECT ad FROM dbo.jq_edit"), Token))).OfType<RowBatch>().SelectMany(static b => b.Rows).ToList();
+        Assert.Equal("Müşteri İşlemleri", Assert.Single(rows)[0]);
+    }
+
     private async Task<IDatabaseConnection> OpenAsync()
     {
         Assert.SkipWhen(fixture.SkipReason is not null, fixture.SkipReason ?? string.Empty);

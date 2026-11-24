@@ -7,7 +7,7 @@ namespace JetQueries.Wpf.Views;
 /// filters. A snapshot has a fixed row count; the grid gets a new one as rows stream in or the view changes,
 /// with the same schema key so column widths and scroll position stay.
 /// </summary>
-public sealed class ResultGridSource : IGridDataSource, IGridColumnCaptions
+public sealed class ResultGridSource : IGridDataSource, IGridColumnCaptions, IEditableGridDataSource
 {
     private readonly QueryResultSet _set;
     private readonly GridColumnKind[] _kinds;
@@ -56,6 +56,23 @@ public sealed class ResultGridSource : IGridDataSource, IGridColumnCaptions
     public string GetText(int row, int column) => _set.GetText(Row(row), column) ?? string.Empty;
 
     public bool IsNull(int row, int column) => _set.GetText(Row(row), column) is null;
+
+    public bool CanEdit(int row, int column) => _set.Editor?.CanEdit(Row(row), column) == true;
+
+    public string? GetEditText(int row, int column) => _set.Editor?.EditText(Row(row), column);
+
+    public bool IsModified(int row, int column) => _set.Editor?.IsModified(Row(row), column) == true;
+
+    public GridRowState GetRowState(int row) => _set.Editor is not { } editor ? GridRowState.Normal
+        : editor.IsDeleted(Row(row)) ? GridRowState.Deleted
+        : editor.IsInserted(Row(row)) ? GridRowState.Inserted
+        : GridRowState.Normal;
+
+    /// <summary>The result's row shown at a grid row.</summary>
+    public int SourceRow(int row) => Row(row);
+
+    /// <summary>The grid row that shows a result's row; -1 when it is filtered out.</summary>
+    public int GridRow(int sourceRow) => _map is null ? (sourceRow < RowCount ? sourceRow : -1) : Array.IndexOf(_map, sourceRow);
 
     private int Row(int row) => _map is null ? row : _map[row];
 }

@@ -544,6 +544,30 @@ public sealed class OracleIntegrationTests(OracleFixture fixture) : IClassFixtur
     }
 
     [Fact]
+    public async Task A_row_is_updated_and_deleted_by_its_key()
+    {
+        await using var connection = await OpenAsync();
+        await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest("CREATE TABLE jq_edit (id NUMBER(10) PRIMARY KEY, ad VARCHAR2(40 CHAR), tarih DATE)"), Token));
+        await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest("INSERT INTO jq_edit (id, ad) SELECT 1, 'Bir' FROM dual UNION ALL SELECT 2, 'İki' FROM dual"), Token));
+        var provider = new OracleProvider();
+        var user = fixture.Credential.UserName!.ToUpperInvariant();
+        var table = new DatabaseObjectName(null, user, "JQ_EDIT");
+
+        var update = provider.ScriptUpdate(table, ["AD", "TARIH"], ["ID"]);
+        Assert.EndsWith("SET \"AD\" = :s0, \"TARIH\" = :s1\nWHERE \"ID\" = :k0", update, StringComparison.Ordinal);
+        var updated = (await ToListAsync(connection.Executor.ExecuteAsync(
+            new QueryRequest(update) { Parameters = [new("s0", "Müşteri İşlemleri"), new("s1", new DateTime(2026, 1, 15)), new("k0", 1m)] }, Token))).OfType<StatementCompleted>().First().RowsAffected;
+        var deleted = (await ToListAsync(connection.Executor.ExecuteAsync(
+            new QueryRequest(provider.ScriptDelete(table, ["ID"])) { Parameters = [new("k0", 2L)] }, Token))).OfType<StatementCompleted>().First().RowsAffected;
+
+        Assert.Equal(1, updated);
+        Assert.Equal(1, deleted);
+        var rows = (await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest("SELECT ad, tarih FROM jq_edit"), Token))).OfType<RowBatch>().SelectMany(static b => b.Rows).ToList();
+        Assert.Equal("Müşteri İşlemleri", Assert.Single(rows)[0]);
+        Assert.Equal(new DateTime(2026, 1, 15), rows[0][1]);
+    }
+
+    [Fact]
     public async Task A_tns_alias_from_a_tnsnames_file_connects()
     {
         Assert.SkipWhen(fixture.SkipReason is not null, fixture.SkipReason ?? string.Empty);

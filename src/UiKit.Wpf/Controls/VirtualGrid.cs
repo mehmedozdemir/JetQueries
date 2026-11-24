@@ -37,7 +37,7 @@ public static class GridStrings
 /// elements), so scrolling stays smooth for tens of millions of rows. Rows are scrolled logically by index.
 /// Theme colors come from the UiKit "Brush.*" resources.
 /// </summary>
-public sealed class VirtualGrid : FrameworkElement
+public sealed partial class VirtualGrid : FrameworkElement
 {
     // Taller when the source gives captions (a second, smaller line under the names).
     private double HeaderHeight => _captions is null ? 36 : 46;
@@ -346,6 +346,10 @@ public sealed class VirtualGrid : FrameworkElement
     {
         newSource ??= ArrayGridDataSource.Empty;
         bool sameSchema = oldSource is not null && Equals(oldSource.SchemaKey, newSource.SchemaKey) && oldSource.ColumnCount == newSource.ColumnCount;
+
+        // A new snapshot of the same rows (more rows arrived, a row was added) keeps the cell being edited.
+        if (!sameSchema || _editRow >= newSource.RowCount)
+            CloseEditor();
         _source = newSource;
         _captions = HasCaptions(newSource) ? (IGridColumnCaptions)newSource : null;
 
@@ -361,6 +365,10 @@ public sealed class VirtualGrid : FrameworkElement
             for (int i = 0; i < _widths.Length; i++)
                 _widths[i] = MeasureColumn(i, sampleRows: 300, maxWidth: 360);
         }
+        else if (_editor is not null)
+        {
+            // Editing: the place stays.
+        }
         else
         {
             _firstRow = 0;
@@ -370,7 +378,8 @@ public sealed class VirtualGrid : FrameworkElement
         }
 
         RecomputeLayout();
-        _vbar.Value = 0;
+        if (_editor is null)
+            _vbar.Value = 0;
         CurrentCellChanged?.Invoke();
         SelectionChanged?.Invoke();
     }
@@ -541,6 +550,7 @@ public sealed class VirtualGrid : FrameworkElement
         _hbar.Arrange(new Rect(_gutterWidth, height - ScrollBarSize, Math.Max(0, width - _gutterWidth - (needV ? ScrollBarSize : 0)), ScrollBarSize));
 
         UpdateScrollBars(width, height);
+        ArrangeEditor();
         return finalSize;
     }
 
@@ -570,6 +580,7 @@ public sealed class VirtualGrid : FrameworkElement
         _firstRow = value;
         HideTip();
         InvalidateVisual();
+        if (_editor is not null) InvalidateArrange();
     }
 
     private void SetHorizontalOffsetCore(double value)
@@ -578,6 +589,7 @@ public sealed class VirtualGrid : FrameworkElement
         _hOffset = value;
         HideTip();
         InvalidateVisual();
+        if (_editor is not null) InvalidateArrange();
     }
 
     private void ScrollToRow(int first) => _vbar.Value = Math.Clamp(first, 0, (int)_vbar.Maximum);
@@ -638,6 +650,8 @@ public sealed class VirtualGrid : FrameworkElement
                 dc.DrawRectangle(AltRowBrush, null, new Rect(0, y, dataRight, rowHeight));
             if (r == _hoverRow && _drag == DragMode.None)
                 dc.DrawRectangle(HoverBrush, null, new Rect(0, y, dataRight, rowHeight));
+            if (Editable?.GetRowState(r) == GridRowState.Inserted)
+                dc.DrawRectangle(AccentSoftBrush, null, new Rect(0, y, dataRight, rowHeight));
         }
 
         if (selection is { } sel && rows > 0)
@@ -669,10 +683,13 @@ public sealed class VirtualGrid : FrameworkElement
             bool right = IsNumeric(kind);
             double textWidth = w - CellPadding * 2;
 
+            var editable = Editable;
             for (int i = 0; i < rows; i++)
             {
                 int r = _firstRow + i;
                 double baseline = HeaderHeight + i * rowHeight + textOffsetY;
+                if (editable is not null && editable.IsModified(r, column))
+                    dc.DrawRectangle(AccentSoftBrush, null, new Rect(x, HeaderHeight + i * rowHeight, w, rowHeight));
                 if (_source.IsNull(r, column))
                 {
                     if (nullText.Length > 0)
@@ -680,7 +697,7 @@ public sealed class VirtualGrid : FrameworkElement
                     continue;
                 }
                 string text = _source.GetText(r, column);
-                Brush brush = TextBrush;
+                Brush brush = editable?.GetRowState(r) == GridRowState.Deleted ? MutedTextBrush : TextBrush;
                 if (kind == GridColumnKind.Boolean)
                     brush = IsTrue(text) ? TrueBrush : MutedTextBrush;
                 cell.Draw(dc, text, brush, x + CellPadding, baseline, textWidth, right, ppd);
@@ -694,6 +711,20 @@ public sealed class VirtualGrid : FrameworkElement
         {
             double y = Snap(HeaderHeight + i * rowHeight) - line / 2;
             dc.DrawLine(gridPen, new Point(_gutterWidth, y), new Point(dataRight, y));
+        }
+
+        // Rows to be deleted are struck through.
+        if (Editable is { } marks)
+        {
+            var strike = new Pen(MutedTextBrush, 1);
+            for (int i = 0; i < rows; i++)
+            {
+                if (marks.GetRowState(_firstRow + i) == GridRowState.Deleted)
+                {
+                    double y = Snap(HeaderHeight + i * rowHeight + rowHeight / 2);
+                    dc.DrawLine(strike, new Point(_gutterWidth + 4, y), new Point(dataRight - 4, y));
+                }
+            }
         }
 
         if (_curRow >= _firstRow && _curRow <= lastRow && _curCol >= 0 && _curCol < _display.Length)
@@ -1016,6 +1047,8 @@ public sealed class VirtualGrid : FrameworkElement
     protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
     {
         base.OnMouseLeftButtonDown(e);
+        if (IsInEditor(e.OriginalSource)) return;
+        if (_editor is not null) CommitEdit(move: null);
         Focus();
         HideTip();
         var p = e.GetPosition(this);
@@ -1062,6 +1095,8 @@ public sealed class VirtualGrid : FrameworkElement
                 SetCurrent(hit.Row, _display.Length - 1, keepAnchor: true);
                 _drag = DragMode.RowSelect;
                 CaptureMouse();
+                break;
+            case Area.Cell when hit.Col >= 0 && e.ClickCount == 2 && Editable is not null && StartEditAt(hit.Row, hit.Col):
                 break;
             case Area.Cell when hit.Col >= 0:
                 SetCurrent(hit.Row, hit.Col, keepAnchor: shift);
@@ -1184,6 +1219,7 @@ public sealed class VirtualGrid : FrameworkElement
     protected override void OnKeyDown(KeyEventArgs e)
     {
         base.OnKeyDown(e);
+        if (_editor is not null || IsInEditor(e.OriginalSource)) return;
         if (_source.RowCount == 0 || _display.Length == 0) return;
 
         bool ctrl = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
@@ -1219,6 +1255,10 @@ public sealed class VirtualGrid : FrameworkElement
             case Key.Apps:
                 ShowCellMenu(row, col);
                 e.Handled = true;
+                return;
+            case Key.F2:
+                if (BeginEdit())
+                    e.Handled = true;
                 return;
             default:
                 return;

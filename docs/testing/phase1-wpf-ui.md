@@ -613,3 +613,17 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
       nothing stays in the table. "Vazgeç" while it runs stops it.
 - [ ] On a production connection a confirmation comes first; on a read-only connection the import is refused.
 
+## Data editor
+- [ ] Run `SELECT * FROM <a table with a primary key>`: the footer shows "Satır ekle", "Satır sil", "Kaydet (0)",
+      "Değişiklikleri geri al". A join, GROUP BY, DISTINCT, a result without the key columns or a read-only connection
+      shows a "Salt okunur" badge whose tip says why.
+- [ ] Double-click a cell (or F2, or start typing): a box opens over it; Enter keeps the value and goes down, Tab goes
+      right, Esc drops it. The changed cell is highlighted and "Kaydet (1)" counts it. Typing text into a number column
+      shows the reason in red and keeps the old value; an empty cell becomes NULL (also "NULL yap" in the menu).
+- [ ] Delete (or "Satır sil") strikes the selected rows through; again unmarks them. Alt+Insert (or "Satır ekle") adds a
+      highlighted row at the end and opens its first cell.
+- [ ] "Kaydet" (or Ctrl+S in the grid) writes the changes and reads the rows again; the Messages tab says how many.
+      Turkish text (İ, ş, ğ) is saved as typed. On a production connection a confirmation comes first.
+- [ ] Change a row, delete it from another tab, then save: an error names the key ("id = …") and nothing is written.
+- [ ] With unsaved changes, Next page / All / Refresh / a SQL filter ask before dropping them; "Değişiklikleri geri al"
+      puts the read values back and removes added rows.

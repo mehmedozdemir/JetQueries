@@ -19,7 +19,7 @@ public sealed class PostgreSqlExtension : IExtension
 }
 
 /// <summary>Database provider for PostgreSQL, on the Npgsql driver.</summary>
-public sealed class PostgreSqlProvider : IDatabaseProvider, IBulkInsertScripting, IRoutineExecutionScripting, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport,
+public sealed class PostgreSqlProvider : IDatabaseProvider, IBulkInsertScripting, IRowEditScripting, IRoutineExecutionScripting, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport,
     IConnectionStringImport, IProviderAppearance, IObjectScripting
 {
     /// <summary>The provider identifier stored in connection profiles.</summary>
@@ -149,6 +149,22 @@ public sealed class PostgreSqlProvider : IDatabaseProvider, IBulkInsertScripting
 
     /// <inheritdoc />
     public int RowsPerStatement(int columnCount) => Providers.Metadata.BulkInsert.Rows(columnCount, 30000, 1000);
+
+    /// <inheritdoc />
+    public string ScriptUpdate(DatabaseObjectName table, IReadOnlyList<string> columns, IReadOnlyList<string> keyColumns)
+    {
+        ArgumentNullException.ThrowIfNull(table);
+        return Providers.Metadata.RowEdit.Update(PostgreSqlNames.Quote, '@', RowEditTable(table), columns, keyColumns);
+    }
+
+    /// <inheritdoc />
+    public string ScriptDelete(DatabaseObjectName table, IReadOnlyList<string> keyColumns)
+    {
+        ArgumentNullException.ThrowIfNull(table);
+        return Providers.Metadata.RowEdit.Delete(PostgreSqlNames.Quote, '@', RowEditTable(table), keyColumns);
+    }
+
+    private static string RowEditTable(DatabaseObjectName table) => (table.Schema is { Length: > 0 } schema ? PostgreSqlNames.Quote(schema) + "." : string.Empty) + PostgreSqlNames.Quote(table.Name);
 
     /// <inheritdoc />
     public string ScriptInsert(DatabaseObjectName table, IReadOnlyList<string> columns, int rowCount)
