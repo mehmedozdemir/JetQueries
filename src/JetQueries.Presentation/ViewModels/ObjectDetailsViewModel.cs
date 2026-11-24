@@ -299,14 +299,18 @@ public partial class ObjectDetailsViewModel : ObservableObject
 
     private async Task<ObjectDetails?> ReadDetailsAsync(DatabaseObject target, IProgress<ObjectDetails> progress, CancellationToken cancellationToken)
     {
+        // An object of another database (PostgreSQL) is read on a connection to that database.
+        var asked = ForProvider(target);
         var details = await _session.UseMetadataAsync(
+            target.Name.Database,
             (provider, token) => provider switch
             {
-                IProgressiveObjectDetailsProvider progressive => progressive.GetDetailsAsync(target, progress, token),
-                IObjectDetailsProvider detailed => detailed.GetDetailsAsync(target, token),
+                IProgressiveObjectDetailsProvider progressive => progressive.GetDetailsAsync(asked, progress, token),
+                IObjectDetailsProvider detailed => detailed.GetDetailsAsync(asked, token),
                 _ => Task.FromResult<ObjectDetails?>(null),
             },
             cancellationToken).ConfigureAwait(false);
+        details = Stamped(details, target);
         if (details is not null || !ObjectScripts.HasData(target.Kind))
         {
             return details;
@@ -329,7 +333,26 @@ public partial class ObjectDetailsViewModel : ObservableObject
     }
 
     private Task<string?> ReadDdlAsync(DatabaseObject target, CancellationToken cancellationToken) =>
-        _session.UseMetadataAsync((provider, token) => provider.GetDefinitionAsync(target, token), cancellationToken);
+        _session.UseMetadataAsync(target.Name.Database, (provider, token) => provider.GetDefinitionAsync(ForProvider(target), token), cancellationToken);
+
+    // A provider whose metadata sees one database is asked without the database part, and its answer keeps it.
+    private DatabaseObject ForProvider(DatabaseObject target) =>
+        _session.HasMetadataPerDatabase ? target with { Name = target.Name with { Database = null } } : target;
+
+    private ObjectDetails? Stamped(ObjectDetails? details, DatabaseObject target)
+    {
+        if (details is null || !_session.HasMetadataPerDatabase || target.Name.Database is not { } database)
+        {
+            return details;
+        }
+
+        DatabaseObject? Stamp(DatabaseObject? o) => o is null ? null : o with { Name = o.Name with { Database = database } };
+        return details with
+        {
+            Target = Stamp(details.Target)!,
+            Sections = [.. details.Sections.Select(s => s with { Rows = [.. s.Rows.Select(r => r with { Target = Stamp(r.Target) })] })],
+        };
+    }
 
     private static string Format(string format, object? argument) =>
         string.Format(System.Globalization.CultureInfo.CurrentCulture, System.Text.CompositeFormat.Parse(format), argument);

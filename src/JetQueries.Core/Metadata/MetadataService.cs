@@ -15,16 +15,21 @@ public interface IMetadataService
     /// <param name="kinds">The kinds of objects wanted.</param>
     /// <param name="refresh"><see langword="true"/> to ask the database even if the cache has an answer.</param>
     /// <param name="cancellationToken">Cancels the lookup and the database call.</param>
+    /// <param name="database">
+    /// The database a query window has selected, for providers whose metadata sees one database only
+    /// (<see cref="ConnectionSession.HasMetadataPerDatabase"/>); null for the session's own.
+    /// </param>
     Task<IReadOnlyList<DatabaseObject>> GetObjectsAsync(
-        ConnectionSession session, DatabaseObject? parent, DatabaseObjectKinds kinds, bool refresh, CancellationToken cancellationToken);
+        ConnectionSession session, DatabaseObject? parent, DatabaseObjectKinds kinds, bool refresh, CancellationToken cancellationToken, string? database = null);
 
     /// <summary>Gets the columns of a table or view.</summary>
     /// <param name="session">The open session.</param>
     /// <param name="tableOrView">The table or view.</param>
     /// <param name="refresh"><see langword="true"/> to ask the database even if the cache has an answer.</param>
     /// <param name="cancellationToken">Cancels the lookup and the database call.</param>
+    /// <param name="database">As for <see cref="GetObjectsAsync"/>.</param>
     Task<IReadOnlyList<ColumnInfo>> GetColumnsAsync(
-        ConnectionSession session, DatabaseObjectName tableOrView, bool refresh, CancellationToken cancellationToken);
+        ConnectionSession session, DatabaseObjectName tableOrView, bool refresh, CancellationToken cancellationToken, string? database = null);
 }
 
 /// <summary>Default <see cref="IMetadataService"/>.</summary>
@@ -40,10 +45,11 @@ public sealed class MetadataService(IMetadataCache cache, TimeProvider timeProvi
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<DatabaseObject>> GetObjectsAsync(
-        ConnectionSession session, DatabaseObject? parent, DatabaseObjectKinds kinds, bool refresh, CancellationToken cancellationToken)
+        ConnectionSession session, DatabaseObject? parent, DatabaseObjectKinds kinds, bool refresh, CancellationToken cancellationToken, string? database = null)
     {
         ArgumentNullException.ThrowIfNull(session);
-        var connectionId = session.Definition.Id;
+        var other = await session.OtherMetadataDatabaseAsync(database, cancellationToken).ConfigureAwait(false);
+        var connectionId = session.MetadataCacheId(other);
         if (!refresh)
         {
             // A cache hit needs neither the metadata connection nor its turn in the queue.
@@ -55,6 +61,7 @@ public sealed class MetadataService(IMetadataCache cache, TimeProvider timeProvi
         }
 
         var objects = await session.UseMetadataAsync(
+            other,
             async (metadata, token) =>
             {
                 var list = new List<DatabaseObject>();
@@ -72,10 +79,11 @@ public sealed class MetadataService(IMetadataCache cache, TimeProvider timeProvi
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<ColumnInfo>> GetColumnsAsync(
-        ConnectionSession session, DatabaseObjectName tableOrView, bool refresh, CancellationToken cancellationToken)
+        ConnectionSession session, DatabaseObjectName tableOrView, bool refresh, CancellationToken cancellationToken, string? database = null)
     {
         ArgumentNullException.ThrowIfNull(session);
-        var connectionId = session.Definition.Id;
+        var other = await session.OtherMetadataDatabaseAsync(database, cancellationToken).ConfigureAwait(false);
+        var connectionId = session.MetadataCacheId(other);
         if (!refresh)
         {
             var cached = await cache.GetColumnsAsync(connectionId, tableOrView, cancellationToken).ConfigureAwait(false);
@@ -85,7 +93,7 @@ public sealed class MetadataService(IMetadataCache cache, TimeProvider timeProvi
             }
         }
 
-        var columns = await session.UseMetadataAsync((metadata, token) => metadata.GetColumnsAsync(tableOrView, token), cancellationToken).ConfigureAwait(false);
+        var columns = await session.UseMetadataAsync(other, (metadata, token) => metadata.GetColumnsAsync(tableOrView, token), cancellationToken).ConfigureAwait(false);
         await cache.SetColumnsAsync(connectionId, tableOrView, columns, cancellationToken).ConfigureAwait(false);
         return columns;
     }

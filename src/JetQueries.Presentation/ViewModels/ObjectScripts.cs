@@ -59,11 +59,11 @@ public static class ObjectScripts
         switch (kind)
         {
             case ObjectScriptKind.Create:
-                return await new SessionMetadataProvider(session, metadata).GetDefinitionAsync(target, cancellationToken).ConfigureAwait(false);
+                return await new SessionMetadataProvider(session, metadata, target.Name.Database).GetDefinitionAsync(target, cancellationToken).ConfigureAwait(false);
             case ObjectScriptKind.Alter:
             {
                 if (provider is not IObjectScripting alterScripting ||
-                    await new SessionMetadataProvider(session, metadata).GetDefinitionAsync(target, cancellationToken).ConfigureAwait(false) is not { } definition)
+                    await new SessionMetadataProvider(session, metadata, target.Name.Database).GetDefinitionAsync(target, cancellationToken).ConfigureAwait(false) is not { } definition)
                 {
                     return null;
                 }
