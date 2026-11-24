@@ -679,3 +679,12 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] The installed app shows the blue database-and-bolt icon on its Start menu and desktop shortcuts, in the taskbar
       (also pinned), in Alt+Tab and in Explorer for JetQueries.exe; Setup.exe has it too.
 - [ ] The same mark is at the left of the title bar, sharp at 100 %, 150 % and 200 % scaling, in light and dark themes.
+
+## Editor assistance (value comparison, hover)
+- [ ] `SELECT * FROM <table> WHERE ` then choose a text column from the list (Enter or Tab): ` = ''` is added and the
+      caret is between the quotes; an nvarchar column on SQL Server gets ` = N''`. Same after AND / OR / ON / HAVING
+      and in `UPDATE … SET a = 1, ` for the next column. A number or bit column, the select list and ORDER BY get
+      nothing added.
+- [ ] Rest the mouse on a table name or alias: a card with "TABLO", its name and columns (key icon, types,
+      NOT NULL). On a column: its type and table, primary key and NULL / NOT NULL. Keywords and strings show nothing.
+- [ ] Settings > SQL editor > Yardımcılar: turning either off stops it at once; both are on in a new installation.

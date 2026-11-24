@@ -624,6 +624,15 @@ public partial class SqlEditor
             var insert = item.InsertText ?? item.Label;
             textArea.Document.Replace(completionSegment, insert);
 
+            // A text column in a condition: " = ''" with the caret between the quotes.
+            var end = completionSegment.Offset + insert.Length;
+            if (owner.CompletionSuffix?.Invoke(textArea.Document.Text, completionSegment.Offset, end, item) is { } suffix)
+            {
+                textArea.Document.Insert(end, suffix.Text);
+                textArea.Caret.Offset = end + suffix.Caret;
+                return;
+            }
+
             // A function goes in with its parentheses; the caret goes between them and its parameters are shown.
             if (insert.EndsWith("()", StringComparison.Ordinal))
             {

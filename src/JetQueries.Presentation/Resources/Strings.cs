@@ -162,6 +162,17 @@ public static class Strings
     public static string FilterClear => Get(nameof(FilterClear));
     public static string FilterValueRequired => Get(nameof(FilterValueRequired));
     public static string FilterClearAll => Get(nameof(FilterClearAll));
+    public static string HoverColumn => Get(nameof(HoverColumn));
+    public static string HoverColumns => Get(nameof(HoverColumns));
+    public static string HoverMoreColumns => Get(nameof(HoverMoreColumns));
+    public static string HoverPrimaryKey => Get(nameof(HoverPrimaryKey));
+    public static string HoverNullable => Get(nameof(HoverNullable));
+    public static string HoverNotNull => Get(nameof(HoverNotNull));
+    public static string SettingsGroupAssist => Get(nameof(SettingsGroupAssist));
+    public static string FieldValueSnippets => Get(nameof(FieldValueSnippets));
+    public static string SettingValueSnippetsInfo => Get(nameof(SettingValueSnippetsInfo));
+    public static string FieldHoverInfo => Get(nameof(FieldHoverInfo));
+    public static string SettingHoverInfoInfo => Get(nameof(SettingHoverInfoInfo));
     public static string KeysFiltered => Get(nameof(KeysFiltered));
     public static string KeysMore => Get(nameof(KeysMore));
     public static string KeyTtl => Get(nameof(KeyTtl));

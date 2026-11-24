@@ -240,6 +240,31 @@
                                 </Border>
                             </StackPanel>
                         </Border>
+                        <TextBlock Text="{x:Static res:Strings.SettingsGroupAssist}" Style="{StaticResource Settings.Group}" />
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <Border Style="{StaticResource Settings.Row}" BorderThickness="0">
+                                    <DockPanel>
+                                        <CheckBox x:Name="ValueSnippetsSwitch" DockPanel.Dock="Right" Style="{StaticResource Switch}" Margin="24,0,0,0" VerticalAlignment="Center"
+                                                  IsChecked="{Binding ValueSnippets}" />
+                                        <StackPanel>
+                                            <TextBlock Text="{x:Static res:Strings.FieldValueSnippets}" Style="{StaticResource Settings.RowTitle}" />
+                                            <TextBlock Text="{x:Static res:Strings.SettingValueSnippetsInfo}" Style="{StaticResource Settings.RowInfo}" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
+                                <Border Style="{StaticResource Settings.Row}">
+                                    <DockPanel>
+                                        <CheckBox x:Name="HoverInfoSwitch" DockPanel.Dock="Right" Style="{StaticResource Switch}" Margin="24,0,0,0" VerticalAlignment="Center"
+                                                  IsChecked="{Binding HoverInfo}" />
+                                        <StackPanel>
+                                            <TextBlock Text="{x:Static res:Strings.FieldHoverInfo}" Style="{StaticResource Settings.RowTitle}" />
+                                            <TextBlock Text="{x:Static res:Strings.SettingHoverInfoInfo}" Style="{StaticResource Settings.RowInfo}" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
                         <TextBlock Text="{x:Static res:Strings.SettingPreview}" Style="{StaticResource Settings.Group}" />
                         <Border Style="{StaticResource Card}" Height="150">
                             <e:SqlEditor x:Name="EditorPreview" Margin="4,8,4,4" IsReadOnly="True" LanguageService="{Binding PreviewLanguage}"

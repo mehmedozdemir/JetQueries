@@ -28,6 +28,12 @@ public partial class QueryDocumentView : UserControl
             ? viewModel.SignatureHelpAsync(text, offset, token)
             : Task.FromResult<SignatureHelp?>(null);
         Editor.SnippetLookup = shortcut => (DataContext as QueryDocumentViewModel)?.Snippets?.Find(shortcut)?.Text;
+
+        // Settings, SQL editor: a table's or column's card on hover, " = ''" after a text column in a condition.
+        Editor.HoverSource = (text, offset, token) => Services.AppearanceService.HoverInfo && DataContext is QueryDocumentViewModel viewModel
+            ? viewModel.HoverAsync(text, offset, token)
+            : Task.FromResult<SqlHoverInfo?>(null);
+        Editor.CompletionSuffix = (text, start, end, item) => Services.AppearanceService.ValueSnippets ? ValueSnippet.After(text, start, end, item) : null;
         Editor.NavigationRequested += (_, offset) =>
         {
             if (DataContext is QueryDocumentViewModel viewModel)
