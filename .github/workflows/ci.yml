@@ -86,6 +86,14 @@ jobs:
         shell: pwsh
         run: scripts/pack.ps1 -Channel ${{ startsWith(github.ref, 'refs/tags/v') && 'stable' || 'nightly' }}
 
+      # CLAUDE.md budgets on the published build: window shown under 1.5 s, idle memory under 200 MB (software
+      # rendering; the runner has no GPU).
+      - name: Performance budgets
+        shell: pwsh
+        env:
+          JETQUERIES_BUDGET_EXE: ${{ github.workspace }}\artifacts\publish\win-x64\JetQueries.exe
+        run: dotnet test tests/JetQueries.Wpf.Tests -c Release --filter "FullyQualifiedName~BudgetTests&DisplayName~software"
+
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:

@@ -215,6 +215,8 @@
   <data name="SettingUpdateOnStartupInfo" xml:space="preserve"><value>Looks for a newer version in the background; the status bar says when there is one.</value></data>
   <data name="FieldCurrentVersion" xml:space="preserve"><value>Running version</value></data>
   <data name="UpdateSourcePlaceholder" xml:space="preserve"><value>https://… or the releases folder of pack.ps1 (artifacts/releases/win-x64)</value></data>
+  <data name="FieldHardwareRendering" xml:space="preserve"><value>Hardware acceleration (GPU)</value></data>
+  <data name="SettingHardwareRenderingInfo" xml:space="preserve"><value>On: smoother scrolling. Off: drawn by the CPU, about 160 MB less memory. Takes effect at the next start.</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Clear all</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Remove filter</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} of {1:N0} rows</value></data>
