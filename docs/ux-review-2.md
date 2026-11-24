@@ -44,6 +44,11 @@ Priorities: **P1** hurts daily work or safety · **P2** friction or inconsistenc
   statement at the cursor) would teach the shortcuts where they matter.
 
 ## Explorer
+- **P1** Deleting a connection is effectively missing: it exists only as the trash icon in the explorer's
+  toolbar (icon-only since the first review). It is not in the connection's right-click menu, not in the
+  main menu (Connection) nor the command palette, and the Delete key does nothing on a selected connection.
+  It should be in all of these (with the existing confirmation; the connection is closed, its saved password
+  removed), next to "Edit connection", which has the same problem.
 - **P2** Drag-and-drop shows only a highlighted target; an insertion caption ("Move to Customer A") next to
   the cursor would confirm what will happen, and Esc should cancel visibly.
 - **P3** No multi-select: moving several connections into a folder takes one drag each.
