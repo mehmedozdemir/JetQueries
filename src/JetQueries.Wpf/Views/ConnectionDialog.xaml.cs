@@ -74,11 +74,28 @@ public partial class ConnectionDialog : Window
     // PasswordBox does not bind its password (by design); it is handed over as it is typed and kept nowhere else.
     private void OnPasswordChanged(object sender, RoutedEventArgs e) => _viewModel.Password = PasswordInput.Password;
 
-    // A file setting (an SQLite database): pick an existing file; a new one can still be typed.
+    // A file setting (an SQLite database): pick an existing file; a new one can still be typed. A folder setting
+    // (Oracle's TNS and wallet folders): pick a folder.
     private void OnBrowseClick(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement { DataContext: SettingFieldViewModel field })
         {
+            return;
+        }
+
+        if (field.IsFolderPath)
+        {
+            var folder = new OpenFolderDialog { Title = Strings.BrowseFolder };
+            if (System.IO.Directory.Exists(field.Value))
+            {
+                folder.InitialDirectory = field.Value;
+            }
+
+            if (folder.ShowDialog(this) == true)
+            {
+                field.Value = folder.FolderName;
+            }
+
             return;
         }
 

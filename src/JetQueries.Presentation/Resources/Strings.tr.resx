@@ -449,6 +449,16 @@
   <data name="HistoryWindowTitle" xml:space="preserve"><value>Sorgu geçmişi</value></data>
   <data name="HistoryCopy" xml:space="preserve"><value>Kopyala</value></data>
   <data name="ConnectionAdvanced" xml:space="preserve"><value>Gelişmiş</value></data>
+  <data name="Setting_connectionType" xml:space="preserve"><value>Bağlantı biçimi</value></data>
+  <data name="SettingOption_connectionType_basic" xml:space="preserve"><value>Sunucu ve servis adı</value></data>
+  <data name="SettingOption_connectionType_tns" xml:space="preserve"><value>TNS adı (tnsnames.ora)</value></data>
+  <data name="Setting_tnsAlias" xml:space="preserve"><value>TNS adı</value></data>
+  <data name="SettingHint_tnsAlias" xml:space="preserve"><value>tnsnames.ora içindeki bir ad</value></data>
+  <data name="Setting_tnsAdmin" xml:space="preserve"><value>TNS klasörü</value></data>
+  <data name="SettingHint_tnsAdmin" xml:space="preserve"><value>tnsnames.ora dosyasının klasörü; boşsa TNS_ADMIN, sonra ORACLE_HOME\network\admin</value></data>
+  <data name="Setting_walletLocation" xml:space="preserve"><value>Wallet klasörü</value></data>
+  <data name="SettingHint_walletLocation" xml:space="preserve"><value>TCPS ya da Autonomous Database için Oracle wallet (cwallet.sso); çoğu zaman aynı klasör</value></data>
+  <data name="BrowseFolder" xml:space="preserve"><value>Klasör seçin</value></data>
   <data name="Setting_serviceName" xml:space="preserve"><value>Servis adı</value></data>
   <data name="Setting_sid" xml:space="preserve"><value>SID</value></data>
   <data name="Setting_role" xml:space="preserve"><value>Bağlanma rolü</value></data>

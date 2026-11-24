@@ -58,7 +58,22 @@ public partial class SettingFieldViewModel : ObservableObject
 
     public bool IsRequired => Descriptor.IsRequired;
 
-    public bool IsText => Descriptor.Kind is ConnectionSettingKind.Text or ConnectionSettingKind.Number;
+    public bool IsText => Descriptor.Kind is ConnectionSettingKind.Text or ConnectionSettingKind.Number && !Descriptor.HasSuggestions;
+
+    /// <summary>Text the provider can suggest values for (TNS aliases): a list the user may still type over.</summary>
+    public bool IsSuggested => Descriptor.HasSuggestions;
+
+    /// <summary>The provider's suggestions, read in the background when the field is shown.</summary>
+    public ObservableCollection<ConnectionSettingOption> Suggestions { get; } = [];
+
+    /// <summary>A file or folder path: shown with a browse button, on a row of its own.</summary>
+    public bool IsPath => IsFilePath || IsFolderPath;
+
+    public bool IsFolderPath => Descriptor.Kind == ConnectionSettingKind.FolderPath;
+
+    /// <summary>Whether the setting applies to the other values (see <see cref="ConnectionSettingDescriptor.VisibleWhen"/>).</summary>
+    [ObservableProperty]
+    public partial bool IsVisible { get; set; } = true;
 
     public bool IsBoolean => Descriptor.Kind == ConnectionSettingKind.Boolean;
 
@@ -257,7 +272,8 @@ public partial class ConnectionEditorViewModel : ObservableObject
             field.SelectedOption = field.OptionFor(value);
         }
 
-        ShowAdvanced = Fields.Any(static f => f.IsAdvanced && f.IsChanged);
+        UpdateVisibility();
+        ShowAdvanced = Fields.Any(static f => f.IsAdvanced && f.IsVisible && f.IsChanged);
         UpdateNeedsCredential();
         if (NeedsCredential && parsed.UserName is { Length: > 0 } user)
         {
@@ -292,12 +308,12 @@ public partial class ConnectionEditorViewModel : ObservableObject
     private string SuggestName(IReadOnlyDictionary<string, string> settings)
     {
         var endpoint = (SelectedProvider?.Provider as IConnectionSettingsProvider)?.GetEndpoint(settings);
-        var field = Fields.FirstOrDefault(static f => f.IsFilePath && f.Value.Length > 0);
+        var field = Fields.FirstOrDefault(static f => f.IsFilePath && f.IsVisible && f.Value.Length > 0);
         var place = field is not null
             ? Path.GetFileName(field.Value)
-            : endpoint?.Host ?? Fields.FirstOrDefault(static f => f.IsRequired && f.Value.Length > 0)?.Value ?? string.Empty;
+            : endpoint?.Host ?? Fields.FirstOrDefault(static f => f.IsRequired && f.IsVisible && f.Value.Length > 0)?.Value ?? string.Empty;
         // The first optional text setting that has a value: the database, service name… of the provider.
-        var database = Fields.FirstOrDefault(static f => !f.IsRequired && f.Descriptor.Kind == ConnectionSettingKind.Text && f.Value.Length > 0)?.Value;
+        var database = Fields.FirstOrDefault(static f => !f.IsRequired && f.IsVisible && f.Descriptor.Kind == ConnectionSettingKind.Text && f.Value.Length > 0)?.Value;
         return database is null || place.Length == 0 ? place : place + " / " + database;
     }
 
@@ -420,14 +436,72 @@ public partial class ConnectionEditorViewModel : ObservableObject
             }
         }
 
+        UpdateVisibility();
         UpdateNeedsCredential();
-        OnPropertyChanged(nameof(FieldColumns));
         OnPropertyChanged(nameof(HasAdvancedFields));
-        ShowAdvanced = Fields.Any(static f => f.IsAdvanced && f.IsChanged);
+        ShowAdvanced = Fields.Any(static f => f.IsAdvanced && f.IsVisible && f.IsChanged);
     }
 
-    /// <summary>Columns of the main fields: two, or one when a file path needs the width.</summary>
-    public int FieldColumns => Fields.Any(static f => f.IsFilePath) ? 1 : 2;
+    /// <summary>Columns of the main fields: two, or one when a file or folder path needs the width.</summary>
+    public int FieldColumns => Fields.Any(static f => f.IsPath && f.IsVisible) ? 1 : 2;
+
+    // Settings that apply only to some values of another (Oracle's TNS fields) are shown and hidden as it changes;
+    // a field with suggestions reads them when it is shown.
+    private void UpdateVisibility()
+    {
+        var all = Fields.Where(static f => !string.IsNullOrWhiteSpace(f.Value)).ToDictionary(static f => f.Key, static f => f.Value.Trim(), StringComparer.Ordinal);
+        foreach (var field in Fields)
+        {
+            var condition = field.Descriptor.VisibleWhen;
+            field.IsVisible = condition is null || condition.IsMet(all, Fields.FirstOrDefault(f => f.Key == condition.Key)?.Descriptor.DefaultValue);
+        }
+
+        OnPropertyChanged(nameof(FieldColumns));
+        LoadSuggestions();
+    }
+
+    private int _suggestionsVersion;
+
+    private void LoadSuggestions()
+    {
+        if (SelectedProvider?.Provider is not IConnectionSettingSuggestions provider)
+        {
+            return;
+        }
+
+        var version = ++_suggestionsVersion;
+        var settings = CurrentSettings();
+        foreach (var field in Fields.Where(static f => f.IsSuggested && f.IsVisible).ToList())
+        {
+            _ = LoadAsync(field);
+        }
+
+        async Task LoadAsync(SettingFieldViewModel field)
+        {
+            try
+            {
+                var options = await _jobs.Enqueue(
+                    "Read setting suggestions",
+                    context => provider.GetSuggestionsAsync(field.Key, settings, context.CancellationToken),
+                    JobPriority.Low).Completion;
+                if (version != _suggestionsVersion)
+                {
+                    return;
+                }
+
+                field.Suggestions.Clear();
+                foreach (var option in options)
+                {
+                    field.Suggestions.Add(option);
+                }
+            }
+#pragma warning disable CA1031 // Suggestions are a convenience: an unreadable file means none.
+            catch (Exception)
+#pragma warning restore CA1031
+            {
+            }
+        }
+    }
 
     /// <summary>Whether the type has fields under "Advanced".</summary>
     public bool HasAdvancedFields => Fields.Any(static f => f.IsAdvanced);
@@ -440,6 +514,12 @@ public partial class ConnectionEditorViewModel : ObservableObject
     {
         if (e.PropertyName == nameof(SettingFieldViewModel.Value))
         {
+            // A field others depend on (the connection type, the TNS folder) changes what is shown and suggested.
+            if (sender is SettingFieldViewModel changed && Fields.Any(f => f.Descriptor.VisibleWhen?.Key == changed.Key || (f.IsSuggested && f != changed && changed.IsPath)))
+            {
+                UpdateVisibility();
+            }
+
             UpdateNeedsCredential();
         }
     }
@@ -448,8 +528,9 @@ public partial class ConnectionEditorViewModel : ObservableObject
         NeedsCredential = SelectedProvider is not null &&
                           ((SelectedProvider.Provider as IConnectionSettingsProvider)?.RequiresCredential(CurrentSettings()) ?? true);
 
+    // Only what applies: a hidden setting (the host of a TNS connection) is not saved.
     private Dictionary<string, string> CurrentSettings() =>
-        Fields.Where(static f => !string.IsNullOrWhiteSpace(f.Value)).ToDictionary(static f => f.Key, static f => f.Value.Trim(), StringComparer.Ordinal);
+        Fields.Where(static f => f.IsVisible && !string.IsNullOrWhiteSpace(f.Value)).ToDictionary(static f => f.Key, static f => f.Value.Trim(), StringComparer.Ordinal);
 
     private bool Validate()
     {
@@ -462,7 +543,7 @@ public partial class ConnectionEditorViewModel : ObservableObject
         {
             ValidationMessage = Strings.ValidationProviderRequired;
         }
-        else if (Fields.FirstOrDefault(static f => f.IsRequired && string.IsNullOrWhiteSpace(f.Value)) is { } missing)
+        else if (Fields.FirstOrDefault(static f => f.IsRequired && f.IsVisible && string.IsNullOrWhiteSpace(f.Value)) is { } missing)
         {
             ValidationMessage = string.Format(CultureInfo.CurrentCulture, CompositeFormat.Parse(Strings.ValidationSettingRequired), missing.Label);
         }

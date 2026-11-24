@@ -418,6 +418,32 @@ public sealed class OracleIntegrationTests(OracleFixture fixture) : IClassFixtur
         Assert.NotNull(await details.GetDetailsAsync(new DatabaseObject(new DatabaseObjectName(null, null, user), DatabaseObjectKinds.Schema), Token));
     }
 
+    [Fact]
+    public async Task A_tns_alias_from_a_tnsnames_file_connects()
+    {
+        Assert.SkipWhen(fixture.SkipReason is not null, fixture.SkipReason ?? string.Empty);
+        var folder = Path.Combine(AppContext.BaseDirectory, "tns-integration", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        var host = fixture.Profile.Settings["host"];
+        var port = fixture.Profile.Settings["port"];
+        await File.WriteAllTextAsync(
+            Path.Combine(folder, "tnsnames.ora"),
+            $"""
+            # test
+            JQ_TEST =
+              (DESCRIPTION = (ADDRESS = (PROTOCOL = TCP)(HOST = {host})(PORT = {port}))
+                (CONNECT_DATA = (SERVICE_NAME = FREEPDB1)))
+            """,
+            Token);
+        var provider = new OracleProvider();
+        var settings = new Dictionary<string, string> { ["connectionType"] = "tns", ["tnsAlias"] = "JQ_TEST", ["tnsAdmin"] = folder };
+
+        Assert.Equal("JQ_TEST", Assert.Single(await provider.GetSuggestionsAsync("tnsAlias", settings, Token)).Value);
+        await using var connection = await provider.OpenConnectionAsync(new ConnectionProfile(Guid.NewGuid(), "tns", OracleProvider.ProviderId, settings), fixture.Credential, Token);
+        var rows = (await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest("SELECT 42 AS n FROM dual"), Token))).OfType<RowBatch>().Single();
+        Assert.Equal(42m, Convert.ToDecimal(rows.Rows[0][0], System.Globalization.CultureInfo.InvariantCulture));
+    }
+
     private sealed class Recorder(List<ObjectDetails> steps) : IProgress<ObjectDetails>
     {
         public void Report(ObjectDetails value) => steps.Add(value);
