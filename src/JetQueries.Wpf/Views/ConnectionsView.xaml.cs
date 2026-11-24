@@ -103,6 +103,120 @@ public partial class ConnectionsView : UserControl
         }
     }
 
+    private Point _dragStart;
+    private ExplorerNodeViewModel? _dragNode;
+    private ExplorerNodeViewModel? _dropTarget;
+
+    // Connections and folders can be dragged onto folders (or a connection, meaning its folder, or empty space: the top).
+    private void OnTreeMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        _dragStart = e.GetPosition(Tree);
+        _dragNode = NodeAt(e.OriginalSource as DependencyObject) is { } node and (ConnectionNodeViewModel or FolderNodeViewModel) ? node : null;
+    }
+
+    private void OnTreeMouseMove(object sender, MouseEventArgs e)
+    {
+        if (_dragNode is null || e.LeftButton != MouseButtonState.Pressed)
+        {
+            return;
+        }
+
+        var moved = e.GetPosition(Tree) - _dragStart;
+        if (Math.Abs(moved.X) < SystemParameters.MinimumHorizontalDragDistance && Math.Abs(moved.Y) < SystemParameters.MinimumVerticalDragDistance)
+        {
+            return;
+        }
+
+        var node = _dragNode;
+        _dragNode = null;
+        DragDrop.DoDragDrop(Tree, new DataObject(typeof(ExplorerNodeViewModel), node), DragDropEffects.Move);
+        SetDropTarget(null);
+    }
+
+    private void OnTreeDragOver(object sender, DragEventArgs e)
+    {
+        var dragged = e.Data.GetData(typeof(ExplorerNodeViewModel)) as ExplorerNodeViewModel;
+        var target = NodeAt(e.OriginalSource as DependencyObject);
+
+        // Over an object below a connection: no drop there.
+        if (target is not null and not (ConnectionNodeViewModel or FolderNodeViewModel))
+        {
+            target = null;
+            e.Effects = DragDropEffects.None;
+            SetDropTarget(null);
+            e.Handled = true;
+            return;
+        }
+
+        var allowed = ConnectionsViewModel.CanMove(dragged, target);
+        e.Effects = allowed ? DragDropEffects.Move : DragDropEffects.None;
+        SetDropTarget(allowed ? target as FolderNodeViewModel ?? (target is ConnectionNodeViewModel ? FolderAbove(target) : null) : null);
+        e.Handled = true;
+    }
+
+    private void OnTreeDragLeave(object sender, DragEventArgs e) => SetDropTarget(null);
+
+    private async void OnTreeDrop(object sender, DragEventArgs e)
+    {
+        SetDropTarget(null);
+        if (DataContext is ConnectionsViewModel viewModel && e.Data.GetData(typeof(ExplorerNodeViewModel)) is ExplorerNodeViewModel dragged)
+        {
+            var target = NodeAt(e.OriginalSource as DependencyObject);
+            if (target is null or ConnectionNodeViewModel or FolderNodeViewModel)
+            {
+                e.Handled = true;
+                await viewModel.MoveAsync(dragged, target);
+            }
+        }
+    }
+
+    private void SetDropTarget(ExplorerNodeViewModel? node)
+    {
+        if (ReferenceEquals(node, _dropTarget))
+        {
+            return;
+        }
+
+        _dropTarget?.IsDropTarget = false;
+        _dropTarget = node;
+        _dropTarget?.IsDropTarget = true;
+    }
+
+    /// <summary>The folder that holds a node in the tree; null at the top.</summary>
+    private FolderNodeViewModel? FolderAbove(ExplorerNodeViewModel node) =>
+        DataContext is ConnectionsViewModel viewModel ? FindParent(viewModel.Roots, node) : null;
+
+    private static FolderNodeViewModel? FindParent(IEnumerable<ExplorerNodeViewModel> nodes, ExplorerNodeViewModel target)
+    {
+        foreach (var folder in nodes.OfType<FolderNodeViewModel>())
+        {
+            if (folder.Children.Contains(target))
+            {
+                return folder;
+            }
+
+            if (FindParent(folder.Children, target) is { } inside)
+            {
+                return inside;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>The node of the tree row an element belongs to; null over empty space.</summary>
+    private static ExplorerNodeViewModel? NodeAt(DependencyObject? element)
+    {
+        while (element is not null and not TreeViewItem and not TreeView)
+        {
+            element = element is System.Windows.Media.Visual or System.Windows.Media.Media3D.Visual3D
+                ? System.Windows.Media.VisualTreeHelper.GetParent(element)
+                : LogicalTreeHelper.GetParent(element);
+        }
+
+        return (element as TreeViewItem)?.DataContext as ExplorerNodeViewModel;
+    }
+
     // Double-click on a connection connects it; on anything else the tree's own expand/collapse applies.
     private void OnTreeDoubleClick(object sender, MouseButtonEventArgs e)
     {

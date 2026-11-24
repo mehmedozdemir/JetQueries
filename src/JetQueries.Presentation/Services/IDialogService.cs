@@ -41,6 +41,12 @@ public interface IDialogService
 
     /// <summary>Shows Import connections (DBeaver, SSMS); true when something was imported.</summary>
     Task<bool> ImportConnectionsAsync();
+
+    /// <summary>Asks for a line of text (a folder name); null when canceled.</summary>
+    /// <param name="title">The window title.</param>
+    /// <param name="message">What to enter.</param>
+    /// <param name="initial">The text the box starts with.</param>
+    Task<string?> PromptTextAsync(string title, string message, string initial) => Task.FromResult<string?>(null);
 }
 
 /// <summary>The answer to "save changes?".</summary>

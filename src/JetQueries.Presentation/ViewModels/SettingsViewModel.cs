@@ -97,6 +97,40 @@ public interface IThemeService
 
     /// <summary>Shows the dark or the light theme and remembers the choice.</summary>
     void SetDark(bool dark);
+
+    /// <summary>The colour scheme of the dark or the light theme (see <see cref="ColorScheme.All"/>).</summary>
+    string SchemeOf(bool dark) => dark ? "Midnight" : "Paper";
+
+    /// <summary>Chooses the colour scheme of a theme (shown at once when that theme is showing) and remembers it.</summary>
+    void SetScheme(bool dark, string scheme)
+    {
+    }
+}
+
+/// <summary>A colour scheme of the light or the dark theme, with the colours its card shows.</summary>
+/// <param name="Key">The scheme's name in UiKit (Midnight, Graphite, Paper…).</param>
+/// <param name="IsDark">Whether it belongs to the dark theme.</param>
+/// <param name="Window">The window colour.</param>
+/// <param name="Surface">The panels' colour.</param>
+/// <param name="Text">The text colour.</param>
+/// <param name="Accent">The accent colour.</param>
+public sealed record ColorScheme(string Key, bool IsDark, string Window, string Surface, string Text, string Accent)
+{
+    /// <summary>The scheme's name in the user's language.</summary>
+    public string Name => Strings.Find("Scheme_" + (IsDark ? "Dark" : "Light") + "_" + Key) ?? Key;
+
+    /// <summary>Every scheme; the first of each theme is its default.</summary>
+    public static IReadOnlyList<ColorScheme> All { get; } =
+    [
+        new("Midnight", true, "#0D0F13", "#181B22", "#F3F5F9", "#4C8DFF"),
+        new("Graphite", true, "#15171C", "#20242C", "#E7E9EE", "#5B8CFF"),
+        new("Ocean", true, "#0B141D", "#13212D", "#E8F1F8", "#22B8F0"),
+        new("Contrast", true, "#000000", "#121212", "#FFFFFF", "#6AA8FF"),
+        new("Paper", false, "#F3F4F7", "#FFFFFF", "#1C2128", "#2F6FEB"),
+        new("Sky", false, "#EAF1F8", "#FFFFFF", "#0F1B2A", "#0A63D1"),
+        new("Sand", false, "#F3EFE8", "#FFFDF8", "#1F1A14", "#B4531B"),
+        new("Contrast", false, "#FFFFFF", "#F5F5F5", "#000000", "#0047B3"),
+    ];
 }
 
 /// <summary>A choice in a list of the settings screen.</summary>
@@ -135,6 +169,7 @@ public partial class SettingsViewModel : ObservableObject
     private readonly IJobQueue _jobs;
     private readonly IAppearanceService _appearance;
     private readonly IThemeService _theme;
+    private readonly (string Dark, string Light) _originalSchemes;
     private readonly AppearanceSettings _original;
     private readonly bool _originalDark;
     private bool _loading;
@@ -196,6 +231,7 @@ public partial class SettingsViewModel : ObservableObject
         UiFontFamily = string.Empty;
         EditorFontFamily = string.Empty;
         Show(_original);
+        _originalSchemes = (theme.SchemeOf(true), theme.SchemeOf(false));
         SelectedTheme = Themes.First(t => t.Value == _originalDark);
     }
 
@@ -211,6 +247,36 @@ public partial class SettingsViewModel : ObservableObject
     public IReadOnlyList<double> GridSizes { get; } = [11, 12, 13, 14, 15, 16, 18];
 
     public ObservableCollection<SettingChoice<bool>> Themes { get; }
+
+    /// <summary>The colour schemes of the theme chosen above.</summary>
+    public ObservableCollection<ColorScheme> Schemes { get; } = [];
+
+    /// <summary>The scheme of the chosen theme; applied at once, as the theme is.</summary>
+    [ObservableProperty]
+    public partial ColorScheme? SelectedScheme { get; set; }
+
+    private bool _fillingSchemes;
+
+    partial void OnSelectedSchemeChanged(ColorScheme? value)
+    {
+        if (value is not null && !_fillingSchemes)
+        {
+            _theme.SetScheme(value.IsDark, value.Key);
+        }
+    }
+
+    private void FillSchemes(bool dark)
+    {
+        _fillingSchemes = true;
+        Schemes.Clear();
+        foreach (var scheme in ColorScheme.All.Where(s => s.IsDark == dark))
+        {
+            Schemes.Add(scheme);
+        }
+
+        SelectedScheme = Schemes.FirstOrDefault(s => s.Key == _theme.SchemeOf(dark)) ?? Schemes.FirstOrDefault();
+        _fillingSchemes = false;
+    }
 
     [ObservableProperty]
     public partial SettingChoice<bool>? SelectedTheme { get; set; }
@@ -388,6 +454,11 @@ public partial class SettingsViewModel : ObservableObject
         {
             _theme.SetDark(value.Value);
         }
+
+        if (value is not null)
+        {
+            FillSchemes(value.Value);
+        }
     }
 
     [RelayCommand]
@@ -418,6 +489,16 @@ public partial class SettingsViewModel : ObservableObject
     private void Cancel()
     {
         _appearance.Apply(_original);
+        if (_theme.SchemeOf(true) != _originalSchemes.Dark)
+        {
+            _theme.SetScheme(true, _originalSchemes.Dark);
+        }
+
+        if (_theme.SchemeOf(false) != _originalSchemes.Light)
+        {
+            _theme.SetScheme(false, _originalSchemes.Light);
+        }
+
         if (_theme.IsDark != _originalDark)
         {
             _theme.SetDark(_originalDark);

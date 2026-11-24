@@ -510,4 +510,36 @@
   <data name="ExplorerFavorites" xml:space="preserve"><value>Favourites</value></data>
   <data name="ExplorerAddFavorite" xml:space="preserve"><value>Add to favourites</value></data>
   <data name="ExplorerRemoveFavorite" xml:space="preserve"><value>Remove from favourites</value></data>
+  <data name="FolderNew" xml:space="preserve"><value>New folder</value></data>
+  <data name="FolderRename" xml:space="preserve"><value>Rename folder</value></data>
+  <data name="FolderDelete" xml:space="preserve"><value>Delete folder</value></data>
+  <data name="FolderNewTitle" xml:space="preserve"><value>New folder</value></data>
+  <data name="FolderRenameTitle" xml:space="preserve"><value>Rename folder</value></data>
+  <data name="FolderNameMessage" xml:space="preserve"><value>Folder name (without /):</value></data>
+  <data name="FolderDeleteTitle" xml:space="preserve"><value>Delete folder</value></data>
+  <data name="FolderDeleteMessage" xml:space="preserve"><value>Delete the folder "{0}"? The connections and folders in it move up one level; nothing is deleted.</value></data>
+  <data name="ExplorerDragHint" xml:space="preserve"><value>Drag connections onto folders to move them</value></data>
+  <data name="ImportChooseSourceTitle" xml:space="preserve"><value>Where from?</value></data>
+  <data name="ImportChooseSourceInfo" xml:space="preserve"><value>Choose the tool whose connections you want to bring over. Passwords are never imported.</value></data>
+  <data name="ImportSourceDBeaver" xml:space="preserve"><value>Connections of the DBeaver workspace (data-sources.json)</value></data>
+  <data name="ImportSourceSsms" xml:space="preserve"><value>Registered servers of SSMS (RegSrvr.xml)</value></data>
+  <data name="ImportSourceFile" xml:space="preserve"><value>From a file</value></data>
+  <data name="ImportSourceFileInfo" xml:space="preserve"><value>A DBeaver data-sources.json or an SSMS RegSrvr.xml copied from elsewhere</value></data>
+  <data name="ImportSourceFileHint" xml:space="preserve"><value>Choose a file…</value></data>
+  <data name="ImportSourceNotFound" xml:space="preserve"><value>Not found on this computer</value></data>
+  <data name="ImportSourceFound" xml:space="preserve"><value>{0} settings file(s) found</value></data>
+  <data name="ImportSourceNotFoundLong" xml:space="preserve"><value>Its settings were not found on this computer. Choose its file with "Choose a file".</value></data>
+  <data name="ImportKeepFolders" xml:space="preserve"><value>Keep their folders</value></data>
+  <data name="ImportTargetFolder" xml:space="preserve"><value>Into folder</value></data>
+  <data name="ImportTargetFolderHint" xml:space="preserve"><value>top level</value></data>
+  <data name="ImportBack" xml:space="preserve"><value>Sources</value></data>
+  <data name="SettingSchemeInfo" xml:space="preserve"><value>Colours of the theme chosen above; applied at once.</value></data>
+  <data name="Scheme_Dark_Midnight" xml:space="preserve"><value>Midnight</value></data>
+  <data name="Scheme_Dark_Graphite" xml:space="preserve"><value>Graphite</value></data>
+  <data name="Scheme_Dark_Ocean" xml:space="preserve"><value>Ocean</value></data>
+  <data name="Scheme_Dark_Contrast" xml:space="preserve"><value>High contrast</value></data>
+  <data name="Scheme_Light_Paper" xml:space="preserve"><value>Paper</value></data>
+  <data name="Scheme_Light_Sky" xml:space="preserve"><value>Sky</value></data>
+  <data name="Scheme_Light_Sand" xml:space="preserve"><value>Sand</value></data>
+  <data name="Scheme_Light_Contrast" xml:space="preserve"><value>High contrast</value></data>
 </root>

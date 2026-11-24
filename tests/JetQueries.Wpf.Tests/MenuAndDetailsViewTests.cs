@@ -195,8 +195,22 @@ public sealed class MenuAndDetailsViewTests
             window.Show();
             await EditorActionsTests.Idle();
 
-            Assert.True(((FrameworkElement)view.FindName("EnvironmentStrip")).IsVisible);
-            Assert.Equal("Kartlar — canlı", ((TextBlock)view.FindName("ConnectionName")).Text);
+            // The query is framed in the production colour; no strip or name repeats it.
+            var frame = (Border)view.FindName("EnvironmentFrame");
+            Assert.Same(Application.Current.FindResource("Brush.Danger"), frame.BorderBrush);
+            Assert.Null(view.FindName("EnvironmentStrip"));
+            Assert.Equal("ÜRETİM · Kartlar — canlı", frame.ToolTip);
+
+            // The splitter between editor and results is a row splitter with the ↕ cursor and drags.
+            var splitter = ShellRenderTests.Find<GridSplitter>(view);
+            Assert.Equal(System.Windows.Input.Cursors.SizeNS, splitter.Cursor);
+            var rows = ((Grid)splitter.Parent).RowDefinitions;
+            var before = rows[1].ActualHeight;
+            splitter.RaiseEvent(new System.Windows.Controls.Primitives.DragStartedEventArgs(0, 0) { RoutedEvent = System.Windows.Controls.Primitives.Thumb.DragStartedEvent });
+            splitter.RaiseEvent(new System.Windows.Controls.Primitives.DragDeltaEventArgs(0, -60) { RoutedEvent = System.Windows.Controls.Primitives.Thumb.DragDeltaEvent });
+            splitter.RaiseEvent(new System.Windows.Controls.Primitives.DragCompletedEventArgs(0, -60, false) { RoutedEvent = System.Windows.Controls.Primitives.Thumb.DragCompletedEvent });
+            await EditorActionsTests.Idle();
+            Assert.True(rows[1].ActualHeight < before - 30, $"{before} → {rows[1].ActualHeight}");
             foreach (var theme in new[] { AppTheme.Dark, AppTheme.Light })
             {
                 ThemeManager.Apply(theme, save: false);

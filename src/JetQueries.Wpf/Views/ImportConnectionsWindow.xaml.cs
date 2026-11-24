@@ -23,6 +23,7 @@ public partial class ImportConnectionsWindow : Window
             Imported = imported;
             Close();
         };
+        viewModel.FileRequested += OnFileRequested;
         if (discover)
         {
             Loaded += (_, _) => _ = viewModel.DiscoverAsync();
@@ -32,12 +33,19 @@ public partial class ImportConnectionsWindow : Window
     /// <summary>Something was imported.</summary>
     public bool Imported { get; private set; }
 
-    private void OnChooseFile(object sender, RoutedEventArgs e)
+    // A file of the chosen source (DBeaver's JSON, SSMS's XML, or either).
+    private void OnFileRequested(object? sender, string source)
     {
-        var dialog = new OpenFileDialog { Filter = Strings.ImportFileFilter, CheckFileExists = true };
+        var filter = source switch
+        {
+            ImportSource.DBeaver => "DBeaver (data-sources*.json)|data-sources*.json|JSON (*.json)|*.json",
+            ImportSource.Ssms => "SSMS (RegSrvr*.xml)|RegSrvr*.xml|XML (*.xml)|*.xml",
+            _ => Strings.ImportFileFilter,
+        };
+        var dialog = new OpenFileDialog { Filter = filter, CheckFileExists = true };
         if (dialog.ShowDialog(this) == true)
         {
-            _ = _viewModel.AddFileAsync(dialog.FileName);
+            _ = _viewModel.AddFileAsync(dialog.FileName, _viewModel.SelectedSource?.Key == ImportSource.File ? null : _viewModel.SelectedSource?.Title);
         }
     }
 }

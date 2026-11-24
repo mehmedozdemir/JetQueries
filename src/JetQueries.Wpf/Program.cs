@@ -51,6 +51,7 @@ internal static class Program
         builder.Services.AddSingleton<IDialogService, WpfDialogService>();
         builder.Services.AddSingleton<IUiDispatcher, WpfUiDispatcher>();
         builder.Services.AddSingleton<FavoriteObjects>();
+        builder.Services.AddSingleton<ConnectionFolders>();
         builder.Services.AddSingleton<ConnectionsViewModel>();
         builder.Services.AddSingleton<DocumentsViewModel>();
         builder.Services.AddSingleton<HistoryViewModel>();
