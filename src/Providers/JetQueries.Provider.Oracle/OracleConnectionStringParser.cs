@@ -70,6 +70,9 @@ internal static partial class OracleConnectionStringParser
         string? user = null;
         string? password = null;
         var hasAddress = false;
+
+        // The TNS and wallet folders apply to a TNS alias only; with host:port/service they are not used.
+        var folders = new List<(string Key, string Value)>();
         foreach (var (key, value) in ConnectionStringText.ReadPairs(text))
         {
             switch (ConnectionStringText.Normalize(key))
@@ -116,6 +119,9 @@ internal static partial class OracleConnectionStringParser
                     }
 
                     break;
+                case "TNSADMIN" or "WALLETLOCATION" when value.Trim().Length > 0:
+                    folders.Add((key, value.Trim()));
+                    break;
                 case var other when Tuning.Contains(other):
                     break;
                 default:
@@ -127,6 +133,18 @@ internal static partial class OracleConnectionStringParser
         if (!hasAddress)
         {
             throw new FormatException("The connection string has no Data Source.");
+        }
+
+        foreach (var (key, value) in folders)
+        {
+            if (OracleConnectionSettings.IsTns(settings))
+            {
+                settings[ConnectionStringText.Normalize(key) == "TNSADMIN" ? OracleConnectionSettings.TnsAdmin : OracleConnectionSettings.WalletLocation] = value;
+            }
+            else
+            {
+                ignored.Add(key);
+            }
         }
 
         return new ParsedConnectionString { Settings = settings, UserName = user, Password = password, Ignored = ignored };
@@ -160,9 +178,12 @@ internal static partial class OracleConnectionStringParser
 
             // host:port:SID (JDBC); after a service name the same place holds the server type (dedicated…).
             sid = service is null && match.Groups["tail"].Success ? match.Groups["tail"].Value : null;
+            // A bare name is a TNS alias: the driver finds it in tnsnames.ora.
             if (port is null && service is null && sid is null && !address.StartsWith("//", StringComparison.Ordinal))
             {
-                throw new FormatException("TNS names (tnsnames.ora aliases) are not supported: give host:port/service.");
+                settings[OracleConnectionSettings.ConnectionType] = OracleConnectionSettings.Tns;
+                settings[OracleConnectionSettings.TnsAlias] = address;
+                return;
             }
         }
 

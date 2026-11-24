@@ -52,6 +52,14 @@ public sealed class ConnectionDialogTests
             Assert.True(editor.IsFormMode);
             await Shoot("form");
 
+            // Oracle by TNS alias: the alias list and the two folders, one to a row.
+            editor.ChangeTypeCommand.Execute(null);
+            editor.ChooseTypeCommand.Execute(editor.Providers.Single(static p => p.Provider is OracleProvider));
+            var type = editor.Fields.Single(static f => f.Key == "connectionType");
+            type.SelectedOption = type.OptionFor("tns");
+            editor.Fields.Single(static f => f.Key == "tnsAlias").Value = "PRODDB";
+            await Shoot("oracle-tns");
+
             ThemeManager.Apply(AppTheme.Dark, save: false);
             dialog.Close();
             return results;

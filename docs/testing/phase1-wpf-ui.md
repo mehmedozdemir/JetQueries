@@ -495,3 +495,15 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] Open a PostgreSQL connection, switch the tab's database to another one: "SELECT * FROM " offers that
       database's tables, "alias." its columns; switching back offers the first database's tables again.
 - [ ] Ctrl+Click a table of the other database: its details open (subtitle shows that database), with columns.
+
+## Oracle TNS aliases and wallet
+- [ ] New connection > Oracle: "Bağlantı biçimi" is "Sunucu ve servis adı" with host, port, service, SID as before.
+- [ ] Switch it to "TNS adı (tnsnames.ora)": host/port/service/SID disappear (port also from "Gelişmiş"); TNS adı,
+      TNS klasörü and Wallet klasörü appear, each folder on a row with "Gözat…" opening a folder picker.
+- [ ] Choose the folder of your tnsnames.ora: the TNS adı list shows its aliases as "ALIAS — host:port/service";
+      picking one fills the box; any other name can still be typed. With the folder empty, TNS_ADMIN is used.
+- [ ] Save without an alias: "TNS adı" is reported as required. Save with one: the connection opens and runs a query
+      (with VPN, against a real alias). Reopen the editor: the TNS fields are back, no stale host is kept.
+- [ ] Wallet (Autonomous Database / TCPS): point both folders at the unzipped wallet and use a *_high alias.
+- [ ] Paste "User Id=hr;Password=…;Data Source=PRODDB;Tns_Admin=C:\oracle\network\admin" in the connection string
+      tab: the form switches to TNS adı with PRODDB and the folder filled in.

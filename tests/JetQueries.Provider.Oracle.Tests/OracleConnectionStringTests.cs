@@ -51,14 +51,24 @@ public sealed class OracleConnectionStringTests
         Assert.Equal("p@w", Parse("hr/p@w@db:1521/FREE").Password);
     }
 
-    [Theory]
-    [InlineData("User Id=hr;Password=pw;Data Source=PRODDB")]
-    [InlineData("PRODDB")]
-    [InlineData("User Id=hr;Password=pw")]
-    public void Tns_aliases_and_missing_addresses_are_refused(string text)
+    [Fact]
+    public void A_missing_address_is_refused()
     {
-        var error = Assert.Throws<FormatException>(() => Parse(text));
+        var error = Assert.Throws<FormatException>(() => Parse("User Id=hr;Password=pw"));
         Assert.DoesNotContain("pw", error.Message, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("User Id=hr;Password=pw;Data Source=PRODDB;Tns_Admin=C:\\oracle\\network\\admin;Wallet_Location=C:\\wallet", "PRODDB", "C:\\oracle\\network\\admin")]
+    [InlineData("hr/pw@PRODDB", "PRODDB", null)]
+    public void A_bare_name_is_a_tns_alias_with_its_folders(string text, string alias, string? folder)
+    {
+        var parsed = Parse(text);
+        Assert.Equal("tns", parsed.Settings["connectionType"]);
+        Assert.Equal(alias, parsed.Settings["tnsAlias"]);
+        Assert.Equal(folder, parsed.Settings.GetValueOrDefault("tnsAdmin"));
+        Assert.False(parsed.Settings.ContainsKey("host"));
+        Assert.Null(new OracleProvider().GetEndpoint(parsed.Settings));
     }
 
     [Fact]

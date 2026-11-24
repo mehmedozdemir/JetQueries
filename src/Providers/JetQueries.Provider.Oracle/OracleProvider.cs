@@ -19,7 +19,7 @@ public sealed class OracleExtension : IExtension
 }
 
 /// <summary>Database provider for Oracle Database, on the managed ODP.NET driver (no Oracle client installation needed).</summary>
-public sealed class OracleProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport,
+public sealed class OracleProvider : IDatabaseProvider, IConnectionSettingsProvider, IConnectionSettingSuggestions, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport,
     IConnectionStringImport, IProviderAppearance, IObjectScripting
 {
     /// <summary>The provider identifier stored in connection profiles.</summary>
@@ -55,10 +55,26 @@ public sealed class OracleProvider : IDatabaseProvider, IConnectionSettingsProvi
     /// <inheritdoc />
     public IReadOnlyList<ConnectionSettingDescriptor> ConnectionSettings { get; } =
     [
-        new(OracleConnectionSettings.Host, "Host", ConnectionSettingKind.Text) { IsRequired = true },
-        new(OracleConnectionSettings.Port, "Port", ConnectionSettingKind.Number) { DefaultValue = "1521" },
-        new(OracleConnectionSettings.ServiceName, "Service name", ConnectionSettingKind.Text) { Hint = "for example ORCLPDB1; leave empty when a SID is given" },
-        new(OracleConnectionSettings.Sid, "SID", ConnectionSettingKind.Text) { Hint = "only for databases without a service name" },
+        new(OracleConnectionSettings.ConnectionType, "Connect with", ConnectionSettingKind.Choice)
+        {
+            DefaultValue = OracleConnectionSettings.Basic,
+            Options = [new(OracleConnectionSettings.Basic, "Host and service name"), new(OracleConnectionSettings.Tns, "TNS alias (tnsnames.ora)")],
+        },
+        new(OracleConnectionSettings.Host, "Host", ConnectionSettingKind.Text) { IsRequired = true, VisibleWhen = BasicOnly },
+        new(OracleConnectionSettings.Port, "Port", ConnectionSettingKind.Number) { DefaultValue = "1521", VisibleWhen = BasicOnly },
+        new(OracleConnectionSettings.ServiceName, "Service name", ConnectionSettingKind.Text) { Hint = "for example ORCLPDB1; leave empty when a SID is given", VisibleWhen = BasicOnly },
+        new(OracleConnectionSettings.Sid, "SID", ConnectionSettingKind.Text) { Hint = "only for databases without a service name", VisibleWhen = BasicOnly },
+        new(OracleConnectionSettings.TnsAlias, "TNS alias", ConnectionSettingKind.Text) { IsRequired = true, HasSuggestions = true, Hint = "a name from tnsnames.ora", VisibleWhen = TnsOnly },
+        new(OracleConnectionSettings.TnsAdmin, "TNS folder", ConnectionSettingKind.FolderPath)
+        {
+            Hint = "the folder of tnsnames.ora; empty: TNS_ADMIN, then ORACLE_HOME\\network\\admin",
+            VisibleWhen = TnsOnly,
+        },
+        new(OracleConnectionSettings.WalletLocation, "Wallet folder", ConnectionSettingKind.FolderPath)
+        {
+            Hint = "an Oracle wallet (cwallet.sso) for TCPS or Autonomous Database; often the same folder",
+            VisibleWhen = TnsOnly,
+        },
         new(OracleConnectionSettings.Role, "Connect as", ConnectionSettingKind.Choice)
         {
             DefaultValue = "normal",
@@ -67,13 +83,43 @@ public sealed class OracleProvider : IDatabaseProvider, IConnectionSettingsProvi
         new(OracleConnectionSettings.ConnectTimeoutSeconds, "Connect timeout (s)", ConnectionSettingKind.Number) { DefaultValue = "15" },
     ];
 
+    private static readonly ConnectionSettingCondition BasicOnly = new(OracleConnectionSettings.ConnectionType, OracleConnectionSettings.Basic);
+    private static readonly ConnectionSettingCondition TnsOnly = new(OracleConnectionSettings.ConnectionType, OracleConnectionSettings.Tns);
+
     /// <inheritdoc />
     public bool RequiresCredential(IReadOnlyDictionary<string, string> settings) => true;
+
+    /// <inheritdoc />
+    /// <remarks>The aliases of the tnsnames.ora the connection would read, with where each one points.</remarks>
+    public async Task<IReadOnlyList<ConnectionSettingOption>> GetSuggestionsAsync(string key, IReadOnlyDictionary<string, string> settings, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        if (key != OracleConnectionSettings.TnsAlias || OracleConnectionSettings.TnsFolder(settings) is not { } folder)
+        {
+            return [];
+        }
+
+        var path = Path.Combine(folder, "tnsnames.ora");
+        if (!File.Exists(path))
+        {
+            return [];
+        }
+
+        var text = await File.ReadAllTextAsync(path, cancellationToken).ConfigureAwait(false);
+        return [.. TnsNames.Parse(text).Select(static e => new ConnectionSettingOption(e.Alias, e.Describe()))];
+    }
 
     /// <inheritdoc />
     public NetworkEndpoint? GetEndpoint(IReadOnlyDictionary<string, string> settings)
     {
         ArgumentNullException.ThrowIfNull(settings);
+
+        // A TNS alias is resolved by the driver from tnsnames.ora; no file is read here.
+        if (OracleConnectionSettings.IsTns(settings))
+        {
+            return null;
+        }
+
         return settings.TryGetValue(OracleConnectionSettings.Host, out var host) && !string.IsNullOrWhiteSpace(host) &&
                OracleConnectionSettings.TryGetPort(settings, out var port)
             ? new NetworkEndpoint(host.Trim(), port)
@@ -402,12 +448,20 @@ internal static class OracleNames
 }
 
 /// <summary>
-/// Turns a connection profile into an ODP.NET connection string. Settings: <c>host</c> (required), <c>port</c>
-/// (default 1521), <c>serviceName</c> or <c>sid</c> (one of them), <c>role</c> (<c>normal</c>, <c>sysdba</c>,
-/// <c>sysoper</c>), <c>connectTimeoutSeconds</c> (default 15).
+/// Turns a connection profile into an ODP.NET connection string. Settings: <c>connectionType</c> (<c>basic</c>,
+/// the default, or <c>tns</c>); for basic <c>host</c> (required), <c>port</c> (default 1521), <c>serviceName</c>
+/// or <c>sid</c> (one of them); for tns <c>tnsAlias</c> (required), <c>tnsAdmin</c> (the folder of tnsnames.ora;
+/// default TNS_ADMIN, then ORACLE_HOME\network\admin) and <c>walletLocation</c>; and <c>role</c> (<c>normal</c>,
+/// <c>sysdba</c>, <c>sysoper</c>), <c>connectTimeoutSeconds</c> (default 15).
 /// </summary>
 internal static class OracleConnectionSettings
 {
+    public const string ConnectionType = "connectionType";
+    public const string Basic = "basic";
+    public const string Tns = "tns";
+    public const string TnsAlias = "tnsAlias";
+    public const string TnsAdmin = "tnsAdmin";
+    public const string WalletLocation = "walletLocation";
     public const string Host = "host";
     public const string Port = "port";
     public const string ServiceName = "serviceName";
@@ -422,46 +476,98 @@ internal static class OracleConnectionSettings
                (int.TryParse(text.Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out port) && port is >= 1 and <= 65535);
     }
 
+    public static bool IsTns(IReadOnlyDictionary<string, string> settings) =>
+        string.Equals(settings.GetValueOrDefault(ConnectionType)?.Trim(), Tns, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>The folder of tnsnames.ora: the setting, else TNS_ADMIN, else ORACLE_HOME\network\admin; null when none is known.</summary>
+    public static string? TnsFolder(IReadOnlyDictionary<string, string> settings)
+    {
+        if (settings.GetValueOrDefault(TnsAdmin)?.Trim() is { Length: > 0 } folder)
+        {
+            return folder;
+        }
+
+        if (Environment.GetEnvironmentVariable("TNS_ADMIN")?.Trim() is { Length: > 0 } fromEnvironment)
+        {
+            return fromEnvironment;
+        }
+
+        return Environment.GetEnvironmentVariable("ORACLE_HOME")?.Trim() is { Length: > 0 } home ? Path.Combine(home, "network", "admin") : null;
+    }
+
     /// <summary>Builds the connection string. The result contains the password and must never be logged or stored.</summary>
     /// <exception cref="ArgumentException">A setting is missing or has a value that is not understood.</exception>
     public static string BuildConnectionString(ConnectionProfile profile, ConnectionCredential? credential)
     {
         ArgumentNullException.ThrowIfNull(profile);
         var settings = profile.Settings;
+        var builder = IsTns(settings) ? TnsBuilder(settings) : BasicBuilder(settings);
+        if (string.IsNullOrEmpty(credential?.UserName))
+        {
+            throw new ArgumentException("An Oracle connection needs a user name.", nameof(credential));
+        }
 
+        builder.UserID = credential.UserName;
+        builder.Password = credential.Password ?? string.Empty;
+        builder.PersistSecurityInfo = false;
+        builder.ConnectionTimeout = 15;
+        return Finish(builder, settings);
+    }
+
+    // A TNS alias: the driver reads its descriptor from tnsnames.ora in the given folder; a wallet folder adds
+    // TCPS certificates (Autonomous Database).
+    private static OracleConnectionStringBuilder TnsBuilder(IReadOnlyDictionary<string, string> settings)
+    {
+        var alias = Required(settings, TnsAlias, "The connection has no TNS alias.");
+        var builder = new OracleConnectionStringBuilder { DataSource = Plain(alias, TnsAlias) };
+        if (TnsFolder(settings) is { } folder)
+        {
+            builder.TnsAdmin = Folder(folder, TnsAdmin);
+        }
+
+        if (settings.GetValueOrDefault(WalletLocation)?.Trim() is { Length: > 0 } wallet)
+        {
+            builder.WalletLocation = Folder(wallet, WalletLocation);
+        }
+
+        return builder;
+    }
+
+    // A folder path goes into the connection string: characters that would end its value are refused.
+    private static string Folder(string path, string setting) =>
+        path.IndexOfAny([';', '"', '\'', '=', '\r', '\n']) >= 0
+            ? throw new ArgumentException($"'{setting}' contains a character that is not allowed in a folder path here.", nameof(path))
+            : path;
+
+    private static OracleConnectionStringBuilder BasicBuilder(IReadOnlyDictionary<string, string> settings)
+    {
         var host = Required(settings, Host, "The connection has no host.");
         if (!TryGetPort(settings, out var port))
         {
-            throw new ArgumentException($"'{Port}' must be a whole number from 1 to 65535.", nameof(profile));
+            throw new ArgumentException($"'{Port}' must be a whole number from 1 to 65535.", nameof(settings));
         }
 
         var service = settings.GetValueOrDefault(ServiceName)?.Trim();
         var sid = settings.GetValueOrDefault(Sid)?.Trim();
         if (string.IsNullOrEmpty(service) == string.IsNullOrEmpty(sid))
         {
-            throw new ArgumentException("Give either a service name or a SID.", nameof(profile));
-        }
-
-        if (string.IsNullOrEmpty(credential?.UserName))
-        {
-            throw new ArgumentException("An Oracle connection needs a user name.", nameof(credential));
+            throw new ArgumentException("Give either a service name or a SID.", nameof(settings));
         }
 
         // The address goes into a connect descriptor, whose syntax is built from parentheses and '='. Those
         // characters cannot occur in a host, service or SID, so a value containing them is refused instead of
         // being allowed to change the descriptor.
         var target = string.IsNullOrEmpty(service) ? $"(SID={Plain(sid!, Sid)})" : $"(SERVICE_NAME={Plain(service, ServiceName)})";
-        var builder = new OracleConnectionStringBuilder
+        return new OracleConnectionStringBuilder
         {
             DataSource = string.Create(
                 CultureInfo.InvariantCulture,
                 $"(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST={Plain(host, Host)})(PORT={port}))(CONNECT_DATA={target}))"),
-            UserID = credential.UserName,
-            Password = credential.Password ?? string.Empty,
-            PersistSecurityInfo = false,
-            ConnectionTimeout = 15,
         };
+    }
 
+    private static string Finish(OracleConnectionStringBuilder builder, IReadOnlyDictionary<string, string> settings)
+    {
         var role = settings.GetValueOrDefault(Role, "normal").Trim().ToUpperInvariant();
         switch (role)
         {
@@ -471,14 +577,14 @@ internal static class OracleConnectionSettings
                 builder.DBAPrivilege = role;
                 break;
             default:
-                throw new ArgumentException($"Unknown role '{settings[Role]}'. Use 'normal', 'sysdba' or 'sysoper'.", nameof(profile));
+                throw new ArgumentException($"Unknown role '{settings[Role]}'. Use 'normal', 'sysdba' or 'sysoper'.", nameof(settings));
         }
 
         if (settings.TryGetValue(ConnectTimeoutSeconds, out var timeout) && !string.IsNullOrWhiteSpace(timeout))
         {
             if (!int.TryParse(timeout.Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out var seconds) || seconds is < 1 or > 600)
             {
-                throw new ArgumentException($"'{ConnectTimeoutSeconds}' must be a whole number from 1 to 600.", nameof(profile));
+                throw new ArgumentException($"'{ConnectTimeoutSeconds}' must be a whole number from 1 to 600.", nameof(settings));
             }
 
             builder.ConnectionTimeout = seconds;

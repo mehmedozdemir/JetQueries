@@ -65,7 +65,7 @@ public sealed class ConnectionEditorStepsTests
         editor.ChangeTypeCommand.Execute(null);
         Assert.True(editor.IsChoosingType);
         editor.ChooseTypeCommand.Execute(editor.Providers.Single(static p => p.Provider is OracleProvider));
-        Assert.Equal("host", editor.Fields[0].Key);
+        Assert.Equal(["connectionType", "host"], editor.Fields.Take(2).Select(static f => f.Key));
     }
 
     [Fact]
@@ -136,17 +136,17 @@ public sealed class ConnectionEditorStepsTests
         await using var env = new TestEnvironment();
         var editor = Editor(env);
         editor.ChooseTypeCommand.Execute(editor.Providers.Single(static p => p.Provider is OracleProvider));
-        editor.Fields[0].Value = "keep";
+        editor.Fields.Single(static f => f.Key == "host").Value = "keep";
         editor.IsConnectionStringMode = true;
-        editor.ConnectionString = "User Id=hr;Password=pw;Data Source=PRODDB";
+        editor.ConnectionString = "User Id=hr;Password=pw;Data Source=db01:x/FREE";
 
         editor.ApplyConnectionStringCommand.Execute(null);
 
         Assert.True(editor.ConnectionStringFailed);
-        Assert.StartsWith("The connection string could not be read: TNS names", editor.ConnectionStringMessage, StringComparison.Ordinal);
+        Assert.StartsWith("The connection string could not be read:", editor.ConnectionStringMessage, StringComparison.Ordinal);
         Assert.DoesNotContain("pw", editor.ConnectionStringMessage, StringComparison.Ordinal);
         Assert.True(editor.IsConnectionStringMode);
-        Assert.Equal("keep", editor.Fields[0].Value);
+        Assert.Equal("keep", editor.Fields.Single(static f => f.Key == "host").Value);
         Assert.Empty(editor.Password);
     }
 
@@ -213,5 +213,54 @@ public sealed class ConnectionEditorStepsTests
 
         public Task<IDatabaseConnection> OpenConnectionAsync(ConnectionProfile profile, ConnectionCredential? credential, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
+    }
+
+    [Fact]
+    public async Task An_oracle_tns_connection_shows_its_own_fields_and_suggests_the_aliases()
+    {
+        await using var env = new TestEnvironment();
+        var folder = Path.Combine(AppContext.BaseDirectory, "tns-editor", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        await File.WriteAllTextAsync(Path.Combine(folder, "tnsnames.ora"), "PRODDB = (DESCRIPTION = (ADDRESS = (HOST = db1)(PORT = 1521))(CONNECT_DATA = (SERVICE_NAME = P)))", Token);
+        var editor = Editor(env);
+        editor.ChooseTypeCommand.Execute(editor.Providers.Single(static p => p.Provider is OracleProvider));
+        SettingFieldViewModel Field(string key) => editor.Fields.Single(f => f.Key == key);
+
+        // Host and service by default: the TNS fields are hidden.
+        Assert.True(Field("host").IsVisible);
+        Assert.False(Field("tnsAlias").IsVisible);
+        Assert.Equal(2, editor.FieldColumns);
+
+        // A TNS alias: the address fields go, the alias and folders come (a folder takes a row of its own).
+        Field("host").Value = "old-host";
+        Field("connectionType").SelectedOption = Field("connectionType").OptionFor("tns");
+        Assert.False(Field("host").IsVisible);
+        Assert.False(Field("port").IsVisible);
+        Assert.True(Field("tnsAlias").IsVisible);
+        Assert.True(Field("tnsAdmin").IsFolderPath);
+        Assert.Equal(1, editor.FieldColumns);
+
+        // The alias is required; the hidden host is not.
+        editor.Name = "Prod";
+        editor.UserName = "hr";
+        await editor.SaveCommand.ExecuteAsync(null);
+        Assert.Empty(await env.Store.GetAllAsync(Token));
+        Assert.Contains("TNS", editor.ValidationMessage, StringComparison.Ordinal);
+
+        // Choosing the folder lists its aliases.
+        Field("tnsAdmin").Value = folder;
+        for (var i = 0; i < 100 && Field("tnsAlias").Suggestions.Count == 0; i++)
+        {
+            await Task.Delay(10, Token);
+        }
+
+        Assert.Equal("PRODDB — db1:1521/P", Assert.Single(Field("tnsAlias").Suggestions).DisplayName);
+        Field("tnsAlias").Value = "PRODDB";
+
+        // What is saved is what applies: no host.
+        var definition = editor.BuildDefinition();
+        Assert.Equal("tns", definition.Settings["connectionType"]);
+        Assert.Equal("PRODDB", definition.Settings["tnsAlias"]);
+        Assert.False(definition.Settings.ContainsKey("host"));
     }
 }

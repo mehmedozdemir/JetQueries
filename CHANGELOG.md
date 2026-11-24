@@ -6,6 +6,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 ## [Unreleased]
 
 ### Added
+- Oracle: connect by TNS alias. The connection form has "Connect with: host and service name / TNS alias"; for a TNS alias it asks for the alias (listed from tnsnames.ora with where each one points), the TNS folder (default TNS_ADMIN, then `ORACLE_HOME\network\admin`) and an optional wallet folder (TCPS, Autonomous Database). A pasted connection string with a bare alias (`Data Source=PRODDB`, `hr/pw@PRODDB`) and `Tns_Admin` / `Wallet_Location` is read as such.
+- SDK (preview): connection settings can depend on another setting (`VisibleWhen`), take a folder (`ConnectionSettingKind.FolderPath`) and offer suggested values (`HasSuggestions`, `IConnectionSettingSuggestions`).
+- UiKit: the ComboBox style supports `IsEditable` (typed text with the list still available).
 - Completion: built-ins called without brackets (Oracle SYSDATE, SYSTIMESTAMP, USER, ROWNUM…; CURRENT_TIMESTAMP, CURRENT_USER… in every dialect) come with their type and description and are inserted without brackets.
 - SDK (preview): `IProgressiveObjectDetailsProvider` reports object details as they are read; the details view shows the properties and columns first and adds the other tabs as they arrive (Oracle).
 - Repository foundation: CLAUDE.md, product analysis, build props.

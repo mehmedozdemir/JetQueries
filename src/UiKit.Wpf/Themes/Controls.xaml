@@ -363,11 +363,16 @@
                     <Grid>
                         <Border x:Name="Root" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6" />
-                        <ContentPresenter Margin="10,0,30,0" VerticalAlignment="Center" IsHitTestVisible="False"
+                        <ContentPresenter x:Name="Selection" Margin="10,0,30,0" VerticalAlignment="Center" IsHitTestVisible="False"
                                           Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
                                           ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}" />
                         <ToggleButton Style="{StaticResource ComboBox.Toggle}" Cursor="Hand"
                                       IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
+                        <!-- IsEditable: the text is typed here (any value, or one picked from the list); the arrow still opens it -->
+                        <TextBox x:Name="PART_EditableTextBox" Visibility="Collapsed" Margin="1,1,28,1" VerticalAlignment="Stretch"
+                                 VerticalContentAlignment="Center" Background="Transparent" BorderThickness="0"
+                                 Foreground="{TemplateBinding Foreground}" IsReadOnly="{TemplateBinding IsReadOnly}"
+                                 c:Ui.Placeholder="{TemplateBinding c:Ui.Placeholder}" />
                         <Popup x:Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom" AllowsTransparency="True"
                                Focusable="False" PopupAnimation="Fade" VerticalOffset="4">
                             <Border MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}" MaxHeight="{TemplateBinding MaxDropDownHeight}"
@@ -388,6 +393,10 @@
                         </Trigger>
                         <Trigger Property="IsKeyboardFocusWithin" Value="True">
                             <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
+                        </Trigger>
+                        <Trigger Property="IsEditable" Value="True">
+                            <Setter TargetName="PART_EditableTextBox" Property="Visibility" Value="Visible" />
+                            <Setter TargetName="Selection" Property="Visibility" Value="Collapsed" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

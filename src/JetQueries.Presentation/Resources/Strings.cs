@@ -127,6 +127,7 @@ public static class Strings
     public static string HistoryClearConfirmMessage => Get(nameof(HistoryClearConfirmMessage));
     public static string Browse => Get(nameof(Browse));
     public static string BrowseDatabaseFile => Get(nameof(BrowseDatabaseFile));
+    public static string BrowseFolder => Get(nameof(BrowseFolder));
     public static string DatabaseFiles => Get(nameof(DatabaseFiles));
     public static string QueryNew => Get(nameof(QueryNew));
     public static string QueryNewTip => Get(nameof(QueryNewTip));

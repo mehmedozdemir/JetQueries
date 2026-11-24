@@ -189,6 +189,9 @@
                                     <DataTrigger Binding="{Binding IsAdvanced}" Value="True">
                                         <Setter Property="Visibility" Value="Collapsed" />
                                     </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsVisible}" Value="False">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
                                 </Style.Triggers>
                             </Style>
                         </ItemsControl.ItemContainerStyle>
@@ -198,12 +201,16 @@
                                     <TextBlock Text="{Binding Label}" Style="{StaticResource Label}" />
                                     <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" c:Ui.Placeholder="{Binding Hint}"
                                              Visibility="{Binding IsText, Converter={StaticResource BoolToVisibility}}" />
-                                    <DockPanel Visibility="{Binding IsFilePath, Converter={StaticResource BoolToVisibility}}">
+                                    <DockPanel Visibility="{Binding IsPath, Converter={StaticResource BoolToVisibility}}">
                                         <Button DockPanel.Dock="Right" Margin="8,0,0,0" Content="{x:Static res:Strings.Browse}" Click="OnBrowseClick" />
                                         <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" c:Ui.Placeholder="{Binding Hint}" />
                                     </DockPanel>
                                     <ComboBox ItemsSource="{Binding Options}" SelectedItem="{Binding SelectedOption}" DisplayMemberPath="DisplayName"
                                               Visibility="{Binding IsChoice, Converter={StaticResource BoolToVisibility}}" />
+                                    <!-- Suggested values (TNS aliases): pick one, or type any other -->
+                                    <ComboBox IsEditable="True" ItemsSource="{Binding Suggestions}" DisplayMemberPath="DisplayName" TextSearch.TextPath="Value"
+                                              Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" c:Ui.Placeholder="{Binding Hint}"
+                                              Visibility="{Binding IsSuggested, Converter={StaticResource BoolToVisibility}}" />
                                     <CheckBox IsChecked="{Binding BooleanValue}" Content="{Binding Label}" Margin="0,2,0,0"
                                               Visibility="{Binding IsBoolean, Converter={StaticResource BoolToVisibility}}" />
                                 </StackPanel>
@@ -266,6 +273,9 @@
                                             <DataTrigger Binding="{Binding IsAdvancedValue}" Value="True">
                                                 <Setter Property="Visibility" Value="Visible" />
                                             </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsVisible}" Value="False">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </ItemsControl.ItemContainerStyle>
@@ -290,6 +300,9 @@
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding IsAdvancedSwitch}" Value="True">
                                                 <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsVisible}" Value="False">
+                                                <Setter Property="Visibility" Value="Collapsed" />
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
