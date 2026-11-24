@@ -51,6 +51,10 @@ public sealed class ConnectionSession : IAsyncDisposable
     private readonly QueryChannel _main;
     private bool _mainLeased;
     private IDatabaseConnection? _metadataConnection;
+
+    // Metadata connections switched to other databases, for providers whose metadata sees one database only.
+    private readonly Dictionary<string, IDatabaseConnection> _databaseMetadata = new(StringComparer.Ordinal);
+    private string? _homeDatabase;
     private bool _disposed;
 
     internal ConnectionSession(ConnectionDefinition definition, IDatabaseProvider provider, IDatabaseConnection connection, ConnectionCredential? credential)
@@ -150,18 +154,16 @@ public sealed class ConnectionSession : IAsyncDisposable
         await _metadataGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            ObjectDisposedException.ThrowIf(_disposed, this);
-            _metadataConnection ??= await Provider.OpenConnectionAsync(Definition.ToProfile(), _credential, cancellationToken).ConfigureAwait(false);
+            var connection = await MetadataConnectionAsync(cancellationToken).ConfigureAwait(false);
             try
             {
-                return await work(_metadataConnection.Metadata, cancellationToken).ConfigureAwait(false);
+                return await work(connection.Metadata, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 // The connection may be broken (network, VPN): do not keep failing on it.
-                var broken = _metadataConnection;
                 _metadataConnection = null;
-                await broken.DisposeAsync().ConfigureAwait(false);
+                await connection.DisposeAsync().ConfigureAwait(false);
                 throw;
             }
         }
@@ -169,6 +171,121 @@ public sealed class ConnectionSession : IAsyncDisposable
         {
             _metadataGate.Release();
         }
+    }
+
+    /// <summary>
+    /// Whether metadata is read per database: the provider switches databases by connection
+    /// (<see cref="DatabaseContextKind.Database"/>) and its metadata sees only the connected one (PostgreSQL).
+    /// </summary>
+    public bool HasMetadataPerDatabase => Connection is IDatabaseContext { Kind: DatabaseContextKind.Database, MetadataSpansDatabases: false };
+
+    /// <summary>
+    /// The database whose metadata must be read apart from the session's own: <see langword="null"/> when
+    /// <paramref name="database"/> is null, is the database the session is connected to, or the provider's
+    /// metadata answers for every database anyway.
+    /// </summary>
+    /// <param name="database">The database a query window has selected.</param>
+    /// <param name="cancellationToken">Cancels waiting for the metadata connection.</param>
+    public async Task<string?> OtherMetadataDatabaseAsync(string? database, CancellationToken cancellationToken)
+    {
+        if (database is null || !HasMetadataPerDatabase)
+        {
+            return null;
+        }
+
+        if (_homeDatabase is null)
+        {
+            await _metadataGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                var connection = await MetadataConnectionAsync(cancellationToken).ConfigureAwait(false);
+                _homeDatabase = (connection is IDatabaseContext context ? await context.GetCurrentAsync(cancellationToken).ConfigureAwait(false) : null) ?? string.Empty;
+            }
+            finally
+            {
+                _metadataGate.Release();
+            }
+        }
+
+        return string.Equals(database, _homeDatabase, StringComparison.Ordinal) ? null : database;
+    }
+
+    /// <summary>
+    /// Where the metadata cache keeps the answers for a database: the connection's id for its own database, a
+    /// stable id derived from it for another one (see <see cref="OtherMetadataDatabaseAsync"/>).
+    /// </summary>
+    /// <param name="otherDatabase">What <see cref="OtherMetadataDatabaseAsync"/> returned.</param>
+    public Guid MetadataCacheId(string? otherDatabase)
+    {
+        if (otherDatabase is null)
+        {
+            return Definition.Id;
+        }
+
+        var bytes = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(Definition.Id.ToString("N") + "/" + otherDatabase));
+        return new Guid(bytes.AsSpan(0, 16));
+    }
+
+    /// <summary>
+    /// Runs one metadata operation for <paramref name="database"/>: on the session's metadata connection, or,
+    /// when the provider's metadata sees one database only and another one is wanted, on a metadata connection
+    /// switched to that database (opened on first use, kept for the session).
+    /// </summary>
+    /// <typeparam name="T">The result of the operation.</typeparam>
+    /// <param name="database">The database a query window has selected; null for the session's own.</param>
+    /// <param name="work">The operation.</param>
+    /// <param name="cancellationToken">Cancels waiting for the connection and the operation itself.</param>
+    public async Task<T> UseMetadataAsync<T>(string? database, Func<IMetadataProvider, CancellationToken, Task<T>> work, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(work);
+        var other = await OtherMetadataDatabaseAsync(database, cancellationToken).ConfigureAwait(false);
+        if (other is null)
+        {
+            return await UseMetadataAsync(work, cancellationToken).ConfigureAwait(false);
+        }
+
+        await _metadataGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            if (!_databaseMetadata.TryGetValue(other, out var connection))
+            {
+                connection = await Provider.OpenConnectionAsync(Definition.ToProfile(), _credential, cancellationToken).ConfigureAwait(false);
+                try
+                {
+                    await ((IDatabaseContext)connection).ChangeAsync(other, cancellationToken).ConfigureAwait(false);
+                }
+                catch
+                {
+                    await connection.DisposeAsync().ConfigureAwait(false);
+                    throw;
+                }
+
+                _databaseMetadata[other] = connection;
+            }
+
+            try
+            {
+                return await work(connection.Metadata, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                _databaseMetadata.Remove(other);
+                await connection.DisposeAsync().ConfigureAwait(false);
+                throw;
+            }
+        }
+        finally
+        {
+            _metadataGate.Release();
+        }
+    }
+
+    // Under the metadata gate.
+    private async Task<IDatabaseConnection> MetadataConnectionAsync(CancellationToken cancellationToken)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        return _metadataConnection ??= await Provider.OpenConnectionAsync(Definition.ToProfile(), _credential, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>Closes every driver connection of the session: query channels, metadata, main.</summary>
@@ -194,6 +311,13 @@ public sealed class ConnectionSession : IAsyncDisposable
             {
                 await _metadataConnection.DisposeAsync().ConfigureAwait(false);
             }
+
+            foreach (var connection in _databaseMetadata.Values)
+            {
+                await connection.DisposeAsync().ConfigureAwait(false);
+            }
+
+            _databaseMetadata.Clear();
         }
         finally
         {

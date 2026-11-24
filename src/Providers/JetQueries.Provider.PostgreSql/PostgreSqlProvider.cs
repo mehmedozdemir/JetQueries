@@ -262,6 +262,9 @@ internal sealed class PostgreSqlDatabaseConnection : IDatabaseConnection, IDatab
 
     public DatabaseContextKind Kind => DatabaseContextKind.Database;
 
+    // pg_catalog describes the connected database only.
+    public bool MetadataSpansDatabases => false;
+
     public Task<string?> GetCurrentAsync(CancellationToken cancellationToken) => Task.FromResult<string?>(_connection.Database);
 
     public async Task<IReadOnlyList<string>> GetAvailableAsync(CancellationToken cancellationToken)

@@ -494,7 +494,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
         string? outcome = null;
         try
         {
-            var document = Document(text, new SessionMetadataProvider(session, _metadata));
+            var document = Document(text, SessionMetadata(session));
             var definition = await _jobs.Enqueue("Find object", context => service.GetDefinitionAsync(document, offset, context.CancellationToken), JobPriority.High).Completion;
             if (definition?.Target is { } target)
             {
@@ -557,7 +557,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
             return Task.FromResult<SignatureHelp?>(null);
         }
 
-        var document = Document(text, new SessionMetadataProvider(session, _metadata));
+        var document = Document(text, SessionMetadata(session));
         return _jobs.Enqueue("Signature help", context => service.GetSignatureHelpAsync(document, offset, context.CancellationToken), JobPriority.High, cancellationToken)
             .Completion;
     }
@@ -572,7 +572,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
 
         try
         {
-            var metadata = new SessionMetadataProvider(session, _metadata);
+            var metadata = SessionMetadata(session);
             var document = Document(text, metadata);
             var found = await _jobs.Enqueue<(DatabaseObject? Target, string? Source)>(
                 "Go to definition",
@@ -620,13 +620,17 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
             return Task.FromResult<IReadOnlyList<CompletionItem>>([]);
         }
 
-        var document = Document(text, new SessionMetadataProvider(session, _metadata));
+        var document = Document(text, SessionMetadata(session));
         return _jobs.Enqueue(
             "Completion",
             context => service.GetCompletionsAsync(document, offset, context.CancellationToken),
             JobPriority.High,
             cancellationToken).Completion;
     }
+
+    // The selected database matters to providers whose metadata sees one database only (PostgreSQL).
+    private SessionMetadataProvider SessionMetadata(ConnectionSession session) =>
+        new(session, _metadata, _channel?.ContextKind == DatabaseContextKind.Database ? SelectedDatabase : null);
 
     private SqlDocument Document(string text, IMetadataProvider metadata) => _channel?.ContextKind switch
     {

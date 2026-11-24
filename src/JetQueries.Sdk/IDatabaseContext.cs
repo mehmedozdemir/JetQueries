@@ -21,6 +21,15 @@ public interface IDatabaseContext
     /// <summary>Whether a database or a schema is switched.</summary>
     DatabaseContextKind Kind { get; }
 
+    /// <summary>
+    /// Whether the connection's <see cref="IDatabaseConnection.Metadata"/> answers for every database of the server
+    /// (SQL Server, through three-part names) or only for the one it is connected to (PostgreSQL). When it is
+    /// <see langword="false"/>, the host reads another database's metadata on a connection switched to it with
+    /// <see cref="ChangeAsync"/>. Only meaningful for <see cref="DatabaseContextKind.Database"/>.
+    /// </summary>
+    /// <remarks>Preview; defaults to <see langword="true"/>.</remarks>
+    bool MetadataSpansDatabases => true;
+
     /// <summary>The current database or schema, as the server reports it now (a script may have changed it).</summary>
     /// <param name="cancellationToken">Cancels the request.</param>
     Task<string?> GetCurrentAsync(CancellationToken cancellationToken);

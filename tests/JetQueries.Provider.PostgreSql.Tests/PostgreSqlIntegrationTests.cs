@@ -368,6 +368,64 @@ public sealed class PostgreSqlIntegrationTests(PostgreSqlFixture fixture) : ICla
         section.Rows[row].Cells[section.Columns.Select(static c => c.Key).ToList().IndexOf(key)];
 
     [Fact]
+    public async Task Completion_and_details_follow_the_database_the_window_selected()
+    {
+        if (fixture.SkipReason is { } reason)
+        {
+            Assert.Skip(reason);
+        }
+
+        // A second database with a table of its own.
+        await using (var setup = await OpenAsync())
+        {
+            await Collect(setup.Executor.ExecuteAsync(new QueryRequest("CREATE DATABASE jq_other"), Token));
+        }
+
+        var settings = new Dictionary<string, string>(fixture.Profile.Settings, StringComparer.OrdinalIgnoreCase) { [PostgreSqlConnectionSettings.Database] = "jq_other" };
+        await using (var other = await new PostgreSqlProvider().OpenConnectionAsync(fixture.Profile with { Settings = settings }, fixture.Credential, Token))
+        {
+            await Collect(other.Executor.ExecuteAsync(new QueryRequest("CREATE TABLE only_here (id int PRIMARY KEY, label text)"), Token));
+        }
+
+        var definition = new ConnectionDefinition
+        {
+            Id = Guid.NewGuid(),
+            Name = "pg",
+            ProviderId = PostgreSqlProvider.ProviderId,
+            Settings = new Dictionary<string, string>(fixture.Profile.Settings),
+            UserName = fixture.Credential.UserName,
+        };
+        await using var manager = new ConnectionManager(new SingleProvider(new PostgreSqlProvider()), new SessionCredentialStore(), new NoProbe());
+        var session = (await manager.OpenAsync(definition, fixture.Credential.Password, Token)).Session!;
+        Assert.True(session.HasMetadataPerDatabase);
+        using var cache = new JetQueries.Core.Metadata.SqliteMetadataCache(
+            new JetQueries.Core.Metadata.MetadataCacheOptions(), TimeProvider.System, Microsoft.Extensions.Logging.Abstractions.NullLogger<JetQueries.Core.Metadata.SqliteMetadataCache>.Instance);
+        var service = new JetQueries.Core.Metadata.MetadataService(cache, TimeProvider.System);
+        var language = new PostgreSqlProvider().LanguageService!;
+
+        async Task<IReadOnlyList<string>> CompleteAsync(string? database, string marked)
+        {
+            var text = marked.Replace("|", string.Empty, StringComparison.Ordinal);
+            var metadata = new JetQueries.Core.Metadata.SessionMetadataProvider(session, service, database);
+            var items = await language.GetCompletionsAsync(new SqlDocument(text, metadata) { DefaultDatabase = database }, marked.IndexOf('|', StringComparison.Ordinal), Token);
+            return [.. items.Select(static i => i.Label)];
+        }
+
+        // The connection's own database does not have the table; the selected one does, columns included.
+        Assert.DoesNotContain("only_here", await CompleteAsync(null, "SELECT * FROM only_|"));
+        Assert.Contains("only_here", await CompleteAsync("jq_other", "SELECT * FROM only_|"));
+        Assert.Contains("label", await CompleteAsync("jq_other", "SELECT o.| FROM only_here o"));
+
+        // What is found there keeps its database, so its details are read there too.
+        var found = await new JetQueries.Core.Metadata.SessionMetadataProvider(session, service, "jq_other")
+            .GetObjectsAsync(null, DatabaseObjectKinds.Table, Token).ToListAsync(Token);
+        var table = Assert.Single(found, static o => o.Name.Name == "only_here");
+        Assert.Equal("jq_other", table.Name.Database);
+        var details = await session.UseMetadataAsync(table.Name.Database, (provider, token) => ((IObjectDetailsProvider)provider).GetDetailsAsync(table with { Name = table.Name with { Database = null } }, token), Token);
+        Assert.NotNull(details);
+    }
+
+    [Fact]
     public async Task A_script_runs_through_the_session_statement_by_statement()
     {
         if (fixture.SkipReason is { } reason)

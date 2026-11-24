@@ -154,6 +154,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 - Accessibility: icon buttons give screen readers their tooltip as name; muted text is darker in both themes (≥ 4.5:1 for small text).
 
 ### Fixed
+- PostgreSQL: after switching a tab's database, completion, Ctrl+Click and the details view still read the connection's own database. They now read the selected one, on a metadata connection to it, with its own cache. SDK (preview): `IDatabaseContext.MetadataSpansDatabases`.
 - Security: the open tabs' text (the workspace, which may hold a typed password) was saved as plain JSON. It is now encrypted for the current Windows user with DPAPI (`workspace.bin`); a plain `workspace.json` from an earlier version is read once and removed at the next save.
 - Oracle object details (Ctrl+Click) were slow: the dictionary queries ran ALL_CONSTRAINTS nested per column and per row. They are now plain single-view reads joined in code; a first look at a table on a cold instance went from about 28 s to under 6 s (columns after well under 1 s), later looks take tens of milliseconds. Oracle column lists for completion use the same cheaper key lookup.
 - The SQL editor's text no longer touches the line numbers' rule.

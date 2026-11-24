@@ -463,8 +463,8 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - Idle memory of the WPF application is about 370 MB (budget: 200 MB); not investigated yet.
 - The editor's zoom is shared by the query tabs (one editor view shows the selected tab).
 - The explorer filter searches what has been loaded (expanded) so far, not the whole catalog.
-- PostgreSQL: after switching a tab's database, completion and the explorer still read the connection's own
-  database (their metadata connection is not switched).
+- PostgreSQL: the explorer shows the connection's own database only; completion, Ctrl+Click and details follow
+  the database a tab selected (a metadata connection per database, kept for the session).
 - Each query tab after the first holds its own server connection while it is open (as in SSMS).
 - The workspace (`%AppData%\JetQueries\workspace.bin`) holds the open tabs' texts as typed, encrypted for the
   current Windows user (DPAPI). Query history masks password literals; the workspace does not change the user's text.
@@ -490,3 +490,8 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
       Enter inserts SYSDATE with no brackets and no parameter card. Same for SYSTIMESTAMP, USER, ROWNUM.
 - [ ] SQL Server CURRENT_TIMESTAMP, PostgreSQL current_date / current_user, SQLite current_timestamp: one row each
       (no second "keyword" row), inserted without brackets.
+
+## PostgreSQL: completion after switching database
+- [ ] Open a PostgreSQL connection, switch the tab's database to another one: "SELECT * FROM " offers that
+      database's tables, "alias." its columns; switching back offers the first database's tables again.
+- [ ] Ctrl+Click a table of the other database: its details open (subtitle shows that database), with columns.
