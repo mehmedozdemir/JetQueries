@@ -597,6 +597,27 @@ public sealed class SqlServerIntegrationTests(SqlServerFixture fixture) : IClass
         Assert.Equal(11, Convert.ToInt32(result, System.Globalization.CultureInfo.InvariantCulture));
     }
 
+    [Fact]
+    public async Task A_multi_row_insert_takes_typed_parameters()
+    {
+        await using var connection = await OpenAsync();
+        await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest("DROP TABLE IF EXISTS dbo.jq_import; CREATE TABLE dbo.jq_import (id int, ad nvarchar(40), tutar decimal(12,2), tarih datetime2, aktif bit)"), Token));
+        var provider = new SqlServerProvider();
+        var table = new DatabaseObjectName(null, "dbo", "jq_import");
+        string[] columns = ["id", "ad", "tutar", "tarih", "aktif"];
+        Assert.Equal(400, provider.RowsPerStatement(5));
+        var sql = provider.ScriptInsert(table, columns, 2);
+        QueryParameter[] parameters =
+        [
+            new("p0_0", 1L), new("p0_1", "İstanbul'da"), new("p0_2", 1250.5m), new("p0_3", new DateTime(2026, 1, 15)), new("p0_4", true),
+            new("p1_0", 2L), new("p1_1", null), new("p1_2", null), new("p1_3", null), new("p1_4", false),
+        ];
+        await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest(sql) { Parameters = parameters }, Token));
+        var rows = (await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest("SELECT ad, tutar, aktif FROM dbo.jq_import ORDER BY id"), Token))).OfType<RowBatch>().SelectMany(static b => b.Rows).ToList();
+        Assert.Equal(["İstanbul'da", 1250.50m, true], rows[0]);
+        Assert.Null(rows[1][0]);
+    }
+
     private async Task<IDatabaseConnection> OpenAsync()
     {
         Assert.SkipWhen(fixture.SkipReason is not null, fixture.SkipReason ?? string.Empty);

@@ -48,6 +48,13 @@ public interface IDialogService
     /// <param name="initial">The text the box starts with.</param>
     Task<string?> PromptTextAsync(string title, string message, string initial) => Task.FromResult<string?>(null);
 
+    /// <summary>Shows the Import data dialog of a table (the import runs in it).</summary>
+    /// <param name="import">The dialog's view model.</param>
+    Task ImportDataAsync(ViewModels.ImportDataViewModel import) => Task.CompletedTask;
+
+    /// <summary>Asks for a file to import (CSV, text); null when canceled.</summary>
+    Task<string?> PickImportFileAsync() => Task.FromResult<string?>(null);
+
     /// <summary>Shows the Export dialog of a result; true when the user chose to export.</summary>
     /// <param name="options">The dialog's view model.</param>
     Task<bool> ExportResultAsync(ViewModels.ExportResultViewModel options) => Task.FromResult(false);

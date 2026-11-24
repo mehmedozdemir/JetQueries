@@ -17,7 +17,7 @@ public sealed class SqlServerExtension : IExtension
 }
 
 /// <summary>Database provider for Microsoft SQL Server and Azure SQL, on Microsoft.Data.SqlClient.</summary>
-public sealed class SqlServerProvider : IDatabaseProvider, IRoutineExecutionScripting, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport,
+public sealed class SqlServerProvider : IDatabaseProvider, IBulkInsertScripting, IRoutineExecutionScripting, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport,
     IConnectionStringImport, IProviderAppearance, IObjectScripting
 {
     /// <summary>The provider identifier stored in connection profiles.</summary>
@@ -183,6 +183,17 @@ public sealed class SqlServerProvider : IDatabaseProvider, IRoutineExecutionScri
 
     /// <inheritdoc />
     public string QuoteIdentifier(string identifier) => SqlServerNames.Quote(identifier);
+
+    /// <inheritdoc />
+    /// <remarks>2100 parameters a statement and 1000 rows in a VALUES list.</remarks>
+    public int RowsPerStatement(int columnCount) => Providers.Metadata.BulkInsert.Rows(columnCount, 2000, 1000);
+
+    /// <inheritdoc />
+    public string ScriptInsert(DatabaseObjectName table, IReadOnlyList<string> columns, int rowCount)
+    {
+        ArgumentNullException.ThrowIfNull(table);
+        return Providers.Metadata.BulkInsert.Values(SqlServerNames.Quote, '@', SqlServerNames.Quote(table), columns, rowCount);
+    }
 
     /// <inheritdoc />
     public string? ScriptExecute(DatabaseObject routine, SqlSignature signature, IReadOnlyList<RoutineArgument> arguments) =>

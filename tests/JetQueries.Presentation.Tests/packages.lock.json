@@ -391,6 +391,13 @@
           "Oracle.ManagedDataAccess.Core": "[23.26.401, )"
         }
       },
+      "jetqueries.provider.sqlite": {
+        "type": "Project",
+        "dependencies": {
+          "JetQueries.Sdk": "[1.0.0, )",
+          "Microsoft.Data.Sqlite": "[10.0.15, )"
+        }
+      },
       "jetqueries.provider.sqlserver": {
         "type": "Project",
         "dependencies": {

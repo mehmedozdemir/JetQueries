@@ -133,6 +133,9 @@
                                     <MenuItem Header="{x:Static res:Strings.ExplorerRemoveFavorite}" c:Ui.Icon="&#xE735;"
                                               Command="{Binding ToggleFavoriteCommand}" CommandParameter="{Binding Selected}"
                                               Visibility="{Binding Selected.IsFavorite, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
+                                    <MenuItem Header="{x:Static res:Strings.ExplorerImportData}" c:Ui.Icon="&#xE8B5;"
+                                              Command="{Binding ImportDataCommand}" CommandParameter="{Binding Selected}"
+                                              Visibility="{Binding Selected.CanImportData, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
                                     <MenuItem Header="{x:Static res:Strings.ExplorerExecute}" c:Ui.Icon="{x:Static c:Icons.Play}"
                                               Command="{Binding ExecuteRoutineCommand}" CommandParameter="{Binding Selected}"
                                               Visibility="{Binding Selected.CanExecuteRoutine, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />

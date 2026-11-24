@@ -155,6 +155,9 @@ public sealed class DatabaseObjectNodeViewModel(ExplorerContext context, Databas
 
     public bool IsContainer => Target.Kind is DatabaseObjectKinds.Database or DatabaseObjectKinds.Schema;
 
+    /// <summary>A table the provider can fill from a file (the Import data dialog).</summary>
+    public bool CanImportData => ImportDataViewModel.CanImport(context.Session, Target);
+
     /// <summary>A procedure or function the provider can write a call for (the Execute dialog).</summary>
     public bool CanExecuteRoutine => ExecuteRoutineViewModel.CanExecute(context.Session, Target);
 

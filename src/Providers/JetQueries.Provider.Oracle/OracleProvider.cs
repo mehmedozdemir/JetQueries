@@ -19,7 +19,7 @@ public sealed class OracleExtension : IExtension
 }
 
 /// <summary>Database provider for Oracle Database, on the managed ODP.NET driver (no Oracle client installation needed).</summary>
-public sealed class OracleProvider : IDatabaseProvider, IRoutineExecutionScripting, IConnectionSettingsProvider, IConnectionSettingSuggestions, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport,
+public sealed class OracleProvider : IDatabaseProvider, IBulkInsertScripting, IRoutineExecutionScripting, IConnectionSettingsProvider, IConnectionSettingSuggestions, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport,
     IConnectionStringImport, IProviderAppearance, IObjectScripting
 {
     /// <summary>The provider identifier stored in connection profiles.</summary>
@@ -208,6 +208,25 @@ public sealed class OracleProvider : IDatabaseProvider, IRoutineExecutionScripti
 
     /// <inheritdoc />
     public string QuoteIdentifier(string identifier) => OracleNames.Quote(identifier);
+
+    /// <inheritdoc />
+    /// <remarks>INSERT ALL … SELECT 1 FROM dual: one statement, several rows.</remarks>
+    public int RowsPerStatement(int columnCount) => Providers.Metadata.BulkInsert.Rows(columnCount, 30000, 500);
+
+    /// <inheritdoc />
+    public string ScriptInsert(DatabaseObjectName table, IReadOnlyList<string> columns, int rowCount)
+    {
+        ArgumentNullException.ThrowIfNull(table);
+        ArgumentNullException.ThrowIfNull(columns);
+        var into = "INTO " + OracleNames.Quote(table) + " (" + string.Join(", ", columns.Select(OracleNames.Quote)) + ") VALUES (";
+        var text = new System.Text.StringBuilder("INSERT ALL");
+        for (var row = 0; row < rowCount; row++)
+        {
+            text.Append("\n  ").Append(into).AppendJoin(", ", columns.Select((_, column) => ":" + Providers.Metadata.BulkInsert.Name(row, column))).Append(')');
+        }
+
+        return text.Append("\nSELECT 1 FROM dual").ToString();
+    }
 
     /// <inheritdoc />
     public string? ScriptExecute(DatabaseObject routine, SqlSignature signature, IReadOnlyList<RoutineArgument> arguments) =>

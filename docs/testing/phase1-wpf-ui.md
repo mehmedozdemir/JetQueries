@@ -602,3 +602,14 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] CSV with ";" opens in Turkish Excel with columns split and Turkish characters right; the .xlsx opens with numbers
       as numbers, dates as dates, the header row frozen; "Bitince dosyayı aç" opens it.
 
+## Import data from CSV
+- [ ] Right-click a table: "Veri içe aktar…" (SQL Server, PostgreSQL, Oracle, SQLite). Choose a CSV: the first rows show,
+      the separator is detected (or chosen), Turkish characters read right (UTF-8, or Windows-1254 for older files).
+- [ ] Each table column takes the file column of the same name (ignoring case and spaces), else "(atla)"; without a
+      header line, by position. Changing a mapping by hand works.
+- [ ] "İçe aktar": the rows are written; the count grows while it runs; the result says how many. Numbers like
+      1.250,50, dates like 15.01.2026 and evet/hayır are taken.
+- [ ] A value that does not fit (text in a number column) stops with "Satır N, kolon X: …"; with "Ya hepsi ya hiçbiri"
+      nothing stays in the table. "Vazgeç" while it runs stops it.
+- [ ] On a production connection a confirmation comes first; on a read-only connection the import is refused.
+

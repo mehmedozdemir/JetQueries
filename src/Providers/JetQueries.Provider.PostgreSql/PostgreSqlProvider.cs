@@ -19,7 +19,7 @@ public sealed class PostgreSqlExtension : IExtension
 }
 
 /// <summary>Database provider for PostgreSQL, on the Npgsql driver.</summary>
-public sealed class PostgreSqlProvider : IDatabaseProvider, IRoutineExecutionScripting, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport,
+public sealed class PostgreSqlProvider : IDatabaseProvider, IBulkInsertScripting, IRoutineExecutionScripting, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport,
     IConnectionStringImport, IProviderAppearance, IObjectScripting
 {
     /// <summary>The provider identifier stored in connection profiles.</summary>
@@ -146,6 +146,17 @@ public sealed class PostgreSqlProvider : IDatabaseProvider, IRoutineExecutionScr
 
     /// <inheritdoc />
     public string QuoteIdentifier(string identifier) => PostgreSqlNames.Quote(identifier);
+
+    /// <inheritdoc />
+    public int RowsPerStatement(int columnCount) => Providers.Metadata.BulkInsert.Rows(columnCount, 30000, 1000);
+
+    /// <inheritdoc />
+    public string ScriptInsert(DatabaseObjectName table, IReadOnlyList<string> columns, int rowCount)
+    {
+        ArgumentNullException.ThrowIfNull(table);
+        var name = (table.Schema is { Length: > 0 } schema ? PostgreSqlNames.Quote(schema) + "." : string.Empty) + PostgreSqlNames.Quote(table.Name);
+        return Providers.Metadata.BulkInsert.Values(PostgreSqlNames.Quote, '@', name, columns, rowCount);
+    }
 
     /// <inheritdoc />
     public string? ScriptExecute(DatabaseObject routine, SqlSignature signature, IReadOnlyList<RoutineArgument> arguments) =>

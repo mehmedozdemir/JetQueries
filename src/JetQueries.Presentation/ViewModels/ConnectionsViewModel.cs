@@ -536,6 +536,20 @@ public partial class ConnectionsViewModel(
     [RelayCommand]
     private Task ScriptDropAsync(ExplorerNodeViewModel? node) => ScriptAsync(node, ObjectScriptKind.Drop);
 
+    /// <summary>The Import data dialog of a table: a CSV file into its rows.</summary>
+    [RelayCommand]
+    private async Task ImportDataAsync(ExplorerNodeViewModel? node)
+    {
+        if ((node ?? Selected) is not DatabaseObjectNodeViewModel { Target: var target, Session: var session } || !ImportDataViewModel.CanImport(session, target))
+        {
+            return;
+        }
+
+        var import = new ImportDataViewModel(session, target, metadata, jobs, dialogs);
+        _ = import.LoadAsync();
+        await dialogs.ImportDataAsync(import);
+    }
+
     /// <summary>The Execute dialog of a procedure or function; its script opens (or runs) in a query tab.</summary>
     [RelayCommand]
     private Task ExecuteRoutineAsync(ExplorerNodeViewModel? node) =>

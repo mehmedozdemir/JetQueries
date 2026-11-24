@@ -173,6 +173,12 @@ internal sealed class WpfDialogService(IServiceProvider services) : IDialogServi
         return Task.FromResult(dialog.ShowDialog() == true ? dialog.Text : null);
     }
 
+    public Task ImportDataAsync(ImportDataViewModel import)
+    {
+        new ImportDataWindow(import) { Owner = Owner }.ShowDialog();
+        return Task.CompletedTask;
+    }
+
     public Task<bool> ExportResultAsync(ExportResultViewModel options) =>
         Task.FromResult(new ExportResultWindow(options) { Owner = Owner }.ShowDialog() == true);
 
