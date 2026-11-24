@@ -256,6 +256,32 @@
   <data name="ExportFailed" xml:space="preserve"><value>Export failed: {0}</value></data>
   <data name="ExportExcelTruncated" xml:space="preserve"><value>An Excel sheet holds {0:N0} rows; the rest were left out.</value></data>
   <data name="ExportBrowseTitle" xml:space="preserve"><value>Export to</value></data>
+  <data name="ImportDialogTitle" xml:space="preserve"><value>Import data</value></data>
+  <data name="ExplorerImportData" xml:space="preserve"><value>Import data…</value></data>
+  <data name="ImportEncoding" xml:space="preserve"><value>Encoding</value></data>
+  <data name="ImportEncodingTurkish" xml:space="preserve"><value>Windows-1254 (Turkish)</value></data>
+  <data name="ImportDelimiter" xml:space="preserve"><value>Separator</value></data>
+  <data name="ImportDelimiterAuto" xml:space="preserve"><value>Detect</value></data>
+  <data name="ImportHeader" xml:space="preserve"><value>The first line holds the column names</value></data>
+  <data name="ImportEmptyIsNull" xml:space="preserve"><value>Empty fields are NULL</value></data>
+  <data name="ImportTransaction" xml:space="preserve"><value>All rows or none (one transaction)</value></data>
+  <data name="ImportPreview" xml:space="preserve"><value>First rows of the file</value></data>
+  <data name="ImportMapping" xml:space="preserve"><value>Table column ← file column</value></data>
+  <data name="ImportSkip" xml:space="preserve"><value>(skip)</value></data>
+  <data name="ImportColumnN" xml:space="preserve"><value>Column {0}</value></data>
+  <data name="ImportClose" xml:space="preserve"><value>Close</value></data>
+  <data name="ImportRunning" xml:space="preserve"><value>Importing…</value></data>
+  <data name="ImportRows" xml:space="preserve"><value>{0:N0} rows written</value></data>
+  <data name="ImportDone" xml:space="preserve"><value>{0:N0} rows imported into {1}.</value></data>
+  <data name="ImportCanceled" xml:space="preserve"><value>Import canceled; the rows written so far stay.</value></data>
+  <data name="ImportCanceledRolledBack" xml:space="preserve"><value>Import canceled; nothing was kept.</value></data>
+  <data name="ImportRolledBack" xml:space="preserve"><value>Nothing was kept (the transaction was rolled back).</value></data>
+  <data name="ImportBadValue" xml:space="preserve"><value>Line {0}, column {1}: "{2}" is not a value of type {3}.</value></data>
+  <data name="ImportServerError" xml:space="preserve"><value>Lines {0}–{1}: {2}</value></data>
+  <data name="ImportConfirmTitle" xml:space="preserve"><value>Import into production</value></data>
+  <data name="ImportConfirmProduction" xml:space="preserve"><value>Rows will be added to {0} on {1}, a production connection. Go on?</value></data>
+  <data name="ImportBrowseTitle" xml:space="preserve"><value>Choose a file to import</value></data>
+  <data name="ImportTextFiles" xml:space="preserve"><value>Text files</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Clear all</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Remove filter</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} of {1:N0} rows</value></data>

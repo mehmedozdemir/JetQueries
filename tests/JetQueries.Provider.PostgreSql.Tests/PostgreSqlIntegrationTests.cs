@@ -472,6 +472,31 @@ public sealed class PostgreSqlIntegrationTests(PostgreSqlFixture fixture) : ICla
     }
 
     [Fact]
+    public async Task A_multi_row_insert_takes_typed_parameters()
+    {
+        if (fixture.SkipReason is { } reason)
+        {
+            Assert.Skip(reason);
+        }
+
+        await using var connection = await OpenAsync();
+        await Collect(connection.Executor.ExecuteAsync(new QueryRequest("DROP TABLE IF EXISTS jq_import; CREATE TABLE jq_import (id bigint, ad text, tutar numeric(12,2), tarih date, aktif boolean)"), Token));
+        var provider = new PostgreSqlProvider();
+        var sql = provider.ScriptInsert(new DatabaseObjectName(null, "public", "jq_import"), ["id", "ad", "tutar", "tarih", "aktif"], 2);
+        QueryParameter[] parameters =
+        [
+            new("p0_0", 1L), new("p0_1", "İstanbul'da"), new("p0_2", 1250.5m), new("p0_3", new DateTime(2026, 1, 15)), new("p0_4", true),
+            new("p1_0", 2L), new("p1_1", null), new("p1_2", null), new("p1_3", null), new("p1_4", false),
+        ];
+        await Collect(connection.Executor.ExecuteAsync(new QueryRequest(sql) { Parameters = parameters }, Token));
+        var rows = (await Collect(connection.Executor.ExecuteAsync(new QueryRequest("SELECT ad, tutar, aktif, tarih FROM jq_import ORDER BY id"), Token))).OfType<RowBatch>().SelectMany(static b => b.Rows).ToList();
+        Assert.Equal("İstanbul'da", rows[0][0]);
+        Assert.Equal(1250.50m, rows[0][1]);
+        Assert.Equal(true, rows[0][2]);
+        Assert.Null(rows[1][0]);
+    }
+
+    [Fact]
     public async Task A_script_runs_through_the_session_statement_by_statement()
     {
         if (fixture.SkipReason is { } reason)

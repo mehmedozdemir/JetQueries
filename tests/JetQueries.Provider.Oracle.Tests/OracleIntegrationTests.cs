@@ -523,6 +523,27 @@ public sealed class OracleIntegrationTests(OracleFixture fixture) : IClassFixtur
     }
 
     [Fact]
+    public async Task A_multi_row_insert_takes_typed_parameters()
+    {
+        await using var connection = await OpenAsync();
+        await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest("CREATE TABLE jq_import (id NUMBER(10), ad VARCHAR2(40 CHAR), tutar NUMBER(12,2), tarih DATE)"), Token));
+        var provider = new OracleProvider();
+        var user = fixture.Credential.UserName!.ToUpperInvariant();
+        var sql = provider.ScriptInsert(new DatabaseObjectName(null, user, "JQ_IMPORT"), ["ID", "AD", "TUTAR", "TARIH"], 2);
+        Assert.StartsWith("INSERT ALL", sql, StringComparison.Ordinal);
+        QueryParameter[] parameters =
+        [
+            new("p0_0", 1L), new("p0_1", "İstanbul'da"), new("p0_2", 1250.5m), new("p0_3", new DateTime(2026, 1, 15)),
+            new("p1_0", 2L), new("p1_1", null), new("p1_2", null), new("p1_3", null),
+        ];
+        await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest(sql) { Parameters = parameters }, Token));
+        var rows = (await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest("SELECT ad, tutar FROM jq_import ORDER BY id"), Token))).OfType<RowBatch>().SelectMany(static b => b.Rows).ToList();
+        Assert.Equal("İstanbul'da", rows[0][0]);
+        Assert.Equal(1250.5m, Convert.ToDecimal(rows[0][1], System.Globalization.CultureInfo.InvariantCulture));
+        Assert.Null(rows[1][0]);
+    }
+
+    [Fact]
     public async Task A_tns_alias_from_a_tnsnames_file_connects()
     {
         Assert.SkipWhen(fixture.SkipReason is not null, fixture.SkipReason ?? string.Empty);

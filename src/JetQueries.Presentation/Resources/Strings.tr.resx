@@ -256,6 +256,32 @@
   <data name="ExportFailed" xml:space="preserve"><value>Dışa aktarılamadı: {0}</value></data>
   <data name="ExportExcelTruncated" xml:space="preserve"><value>Bir Excel sayfası {0:N0} satır alır; fazlası yazılmadı.</value></data>
   <data name="ExportBrowseTitle" xml:space="preserve"><value>Dışa aktarılacak dosya</value></data>
+  <data name="ImportDialogTitle" xml:space="preserve"><value>Veri içe aktar</value></data>
+  <data name="ExplorerImportData" xml:space="preserve"><value>Veri içe aktar…</value></data>
+  <data name="ImportEncoding" xml:space="preserve"><value>Kodlama</value></data>
+  <data name="ImportEncodingTurkish" xml:space="preserve"><value>Windows-1254 (Türkçe)</value></data>
+  <data name="ImportDelimiter" xml:space="preserve"><value>Ayırıcı</value></data>
+  <data name="ImportDelimiterAuto" xml:space="preserve"><value>Otomatik</value></data>
+  <data name="ImportHeader" xml:space="preserve"><value>İlk satır kolon adları</value></data>
+  <data name="ImportEmptyIsNull" xml:space="preserve"><value>Boş alanlar NULL</value></data>
+  <data name="ImportTransaction" xml:space="preserve"><value>Ya hepsi ya hiçbiri (tek transaction)</value></data>
+  <data name="ImportPreview" xml:space="preserve"><value>Dosyanın ilk satırları</value></data>
+  <data name="ImportMapping" xml:space="preserve"><value>Tablo kolonu ← dosya kolonu</value></data>
+  <data name="ImportSkip" xml:space="preserve"><value>(atla)</value></data>
+  <data name="ImportColumnN" xml:space="preserve"><value>Kolon {0}</value></data>
+  <data name="ImportClose" xml:space="preserve"><value>Kapat</value></data>
+  <data name="ImportRunning" xml:space="preserve"><value>İçe aktarılıyor…</value></data>
+  <data name="ImportRows" xml:space="preserve"><value>{0:N0} satır yazıldı</value></data>
+  <data name="ImportDone" xml:space="preserve"><value>{0:N0} satır {1} tablosuna aktarıldı.</value></data>
+  <data name="ImportCanceled" xml:space="preserve"><value>İçe aktarma iptal edildi; o ana kadar yazılan satırlar duruyor.</value></data>
+  <data name="ImportCanceledRolledBack" xml:space="preserve"><value>İçe aktarma iptal edildi; hiçbir satır kalmadı.</value></data>
+  <data name="ImportRolledBack" xml:space="preserve"><value>Hiçbir satır kalmadı (transaction geri alındı).</value></data>
+  <data name="ImportBadValue" xml:space="preserve"><value>Satır {0}, kolon {1}: "{2}" {3} tipinde bir değer değil.</value></data>
+  <data name="ImportServerError" xml:space="preserve"><value>Satır {0}–{1}: {2}</value></data>
+  <data name="ImportConfirmTitle" xml:space="preserve"><value>Üretim ortamına içe aktarma</value></data>
+  <data name="ImportConfirmProduction" xml:space="preserve"><value>{1} bir üretim bağlantısı; {0} tablosuna satır eklenecek. Devam edilsin mi?</value></data>
+  <data name="ImportBrowseTitle" xml:space="preserve"><value>İçe aktarılacak dosyayı seçin</value></data>
+  <data name="ImportTextFiles" xml:space="preserve"><value>Metin dosyaları</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Tümünü temizle</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Filtreyi kaldır</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} / {1:N0} satır</value></data>
