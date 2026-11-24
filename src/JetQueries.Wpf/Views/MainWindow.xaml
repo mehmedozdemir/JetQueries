@@ -76,6 +76,8 @@
                             <MenuItem Header="{x:Static res:Strings.QueryRun}" c:Ui.Icon="{x:Static c:Icons.Play}" InputGestureText="F5" Command="{Binding Documents.Selected.RunCommand}" />
                             <MenuItem Header="{x:Static res:Strings.QueryRunInNewTab}" c:Ui.Icon="&#xE8A7;" InputGestureText="Ctrl+Shift+Enter" Command="{Binding Documents.Selected.RunInNewTabCommand}" />
                             <MenuItem Header="{x:Static res:Strings.QueryCancel}" c:Ui.Icon="{x:Static c:Icons.Stop}" InputGestureText="Esc" Command="{Binding Documents.Selected.CancelCommand}" />
+                            <Separator />
+                            <MenuItem Header="{x:Static res:Strings.ExportMenu}" c:Ui.Icon="&#xEDE1;" Command="{Binding Documents.Selected.ExportCommand}" />
                         </MenuItem>
                         <MenuItem Header="{x:Static res:Strings.MenuView}">
                             <MenuItem x:Name="ExplorerMenuItem" Header="{x:Static res:Strings.MenuExplorer}" IsCheckable="True" IsChecked="True" Click="OnToggleExplorer" />

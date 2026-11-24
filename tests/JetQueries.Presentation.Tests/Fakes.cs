@@ -135,6 +135,17 @@ internal sealed class ImmediateDispatcher : IUiDispatcher
 
 internal sealed class FakeDialogs : IDialogService
 {
+    /// <summary>What the Export dialog answers (it may change the options first); null declines.</summary>
+    public Func<ExportResultViewModel, bool>? Export { get; set; }
+
+    public List<string> Opened { get; } = [];
+
+    public Task<bool> ExportResultAsync(ExportResultViewModel options) => Task.FromResult(Export?.Invoke(options) ?? false);
+
+    public void OpenWithShell(string path) => Opened.Add(path);
+
+    public string DocumentsFolder => System.IO.Path.Combine(AppContext.BaseDirectory, "exports");
+
     public bool EditResult { get; set; }
 
     public string? Password { get; set; }

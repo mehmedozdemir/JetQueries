@@ -173,6 +173,14 @@ internal sealed class WpfDialogService(IServiceProvider services) : IDialogServi
         return Task.FromResult(dialog.ShowDialog() == true ? dialog.Text : null);
     }
 
+    public Task<bool> ExportResultAsync(ExportResultViewModel options) =>
+        Task.FromResult(new ExportResultWindow(options) { Owner = Owner }.ShowDialog() == true);
+
+    public void OpenWithShell(string path) =>
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(path) { UseShellExecute = true })?.Dispose();
+
+    public string DocumentsFolder => Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+
     public Task<RoutineExecutionChoice> ExecuteRoutineAsync(ExecuteRoutineViewModel routine)
     {
         var window = new ExecuteRoutineWindow(routine) { Owner = Owner };

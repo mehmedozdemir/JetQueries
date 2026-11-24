@@ -234,6 +234,28 @@
   <data name="SshSavePassword" xml:space="preserve"><value>Keep the SSH password in the system credential store</value></data>
   <data name="SshHint" xml:space="preserve"><value>The database host and port above are as the SSH server sees them (often localhost). The server key is remembered at the first connection; a changed key is refused.</value></data>
   <data name="BrowseKeyFile" xml:space="preserve"><value>Choose a private key</value></data>
+  <data name="ExportDialogTitle" xml:space="preserve"><value>Export result</value></data>
+  <data name="ExportFormat" xml:space="preserve"><value>Format</value></data>
+  <data name="ExportRows" xml:space="preserve"><value>Rows</value></data>
+  <data name="ExportShownRows" xml:space="preserve"><value>The rows shown ({0:N0}), in the grid's order and columns</value></data>
+  <data name="ExportAllRows" xml:space="preserve"><value>The whole result: the query runs again and every row is written</value></data>
+  <data name="ExportFile" xml:space="preserve"><value>File</value></data>
+  <data name="ExportDelimiter" xml:space="preserve"><value>Separator</value></data>
+  <data name="ExportDelimiterComma" xml:space="preserve"><value>Comma (,)</value></data>
+  <data name="ExportDelimiterSemicolon" xml:space="preserve"><value>Semicolon (;) — Excel with Turkish settings</value></data>
+  <data name="ExportDelimiterTab" xml:space="preserve"><value>Tab</value></data>
+  <data name="ExportHeader" xml:space="preserve"><value>Column names on the first line</value></data>
+  <data name="ExportNullAsText" xml:space="preserve"><value>Write NULL as the word NULL (else empty)</value></data>
+  <data name="ExportTableName" xml:space="preserve"><value>Table name in INSERT</value></data>
+  <data name="ExportOpenWhenDone" xml:space="preserve"><value>Open the file afterwards</value></data>
+  <data name="ExportButton" xml:space="preserve"><value>Export</value></data>
+  <data name="ExportMenu" xml:space="preserve"><value>Export…</value></data>
+  <data name="ExportRunning" xml:space="preserve"><value>Exporting… {0:N0} rows</value></data>
+  <data name="ExportDone" xml:space="preserve"><value>{0:N0} rows written to {1}</value></data>
+  <data name="ExportCanceled" xml:space="preserve"><value>Export canceled.</value></data>
+  <data name="ExportFailed" xml:space="preserve"><value>Export failed: {0}</value></data>
+  <data name="ExportExcelTruncated" xml:space="preserve"><value>An Excel sheet holds {0:N0} rows; the rest were left out.</value></data>
+  <data name="ExportBrowseTitle" xml:space="preserve"><value>Export to</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Clear all</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Remove filter</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} of {1:N0} rows</value></data>

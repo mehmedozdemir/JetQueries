@@ -670,6 +670,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
     };
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExportCommand))]
     public partial IResultTab? SelectedTab { get; set; }
 
     [ObservableProperty]
@@ -1500,6 +1501,136 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
     }
 
     private bool CanCount(QueryResultSet? set) => set is { IsCounting: false } && LastSql is not null && SelectedSession is not null;
+
+    private bool CanExport(QueryResultSet? set) => (set ?? SelectedTab as QueryResultSet) is { Columns.Count: > 0 } && !IsExporting;
+
+    /// <summary>An export is writing its file (the command waits for it).</summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExportCommand))]
+    public partial bool IsExporting { get; set; }
+
+    /// <summary>
+    /// Writes a result to a file (CSV, Excel, JSON, SQL, Markdown, HTML): the rows shown, in the grid's order and
+    /// columns, or the whole result read again on a connection of its own and streamed to the file.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanExport))]
+    private async Task ExportAsync(QueryResultSet? set)
+    {
+        set ??= SelectedTab as QueryResultSet;
+        if (set is null)
+        {
+            return;
+        }
+
+        var session = SelectedSession?.Session;
+        var sql = session is null ? null : SqlOf(set, session);
+        var export = new ExportResultViewModel(set.View.RowCount, sql is not null && set.PagedSql is not null, Title.TrimEnd('*', ' '), _dialogs.DocumentsFolder);
+        if (!await _dialogs.ExportResultAsync(export) || !export.IsValid)
+        {
+            return;
+        }
+
+        var options = export.Options;
+        var path = export.Path.Trim();
+        var columns = set.RecordColumns ?? [.. Enumerable.Range(0, set.Columns.Count)];
+        var headers = columns.Select(c => set.Columns[c].Header).ToList();
+        var database = SelectedDatabase;
+        IAsyncEnumerable<object?[]> rows;
+        if (export.AllRows && session is not null && sql is not null)
+        {
+            rows = ReadAgain(session, sql, database, columns);
+        }
+        else
+        {
+            var snapshot = set.SnapshotRows();
+            var order = Enumerable.Range(0, set.View.RowCount).Select(set.View.SourceRow).ToList();
+            rows = Shown(snapshot, order, columns);
+        }
+
+        IsExporting = true;
+        Status = Format(Strings.ExportRunning, 0L);
+        var progress = new Progress<long>(count => Status = Format(Strings.ExportRunning, count));
+        try
+        {
+            var written = await _jobs.Enqueue(
+                "Export result",
+                async context =>
+                {
+                    var file = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None, 1 << 16, useAsync: true);
+                    await using (file.ConfigureAwait(false))
+                    {
+                        return await ResultExporter.WriteAsync(file, options, headers, rows, progress, context.CancellationToken).ConfigureAwait(false);
+                    }
+                },
+                JobPriority.Normal).Completion;
+            Status = string.Format(CultureInfo.CurrentCulture, CompositeFormat.Parse(Strings.ExportDone), written, path);
+            if (options.Format == ResultExportFormat.Excel && written > ResultExporter.ExcelMaxRows)
+            {
+                AddMessage(Format(Strings.ExportExcelTruncated, ResultExporter.ExcelMaxRows), isError: false);
+            }
+
+            if (export.OpenWhenDone)
+            {
+                _dialogs.OpenWithShell(path);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            Status = Strings.ExportCanceled;
+        }
+#pragma warning disable CA1031 // The file system's or the server's reason is shown; nothing else is disturbed.
+        catch (Exception ex)
+#pragma warning restore CA1031
+        {
+            Status = Format(Strings.ExportFailed, ex.Message);
+            AddMessage(Status, isError: true);
+        }
+        finally
+        {
+            IsExporting = false;
+        }
+
+        static async IAsyncEnumerable<object?[]> Shown(object?[][] snapshot, List<int> order, IReadOnlyList<int> columns)
+        {
+            foreach (var index in order)
+            {
+                var source = snapshot[index];
+                yield return [.. columns.Select(c => source[c])];
+            }
+
+            await Task.CompletedTask.ConfigureAwait(false);
+        }
+
+        // The query again, on a connection of its own in the same database: every row, in batches, to the file.
+        static async IAsyncEnumerable<object?[]> ReadAgain(
+            ConnectionSession session, string sql, string? database, IReadOnlyList<int> columns,
+            [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            var channel = await session.OpenChannelAsync(cancellationToken).ConfigureAwait(false);
+            await using (channel.ConfigureAwait(false))
+            {
+                if (database is not null && channel.ContextKind is not null)
+                {
+                    await channel.ChangeDatabaseAsync(database, cancellationToken).ConfigureAwait(false);
+                }
+
+                await foreach (var item in channel.ExecuteAsync(new QueryRequest(sql) { BatchSize = 2000 }, cancellationToken).ConfigureAwait(false))
+                {
+                    if (item is RowBatch batch)
+                    {
+                        foreach (var row in batch.Rows)
+                        {
+                            yield return [.. columns.Select(c => c < row.Length ? row[c] : null)];
+                        }
+                    }
+                    else if (item is ResultSetCompleted)
+                    {
+                        yield break;
+                    }
+                }
+            }
+        }
+    }
 
     /// <summary>
     /// Counts the rows of the last query without fetching them (DBeaver's "calculate total row count"), on the

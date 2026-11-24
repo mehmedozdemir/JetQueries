@@ -48,6 +48,19 @@ public interface IDialogService
     /// <param name="initial">The text the box starts with.</param>
     Task<string?> PromptTextAsync(string title, string message, string initial) => Task.FromResult<string?>(null);
 
+    /// <summary>Shows the Export dialog of a result; true when the user chose to export.</summary>
+    /// <param name="options">The dialog's view model.</param>
+    Task<bool> ExportResultAsync(ViewModels.ExportResultViewModel options) => Task.FromResult(false);
+
+    /// <summary>Opens a file with the application Windows associates with it (an exported result).</summary>
+    /// <param name="path">The file.</param>
+    void OpenWithShell(string path)
+    {
+    }
+
+    /// <summary>The user's documents folder, where exports are offered.</summary>
+    string DocumentsFolder => Path.GetTempPath();
+
     /// <summary>Shows the Execute dialog of a stored procedure or function (its parameters are read while it is open).</summary>
     /// <param name="routine">The dialog's view model.</param>
     Task<ViewModels.RoutineExecutionChoice> ExecuteRoutineAsync(ViewModels.ExecuteRoutineViewModel routine) =>
