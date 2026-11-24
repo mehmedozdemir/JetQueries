@@ -108,6 +108,11 @@ public sealed class EditorAssistTests
             editor.Text = "SELECT * FROM T ts WHERE ts";
             editor.MoveCaret(editor.Text.Length);
             await EditorActionsTests.Idle();
+
+            // The text keeps a gap from the line numbers' rule.
+            var directory = Path.Combine(AppContext.BaseDirectory, "screenshots");
+            Directory.CreateDirectory(directory);
+            Assert.True(ResultGridViewTests.Capture(editor, Path.Combine(directory, "wpf-editor-text.png")) > 2);
             await editor.ShowCompletionAsync();
             await EditorActionsTests.Idle();
             Assert.True(editor.IsCompletionOpen);

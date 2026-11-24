@@ -109,6 +109,9 @@ public partial class SqlEditor : UserControl
         _editor.Options.HighlightCurrentLine = false;
         _editor.TextArea.SelectionCornerRadius = 2;
         _editor.TextArea.SelectionBorder = null;
+
+        // Room between the line numbers' rule and the text, so the first column does not touch it.
+        _editor.TextArea.TextView.Margin = new Thickness(12, 0, 0, 0);
         _editor.SetBinding(ForegroundProperty, new System.Windows.Data.Binding(nameof(Foreground)) { Source = this });
         _editor.SetBinding(FontFamilyProperty, new System.Windows.Data.Binding(nameof(FontFamily)) { Source = this });
         UpdateFont();
