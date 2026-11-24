@@ -266,3 +266,25 @@ public sealed class RedisIntegrationTests(RedisFixture fixture) : IClassFixture<
         return sets;
     }
 }
+
+/// <summary>The provider as the application loads it: an extension in a load context of its own.</summary>
+public sealed class RedisExtensionTests
+{
+    [Fact]
+    public async Task The_provider_loads_as_an_extension()
+    {
+        var providerDirectory = typeof(RedisExtensionTests).Assembly.GetCustomAttributes(typeof(System.Reflection.AssemblyMetadataAttribute), false)
+            .Cast<System.Reflection.AssemblyMetadataAttribute>().Single(static a => a.Key == "ProviderDirectory").Value!;
+        var options = new JetQueries.Core.Extensions.ExtensionHostOptions();
+        options.Directories.Add(Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(Path.GetFullPath(providerDirectory)))!);
+        var host = new JetQueries.Core.Extensions.ExtensionHost(options, Microsoft.Extensions.Logging.Abstractions.NullLogger<JetQueries.Core.Extensions.ExtensionHost>.Instance);
+
+        var results = await host.LoadAsync(TestContext.Current.CancellationToken);
+
+        var loaded = Assert.Single(results, static r => r.Manifest?.Id == "jetqueries.redis");
+        Assert.True(loaded.State == JetQueries.Core.Extensions.ExtensionState.Loaded, loaded.Error);
+        var provider = host.FindDatabaseProvider(RedisProvider.ProviderId)!;
+        Assert.NotSame(System.Runtime.Loader.AssemblyLoadContext.Default, System.Runtime.Loader.AssemblyLoadContext.GetLoadContext(provider.GetType().Assembly));
+        Assert.Equal("Redis", provider.DisplayName);
+    }
+}

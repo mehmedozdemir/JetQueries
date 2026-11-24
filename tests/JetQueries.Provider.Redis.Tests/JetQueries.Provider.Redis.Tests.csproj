@@ -11,6 +11,7 @@
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="Testcontainers.Redis" />
     <PackageReference Include="StackExchange.Redis" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />
@@ -19,5 +20,7 @@
     <ProjectReference Include="..\..\src\JetQueries.Sdk\JetQueries.Sdk.csproj" />
     <ProjectReference Include="..\..\src\JetQueries.Core\JetQueries.Core.csproj" />
     <ProjectReference Include="..\..\src\Providers\JetQueries.Provider.Redis\JetQueries.Provider.Redis.csproj" />
+    <!-- Where the provider is built as an extension, for the test that loads it through the extension host. -->
+    <AssemblyMetadata Include="ProviderDirectory" Value="$(MSBuildThisFileDirectory)../../src/Providers/JetQueries.Provider.Redis/bin/$(Configuration)/$(TargetFramework)/" />
   </ItemGroup>
 </Project>
