@@ -503,6 +503,9 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] Save without an alias: "TNS adı" is reported as required. Save with one: the connection opens and runs a query
       (with VPN, against a real alias). Reopen the editor: the TNS fields are back, no stale host is kept.
 - [ ] Wallet (Autonomous Database / TCPS): point both folders at the unzipped wallet and use a *_high alias.
+- [ ] Secure external password store: with a wallet made by `mkstore -createCredential <alias> <user>` and a
+      sqlnet.ora with `SQLNET.WALLET_OVERRIDE = TRUE`, tick "Kullanıcı ve parola wallet'tan" (under Gelişmiş): the user
+      and password fields go away, and the connection opens with the wallet's credential.
 - [ ] Paste "User Id=hr;Password=…;Data Source=PRODDB;Tns_Admin=C:\oracle\network\admin" in the connection string
       tab: the form switches to TNS adı with PRODDB and the folder filled in.
 

@@ -70,6 +70,7 @@ internal static partial class OracleConnectionStringParser
         string? user = null;
         string? password = null;
         var hasAddress = false;
+        var slashUser = false;
 
         // The TNS and wallet folders apply to a TNS alias only; with host:port/service they are not used.
         var folders = new List<(string Key, string Value)>();
@@ -85,7 +86,7 @@ internal static partial class OracleConnectionStringParser
                     // "/" is operating-system authentication, which the provider does not offer.
                     if (value.Trim() == "/")
                     {
-                        ignored.Add(key);
+                        slashUser = true;
                     }
                     else
                     {
@@ -133,6 +134,17 @@ internal static partial class OracleConnectionStringParser
         if (!hasAddress)
         {
             throw new FormatException("The connection string has no Data Source.");
+        }
+
+        // "User Id=/" with a TNS alias: the wallet's secure external password store; otherwise operating-system
+        // authentication, which the provider does not offer.
+        if (slashUser && OracleConnectionSettings.IsTns(settings))
+        {
+            settings[OracleConnectionSettings.WalletCredentials] = "true";
+        }
+        else if (slashUser)
+        {
+            ignored.Add("User Id");
         }
 
         foreach (var (key, value) in folders)
