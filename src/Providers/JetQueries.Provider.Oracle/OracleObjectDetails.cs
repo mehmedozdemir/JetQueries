@@ -8,11 +8,18 @@ namespace JetQueries.Provider.Oracle;
 /// The object details view for Oracle: everything is read from ALL_* dictionary views with bind variables.
 /// Row counts come from the optimizer statistics (ALL_TABLES.NUM_ROWS); no user table is ever scanned.
 /// </summary>
-internal sealed partial class OracleMetadataProvider : IObjectDetailsProvider
+internal sealed partial class OracleMetadataProvider : IProgressiveObjectDetailsProvider
 {
     private const string DateFormat = "'YYYY-MM-DD HH24:MI:SS'";
 
-    public async Task<ObjectDetails?> GetDetailsAsync(DatabaseObject target, CancellationToken cancellationToken)
+    public Task<ObjectDetails?> GetDetailsAsync(DatabaseObject target, CancellationToken cancellationToken) =>
+        GetDetailsAsync(target, null, cancellationToken);
+
+    /// <remarks>
+    /// The properties and the columns are reported as soon as they are read; the keys, references and indexes
+    /// follow (on a large dictionary those take the most time).
+    /// </remarks>
+    public async Task<ObjectDetails?> GetDetailsAsync(DatabaseObject target, IProgress<ObjectDetails>? progress, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(target);
         if (target.Kind == DatabaseObjectKinds.Schema)
@@ -47,22 +54,38 @@ internal sealed partial class OracleMetadataProvider : IObjectDetailsProvider
             .Add(ObjectDetailKeys.Status, "Status", head[4]);
         var sections = new List<ObjectDetailSection?>();
         (string, string?)[] key = [("owner", owner), ("name", name)];
+        void Report() => progress?.Report(new ObjectDetails(resolved, properties.Build(), [.. sections.OfType<ObjectDetailSection>()]));
 
         switch (target.Kind)
         {
             case DatabaseObjectKinds.Table:
-                await TablePropertiesAsync(properties, key, cancellationToken).ConfigureAwait(false);
-                sections.Add(await ColumnsSectionAsync(key, cancellationToken).ConfigureAwait(false));
-                sections.Add(await ConstraintsSectionAsync(key, cancellationToken).ConfigureAwait(false));
-                sections.Add(await ForeignKeysSectionAsync(owner, key, cancellationToken).ConfigureAwait(false));
-                sections.Add(await ReferencesSectionAsync(owner, key, cancellationToken).ConfigureAwait(false));
-                sections.Add(await IndexesSectionAsync(key, cancellationToken).ConfigureAwait(false));
+                {
+                    // The columns first (one cheap view), their PK/FK marks once the constraints are read.
+                    var columns = await ColumnRowsAsync(key, cancellationToken).ConfigureAwait(false);
+                    sections.Add(ColumnsSection(columns, []));
+                    Report();
+                    var constraints = await ConstraintsAsync(key, cancellationToken).ConfigureAwait(false);
+                    sections[0] = ColumnsSection(columns, constraints);
+                    sections.Add(ConstraintsSection(constraints));
+                    await TablePropertiesAsync(properties, key, cancellationToken).ConfigureAwait(false);
+                    Report();
+                    sections.Add(await ForeignKeysSectionAsync(owner, constraints, cancellationToken).ConfigureAwait(false));
+                    var referencesAt = sections.Count;
+                    sections.Add(await IndexesSectionAsync(key, cancellationToken).ConfigureAwait(false));
+                    Report();
+
+                    // Other tables' keys pointing here: the slowest to find, read last but shown before the indexes.
+                    sections.Insert(referencesAt, await ReferencesSectionAsync(owner, constraints, cancellationToken).ConfigureAwait(false));
+                    Report();
+                }
+
                 sections.Add(await TriggersSectionAsync(key, cancellationToken).ConfigureAwait(false));
                 break;
 
             case DatabaseObjectKinds.View:
                 properties.Add(ObjectDetailKeys.Comment, "Comment", await TableCommentAsync(key, cancellationToken).ConfigureAwait(false));
-                sections.Add(await ColumnsSectionAsync(key, cancellationToken).ConfigureAwait(false));
+                sections.Add(ColumnsSection(await ColumnRowsAsync(key, cancellationToken).ConfigureAwait(false), []));
+                Report();
                 sections.Add(await TriggersSectionAsync(key, cancellationToken).ConfigureAwait(false));
                 break;
 
@@ -158,24 +181,74 @@ internal sealed partial class OracleMetadataProvider : IObjectDetailsProvider
         await RowsAsync("SELECT c.comments FROM all_tab_comments c WHERE c.owner = :owner AND c.table_name = :name", key, cancellationToken).ConfigureAwait(false)
             is [var row, ..] ? row[0] : null;
 
-    private async Task<ObjectDetailSection?> ColumnsSectionAsync((string, string?)[] key, CancellationToken cancellationToken)
+    // The dictionary views (ALL_CONSTRAINTS above all) are expensive to parse and to run nested: every query
+    // here reads one view or one plain join, without scalar subqueries, and the pieces are put together in code.
+    // A first look at a table on a cold instance went from tens of seconds to under one.
+
+    /// <summary>A key, unique or check constraint, or a foreign key, of the table, with its columns in order.</summary>
+    private sealed record TableConstraint(
+        string Name,
+        string Type,
+        string? Condition,
+        string? Status,
+        string? Validated,
+        string? DeleteRule,
+        string? ReferencedOwner,
+        string? ReferencedName,
+        List<string> Columns);
+
+    private async Task<List<TableConstraint>> ConstraintsAsync((string, string?)[] key, CancellationToken cancellationToken)
+    {
+        const string Sql = """
+            SELECT k.constraint_name, k.constraint_type, k.search_condition_vc, k.status, k.validated, k.delete_rule,
+                   k.r_owner, k.r_constraint_name, k.generated, cc.column_name
+            FROM all_constraints k
+            LEFT JOIN all_cons_columns cc ON cc.owner = k.owner AND cc.constraint_name = k.constraint_name AND cc.table_name = k.table_name
+            WHERE k.owner = :owner AND k.table_name = :name AND k.constraint_type IN ('P', 'U', 'C', 'R')
+            ORDER BY k.constraint_name, cc.position
+            """;
+        var constraints = new List<TableConstraint>();
+        foreach (var k in await RowsAsync(Sql, key, cancellationToken).ConfigureAwait(false))
+        {
+            // NOT NULL constraints Oracle named itself are shown as the column's "Nullable", not as constraints.
+            if (k[1] == "C" && k[8] == "GENERATED NAME" && k[2] is { } condition
+                && condition.StartsWith('"') && condition.EndsWith("\" IS NOT NULL", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            if (constraints.Count == 0 || constraints[^1].Name != k[0])
+            {
+                constraints.Add(new TableConstraint(k[0]!, k[1]!, k[2], k[3], k[4], k[5], k[6], k[7], []));
+            }
+
+            if (k[9] is { } column)
+            {
+                constraints[^1].Columns.Add(column);
+            }
+        }
+
+        return constraints;
+    }
+
+    private async Task<List<string?[]>> ColumnRowsAsync((string, string?)[] key, CancellationToken cancellationToken)
     {
         // ALL_TAB_COLS (not ALL_TAB_COLUMNS) tells virtual columns; hidden system columns are left out.
         const string Sql = """
             SELECT TO_CHAR(c.column_id), c.column_name, c.data_type, TO_CHAR(c.data_length), TO_CHAR(c.data_precision), TO_CHAR(c.data_scale),
-                   TO_CHAR(c.char_length), c.char_used, c.nullable, c.identity_column, c.virtual_column,
-                   CASE WHEN EXISTS (SELECT 1 FROM all_constraints k JOIN all_cons_columns kc ON kc.owner = k.owner AND kc.constraint_name = k.constraint_name
-                                     WHERE k.constraint_type = 'P' AND k.owner = c.owner AND k.table_name = c.table_name AND kc.column_name = c.column_name)
-                        THEN 'PK' END,
-                   CASE WHEN EXISTS (SELECT 1 FROM all_constraints k JOIN all_cons_columns kc ON kc.owner = k.owner AND kc.constraint_name = k.constraint_name
-                                     WHERE k.constraint_type = 'R' AND k.owner = c.owner AND k.table_name = c.table_name AND kc.column_name = c.column_name)
-                        THEN 'FK' END,
-                   m.comments, c.data_default
+                   TO_CHAR(c.char_length), c.char_used, c.nullable, c.identity_column, c.virtual_column, m.comments, c.data_default
             FROM all_tab_cols c
             LEFT JOIN all_col_comments m ON m.owner = c.owner AND m.table_name = c.table_name AND m.column_name = c.column_name
             WHERE c.owner = :owner AND c.table_name = :name AND c.hidden_column = 'NO'
             ORDER BY c.column_id
             """;
+        return await RowsAsync(Sql, key, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static ObjectDetailSection? ColumnsSection(List<string?[]> rows, List<TableConstraint> constraints)
+    {
+        var primary = constraints.Where(static k => k.Type == "P").SelectMany(static k => k.Columns).ToHashSet(StringComparer.Ordinal);
+        var foreign = constraints.Where(static k => k.Type == "R").SelectMany(static k => k.Columns).ToHashSet(StringComparer.Ordinal);
         var table = new DetailTable(
             ObjectDetailKeys.Columns,
             "Columns",
@@ -187,32 +260,22 @@ internal sealed partial class OracleMetadataProvider : IObjectDetailsProvider
             (ObjectDetailKeys.Identity, "Identity / virtual"),
             (ObjectDetailKeys.Key, "Key"),
             (ObjectDetailKeys.Comment, "Comment"));
-        foreach (var c in await RowsAsync(Sql, key, cancellationToken).ConfigureAwait(false))
+        foreach (var c in rows)
         {
             var dataType = OracleTypeFormatter.Format(c[2] ?? string.Empty, ToInt(c[3]) ?? 0, ToInt(c[4]), ToInt(c[5]), ToInt(c[6]) ?? 0, c[7]);
             var identity = c[9] == "YES" ? "IDENTITY" : c[10] == "YES" ? "VIRTUAL" : null;
 
             // An identity column's default is the sequence Oracle generated for it: noise.
-            var defaultValue = identity == "IDENTITY" ? null : c[14]?.Trim();
-            var keys = string.Join(", ", new[] { c[11], c[12] }.OfType<string>());
-            table.Add([c[0], c[1], dataType, DetailTable.Flag(c[8] == "Y"), defaultValue, identity, keys.Length == 0 ? null : keys, c[13]]);
+            var defaultValue = identity == "IDENTITY" ? null : c[12]?.Trim();
+            var keys = string.Join(", ", new[] { primary.Contains(c[1]!) ? "PK" : null, foreign.Contains(c[1]!) ? "FK" : null }.OfType<string>());
+            table.Add([c[0], c[1], dataType, DetailTable.Flag(c[8] == "Y"), defaultValue, identity, keys.Length == 0 ? null : keys, c[11]]);
         }
 
         return table.Build();
     }
 
-    private async Task<ObjectDetailSection?> ConstraintsSectionAsync((string, string?)[] key, CancellationToken cancellationToken)
+    private static ObjectDetailSection? ConstraintsSection(List<TableConstraint> constraints)
     {
-        // NOT NULL constraints Oracle named itself are shown as the column's "Nullable", not here.
-        const string Sql = """
-            SELECT k.constraint_name, k.constraint_type, k.search_condition_vc, k.status, k.validated,
-                   (SELECT LISTAGG(cc.column_name, ', ') WITHIN GROUP (ORDER BY cc.position)
-                    FROM all_cons_columns cc WHERE cc.owner = k.owner AND cc.constraint_name = k.constraint_name AND cc.table_name = k.table_name)
-            FROM all_constraints k
-            WHERE k.owner = :owner AND k.table_name = :name AND k.constraint_type IN ('P', 'U', 'C')
-              AND NOT (k.constraint_type = 'C' AND k.generated = 'GENERATED NAME' AND k.search_condition_vc LIKE '"%" IS NOT NULL')
-            ORDER BY CASE k.constraint_type WHEN 'P' THEN 1 WHEN 'U' THEN 2 ELSE 3 END, k.constraint_name
-            """;
         var table = new DetailTable(
             ObjectDetailKeys.Constraints,
             "Constraints",
@@ -221,24 +284,50 @@ internal sealed partial class OracleMetadataProvider : IObjectDetailsProvider
             (ObjectDetailKeys.ColumnList, "Columns"),
             (ObjectDetailKeys.Definition, "Condition"),
             (ObjectDetailKeys.Status, "Status"));
-        foreach (var k in await RowsAsync(Sql, key, cancellationToken).ConfigureAwait(false))
+        foreach (var k in constraints.Where(static k => k.Type != "R").OrderBy(static k => k.Type switch { "P" => 1, "U" => 2, _ => 3 }).ThenBy(static k => k.Name, StringComparer.Ordinal))
         {
-            var kind = k[1] switch { "P" => "PRIMARY KEY", "U" => "UNIQUE", _ => "CHECK" };
-            table.Add([k[0], kind, k[5], k[2], Status(k[3], k[4])], source: k[2]);
+            var kind = k.Type switch { "P" => "PRIMARY KEY", "U" => "UNIQUE", _ => "CHECK" };
+            table.Add([k.Name, kind, Join(k.Columns), k.Condition, Status(k.Status, k.Validated)], source: k.Condition);
         }
 
         return table.Build();
     }
 
-    private async Task<ObjectDetailSection?> ForeignKeysSectionAsync(string owner, (string, string?)[] key, CancellationToken cancellationToken)
+    private async Task<ObjectDetailSection?> ForeignKeysSectionAsync(string owner, List<TableConstraint> constraints, CancellationToken cancellationToken)
     {
-        const string Sql = $"""
-            SELECT k.constraint_name, r.owner, r.table_name, k.delete_rule, k.status, k.validated, {ForeignKeyColumns}
-            FROM all_constraints k
-            JOIN all_constraints r ON r.owner = k.r_owner AND r.constraint_name = k.r_constraint_name
-            WHERE k.owner = :owner AND k.table_name = :name AND k.constraint_type = 'R'
-            ORDER BY k.constraint_name
+        var foreignKeys = constraints.Where(static k => k.Type == "R" && k.ReferencedOwner is not null && k.ReferencedName is not null).OrderBy(static k => k.Name, StringComparer.Ordinal).ToList();
+        if (foreignKeys.Count == 0)
+        {
+            return null;
+        }
+
+        // The keys they refer to: table and columns, from ALL_CONS_COLUMNS alone.
+        var parameters = new List<(string, string?)>();
+        var conditions = new List<string>();
+        foreach (var (fk, i) in foreignKeys.Select(static (k, i) => (k, i)))
+        {
+            conditions.Add($"(rc.owner = :o{i} AND rc.constraint_name = :n{i})");
+            parameters.Add(($"o{i}", fk.ReferencedOwner));
+            parameters.Add(($"n{i}", fk.ReferencedName));
+        }
+
+        var sql = $"""
+            SELECT rc.owner, rc.constraint_name, rc.table_name, rc.column_name
+            FROM all_cons_columns rc
+            WHERE {string.Join(" OR ", conditions)}
+            ORDER BY rc.owner, rc.constraint_name, rc.position
             """;
+        var referenced = new Dictionary<(string, string), (string Table, List<string> Columns)>();
+        foreach (var r in await RowsAsync(sql, [.. parameters], cancellationToken).ConfigureAwait(false))
+        {
+            if (!referenced.TryGetValue((r[0]!, r[1]!), out var target))
+            {
+                referenced[(r[0]!, r[1]!)] = target = (r[2]!, []);
+            }
+
+            target.Columns.Add(r[3]!);
+        }
+
         var table = new DetailTable(
             ObjectDetailKeys.ForeignKeys,
             "Foreign keys",
@@ -248,31 +337,39 @@ internal sealed partial class OracleMetadataProvider : IObjectDetailsProvider
             (ObjectDetailKeys.ReferencedColumns, "Referenced columns"),
             (ObjectDetailKeys.OnDelete, "On delete"),
             (ObjectDetailKeys.Status, "Status"));
-        foreach (var k in await RowsAsync(Sql, key, cancellationToken).ConfigureAwait(false))
+        foreach (var k in foreignKeys)
         {
+            if (!referenced.TryGetValue((k.ReferencedOwner!, k.ReferencedName!), out var target))
+            {
+                continue;
+            }
+
             table.Add(
-                [k[0], k[6], Qualify(owner, k[1], k[2]!), k[7], k[3], Status(k[4], k[5])],
-                new DatabaseObject(new DatabaseObjectName(null, k[1], k[2]!), DatabaseObjectKinds.Table));
+                [k.Name, Join(k.Columns), Qualify(owner, k.ReferencedOwner, target.Table), Join(target.Columns), k.DeleteRule, Status(k.Status, k.Validated)],
+                new DatabaseObject(new DatabaseObjectName(null, k.ReferencedOwner, target.Table), DatabaseObjectKinds.Table));
         }
 
         return table.Build();
     }
 
-    // The foreign key's own columns, then the columns of the key it refers to, in the same order.
-    private const string ForeignKeyColumns = """
-        (SELECT LISTAGG(cc.column_name, ', ') WITHIN GROUP (ORDER BY cc.position) FROM all_cons_columns cc WHERE cc.owner = k.owner AND cc.constraint_name = k.constraint_name),
-        (SELECT LISTAGG(rc.column_name, ', ') WITHIN GROUP (ORDER BY rc.position) FROM all_cons_columns rc WHERE rc.owner = r.owner AND rc.constraint_name = r.constraint_name)
-        """;
-
-    private async Task<ObjectDetailSection?> ReferencesSectionAsync(string owner, (string, string?)[] key, CancellationToken cancellationToken)
+    private async Task<ObjectDetailSection?> ReferencesSectionAsync(string owner, List<TableConstraint> constraints, CancellationToken cancellationToken)
     {
-        const string Sql = $"""
-            SELECT k.constraint_name, k.owner, k.table_name, k.delete_rule, k.status, k.validated, {ForeignKeyColumns}
-            FROM all_constraints r
-            JOIN all_constraints k ON k.r_owner = r.owner AND k.r_constraint_name = r.constraint_name AND k.constraint_type = 'R'
-            WHERE r.owner = :owner AND r.table_name = :name AND r.constraint_type IN ('P', 'U')
-            ORDER BY k.owner, k.table_name, k.constraint_name
+        // Foreign keys of other tables that point at this table's primary or unique keys.
+        var keys = constraints.Where(static k => k.Type is "P" or "U").ToDictionary(static k => k.Name, StringComparer.Ordinal);
+        if (keys.Count == 0)
+        {
+            return null;
+        }
+
+        var names = keys.Keys.Select(static (_, i) => $":k{i}").ToList();
+        var sql = $"""
+            SELECT k.owner, k.table_name, k.constraint_name, k.r_constraint_name, k.delete_rule, k.status, k.validated, cc.column_name
+            FROM all_constraints k
+            LEFT JOIN all_cons_columns cc ON cc.owner = k.owner AND cc.constraint_name = k.constraint_name AND cc.table_name = k.table_name
+            WHERE k.constraint_type = 'R' AND k.r_owner = :owner AND k.r_constraint_name IN ({string.Join(", ", names)})
+            ORDER BY k.owner, k.table_name, k.constraint_name, cc.position
             """;
+        (string, string?)[] parameters = [("owner", owner), .. keys.Keys.Select(static (name, i) => ($"k{i}", (string?)name))];
         var table = new DetailTable(
             ObjectDetailKeys.References,
             "References",
@@ -282,25 +379,46 @@ internal sealed partial class OracleMetadataProvider : IObjectDetailsProvider
             (ObjectDetailKeys.ReferencedColumns, "Referenced columns"),
             (ObjectDetailKeys.OnDelete, "On delete"),
             (ObjectDetailKeys.Status, "Status"));
-        foreach (var k in await RowsAsync(Sql, key, cancellationToken).ConfigureAwait(false))
+        string?[]? current = null;
+        var columns = new List<string>();
+        void Flush()
         {
-            table.Add(
-                [k[0], Qualify(owner, k[1], k[2]!), k[6], k[7], k[3], Status(k[4], k[5])],
-                new DatabaseObject(new DatabaseObjectName(null, k[1], k[2]!), DatabaseObjectKinds.Table));
+            if (current is { } k)
+            {
+                table.Add(
+                    [k[2], Qualify(owner, k[0], k[1]!), Join(columns), Join(keys[k[3]!].Columns), k[4], Status(k[5], k[6])],
+                    new DatabaseObject(new DatabaseObjectName(null, k[0], k[1]!), DatabaseObjectKinds.Table));
+            }
+
+            columns.Clear();
         }
 
+        foreach (var k in await RowsAsync(sql, parameters, cancellationToken).ConfigureAwait(false))
+        {
+            if (current is null || current[0] != k[0] || current[2] != k[2])
+            {
+                Flush();
+                current = k;
+            }
+
+            if (k[7] is { } column)
+            {
+                columns.Add(column);
+            }
+        }
+
+        Flush();
         return table.Build();
     }
 
     private async Task<ObjectDetailSection?> IndexesSectionAsync((string, string?)[] key, CancellationToken cancellationToken)
     {
         const string Sql = """
-            SELECT i.index_name, i.index_type, i.uniqueness, i.status, i.tablespace_name,
-                   (SELECT LISTAGG(ic.column_name || CASE WHEN ic.descend = 'DESC' THEN ' DESC' END, ', ') WITHIN GROUP (ORDER BY ic.column_position)
-                    FROM all_ind_columns ic WHERE ic.index_owner = i.owner AND ic.index_name = i.index_name)
+            SELECT i.owner, i.index_name, i.index_type, i.uniqueness, i.status, i.tablespace_name, ic.column_name, ic.descend
             FROM all_indexes i
+            LEFT JOIN all_ind_columns ic ON ic.index_owner = i.owner AND ic.index_name = i.index_name
             WHERE i.table_owner = :owner AND i.table_name = :name AND i.index_type <> 'LOB'
-            ORDER BY i.index_name
+            ORDER BY i.index_name, i.owner, ic.column_position
             """;
         var table = new DetailTable(
             ObjectDetailKeys.Indexes,
@@ -311,13 +429,37 @@ internal sealed partial class OracleMetadataProvider : IObjectDetailsProvider
             (ObjectDetailKeys.ColumnList, "Columns"),
             (ObjectDetailKeys.Tablespace, "Tablespace"),
             (ObjectDetailKeys.Status, "Status"));
-        foreach (var i in await RowsAsync(Sql, key, cancellationToken).ConfigureAwait(false))
+        string?[]? current = null;
+        var columns = new List<string>();
+        void Flush()
         {
-            table.Add([i[0], i[1], DetailTable.Flag(i[2] == "UNIQUE"), i[5], i[4], i[3]]);
+            if (current is { } i)
+            {
+                table.Add([i[1], i[2], DetailTable.Flag(i[3] == "UNIQUE"), Join(columns), i[5], i[4]]);
+            }
+
+            columns.Clear();
         }
 
+        foreach (var i in await RowsAsync(Sql, key, cancellationToken).ConfigureAwait(false))
+        {
+            if (current is null || current[0] != i[0] || current[1] != i[1])
+            {
+                Flush();
+                current = i;
+            }
+
+            if (i[6] is { } column)
+            {
+                columns.Add(column + (i[7] == "DESC" ? " DESC" : string.Empty));
+            }
+        }
+
+        Flush();
         return table.Build();
     }
+
+    private static string? Join(List<string> columns) => columns.Count == 0 ? null : string.Join(", ", columns);
 
     private async Task<ObjectDetailSection?> TriggersSectionAsync((string, string?)[] key, CancellationToken cancellationToken)
     {

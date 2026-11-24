@@ -55,6 +55,44 @@ public sealed class ObjectDetailsTests
     }
 
     [Fact]
+    public async Task A_progressive_provider_shows_the_columns_before_the_slow_tabs()
+    {
+        await using var env = new TestEnvironment();
+        var columns = new ObjectDetailSection(ObjectDetailKeys.Columns, "Columns", [new(ObjectDetailKeys.Name, "Name")], [new(["Id"])]);
+        var indexes = new ObjectDetailSection(ObjectDetailKeys.Indexes, "Indexes", [new(ObjectDetailKeys.Name, "Name")], [new(["IX_Cards"])]);
+        var references = new ObjectDetailSection(ObjectDetailKeys.References, "References", [new(ObjectDetailKeys.Name, "Name")], [new(["FK_Orders_Cards"])]);
+        var slow = new TaskCompletionSource();
+        env.Provider.ProgressiveDetails = async (target, progress, token) =>
+        {
+            progress.Report(new ObjectDetails(target, [new(ObjectDetailKeys.ObjectType, "Type", "TABLE")], [columns]));
+            await slow.Task.WaitAsync(token);
+            return new ObjectDetails(target, [new(ObjectDetailKeys.ObjectType, "Type", "TABLE"), new(ObjectDetailKeys.Rows, "Rows", "5")], [columns, references, indexes]);
+        };
+
+        var definition = await env.OpenAsync(TestEnvironment.Definition("Kartlar"));
+        var session = env.Manager.Sessions.Single(s => s.Definition.Id == definition.Id);
+        var details = new ObjectDetailsViewModel(session, Cards, env.Metadata, env.Jobs);
+        var loading = details.LoadAsync();
+
+        // The columns are there while the rest is still being read.
+        for (var i = 0; i < 200 && details.Sections.Count == 0; i++)
+        {
+            await Task.Delay(10, TestContext.Current.CancellationToken);
+        }
+
+        Assert.True(details.IsLoading);
+        Assert.Equal([ObjectDetailKeys.Columns], details.Sections.Select(static s => s.Key));
+        var columnsView = details.Sections[0];
+
+        slow.SetResult();
+        await loading;
+        Assert.False(details.IsLoading);
+        Assert.Equal([ObjectDetailKeys.Columns, ObjectDetailKeys.References, ObjectDetailKeys.Indexes], details.Sections.Select(static s => s.Key));
+        Assert.Same(columnsView, details.Sections[0]);
+        Assert.Equal(2, details.Properties.Count);
+    }
+
+    [Fact]
     public async Task The_ddl_opens_in_an_editor_tab_and_its_absence_is_said()
     {
         await using var env = new TestEnvironment();

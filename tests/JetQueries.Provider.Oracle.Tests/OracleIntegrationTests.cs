@@ -361,8 +361,14 @@ public sealed class OracleIntegrationTests(OracleFixture fixture) : IClassFixtur
         Assert.Equal(["JQ_CHILD_PARENT_FK", "JQ_CHILD", "PARENT_ID", "ID", "CASCADE", "ENABLED"], reference.Cells);
         Assert.Equal(Object("JQ_CHILD", DatabaseObjectKinds.Table), reference.Target);
 
-        var child = await details.GetDetailsAsync(Object("JQ_CHILD", DatabaseObjectKinds.Table), Token);
+        // Read in steps: the columns come first; the returned value is the final state.
+        var steps = new List<ObjectDetails>();
+        var child = await Assert.IsAssignableFrom<IProgressiveObjectDetailsProvider>(details)
+            .GetDetailsAsync(Object("JQ_CHILD", DatabaseObjectKinds.Table), new Recorder(steps), Token);
         Assert.NotNull(child);
+        Assert.Equal([ObjectDetailKeys.Columns], steps[0].Sections.Select(static s => s.Key));
+        Assert.True(steps.Count >= 3);
+        Assert.Subset(child.Sections.Select(static s => s.Key).ToHashSet(), steps[^1].Sections.Select(static s => s.Key).ToHashSet());
         var columns = Section(child, ObjectDetailKeys.Columns);
         Assert.Equal(["1", "ID", "NUMBER", null, null, "IDENTITY", "PK", null], columns.Rows[0].Cells);
         Assert.Equal("FK", Cell(columns, 1, ObjectDetailKeys.Key));
@@ -410,6 +416,11 @@ public sealed class OracleIntegrationTests(OracleFixture fixture) : IClassFixtur
         Assert.Null(await details.GetDetailsAsync(Object("NOTHING", DatabaseObjectKinds.Table), Token));
         Assert.Null(await details.GetDetailsAsync(Object("JQ_CHILD_V", DatabaseObjectKinds.Table), Token));
         Assert.NotNull(await details.GetDetailsAsync(new DatabaseObject(new DatabaseObjectName(null, null, user), DatabaseObjectKinds.Schema), Token));
+    }
+
+    private sealed class Recorder(List<ObjectDetails> steps) : IProgress<ObjectDetails>
+    {
+        public void Report(ObjectDetails value) => steps.Add(value);
     }
 
     private static ObjectDetailSection Section(ObjectDetails details, string key) => Assert.Single(details.Sections, s => s.Key == key);

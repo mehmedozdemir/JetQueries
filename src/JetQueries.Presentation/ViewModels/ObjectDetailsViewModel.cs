@@ -20,6 +20,7 @@ public sealed class DetailSectionView
     public DetailSectionView(ObjectDetailSection section)
     {
         ArgumentNullException.ThrowIfNull(section);
+        Section = section;
         Key = section.Key;
         Title = ObjectDetailsViewModel.Translate(section.Key, section.Title);
         Headers = [.. section.Columns.Select(static c => ObjectDetailsViewModel.Translate(c.Key, c.Title))];
@@ -29,6 +30,9 @@ public sealed class DetailSectionView
     }
 
     public string Key { get; }
+
+    /// <summary>The provider's section this view shows.</summary>
+    public ObjectDetailSection Section { get; }
 
     /// <summary>The tab title.</summary>
     public string Title { get; }
@@ -127,35 +131,45 @@ public partial class ObjectDetailsViewModel : ObservableObject
     public event EventHandler<ObjectDetailsRequest>? DetailsRequested;
 
     /// <summary>Reads (or reads again) the details and the DDL.</summary>
+    /// <remarks>
+    /// A provider that reports its progress shows the properties and columns first; the other tabs appear as
+    /// they are read (the bar under the header keeps moving until the last one).
+    /// </remarks>
     [RelayCommand]
     public async Task LoadAsync()
     {
         IsLoading = true;
         Error = null;
         var target = Target;
+        var version = ++_loadVersion;
+        var finished = false;
+        var progress = new Progress<ObjectDetails>(partial =>
+        {
+            if (!finished && version == _loadVersion)
+            {
+                Show(partial);
+            }
+        });
         try
         {
-            var detailsJob = _jobs.Enqueue("Object details", context => ReadDetailsAsync(target, context.CancellationToken), JobPriority.High).Completion;
+            var detailsJob = _jobs.Enqueue("Object details", context => ReadDetailsAsync(target, progress, context.CancellationToken), JobPriority.High).Completion;
             var ddlJob = _jobs.Enqueue("Object definition", context => ReadDdlAsync(target, context.CancellationToken), JobPriority.Normal).Completion;
             var details = await detailsJob;
-            Properties.Clear();
-            Sections.Clear();
+            finished = true;
+            if (version != _loadVersion)
+            {
+                return;
+            }
+
             if (details is null)
             {
+                Properties.Clear();
+                Sections.Clear();
                 Error = Format(Strings.DetailsNotFound, Title);
             }
             else
             {
-                Target = details.Target;
-                foreach (var property in details.Properties.Where(static p => !string.IsNullOrWhiteSpace(p.Value)))
-                {
-                    Properties.Add(new DetailPropertyView(Translate(property.Key, property.Label), property.Value!));
-                }
-
-                foreach (var section in details.Sections)
-                {
-                    Sections.Add(new DetailSectionView(section));
-                }
+                Show(details);
             }
 
             try
@@ -182,7 +196,57 @@ public partial class ObjectDetailsViewModel : ObservableObject
         }
         finally
         {
-            IsLoading = false;
+            finished = true;
+            if (version == _loadVersion)
+            {
+                IsLoading = false;
+            }
+        }
+    }
+
+    private int _loadVersion;
+
+    /// <summary>
+    /// Shows details read so far or in full. A section that is already shown keeps its tab (the tab the user is
+    /// on stays selected); new sections are added in the provider's order.
+    /// </summary>
+    private void Show(ObjectDetails details)
+    {
+        Target = details.Target;
+        Properties.Clear();
+        foreach (var property in details.Properties.Where(static p => !string.IsNullOrWhiteSpace(p.Value)))
+        {
+            Properties.Add(new DetailPropertyView(Translate(property.Key, property.Label), property.Value!));
+        }
+
+        var keys = details.Sections.Select(static s => s.Key).ToHashSet(StringComparer.Ordinal);
+        for (var i = Sections.Count - 1; i >= 0; i--)
+        {
+            if (!keys.Contains(Sections[i].Key))
+            {
+                Sections.RemoveAt(i);
+            }
+        }
+
+        for (var i = 0; i < details.Sections.Count; i++)
+        {
+            var section = details.Sections[i];
+            if (i < Sections.Count && Sections[i].Key == section.Key)
+            {
+                if (!ReferenceEquals(Sections[i].Section, section))
+                {
+                    Sections[i] = new DetailSectionView(section);
+                }
+            }
+            else
+            {
+                Sections.Insert(i, new DetailSectionView(section));
+            }
+        }
+
+        while (Sections.Count > details.Sections.Count)
+        {
+            Sections.RemoveAt(Sections.Count - 1);
         }
     }
 
@@ -233,10 +297,15 @@ public partial class ObjectDetailsViewModel : ObservableObject
     /// <summary>The translated name of an object kind (Table, View, …).</summary>
     public static string KindName(DatabaseObjectKinds kind) => Strings.Find("Kind_" + kind) ?? kind.ToString();
 
-    private async Task<ObjectDetails?> ReadDetailsAsync(DatabaseObject target, CancellationToken cancellationToken)
+    private async Task<ObjectDetails?> ReadDetailsAsync(DatabaseObject target, IProgress<ObjectDetails> progress, CancellationToken cancellationToken)
     {
         var details = await _session.UseMetadataAsync(
-            (provider, token) => provider is IObjectDetailsProvider detailed ? detailed.GetDetailsAsync(target, token) : Task.FromResult<ObjectDetails?>(null),
+            (provider, token) => provider switch
+            {
+                IProgressiveObjectDetailsProvider progressive => progressive.GetDetailsAsync(target, progress, token),
+                IObjectDetailsProvider detailed => detailed.GetDetailsAsync(target, token),
+                _ => Task.FromResult<ObjectDetails?>(null),
+            },
             cancellationToken).ConfigureAwait(false);
         if (details is not null || !ObjectScripts.HasData(target.Kind))
         {
