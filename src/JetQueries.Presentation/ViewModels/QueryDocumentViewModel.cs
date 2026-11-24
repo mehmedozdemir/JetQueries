@@ -494,9 +494,14 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
         string? outcome = null;
         try
         {
-            var document = Document(text, SessionMetadata(session));
-            var definition = await _jobs.Enqueue("Find object", context => service.GetDefinitionAsync(document, offset, context.CancellationToken), JobPriority.High).Completion;
-            if (definition?.Target is { } target)
+            var metadata = SessionMetadata(session);
+            var document = Document(text, metadata);
+            var target = await _jobs.Enqueue(
+                "Find object",
+                async context => await TargetOfAsync(await service.GetDefinitionAsync(document, offset, context.CancellationToken).ConfigureAwait(false), metadata, context.CancellationToken)
+                    .ConfigureAwait(false),
+                JobPriority.High).Completion;
+            if (target is not null)
             {
                 DetailsRequested?.Invoke(this, new ObjectDetailsRequest(session.Definition.Id, target));
             }
@@ -534,6 +539,31 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
                 NavigationText = null;
             }
         }
+    }
+
+    /// <summary>
+    /// What a definition opens: its object, or — for a routine pointed at inside a package (<c>pkg.member</c>) —
+    /// that routine, as the package lists it (the package itself when it does not).
+    /// </summary>
+    private static async Task<DatabaseObject?> TargetOfAsync(SqlDefinition? definition, SessionMetadataProvider metadata, CancellationToken cancellationToken)
+    {
+        if (definition?.Target is not { } target)
+        {
+            return null;
+        }
+
+        if (definition.MemberName is { } member && target.Kind == DatabaseObjectKinds.Package)
+        {
+            await foreach (var routine in metadata.GetObjectsAsync(target, DatabaseObjectKinds.Procedure | DatabaseObjectKinds.Function, cancellationToken).ConfigureAwait(false))
+            {
+                if (string.Equals(routine.Name.Name, member, StringComparison.OrdinalIgnoreCase))
+                {
+                    return routine;
+                }
+            }
+        }
+
+        return target;
     }
 
     /// <summary>How long a navigation message ("not found") stays over the editor.</summary>
@@ -579,7 +609,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
                 async context =>
                 {
                     var definition = await service.GetDefinitionAsync(document, offset, context.CancellationToken).ConfigureAwait(false);
-                    if (definition?.Target is not { } target)
+                    if (await TargetOfAsync(definition, metadata, context.CancellationToken).ConfigureAwait(false) is not { } target)
                     {
                         return (null, null);
                     }

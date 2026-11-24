@@ -95,10 +95,17 @@ public enum DatabaseObjectKinds
 /// <param name="Name">The object's own name.</param>
 public sealed record DatabaseObjectName(string? Database, string? Schema, string Name)
 {
+    /// <summary>
+    /// The object a routine is declared in (an Oracle package), unquoted; <see langword="null"/> for a
+    /// standalone object.
+    /// </summary>
+    /// <remarks>Preview.</remarks>
+    public string? Container { get; init; }
+
     /// <summary>Returns the unquoted parts joined with dots, for display only — never for building SQL.</summary>
-    /// <returns>A display string such as <c>Sales.dbo.Orders</c>.</returns>
+    /// <returns>A display string such as <c>Sales.dbo.Orders</c> or <c>HR.PAYROLL.RUN</c>.</returns>
     public override string ToString() =>
-        string.Join('.', new[] { Database, Schema, Name }.Where(static part => part is not null));
+        string.Join('.', new[] { Database, Schema, Container, Name }.Where(static part => part is not null));
 }
 
 /// <summary>An object in the database catalog.</summary>

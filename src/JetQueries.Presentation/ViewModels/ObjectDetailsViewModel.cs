@@ -87,7 +87,7 @@ public partial class ObjectDetailsViewModel : ObservableObject
     public ISqlLanguageService? LanguageService => _session.Provider.LanguageService;
 
     /// <summary>schema.name.</summary>
-    public string Title => Target.Name.Schema is { Length: > 0 } schema ? schema + "." + Target.Name.Name : Target.Name.Name;
+    public string Title => string.Join('.', new[] { Target.Name.Schema, Target.Name.Container, Target.Name.Name }.Where(static p => !string.IsNullOrEmpty(p)));
 
     /// <summary>Kind · connection · database.</summary>
     public string Subtitle => string.Join(" · ", new[] { KindName(Target.Kind), _session.Definition.Name, Target.Name.Database }.Where(static p => !string.IsNullOrEmpty(p)));

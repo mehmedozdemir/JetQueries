@@ -419,6 +419,56 @@ public sealed class OracleIntegrationTests(OracleFixture fixture) : IClassFixtur
     }
 
     [Fact]
+    public async Task A_package_member_has_details_signatures_and_source_of_its_own()
+    {
+        await using var connection = await OpenAsync();
+        foreach (var sql in new[]
+                 {
+                     "CREATE OR REPLACE PACKAGE jq_pay AS\n  -- pays one card\n  PROCEDURE pay(p_card IN NUMBER, p_amount IN NUMBER DEFAULT 0);\n  PROCEDURE pay(p_card IN VARCHAR2);\n  FUNCTION total RETURN NUMBER;\nEND jq_pay;",
+                     "CREATE OR REPLACE PACKAGE BODY jq_pay AS\n  PROCEDURE pay(p_card IN NUMBER, p_amount IN NUMBER DEFAULT 0) IS\n  BEGIN\n    NULL;\n  END pay;\n  PROCEDURE pay(p_card IN VARCHAR2) IS\n  BEGIN\n    NULL;\n  END pay;\n  FUNCTION total RETURN NUMBER IS\n  BEGIN\n    RETURN 42;\n  END total;\nEND jq_pay;",
+                 })
+        {
+            await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest(sql), Token));
+        }
+
+        var user = fixture.Credential.UserName!.ToUpperInvariant();
+        var package = new DatabaseObject(new DatabaseObjectName(null, user, "JQ_PAY"), DatabaseObjectKinds.Package);
+
+        // The explorer's members carry their package.
+        var members = await ToListAsync(connection.Metadata.GetObjectsAsync(package, DatabaseObjectKinds.Procedure | DatabaseObjectKinds.Function, Token));
+        var pay = Assert.Single(members, static m => m.Name.Name == "PAY");
+        Assert.Equal("JQ_PAY", pay.Name.Container);
+        Assert.Equal($"{user}.JQ_PAY.PAY", pay.Name.ToString());
+        var total = Assert.Single(members, static m => m.Name.Name == "TOTAL");
+        Assert.Equal(DatabaseObjectKinds.Function, total.Kind);
+
+        // Details: the package's owner and status, the routine's parameters with the overload.
+        var details = await Assert.IsAssignableFrom<IObjectDetailsProvider>(connection.Metadata).GetDetailsAsync(pay, Token);
+        Assert.NotNull(details);
+        Assert.Equal("JQ_PAY", details.Target.Name.Container);
+        Assert.Contains(details.Properties, static p => p is { Key: "package", Value: "JQ_PAY" });
+        var parameters = Assert.Single(details.Sections, static s => s.Key == ObjectDetailKeys.Parameters);
+        Assert.Equal("overload", parameters.Columns[0].Key);
+        Assert.Equal(3, parameters.Rows.Count);
+        Assert.Equal(["1", "1", "P_CARD", "NUMBER", "IN", null], parameters.Rows[0].Cells);
+        Assert.Equal("✓", parameters.Rows[1].Cells[5]);
+        Assert.Null(await ((IObjectDetailsProvider)connection.Metadata).GetDetailsAsync(pay with { Name = pay.Name with { Name = "NOPE" } }, Token));
+
+        // Signatures: one per overload.
+        Assert.Equal(2, (await ((IRoutineMetadataProvider)connection.Metadata).GetSignaturesAsync(pay, Token)).Count);
+
+        // Source: the declarations from the specification and the bodies, nothing of the other routines.
+        var source = await connection.Metadata.GetDefinitionAsync(pay, Token);
+        Assert.NotNull(source);
+        Assert.Contains($"-- PACKAGE {user}.JQ_PAY", source, StringComparison.Ordinal);
+        Assert.Contains($"-- PACKAGE BODY {user}.JQ_PAY", source, StringComparison.Ordinal);
+        Assert.Contains("PROCEDURE pay(p_card IN VARCHAR2);", source, StringComparison.Ordinal);
+        Assert.Contains("END pay;", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("total", source, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("RETURN 42", await connection.Metadata.GetDefinitionAsync(total, Token), StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task A_tns_alias_from_a_tnsnames_file_connects()
     {
         Assert.SkipWhen(fixture.SkipReason is not null, fixture.SkipReason ?? string.Empty);
