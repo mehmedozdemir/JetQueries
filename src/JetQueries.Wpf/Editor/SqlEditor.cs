@@ -637,6 +637,10 @@ public partial class SqlEditor : UserControl
         {
             e.Handled = true;
         }
+        else if (HandleSingleLineKey(e))
+        {
+            e.Handled = true;
+        }
         else if (e.Key == Key.Space && Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift))
         {
             _ = ShowSignatureHelpAsync();
@@ -800,6 +804,7 @@ public partial class SqlEditor : UserControl
 
     private void OnEditorTextChanged(object? sender, EventArgs e)
     {
+        UpdatePlaceholder();
         if (_updatingText)
         {
             return;

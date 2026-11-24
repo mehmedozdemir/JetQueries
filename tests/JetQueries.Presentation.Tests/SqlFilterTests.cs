@@ -122,4 +122,38 @@ public sealed class SqlFilterTests
 
         Assert.True(condition());
     }
+
+    [Fact]
+    public async Task The_filter_box_offers_the_columns_then_the_words_of_a_condition()
+    {
+        await using var env = new TestEnvironment();
+        await env.OpenAsync(TestEnvironment.Definition("Cards"));
+        var query = env.Query();
+        var set = new QueryResultSet(
+            "r",
+            [new JetQueries.Sdk.ResultColumn("Balance", "decimal(12,2)", typeof(decimal)), new JetQueries.Sdk.ResultColumn("City Name", "nvarchar(40)", typeof(string)), new JetQueries.Sdk.ResultColumn("Bank", "int", typeof(int))]);
+
+        List<string> Labels(string marked) =>
+            [.. query.FilterCompletions(set, marked.Replace("|", string.Empty, StringComparison.Ordinal), marked.IndexOf('|', StringComparison.Ordinal)).Select(static i => i.Label)];
+
+        // At the start and after AND / OR / NOT / "(": the columns.
+        Assert.Equal(["Balance", "City Name", "Bank"], Labels("|"));
+        Assert.Equal(["Balance", "City Name", "Bank"], Labels("Balance > 1 AND |"));
+        Assert.Equal(["Balance", "City Name", "Bank"], Labels("(|"));
+
+        // After a column or a value: the words.
+        Assert.Equal(["AND", "OR", "NOT", "LIKE", "IN", "IS NULL", "IS NOT NULL", "BETWEEN"], Labels("Balance > 100 |"));
+
+        // A prefix narrows both, ignoring case; nothing inside a string.
+        Assert.Equal(["Balance", "Bank", "BETWEEN"], Labels("b|"));
+        Assert.Empty(Labels("City Name LIKE 'b|"));
+
+        // The type is shown; a name that needs it is quoted by the provider.
+        var items = query.FilterCompletions(set, "Ci", 2);
+        var city = Assert.Single(items, static i => i.Label == "City Name");
+        Assert.Equal("nvarchar(40)", city.Detail);
+        Assert.Equal(new JetQueries.Sdk.TextSpan(0, 2), city.ReplaceSpan);
+        Assert.Equal(env.Provider.QuoteIdentifier("City Name"), city.InsertText);
+        Assert.Equal("Balance", Assert.Single(query.FilterCompletions(set, "Bal", 3)).InsertText);
+    }
 }

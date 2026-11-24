@@ -166,6 +166,9 @@
   <data name="FilterApply" xml:space="preserve"><value>Apply</value></data>
   <data name="FilterClear" xml:space="preserve"><value>Clear</value></data>
   <data name="FilterValueRequired" xml:space="preserve"><value>Enter a value.</value></data>
+  <data name="FilterMatchAll" xml:space="preserve"><value>All of (AND)</value></data>
+  <data name="FilterMatchAny" xml:space="preserve"><value>Any of (OR)</value></data>
+  <data name="FilterMatchTip" xml:space="preserve"><value>Show rows matching all the filters, or any one of them</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Clear all</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Remove filter</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} of {1:N0} rows</value></data>

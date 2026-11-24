@@ -71,6 +71,7 @@ public sealed class ResultSetView
     private readonly IUiDispatcher? _ui;
     private List<ResultSort> _sorts = [];
     private List<ResultFilter> _filters = [];
+    private bool _matchAny;
     private JobHandle<int[]?>? _job;
     private int _version;
 
@@ -91,8 +92,18 @@ public sealed class ResultSetView
     /// <summary>The sort keys, most significant first.</summary>
     public IReadOnlyList<ResultSort> Sorts => _sorts;
 
-    /// <summary>The filters; a row must pass all of them.</summary>
+    /// <summary>The filters; a row must pass all of them, or any one with <see cref="MatchAny"/>.</summary>
     public IReadOnlyList<ResultFilter> Filters => _filters;
+
+    /// <summary>Whether a row passing any one filter is shown (OR) instead of only rows passing all (AND).</summary>
+    public bool MatchAny => _matchAny;
+
+    /// <summary>Combines the filters with OR (<see langword="true"/>) or AND.</summary>
+    public Task SetMatchAnyAsync(bool matchAny)
+    {
+        _matchAny = matchAny;
+        return ApplyAsync(_sorts, _filters);
+    }
 
     /// <summary>The result-set row shown at each position; null shows every row in arrival order.</summary>
     public int[]? RowMap { get; private set; }
@@ -176,16 +187,17 @@ public sealed class ResultSetView
         // Rows are appended on the UI thread while a query streams: the job works on a copy of the list.
         var rows = _set.SnapshotRows();
         var columns = _set.Columns;
+        var matchAny = _matchAny;
         if (_jobs is null)
         {
-            Apply(version, Compute(rows, columns, sorts, filters, CancellationToken.None));
+            Apply(version, Compute(rows, columns, sorts, filters, CancellationToken.None, matchAny));
             return;
         }
 
         _job?.Cancel();
         var job = _jobs.Enqueue<int[]?>(
             "Sort and filter results",
-            context => Task.FromResult<int[]?>(Compute(rows, columns, sorts, filters, context.CancellationToken)));
+            context => Task.FromResult<int[]?>(Compute(rows, columns, sorts, filters, context.CancellationToken, matchAny)));
         _job = job;
         int[]? map;
         try
@@ -218,10 +230,13 @@ public sealed class ResultSetView
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
-    /// <summary>The shown rows: those passing every filter, in sort order (ties keep arrival order).</summary>
+    /// <summary>
+    /// The shown rows: those passing every filter (or, with <paramref name="matchAny"/>, at least one), in sort
+    /// order (ties keep arrival order).
+    /// </summary>
     internal static int[] Compute(
         IReadOnlyList<object?[]> rows, IReadOnlyList<ResultGridColumn> columns, IReadOnlyList<ResultSort> sorts, IReadOnlyList<ResultFilter> filters,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, bool matchAny = false)
     {
         var tests = filters.Select(f => CellTest.Create(f, columns[f.Column])).ToArray();
         var kept = new List<int>(rows.Count);
@@ -233,12 +248,12 @@ public sealed class ResultSetView
             }
 
             var row = rows[i];
-            var pass = true;
+            var pass = tests.Length == 0 || !matchAny;
             foreach (var test in tests)
             {
-                if (!test.Passes(row[test.Column]))
+                if (test.Passes(row[test.Column]) == matchAny)
                 {
-                    pass = false;
+                    pass = matchAny;
                     break;
                 }
             }

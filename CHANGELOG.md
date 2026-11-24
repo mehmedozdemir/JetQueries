@@ -6,6 +6,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 ## [Unreleased]
 
 ### Added
+- Results: the SQL filter box above the grid is a one-line SQL editor: colouring, and completion of the result's columns (with their types) and of the words of a condition (AND, OR, LIKE, IS NULL…). Enter applies, Esc puts back the applied filter.
+- Results: column filters can be combined with OR ("Herhangi biri (VEYA)" next to the filter chips, shown from two filters on).
 - Oracle: connect by TNS alias. The connection form has "Connect with: host and service name / TNS alias"; for a TNS alias it asks for the alias (listed from tnsnames.ora with where each one points), the TNS folder (default TNS_ADMIN, then `ORACLE_HOME\network\admin`) and an optional wallet folder (TCPS, Autonomous Database). A pasted connection string with a bare alias (`Data Source=PRODDB`, `hr/pw@PRODDB`) and `Tns_Admin` / `Wallet_Location` is read as such.
 - SDK (preview): connection settings can depend on another setting (`VisibleWhen`), take a folder (`ConnectionSettingKind.FolderPath`) and offer suggested values (`HasSuggestions`, `IConnectionSettingSuggestions`).
 - UiKit: the ComboBox style supports `IsEditable` (typed text with the list still available).

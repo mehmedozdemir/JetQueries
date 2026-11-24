@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using JetQueries.Sdk;
 using UiKit.Controls;
 
 namespace JetQueries.Wpf.Views;
@@ -44,6 +45,9 @@ public partial class ResultGridView : UserControl
         Grid.SortDirectionRequested += (column, direction) =>
             _ = _set?.View.SetSortAsync(column, direction is null ? null : direction == GridSortDirection.Descending);
         Grid.FilterRequested += OpenFilter;
+        SqlFilterBox.Submitted += OnSqlFilterSubmitted;
+        SqlFilterBox.Canceled += OnSqlFilterCanceled;
+        SqlFilterBox.CompletionSource = FilterCompletionsAsync;
         Grid.FilterByValueRequested += (column, row, exclude) => _ = _set?.View.FilterByValueAsync(row, column, exclude);
         Grid.HideColumnRequested += HideColumn;
         Grid.CellMenuOpening += AddCellMenuItems;
@@ -125,25 +129,43 @@ public partial class ResultGridView : UserControl
         UpdateChips();
     }
 
-    /// <summary>Enter applies the SQL filter; Esc puts back the one applied.</summary>
-    private void OnSqlFilterKeyDown(object sender, KeyEventArgs e)
+    /// <summary>Enter applies the SQL filter.</summary>
+    private void OnSqlFilterSubmitted(object? sender, EventArgs e)
     {
-        if (_set is null)
-        {
-            return;
-        }
-
-        if (e.Key == Key.Enter && ApplySqlFilterButton.Command is { } apply && apply.CanExecute(_set))
+        if (_set is not null && ApplySqlFilterButton.Command is { } apply && apply.CanExecute(_set))
         {
             apply.Execute(_set);
-            e.Handled = true;
         }
-        else if (e.Key == Key.Escape)
+    }
+
+    /// <summary>Esc puts back the filter that is applied.</summary>
+    private void OnSqlFilterCanceled(object? sender, EventArgs e)
+    {
+        if (_set is not null)
         {
             _set.SqlFilter = _set.AppliedFilter ?? string.Empty;
-            SqlFilterBox.CaretIndex = SqlFilterBox.Text.Length;
-            e.Handled = true;
+            SqlFilterBox.MoveCaret(SqlFilterBox.Text.Length);
         }
+    }
+
+    // The result's columns and the words of a condition, from the query tab's view model.
+    private Task<IReadOnlyList<CompletionItem>> FilterCompletionsAsync(string text, int offset, CancellationToken cancellationToken) =>
+        Task.FromResult(_set is not null && FindQueryView() is { } query ? query.FilterCompletions(_set, text, offset) : (IReadOnlyList<CompletionItem>)[]);
+
+    private QueryDocumentViewModel? FindQueryView()
+    {
+        DependencyObject? node = this;
+        while (node is not null)
+        {
+            if (node is QueryDocumentView { DataContext: QueryDocumentViewModel model })
+            {
+                return model;
+            }
+
+            node = VisualTreeHelper.GetParent(node) ?? LogicalTreeHelper.GetParent(node);
+        }
+
+        return null;
     }
 
     private int _statsVersion;
@@ -415,7 +437,7 @@ public partial class ResultGridView : UserControl
             UpdateSqlFilterBar();
             if (_set?.IsSqlFilterOpen == true)
             {
-                Dispatcher.BeginInvoke(() => SqlFilterBox.Focus(), DispatcherPriority.Input);
+                Dispatcher.BeginInvoke(() => SqlFilterBox.FocusText(), DispatcherPriority.Input);
             }
         }
     }
@@ -509,6 +531,8 @@ public partial class ResultGridView : UserControl
         var view = _set.View;
         Chips.ItemsSource = view.Filters.Select(f => new FilterChip(f, _set.Columns[f.Column].Header, Describe(f))).ToList();
         ClearAll.Visibility = view.Filters.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        MatchMode.Visibility = view.Filters.Count > 1 ? Visibility.Visible : Visibility.Collapsed;
+        MatchMode.Content = view.MatchAny ? Strings.FilterMatchAny : Strings.FilterMatchAll;
         ShowColumns.Visibility = _hidden.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         ShowColumns.Content = string.Format(CultureInfo.CurrentCulture, CompositeFormat.Parse(Strings.HiddenColumns), _hidden.Count);
         RowsText.Text = string.Format(CultureInfo.CurrentCulture, CompositeFormat.Parse(Strings.ResultRowsShown), view.RowCount, _set.RowCount);
@@ -663,6 +687,15 @@ public partial class ResultGridView : UserControl
     }
 
     private void OnClearAll(object sender, RoutedEventArgs e) => _ = _set?.View.ClearFiltersAsync();
+
+    // AND ⇄ OR between the filters.
+    private void OnMatchMode(object sender, RoutedEventArgs e)
+    {
+        if (_set is not null)
+        {
+            _ = _set.View.SetMatchAnyAsync(!_set.View.MatchAny);
+        }
+    }
 
     private void OnClearFiltersShortcut(object sender, ExecutedRoutedEventArgs e) => _ = _set?.View.ClearFiltersAsync();
 

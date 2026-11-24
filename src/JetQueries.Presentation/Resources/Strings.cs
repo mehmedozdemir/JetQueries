@@ -162,6 +162,9 @@ public static class Strings
     public static string FilterClear => Get(nameof(FilterClear));
     public static string FilterValueRequired => Get(nameof(FilterValueRequired));
     public static string FilterClearAll => Get(nameof(FilterClearAll));
+    public static string FilterMatchAll => Get(nameof(FilterMatchAll));
+    public static string FilterMatchAny => Get(nameof(FilterMatchAny));
+    public static string FilterMatchTip => Get(nameof(FilterMatchTip));
     public static string FilterRemove => Get(nameof(FilterRemove));
     public static string ResultRowsShown => Get(nameof(ResultRowsShown));
     public static string HiddenColumns => Get(nameof(HiddenColumns));

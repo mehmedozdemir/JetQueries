@@ -157,6 +157,33 @@ public sealed class ResultSetViewTests
     }
 
     /// <summary>Id, City, Balance, IssuedAt.</summary>
+    [Fact]
+    public async Task Filters_can_be_combined_with_or()
+    {
+        var set = Cards();
+        var view = set.View;
+        await view.FilterByValueAsync(0, 1, exclude: false);
+        await view.SetFilterAsync(2, new ResultFilter(2, ResultFilterOperator.GreaterThan, "5000"));
+
+        // İstanbul (Turkish case rules: "istanbul" too) AND balance > 5000.
+        Assert.False(view.MatchAny);
+        Assert.Equal(["3"], Ids(set));
+
+        // İstanbul OR balance > 5000; then İstanbul OR balance < 1 (İzmir with 0).
+        await view.SetMatchAnyAsync(true);
+        Assert.True(view.MatchAny);
+        Assert.Equal(["1", "3"], Ids(set));
+        await view.SetFilterAsync(2, new ResultFilter(2, ResultFilterOperator.LessThan, "1"));
+        Assert.Equal(["1", "2", "3"], Ids(set));
+        await view.SetFilterAsync(2, new ResultFilter(2, ResultFilterOperator.GreaterThan, "5000"));
+
+        // One filter, either way, is the same; none shows every row.
+        await view.RemoveFilterAsync(view.Filters[1]);
+        Assert.Equal(["1", "3"], Ids(set));
+        await view.ClearFiltersAsync();
+        Assert.Equal(5, view.RowCount);
+    }
+
     private static QueryResultSet Cards()
     {
         var set = new QueryResultSet(

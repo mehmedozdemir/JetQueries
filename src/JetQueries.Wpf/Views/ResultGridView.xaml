@@ -5,7 +5,26 @@
              xmlns:res="clr-namespace:JetQueries.Presentation.Resources;assembly=JetQueries.Presentation"
              xmlns:v="clr-namespace:JetQueries.Wpf.Views"
              xmlns:ae="http://icsharpcode.net/sharpdevelop/avalonedit"
+             xmlns:e="clr-namespace:JetQueries.Wpf.Editor"
              Focusable="False">
+    <UserControl.Resources>
+        <!-- The SQL filter box looks like an input; an applied filter or the focus draws its border in the accent -->
+        <Style x:Key="SqlFilterFrame" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource Brush.Input}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.BorderStrong}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="1,1" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsFiltered}" Value="True">
+                    <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
+                </DataTrigger>
+                <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                    <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
     <UserControl.InputBindings>
         <KeyBinding Gesture="Ctrl+Shift+L" Command="{x:Static ApplicationCommands.Stop}" />
     </UserControl.InputBindings>
@@ -72,19 +91,12 @@
                         c:Ui.Icon="{x:Static c:Icons.Filter}" Margin="4,0,0,0"
                         Command="{Binding DataContext.ApplyFilterCommand, RelativeSource={RelativeSource AncestorType=v:QueryDocumentView}}"
                         CommandParameter="{Binding}" ToolTip="{x:Static res:Strings.SqlFilterApply}" />
-                <TextBox x:Name="SqlFilterBox" Padding="6,3" FontFamily="{DynamicResource Font.Code}" FontSize="{DynamicResource FontSize.Code}"
-                         c:Ui.Placeholder="{x:Static res:Strings.FilterPlaceholder}" Text="{Binding SqlFilter, UpdateSourceTrigger=PropertyChanged}"
-                         KeyDown="OnSqlFilterKeyDown">
-                    <TextBox.Style>
-                        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsFiltered}" Value="True">
-                                    <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBox.Style>
-                </TextBox>
+                <!-- A one-line SQL editor: colouring and completion of the result's columns -->
+                <Border x:Name="SqlFilterFrame" Style="{StaticResource SqlFilterFrame}" Height="28" VerticalAlignment="Center">
+                    <e:SqlEditor x:Name="SqlFilterBox" IsSingleLine="True" Placeholder="{x:Static res:Strings.FilterPlaceholder}"
+                                 Text="{Binding SqlFilter, UpdateSourceTrigger=PropertyChanged}"
+                                 LanguageService="{Binding DataContext.LanguageService, RelativeSource={RelativeSource AncestorType=v:QueryDocumentView}}" />
+                </Border>
             </DockPanel>
         </Border>
 
@@ -96,6 +108,9 @@
             <Button x:Name="ClearAll" DockPanel.Dock="Right" Style="{StaticResource Btn.Link}" Content="{x:Static res:Strings.FilterClearAll}"
                     Click="OnClearAll" />
             <WrapPanel>
+                <!-- With two filters or more: are they combined with AND or OR -->
+                <Button x:Name="MatchMode" Style="{StaticResource Btn.Link}" VerticalAlignment="Center" Margin="0,0,8,0"
+                        Visibility="Collapsed" Click="OnMatchMode" ToolTip="{x:Static res:Strings.FilterMatchTip}" />
                 <ItemsControl x:Name="Chips" Focusable="False">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>

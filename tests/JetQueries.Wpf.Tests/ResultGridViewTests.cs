@@ -143,6 +143,21 @@ public sealed class ResultGridViewTests
             window.Show();
             await Idle();
 
+            // The SQL filter box is a one-line SQL editor; OR between two column filters.
+            Assert.Equal("Balance > 100 AND City LIKE N'İ%'", view.SqlFilterBox.Text);
+            Assert.True(view.SqlFilterBox.IsSingleLine);
+            await set.View.FilterByValueAsync(0, 1, exclude: false);
+            await set.View.SetFilterAsync(2, new ResultFilter(2, ResultFilterOperator.GreaterThan, "1000"));
+            await set.View.SetMatchAnyAsync(true);
+            await Idle();
+            results["filters"] = Capture((FrameworkElement)window.Content, Path.Combine(directory, "wpf-results-filters.png"));
+            await set.View.ClearFiltersAsync();
+            await set.View.SetMatchAnyAsync(false);
+            set.SqlFilter = string.Empty;
+            await Idle();
+            Assert.Equal(view.SqlFilterBox.PlaceholderShown, JetQueries.Presentation.Resources.Strings.FilterPlaceholder);
+            await Idle();
+
             view.VirtualGrid.SelectRow(4);
             set.ViewMode = ResultViewMode.Text;
             await Idle();
@@ -180,7 +195,7 @@ public sealed class ResultGridViewTests
             return results;
         });
 
-        Assert.Equal(4, colours.Count);
+        Assert.Equal(5, colours.Count);
         Assert.All(colours, static pair => Assert.True(pair.Value > 12, $"{pair.Key} rendered only {pair.Value} distinct colours."));
     }
 
