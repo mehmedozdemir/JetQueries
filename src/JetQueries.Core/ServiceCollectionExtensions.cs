@@ -59,6 +59,11 @@ public static class ServiceCollectionExtensions
 
         var settingsOptions = new SettingsStoreOptions();
         configureSettings?.Invoke(settingsOptions);
+        if (settingsOptions.Protector is null && OperatingSystem.IsWindows())
+        {
+            settingsOptions.Protector = new WindowsDataProtector();
+        }
+
         services.TryAddSingleton(settingsOptions);
         services.TryAddSingleton<ISettingsStore, JsonSettingsStore>();
         return services;
