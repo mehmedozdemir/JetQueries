@@ -620,6 +620,60 @@ public sealed class PostgreSqlIntegrationTests(PostgreSqlFixture fixture) : ICla
         Assert.Single((await Collect(connection.Executor.ExecuteAsync(new QueryRequest("SELECT 1"), Token))).OfType<RowBatch>());
     }
 
+    [Fact]
+    public async Task Signatures_of_functions_and_procedures_come_from_the_catalog()
+    {
+        await using var connection = await OpenAsync();
+        foreach (var sql in new[]
+                 {
+                     "CREATE SCHEMA sig",
+                     "CREATE FUNCTION sig.add(a int, b int DEFAULT 1, OUT total int) LANGUAGE sql AS $$ SELECT a + b $$",
+                     "CREATE FUNCTION sig.joined(sep text, VARIADIC parts text[]) RETURNS text LANGUAGE sql AS $$ SELECT array_to_string(parts, sep) $$",
+                     "CREATE FUNCTION sig.now_utc() RETURNS timestamp LANGUAGE sql AS $$ SELECT now() AT TIME ZONE 'UTC' $$",
+                     "CREATE PROCEDURE sig.move(IN p_from int, INOUT p_count int, OUT p_note text) LANGUAGE plpgsql AS $$ BEGIN p_note := 'x'; END $$",
+                 })
+        {
+            await Collect(connection.Executor.ExecuteAsync(new QueryRequest(sql), Token));
+        }
+
+        var routines = Assert.IsAssignableFrom<IRoutineMetadataProvider>(connection.Metadata);
+        Task<IReadOnlyList<SqlSignature>> Signatures(string? schema, string name, DatabaseObjectKinds kind = DatabaseObjectKinds.Function) =>
+            routines.GetSignaturesAsync(new DatabaseObject(new DatabaseObjectName(null, schema, name), kind), Token);
+
+        // OUT parameters of a function are not passed; defaults make the trailing ones optional.
+        var add = Assert.Single(await Signatures("sig", "add"));
+        Assert.Equal(["a", "b"], add.Parameters.Select(static p => p.Name));
+        Assert.Equal(["integer", "integer"], add.Parameters.Select(static p => p.DataType));
+        Assert.Equal([false, true], add.Parameters.Select(static p => p.IsOptional));
+        Assert.Equal("integer", add.ReturnType);
+
+        var joined = Assert.Single(await Signatures("sig", "joined"));
+        Assert.True(joined.IsVariadic);
+        Assert.Equal("text[]", joined.Parameters[1].DataType);
+
+        Assert.Empty(Assert.Single(await Signatures("sig", "now_utc")).Parameters);
+
+        // A procedure keeps its OUT parameters, which a CALL passes.
+        var move = Assert.Single(await Signatures("sig", "move", DatabaseObjectKinds.Procedure));
+        Assert.Equal([null, "IN OUT", "OUT"], move.Parameters.Select(static p => p.Direction));
+        Assert.Null(move.ReturnType);
+
+        // Overloads, from the fixture's schema.
+        var balance = await Signatures("kart", "balance_of");
+        Assert.Equal(2, balance.Count);
+        Assert.Equal(["p_card", "p_card_no"], balance.Select(static s => s.Parameters.Single().Name).Order(StringComparer.Ordinal));
+        Assert.All(balance, static s => Assert.Equal("numeric", s.ReturnType));
+
+        Assert.Empty(await Signatures("sig", "missing"));
+
+        // Through the language service.
+        var service = (ISignatureHelpProvider)new PostgreSqlProvider().LanguageService!;
+        const string Text = "CALL kart.purge_old_logs(";
+        var help = await service.GetSignatureHelpAsync(new SqlDocument(Text, connection.Metadata), Text.Length, Token);
+        Assert.NotNull(help);
+        Assert.Equal("p_days", help.Signatures[0].Parameters[0].Name);
+    }
+
     private async Task<IDatabaseConnection> OpenAsync()
     {
         if (fixture.SkipReason is { } reason)
