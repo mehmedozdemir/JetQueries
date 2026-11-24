@@ -416,4 +416,11 @@ public static class Strings
     public static string HistoryAllConnections => Get(nameof(HistoryAllConnections));
     public static string HistoryFailedOnly => Get(nameof(HistoryFailedOnly));
     public static string HistoryNoMatch => Get(nameof(HistoryNoMatch));
+    public static string FieldShowColumnTypes => Get(nameof(FieldShowColumnTypes));
+    public static string SettingShowColumnTypesInfo => Get(nameof(SettingShowColumnTypesInfo));
+    public static string MenuCommandPalette => Get(nameof(MenuCommandPalette));
+    public static string CommandPaletteSearch => Get(nameof(CommandPaletteSearch));
+    public static string ExplorerFavorites => Get(nameof(ExplorerFavorites));
+    public static string ExplorerAddFavorite => Get(nameof(ExplorerAddFavorite));
+    public static string ExplorerRemoveFavorite => Get(nameof(ExplorerRemoveFavorite));
 }

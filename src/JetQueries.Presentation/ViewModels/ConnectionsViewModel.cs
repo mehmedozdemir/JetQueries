@@ -26,6 +26,12 @@ public abstract partial class ExplorerNodeViewModel(string name) : ObservableObj
     /// <summary>Whether an ALTER / CREATE OR REPLACE script can be written for the node.</summary>
     public virtual bool CanAlter => false;
 
+    /// <summary>Whether the node can be pinned under the connection's favourites.</summary>
+    public virtual bool CanBeFavorite => false;
+
+    /// <summary>Whether the node is pinned.</summary>
+    public virtual bool IsFavorite => false;
+
     public ObservableCollection<ExplorerNodeViewModel> Children { get; } = [];
 
     [ObservableProperty]
@@ -75,6 +81,9 @@ public sealed partial class ConnectionNodeViewModel(ConnectionDefinition definit
     public override bool CanLoad => _context is not null;
 
     /// <summary>The connection is open: show its objects underneath.</summary>
+    /// <summary>What the nodes underneath load with; null while closed.</summary>
+    public ExplorerContext? Context => _context;
+
     public void Attach(ExplorerContext context)
     {
         _context = context;
@@ -125,8 +134,76 @@ public partial class ConnectionsViewModel(
     ICredentialStore credentials,
     IMetadataService metadata,
     IJobQueue jobs,
-    IDialogService dialogs) : ObservableObject
+    IDialogService dialogs,
+    FavoriteObjects? favorites = null) : ObservableObject
 {
+    /// <summary>Pins the selected object under its connection's favourites, or unpins it.</summary>
+    [RelayCommand]
+    private void ToggleFavorite(ExplorerNodeViewModel? node)
+    {
+        if ((node ?? Selected) is not DatabaseObjectNodeViewModel { CanBeFavorite: true } objectNode || favorites is null)
+        {
+            return;
+        }
+
+        var connectionId = objectNode.Session.Definition.Id;
+        favorites.Toggle(connectionId, objectNode.Target);
+        objectNode.RefreshFavorite();
+        _ = RefreshFavoritesAsync(connectionId);
+    }
+
+    // The connection's Favourites group appears, changes or goes with its first or last object.
+    private async Task RefreshFavoritesAsync(Guid connectionId)
+    {
+        if (FindConnection(Roots, connectionId) is not { IsConnected: true } connection || favorites is null)
+        {
+            return;
+        }
+
+        var group = connection.Children.OfType<FavoritesNodeViewModel>().FirstOrDefault();
+        var any = favorites.Of(connectionId).Count > 0;
+        if (group is not null && !any)
+        {
+            connection.Children.Remove(group);
+        }
+        else if (group is not null)
+        {
+            await group.ReloadAsync();
+        }
+        else if (any && connection.Context is { } context && connection.Children.FirstOrDefault() is not MessageNodeViewModel)
+        {
+            var added = new FavoritesNodeViewModel(context);
+            connection.Children.Insert(0, added);
+            await added.LoadAsync();
+        }
+
+        foreach (var pinned in Flatten(connection.Children).OfType<DatabaseObjectNodeViewModel>())
+        {
+            pinned.RefreshFavorite();
+        }
+
+        static IEnumerable<ExplorerNodeViewModel> Flatten(IEnumerable<ExplorerNodeViewModel> nodes) =>
+            nodes.SelectMany(static n => (IEnumerable<ExplorerNodeViewModel>)[n, .. Flatten(n.Children)]);
+    }
+
+    private static ConnectionNodeViewModel? FindConnection(IEnumerable<ExplorerNodeViewModel> nodes, Guid id)
+    {
+        foreach (var node in nodes)
+        {
+            if (node is ConnectionNodeViewModel connection && connection.Definition.Id == id)
+            {
+                return connection;
+            }
+
+            if (node is FolderNodeViewModel folder && FindConnection(folder.Children, id) is { } inside)
+            {
+                return inside;
+            }
+        }
+
+        return null;
+    }
+
     private Dictionary<string, ProviderMark> _marks = new(StringComparer.Ordinal);
 
     public ObservableCollection<ExplorerNodeViewModel> Roots { get; } = [];
@@ -376,7 +453,7 @@ public partial class ConnectionsViewModel(
             siblings.Add(node);
             if (open.TryGetValue(definition.Id, out var session))
             {
-                node.Attach(new ExplorerContext(session, metadata, jobs));
+                node.Attach(new ExplorerContext(session, metadata, jobs, favorites));
             }
 
             if (definition.Id == selectedId)
@@ -487,7 +564,7 @@ public partial class ConnectionsViewModel(
 
             if (attempt is { Outcome: ConnectionOutcome.Succeeded, Session: { } session })
             {
-                node.Attach(new ExplorerContext(session, metadata, jobs));
+                node.Attach(new ExplorerContext(session, metadata, jobs, favorites));
             }
             else
             {

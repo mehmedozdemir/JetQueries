@@ -36,6 +36,9 @@ public sealed record AppearanceSettings
     /// <summary>Rows fetched per page in a new query tab (DBeaver's fetch size).</summary>
     public int FetchSize { get; init; } = QueryDocumentViewModel.DefaultFetchSize;
 
+    /// <summary>Result headers show each column's data type on a second line.</summary>
+    public bool ShowColumnTypes { get; init; } = true;
+
     /// <summary>How Format SQL writes keywords.</summary>
     public SqlKeywordCase FormatKeywordCase { get; init; } = SqlKeywordCase.Upper;
 
@@ -343,6 +346,11 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     public partial int FetchSize { get; set; }
 
+    [ObservableProperty]
+    public partial bool ShowColumnTypes { get; set; }
+
+    partial void OnShowColumnTypesChanged(bool value) => Preview();
+
     partial void OnQueryButtonPlaceChanged(SettingChoice<bool>? value) => Preview();
 
     partial void OnFetchSizeChanged(int value) => Preview();
@@ -357,6 +365,7 @@ public partial class SettingsViewModel : ObservableObject
         GridFontSize = GridFontSize,
         QueryButtonsInTab = QueryButtonPlace?.Value ?? true,
         FetchSize = FetchSize,
+        ShowColumnTypes = ShowColumnTypes,
         FormatKeywordCase = FormatKeywordCase?.Value ?? SqlKeywordCase.Upper,
         FormatIndent = FormatIndent?.Value ?? 4,
         FormatContentOnNewLine = FormatContentOnNewLine,
@@ -442,6 +451,7 @@ public partial class SettingsViewModel : ObservableObject
             GridFontSize = settings.GridFontSize;
             QueryButtonPlace = QueryButtonPlaces.First(p => p.Value == settings.QueryButtonsInTab);
             FetchSize = settings.FetchSize;
+            ShowColumnTypes = settings.ShowColumnTypes;
             FormatKeywordCase = KeywordCases.FirstOrDefault(c => c.Value == settings.FormatKeywordCase) ?? KeywordCases[0];
             FormatIndent = Indents.FirstOrDefault(c => c.Value == settings.FormatIndent) ?? Indents[1];
             FormatContentOnNewLine = settings.FormatContentOnNewLine;

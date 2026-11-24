@@ -90,6 +90,18 @@
                                     <MenuItem Header="{x:Static res:Strings.ExplorerSelectRows}" c:Ui.Icon="{x:Static c:Icons.Table}"
                                               Command="{Binding SelectRowsCommand}" CommandParameter="{Binding Selected}"
                                               Visibility="{Binding Selected.HasData, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
+                                    <MenuItem Header="{x:Static res:Strings.ExplorerAddFavorite}" c:Ui.Icon="&#xE734;"
+                                              Command="{Binding ToggleFavoriteCommand}" CommandParameter="{Binding Selected}">
+                                        <MenuItem.Visibility>
+                                            <MultiBinding Converter="{x:Static v:AllTrueToVisibilityConverter.Instance}">
+                                                <Binding Path="Selected.CanBeFavorite" FallbackValue="False" />
+                                                <Binding Path="Selected.IsFavorite" Converter="{x:Static v:NotConverter.Instance}" FallbackValue="False" />
+                                            </MultiBinding>
+                                        </MenuItem.Visibility>
+                                    </MenuItem>
+                                    <MenuItem Header="{x:Static res:Strings.ExplorerRemoveFavorite}" c:Ui.Icon="&#xE735;"
+                                              Command="{Binding ToggleFavoriteCommand}" CommandParameter="{Binding Selected}"
+                                              Visibility="{Binding Selected.IsFavorite, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
                                     <MenuItem Header="{x:Static res:Strings.ExplorerDetails}" c:Ui.Icon="{x:Static c:Icons.Info}" InputGestureText="F4"
                                               Command="{Binding OpenDetailsCommand}" CommandParameter="{Binding Selected}"
                                               Visibility="{Binding Selected.HasDefinition, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
@@ -128,8 +140,8 @@
                                     Visibility="{Binding IsReadOnly, Converter={StaticResource BoolToVisibility}}">
                                 <TextBlock Text="{x:Static res:Strings.ConnectionReadOnlyBadge}" FontSize="10.5" Foreground="{DynamicResource Brush.TextSecondary}" />
                             </Border>
-                            <ProgressBar IsIndeterminate="{Binding IsBusy}" Width="36" Margin="8,0,0,0" VerticalAlignment="Center"
-                                         Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
+                            <v:Spinner Style="{StaticResource Spinner}" Margin="8,0,0,0"
+                                       Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
                         </StackPanel>
                         <HierarchicalDataTemplate.Triggers>
                             <DataTrigger Binding="{Binding IsConnected}" Value="True">
@@ -143,15 +155,25 @@
                     <HierarchicalDataTemplate DataType="{x:Type vm:DatabaseObjectNodeViewModel}" ItemsSource="{Binding Children}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
-                            <ProgressBar IsIndeterminate="{Binding IsLoading}" Width="36" Margin="8,0,0,0" VerticalAlignment="Center"
-                                         Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}" />
+                            <TextBlock Text="&#xE735;" Style="{StaticResource Text.Icon}" FontSize="10" Margin="6,0,0,0" Foreground="{DynamicResource Brush.Warning}"
+                                       Visibility="{Binding IsFavorite, Converter={StaticResource BoolToVisibility}}" />
+                            <v:Spinner Style="{StaticResource Spinner}" Margin="8,0,0,0"
+                                       Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}" />
+                        </StackPanel>
+                    </HierarchicalDataTemplate>
+                    <HierarchicalDataTemplate DataType="{x:Type vm:FavoritesNodeViewModel}" ItemsSource="{Binding Children}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding Name}" Foreground="{DynamicResource Brush.TextSecondary}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding LoadedCount, StringFormat=' ({0})'}" Foreground="{DynamicResource Brush.TextMuted}" VerticalAlignment="Center" />
                         </StackPanel>
                     </HierarchicalDataTemplate>
                     <HierarchicalDataTemplate DataType="{x:Type vm:CategoryNodeViewModel}" ItemsSource="{Binding Children}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="{Binding Name}" Foreground="{DynamicResource Brush.TextSecondary}" VerticalAlignment="Center" />
-                            <ProgressBar IsIndeterminate="{Binding IsLoading}" Width="36" Margin="8,0,0,0" VerticalAlignment="Center"
-                                         Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}" />
+                            <!-- How many, once loaded: "Tables (128)" -->
+                            <TextBlock Text="{Binding LoadedCount, StringFormat=' ({0})'}" Foreground="{DynamicResource Brush.TextMuted}" VerticalAlignment="Center" />
+                            <v:Spinner Style="{StaticResource Spinner}" Margin="8,0,0,0"
+                                       Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}" />
                         </StackPanel>
                     </HierarchicalDataTemplate>
                     <DataTemplate DataType="{x:Type vm:ColumnNodeViewModel}">

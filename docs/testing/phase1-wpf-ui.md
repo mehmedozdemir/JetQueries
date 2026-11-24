@@ -337,6 +337,26 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
       "Yalnızca hatalılar" shows failed runs only; filters combine with the search; with no match it says so.
 - [ ] Light theme: captions, placeholders and NULLs are darker than before and readable on white and grey.
 
+## P3 polish
+- [ ] Ctrl+Shift+P (or Tools → Command palette) opens a search card over the window: typing narrows the menu's
+      commands (each word must match the name, the menu or the shortcut; "içe" finds "İçe aktar"); ↑↓ and Enter
+      run one, Esc or a click elsewhere closes it; commands that cannot run now are listed last and do nothing.
+- [ ] The run's status ("3 rows · 28 ms", errors) is in the status bar only, not also on the query toolbar.
+- [ ] View → Explorer off, quit, start: the explorer stays hidden; on again, resize it, quit, start: the width
+      is kept.
+- [ ] Expanding a large group shows a small turning arrow after its name while it loads; then the group shows
+      its count ("Tablolar (128)").
+- [ ] Right-click a table, view or routine → "Favorilere ekle": a "Favoriler" group appears at the top of the
+      connection with the object (a star after its name everywhere); "Favorilerden çıkar" on it, or on its copy
+      under Favoriler, removes it, and the group goes with the last one. Favourites are kept after a restart
+      (`%AppData%\JetQueries\favorites.json`, names only).
+- [ ] The editor's zoom badge appears only away from 100 %.
+- [ ] Settings → Sonuçlar → "Başlıklarda veri tipi" off: result headers lose the type line at once (and get
+      lower); on: it comes back.
+- [ ] Connection editor: the environment is a row of chips (—, Geliştirme, Test, Üretim) with their colours.
+- [ ] Keyboard only (Tab): type cards, segments, switches, check boxes, the Advanced toggle and tabs show an
+      accent focus ring when reached with the keyboard (not on mouse clicks).
+
 ## Connection editor (compact)
 - [ ] The form is two columns: Name + Environment (with its colour) on top, the type's main settings two to a
       row, user and password side by side, "Save password" and "Read-only" switches, then "Advanced" (folder,

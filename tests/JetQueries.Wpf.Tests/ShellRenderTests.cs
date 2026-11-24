@@ -88,6 +88,24 @@ public sealed class ShellRenderTests
             var dialog = new ConnectionDialog(editor) { Left = -20000, Top = 0, ShowActivated = false };
             dialog.Show();
 
+            // The command palette lists the menu's commands and runs one as the menu would.
+            var palette = window.ShowCommandPalette();
+            var paletteModel = (CommandPaletteViewModel)palette.DataContext;
+            Assert.Contains(paletteModel.Shown, static c => c.Title == "Sorgu geçmişi" && c.Group == "Araçlar" && c.Gesture == "Ctrl+Shift+H");
+            Assert.DoesNotContain(paletteModel.Shown, static c => c.Title == "Komut paleti");
+            paletteModel.SearchText = "gezgin";
+            Assert.True(paletteModel.Run());
+            await Idle();
+            Assert.False(window.CurrentLayout().ExplorerVisible);
+            palette.Close();
+
+            // The explorer comes back as it was left.
+            window.ApplyLayout(new ShellLayout { ExplorerVisible = true, ExplorerWidth = 320 });
+            await Idle();
+            Assert.Equal(320, window.CurrentLayout().ExplorerWidth, 0);
+            window.ApplyLayout(new ShellLayout());
+            await Idle();
+
             // The history has its own window (Tools, Query history), opened once and reused.
             var historyWindow = window.ShowHistory(shell);
             historyWindow.Left = -20000;

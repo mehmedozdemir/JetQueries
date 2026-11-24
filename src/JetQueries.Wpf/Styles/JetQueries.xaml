@@ -24,6 +24,14 @@
         <Setter Property="Height" Value="30" />
         <Setter Property="Padding" Value="8,0" />
     </Style>
+    <!-- A small turning arrow while something loads (quieter than a progress bar in a tree row); turned by
+         Views/Spinner, which stops when hidden or unloaded (a storyboard trigger keeps running on removed rows) -->
+    <Style x:Key="Spinner" TargetType="TextBlock" BasedOn="{StaticResource Text.Icon}">
+        <Setter Property="Text" Value="&#xE72C;" />
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Accent}" />
+    </Style>
+
     <!-- Small labelled buttons of the result footer and toolbar: an icon and a short word -->
     <Style x:Key="Btn.Footer" TargetType="ButtonBase" BasedOn="{StaticResource Btn.Toolbar}">
         <Setter Property="Height" Value="26" />
@@ -148,7 +156,7 @@
     <Style x:Key="Settings.NavItem" TargetType="ListBoxItem">
         <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
         <Setter Property="Margin" Value="0,0,0,2" />
-        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual.Rounded}" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
         <Setter Property="Template">
@@ -180,7 +188,7 @@
     <!-- One choice of a few, side by side (keyword case, indentation…): a ListBox bound to SelectedItem. -->
     <Style x:Key="Segment" TargetType="ListBoxItem">
         <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
-        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual.Rounded}" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="Template">
             <Setter.Value>
@@ -230,7 +238,7 @@
     <!-- On / off for a yes-no setting: a CheckBox drawn as a switch. -->
     <Style x:Key="Switch" TargetType="CheckBox">
         <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual.Rounded}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="CheckBox">
@@ -268,7 +276,7 @@
     <!-- A large choice card (theme): icon over a name; the chosen one has an accent border and a check. -->
     <Style x:Key="ChoiceCard" TargetType="ListBoxItem">
         <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
-        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual.Rounded}" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="Margin" Value="0,0,12,0" />
         <Setter Property="Template">
@@ -326,7 +334,7 @@
     <!-- A database type to pick in the connection editor: a card that is a button. -->
     <Style x:Key="TypeCard" TargetType="Button">
         <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
-        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual.Rounded}" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="Margin" Value="0,0,10,10" />
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
@@ -357,7 +365,7 @@
     <!-- A section that opens and closes: a chevron and a label (the connection editor's "Advanced"). -->
     <Style x:Key="Disclosure" TargetType="ToggleButton">
         <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
-        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual.Rounded}" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="HorizontalAlignment" Value="Left" />
         <Setter Property="Template">
@@ -406,7 +414,7 @@
 
     <Style x:Key="SegmentRadio" TargetType="RadioButton">
         <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
-        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual.Rounded}" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="Template">
             <Setter.Value>

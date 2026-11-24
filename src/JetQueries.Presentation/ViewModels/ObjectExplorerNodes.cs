@@ -8,7 +8,8 @@ using JetQueries.Sdk;
 namespace JetQueries.Presentation.ViewModels;
 
 /// <summary>What the nodes under an open connection need to load their children.</summary>
-public sealed record ExplorerContext(ConnectionSession Session, IMetadataService Metadata, IJobQueue Jobs);
+/// <param name="Favorites">The pinned objects; none without.</param>
+public sealed record ExplorerContext(ConnectionSession Session, IMetadataService Metadata, IJobQueue Jobs, FavoriteObjects? Favorites = null);
 
 /// <summary>A row that only says something: "Loading…", "(empty)" or why loading failed.</summary>
 public sealed class MessageNodeViewModel(string text, bool isError = false) : ExplorerNodeViewModel(text)
@@ -48,6 +49,10 @@ public abstract partial class LazyNodeViewModel : ExplorerNodeViewModel
     [ObservableProperty]
     public partial bool IsLoading { get; set; }
 
+    /// <summary>How many objects were loaded underneath (shown after a group's name); null before loading.</summary>
+    [ObservableProperty]
+    public partial int? LoadedCount { get; set; }
+
     /// <summary>Raised after the children were loaded or reloaded.</summary>
     public event EventHandler? ChildrenLoaded;
 
@@ -78,6 +83,7 @@ public abstract partial class LazyNodeViewModel : ExplorerNodeViewModel
             }
 
             _loaded = true;
+            LoadedCount = Children.Count(static c => c is not MessageNodeViewModel);
             ChildrenLoaded?.Invoke(this, EventArgs.Empty);
         }
         catch (OperationCanceledException)
@@ -135,6 +141,15 @@ public sealed class DatabaseObjectNodeViewModel(ExplorerContext context, Databas
     /// <inheritdoc />
     public override bool CanAlter => ObjectScripts.CanAlter(Target.Kind);
 
+    /// <summary>Whether the object can be pinned (anything with a definition: tables, views, routines…).</summary>
+    public override bool CanBeFavorite => HasDefinition && context.Favorites is not null;
+
+    /// <summary>Whether the object is pinned under the connection's favourites.</summary>
+    public override bool IsFavorite => context.Favorites?.Contains(context.Session.Definition.Id, Target) == true;
+
+    /// <summary>Tells the view that <see cref="IsFavorite"/> changed.</summary>
+    public void RefreshFavorite() => OnPropertyChanged(nameof(IsFavorite));
+
     /// <summary>The open connection the object belongs to.</summary>
     public ConnectionSession Session => context.Session;
 
@@ -149,6 +164,17 @@ public sealed class DatabaseObjectNodeViewModel(ExplorerContext context, Databas
         DatabaseObjectKinds.Table or DatabaseObjectKinds.View => ExplorerTree.LoadColumnsAsync(context, Target.Name, refresh),
         _ => Task.FromResult<IReadOnlyList<ExplorerNodeViewModel>>([]),
     };
+}
+
+/// <summary>The objects pinned on a connection, at the top of it (read from the settings, not the catalog).</summary>
+public sealed class FavoritesNodeViewModel(ExplorerContext context) : LazyNodeViewModel(Strings.ExplorerFavorites, expandable: true)
+{
+    /// <summary>Reads the pinned objects again (after one was added or removed).</summary>
+    public Task ReloadAsync() => LoadAsync(refresh: true);
+
+    protected override Task<IReadOnlyList<ExplorerNodeViewModel>> LoadChildrenAsync(bool refresh) =>
+        Task.FromResult<IReadOnlyList<ExplorerNodeViewModel>>(
+            [.. (context.Favorites?.Of(context.Session.Definition.Id) ?? []).Select(o => new DatabaseObjectNodeViewModel(context, o))]);
 }
 
 /// <summary>A group such as "Tables" or "Views" under a schema or database.</summary>
@@ -174,7 +200,22 @@ internal static class ExplorerTree
         kind is DatabaseObjectKinds.Database or DatabaseObjectKinds.Schema or DatabaseObjectKinds.Table or DatabaseObjectKinds.View;
 
     /// <summary>The first level under a connection: databases, schemas, or the object groups directly.</summary>
-    public static Task<IReadOnlyList<ExplorerNodeViewModel>> LoadRootAsync(ExplorerContext context, bool refresh)
+    public static async Task<IReadOnlyList<ExplorerNodeViewModel>> LoadRootAsync(ExplorerContext context, bool refresh)
+    {
+        var nodes = await LoadRootObjectsAsync(context, refresh).ConfigureAwait(true);
+        if (context.Favorites is { } favorites)
+        {
+            await favorites.LoadAsync().ConfigureAwait(true);
+            if (favorites.Of(context.Session.Definition.Id).Count > 0)
+            {
+                return [new FavoritesNodeViewModel(context), .. nodes];
+            }
+        }
+
+        return nodes;
+    }
+
+    private static Task<IReadOnlyList<ExplorerNodeViewModel>> LoadRootObjectsAsync(ExplorerContext context, bool refresh)
     {
         var capabilities = context.Session.Provider.Capabilities;
         if (capabilities.HasFlag(ProviderCapabilities.MultipleDatabases))
