@@ -9,6 +9,7 @@
                 <ResourceDictionary Source="pack://application:,,,/UiKit.Wpf;component/Themes/Dark.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/UiKit.Wpf;component/Themes/Controls.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/JetQueries;component/Styles/JetQueries.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/JetQueries;component/Assets/Logo.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>
