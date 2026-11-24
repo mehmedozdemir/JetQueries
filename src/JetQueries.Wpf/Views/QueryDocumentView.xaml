@@ -102,7 +102,8 @@
                        Visibility="{Binding SelectedSession, Converter={x:Static v:NullToVisibleConverter.Instance}}" />
             <ProgressBar DockPanel.Dock="Left" IsIndeterminate="{Binding IsRunning}" Width="80" Margin="12,0,0,0" VerticalAlignment="Center"
                          Visibility="{Binding IsRunning, Converter={StaticResource BoolToVisibility}}" />
-            <TextBlock Text="{Binding Status}" Style="{StaticResource Text.Status}" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis" />
+            <!-- The run's status is in the window's status bar -->
+            <Grid />
         </DockPanel>
 
         <!-- Editor -->
@@ -135,8 +136,9 @@
                         </ContextMenu>
                     </e:SqlEditor.ContextMenu>
                 </e:SqlEditor>
-                <!-- Zoom of the text; a click goes back to 100 % -->
+                <!-- Zoom of the text, shown only away from 100 %; a click goes back -->
                 <Button x:Name="ZoomBadge" Style="{StaticResource Btn.Link}" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                        Visibility="{Binding Zoom, ElementName=Editor, Converter={x:Static v:ZoomBadgeVisibilityConverter.Instance}}"
                         Margin="0,0,18,6" Padding="6,2" FontSize="{DynamicResource FontSize.Caption}" ToolTip="{x:Static res:Strings.ZoomReset}"
                         Content="{Binding Zoom, ElementName=Editor, Converter={x:Static v:ZoomTextConverter.Instance}}" Click="OnZoomReset" />
             </Grid>

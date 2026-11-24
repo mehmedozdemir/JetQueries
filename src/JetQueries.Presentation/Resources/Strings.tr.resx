@@ -503,4 +503,11 @@
   <data name="HistoryAllConnections" xml:space="preserve"><value>Tüm bağlantılar</value></data>
   <data name="HistoryFailedOnly" xml:space="preserve"><value>Yalnızca hatalılar</value></data>
   <data name="HistoryNoMatch" xml:space="preserve"><value>Filtrelere uyan çalıştırma yok.</value></data>
+  <data name="FieldShowColumnTypes" xml:space="preserve"><value>Başlıklarda veri tipi</value></data>
+  <data name="SettingShowColumnTypesInfo" xml:space="preserve"><value>Her kolon adının altında küçük ikinci bir satır (int, nvarchar(50)…). Kapalı: daha alçak başlıklar.</value></data>
+  <data name="MenuCommandPalette" xml:space="preserve"><value>Komut paleti</value></data>
+  <data name="CommandPaletteSearch" xml:space="preserve"><value>Bir komut yazın…</value></data>
+  <data name="ExplorerFavorites" xml:space="preserve"><value>Favoriler</value></data>
+  <data name="ExplorerAddFavorite" xml:space="preserve"><value>Favorilere ekle</value></data>
+  <data name="ExplorerRemoveFavorite" xml:space="preserve"><value>Favorilerden çıkar</value></data>
 </root>

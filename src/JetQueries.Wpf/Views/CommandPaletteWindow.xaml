@@ -1,0 +1,33 @@
+<Window x:Class="JetQueries.Wpf.Views.CommandPaletteWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:c="clr-namespace:UiKit.Controls;assembly=UiKit.Wpf"
+        xmlns:res="clr-namespace:JetQueries.Presentation.Resources;assembly=JetQueries.Presentation"
+        xmlns:v="clr-namespace:JetQueries.Wpf.Views"
+        Title="{x:Static res:Strings.MenuCommandPalette}" Width="600" Height="420" WindowStyle="None" ResizeMode="NoResize"
+        AllowsTransparency="True" Background="Transparent" ShowInTaskbar="False" WindowStartupLocation="Manual"
+        Deactivated="OnDeactivated">
+    <!-- A floating card near the top of the main window, as in editors; Esc or a click elsewhere closes it -->
+    <Border Style="{StaticResource Card.Popup}" Margin="10,0,24,24">
+        <DockPanel>
+            <c:SearchBox x:Name="Search" DockPanel.Dock="Top" Margin="10,10,10,6" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                         c:Ui.Placeholder="{x:Static res:Strings.CommandPaletteSearch}" PreviewKeyDown="OnSearchKeyDown" />
+            <ListBox x:Name="List" ItemsSource="{Binding Shown}" SelectedItem="{Binding Selected}" BorderThickness="0" Background="Transparent"
+                     Padding="4,0,4,6" ScrollViewer.HorizontalScrollBarVisibility="Disabled" MouseDoubleClick="OnListDoubleClick" Focusable="False">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <DockPanel x:Name="Row" Margin="4,3">
+                            <Border DockPanel.Dock="Right" Background="{DynamicResource Brush.Chip}" CornerRadius="4" Padding="6,0"
+                                    Visibility="{Binding Gesture, Converter={x:Static v:NotNullToVisibilityConverter.Instance}}">
+                                <TextBlock Text="{Binding Gesture}" FontFamily="{DynamicResource Font.Code}" FontSize="{DynamicResource FontSize.Caption}"
+                                           Foreground="{DynamicResource Brush.TextSecondary}" />
+                            </Border>
+                            <TextBlock DockPanel.Dock="Left" Text="{Binding Group}" Foreground="{DynamicResource Brush.TextMuted}" Margin="0,0,8,0" MinWidth="80" />
+                            <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                        </DockPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </DockPanel>
+    </Border>
+</Window>

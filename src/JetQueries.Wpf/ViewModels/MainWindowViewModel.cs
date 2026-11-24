@@ -19,12 +19,15 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly IConnectionManager? _manager;
     private readonly IMetadataService? _metadata;
     private readonly IJobQueue? _jobs;
+    private readonly Core.Settings.ISettingsStore? _store;
 
     /// <param name="manager">Open sessions, for object details; without it (tests) details are not shown.</param>
     public MainWindowViewModel(
         IThemeService themeService, IUiDispatcher ui, ConnectionsViewModel connections, DocumentsViewModel documents, HistoryViewModel history,
-        ISettingsDialog? settings = null, IConnectionManager? manager = null, IMetadataService? metadata = null, IJobQueue? jobs = null)
+        ISettingsDialog? settings = null, IConnectionManager? manager = null, IMetadataService? metadata = null, IJobQueue? jobs = null,
+        Core.Settings.ISettingsStore? store = null)
     {
+        _store = store;
         _manager = manager;
         _metadata = metadata;
         _jobs = jobs;
@@ -123,6 +126,40 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private void ShowShortcuts() => ShortcutsRequested?.Invoke(this, EventArgs.Empty);
 
+    /// <summary>The explorer's visibility and width from the last run; defaults without a store.</summary>
+    public async Task<ShellLayout> LoadLayoutAsync()
+    {
+        if (_store is null || _jobs is null)
+        {
+            return new ShellLayout();
+        }
+
+        try
+        {
+            var store = _store;
+            return await _jobs.Enqueue("Read layout", context => store.LoadAsync(ShellLayout.Section, new ShellLayout(), context.CancellationToken), JobPriority.High)
+                .Completion;
+        }
+#pragma warning disable CA1031 // A layout that cannot be read is the default one.
+        catch (Exception)
+#pragma warning restore CA1031
+        {
+            return new ShellLayout();
+        }
+    }
+
+    /// <summary>Remembers the explorer's visibility and width (written in the background).</summary>
+    public void SaveLayout(ShellLayout layout)
+    {
+        if (_store is null || _jobs is null)
+        {
+            return;
+        }
+
+        var store = _store;
+        _jobs.Enqueue("Save layout", context => store.SaveAsync(ShellLayout.Section, layout, context.CancellationToken), JobPriority.Low);
+    }
+
     /// <summary>Main menu: Tools, Query history.</summary>
     [RelayCommand]
     private void ShowHistory() => HistoryRequested?.Invoke(this, EventArgs.Empty);
@@ -132,4 +169,17 @@ public partial class MainWindowViewModel : ObservableObject
 
     [RelayCommand]
     private void OpenSettings() => _settings?.Show();
+}
+
+/// <summary>The shell's layout, remembered between runs (the <c>shell</c> settings section).</summary>
+public sealed record ShellLayout
+{
+    /// <summary>The settings section (file) name.</summary>
+    public const string Section = "shell";
+
+    /// <summary>Whether the explorer panel is shown.</summary>
+    public bool ExplorerVisible { get; init; } = true;
+
+    /// <summary>The explorer panel's width.</summary>
+    public double ExplorerWidth { get; init; } = 280;
 }

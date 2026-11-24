@@ -15,7 +15,12 @@
         <KeyBinding Gesture="Ctrl+Shift+N" Command="{Binding GoToObjectCommand}" />
         <KeyBinding Gesture="Ctrl+Shift+H" Command="{Binding ShowHistoryCommand}" />
         <KeyBinding Key="F1" Command="{Binding ShowShortcutsCommand}" />
+        <KeyBinding Gesture="Ctrl+Shift+P" Command="{x:Static ApplicationCommands.Find}" />
     </Window.InputBindings>
+
+    <Window.CommandBindings>
+        <CommandBinding Command="{x:Static ApplicationCommands.Find}" Executed="OnCommandPalette" />
+    </Window.CommandBindings>
 
     <Grid>
         <Grid.RowDefinitions>
@@ -69,6 +74,7 @@
                         </MenuItem>
                         <MenuItem Header="{x:Static res:Strings.MenuTools}">
                             <MenuItem Header="{x:Static res:Strings.MenuHistory}" c:Ui.Icon="{x:Static c:Icons.History}" InputGestureText="Ctrl+Shift+H" Command="{Binding ShowHistoryCommand}" />
+                            <MenuItem Header="{x:Static res:Strings.MenuCommandPalette}" c:Ui.Icon="&#xE721;" InputGestureText="Ctrl+Shift+P" Click="OnCommandPaletteClick" />
                             <MenuItem Header="{x:Static res:Strings.MenuShortcuts}" c:Ui.Icon="&#xE765;" InputGestureText="F1" Command="{Binding ShowShortcutsCommand}" />
                             <Separator />
                             <MenuItem Header="{x:Static res:Strings.MenuSettings}" c:Ui.Icon="{x:Static c:Icons.Settings}" Command="{Binding OpenSettingsCommand}" />
@@ -117,7 +123,7 @@
                 <v:ConnectionsView DataContext="{Binding Connections}" />
             </Border>
 
-            <GridSplitter x:Name="ExplorerSplitter" Grid.Column="1" Width="8" HorizontalAlignment="Stretch" ResizeBehavior="PreviousAndNext" />
+            <GridSplitter x:Name="ExplorerSplitter" Grid.Column="1" Width="8" DragCompleted="OnExplorerResized" HorizontalAlignment="Stretch" ResizeBehavior="PreviousAndNext" />
 
             <!-- Query tabs -->
             <v:DocumentsView Grid.Column="2" DataContext="{Binding Documents}" />

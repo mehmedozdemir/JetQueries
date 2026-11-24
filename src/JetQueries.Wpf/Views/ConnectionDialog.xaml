@@ -148,11 +148,11 @@
                         <TextBlock Text="{Binding ConnectionStringMessage}" TextWrapping="Wrap" />
                     </Border>
 
-                    <!-- Name and environment: what the explorer shows -->
+                    <!-- Name and environment: what the explorer shows; the environment as coloured chips, one click -->
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Style="{StaticResource Field}">
                             <TextBlock Text="{x:Static res:Strings.FieldName}" Style="{StaticResource Label}" />
@@ -160,17 +160,19 @@
                         </StackPanel>
                         <StackPanel Grid.Column="1" Style="{StaticResource Field}">
                             <TextBlock Text="{x:Static res:Strings.FieldEnvironment}" Style="{StaticResource Label}" />
-                            <ComboBox ItemsSource="{Binding Environments}" SelectedItem="{Binding SelectedEnvironment}">
-                                <ComboBox.ItemTemplate>
+                            <ListBox x:Name="EnvironmentChips" Style="{StaticResource Segmented}" DisplayMemberPath="" HorizontalAlignment="Left"
+                                     ItemsSource="{Binding Environments}" SelectedItem="{Binding SelectedEnvironment}"
+                                     AutomationProperties.Name="{x:Static res:Strings.FieldEnvironment}">
+                                <ListBox.ItemTemplate>
                                     <DataTemplate>
-                                        <StackPanel Orientation="Horizontal">
-                                            <Ellipse Width="8" Height="8" Margin="0,0,8,0" VerticalAlignment="Center"
+                                        <StackPanel Orientation="Horizontal" ToolTip="{Binding DisplayName}">
+                                            <Ellipse Width="8" Height="8" Margin="0,0,6,0" VerticalAlignment="Center"
                                                      Fill="{Binding Value, Converter={x:Static v:EnvironmentBrushConverter.Instance}}" />
-                                            <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding ShortName}" VerticalAlignment="Center" />
                                         </StackPanel>
                                     </DataTemplate>
-                                </ComboBox.ItemTemplate>
-                            </ComboBox>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
                         </StackPanel>
                     </Grid>
 

@@ -46,7 +46,10 @@ public sealed class ResultGridSource : IGridDataSource, IGridColumnCaptions
     public string GetColumnName(int column) => _set.Columns[column].Header;
 
     /// <summary>The database type under the column name (nvarchar(50), NUMBER, …).</summary>
-    public string? GetColumnCaption(int column) => _set.Columns[column].DataType;
+    public string? GetColumnCaption(int column) => _showTypes ? _set.Columns[column].DataType : null;
+
+    // Read once per snapshot: the grid takes a new one when the setting changes.
+    private readonly bool _showTypes = Services.AppearanceService.ShowColumnTypes;
 
     public GridColumnKind GetColumnKind(int column) => _kinds[column];
 

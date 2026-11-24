@@ -71,6 +71,7 @@ public sealed class ExplorerIconConverter : IValueConverter
         // A connection shows the mark of its database type instead (in its template).
         ConnectionNodeViewModel => null,
         CategoryNodeViewModel => Group,
+        FavoritesNodeViewModel => "\uE735",
         ColumnNodeViewModel { IsPrimaryKey: true } => Icons.Key,
         ColumnNodeViewModel => Icons.Column,
         DatabaseObjectNodeViewModel node => node.Target.Kind switch
@@ -128,4 +129,15 @@ public sealed class NotConverter : IValueConverter
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => value is not true;
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => value is not true;
+}
+
+/// <summary>Visible away from 100 % zoom.</summary>
+public sealed class ZoomBadgeVisibilityConverter : IValueConverter
+{
+    public static ZoomBadgeVisibilityConverter Instance { get; } = new();
+
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value is double zoom && Math.Abs(zoom - 1) > 0.001 ? Visibility.Visible : Visibility.Collapsed;
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
 }

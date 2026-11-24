@@ -87,6 +87,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 - Connection editor redesigned as a compact two-column form with an "Advanced" section.
 - `docs/ux-review.md`: a UX review of the whole application with prioritised findings.
 - Keyboard shortcuts overview (Tools → Keyboard shortcuts, F1), searchable.
+- Command palette (Ctrl+Shift+P): every menu command by name.
+- Explorer favourites: pin tables, views and routines; they appear under "Favourites" at the top of the connection. Object groups show their count once loaded.
+- Setting: data types under result headers can be turned off. The explorer's visibility and width are remembered.
 - Object details open as document tabs beside the queries instead of separate windows.
 - History window filters by connection and by failed runs (in the store, not only in the loaded page).
 - Results: a toolbar with Grid / Text / Record and an on-demand SQL filter bar; the footer's actions are labelled.
@@ -132,6 +135,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
   (mark as SVG path data, colour, description).
 
 ### Changed
+- The connection editor's environment is a row of coloured chips; the query toolbar no longer repeats the status bar; the editor's zoom badge shows only away from 100 %; loading rows in the explorer show a small spinner instead of a progress bar; keyboard focus is visible on custom controls.
 - A result set may hold up to 1,000,000 rows (was 100,000), fetched page by page.
 - View models, their service contracts and strings moved to `JetQueries.Presentation`, shared by both interfaces.
 - The main toolbar is icon-only (the menu names the commands); Commit and Rollback are labelled; the explorer's "connected" badge is gone and script errors show as a dismissible banner at its top.

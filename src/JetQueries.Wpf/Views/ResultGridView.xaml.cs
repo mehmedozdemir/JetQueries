@@ -86,7 +86,13 @@ public partial class ResultGridView : UserControl
         }
     }
 
-    private void OnAppearanceChanged(object? sender, EventArgs e) => ApplyScale();
+    private void OnAppearanceChanged(object? sender, EventArgs e)
+    {
+        ApplyScale();
+
+        // The data-type line under the headers may have been switched on or off.
+        ShowView();
+    }
 
     private void ApplyScale()
     {

@@ -35,6 +35,9 @@ public partial class MainWindow : Window
             }
         };
 
+        // The explorer comes back as it was left (shown or hidden, and its width).
+        Loaded += async (_, _) => ApplyLayout(await viewModel.LoadLayoutAsync());
+
         Loaded += (_, _) =>
         {
             viewModel.Connections.RefreshCommand.Execute(null);
@@ -90,18 +93,67 @@ public partial class MainWindow : Window
 
     private void OnExit(object sender, RoutedEventArgs e) => Close();
 
+    private void OnCommandPalette(object sender, System.Windows.Input.ExecutedRoutedEventArgs e) => ShowCommandPalette();
+
+    private void OnCommandPaletteClick(object sender, RoutedEventArgs e) => ShowCommandPalette();
+
+    /// <summary>The command palette over the top of the window: every menu command (but the palette itself).</summary>
+    internal CommandPaletteWindow ShowCommandPalette()
+    {
+        var commands = CommandPaletteWindow.FromMenu(MainMenu).Where(static c => c.Title != Strings.MenuCommandPalette);
+        var palette = new CommandPaletteWindow(new CommandPaletteViewModel(commands)) { Owner = this };
+        var origin = WindowState == WindowState.Maximized ? new Point(0, 0) : new Point(Left, Top);
+        palette.Left = origin.X + Math.Max(0, (ActualWidth - palette.Width) / 2);
+        palette.Top = origin.Y + 70;
+        palette.Show();
+        return palette;
+    }
+
     // View, Explorer: hides the explorer panel and its splitter; showing it again restores its width.
     private void OnToggleExplorer(object sender, RoutedEventArgs e)
     {
-        var shown = ExplorerMenuItem.IsChecked;
-        if (!shown)
+        ShowExplorer(ExplorerMenuItem.IsChecked);
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            viewModel.SaveLayout(CurrentLayout());
+        }
+    }
+
+    // A width is remembered once the splitter is let go (closing the window may not wait for a write).
+    private void OnExplorerResized(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            viewModel.SaveLayout(CurrentLayout());
+        }
+    }
+
+    private void ShowExplorer(bool shown)
+    {
+        if (!shown && ExplorerColumn.Width.Value > 0)
         {
             _explorerWidth = ExplorerColumn.Width;
         }
 
+        ExplorerMenuItem.IsChecked = shown;
         ExplorerPanel.Visibility = ExplorerSplitter.Visibility = shown ? Visibility.Visible : Visibility.Collapsed;
         ExplorerColumn.MinWidth = shown ? 200 : 0;
         ExplorerColumn.Width = shown ? _explorerWidth : new GridLength(0);
+    }
+
+    /// <summary>Puts a remembered layout into effect.</summary>
+    internal void ApplyLayout(ShellLayout layout)
+    {
+        _explorerWidth = new GridLength(Math.Clamp(layout.ExplorerWidth, 200, 900));
+        ShowExplorer(layout.ExplorerVisible);
+    }
+
+    /// <summary>The layout as it is now.</summary>
+    internal ShellLayout CurrentLayout()
+    {
+        var visible = ExplorerMenuItem.IsChecked;
+        var width = visible ? ExplorerColumn.ActualWidth : _explorerWidth.Value;
+        return new ShellLayout { ExplorerVisible = visible, ExplorerWidth = width > 0 ? width : 280 };
     }
 
     private void UpdateThemeIcon() => Ui.SetIcon(ThemeButton, ThemeManager.Current == AppTheme.Dark ? Icons.Sun : Icons.Moon);

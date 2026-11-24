@@ -25,7 +25,11 @@ public sealed record ProviderOption(IDatabaseProvider Provider)
 }
 
 /// <summary>An environment the user can choose in the connection editor.</summary>
-public sealed record EnvironmentOption(ConnectionEnvironment Value, string DisplayName);
+public sealed record EnvironmentOption(ConnectionEnvironment Value, string DisplayName)
+{
+    /// <summary>The short name on the environment chips ("—" for not marked).</summary>
+    public string ShortName => Value == ConnectionEnvironment.Unspecified ? "—" : DisplayName;
+}
 
 /// <summary>One provider-defined setting in the connection editor.</summary>
 public partial class SettingFieldViewModel : ObservableObject

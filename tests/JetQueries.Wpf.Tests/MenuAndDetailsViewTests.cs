@@ -111,6 +111,12 @@ public sealed class MenuAndDetailsViewTests
             set.AddRows([[1, "Kart"]]);
             var source = ResultGridSource.Snapshot(set);
             Assert.Equal("nvarchar(50)", ((IGridColumnCaptions)source).GetColumnCaption(1));
+
+            // The setting turns the type line off (and back on).
+            var appearance = new Services.AppearanceService();
+            appearance.Apply(new AppearanceSettings { ShowColumnTypes = false });
+            Assert.Null(((IGridColumnCaptions)ResultGridSource.Snapshot(set)).GetColumnCaption(1));
+            appearance.Apply(new AppearanceSettings());
             var grid = new VirtualGrid { Source = source };
             var gridHost = new Window { Content = grid, Width = 400, Height = 200, Left = -20000, Top = 0, ShowActivated = false, ShowInTaskbar = false };
             gridHost.Show();
@@ -219,5 +225,31 @@ public sealed class MenuAndDetailsViewTests
         });
 
         Assert.All(colours, static pair => Assert.True(pair.Value > 12, $"{pair.Key} rendered only {pair.Value} distinct colours."));
+    }
+
+    [Fact]
+    public async Task A_spinner_turns_only_while_it_is_shown()
+    {
+        await WpfTestHost.RunAsync(async () =>
+        {
+            var spinner = new Spinner { Style = (Style)Application.Current.FindResource("Spinner") };
+            var host = new Window { Content = spinner, Width = 100, Height = 100, Left = -20000, ShowActivated = false, ShowInTaskbar = false };
+            host.Show();
+            await EditorActionsTests.Idle().WaitAsync(TimeSpan.FromSeconds(5)).ContinueWith(static _ => { }, TaskScheduler.Default);
+            var turn = (System.Windows.Media.RotateTransform)spinner.RenderTransform;
+            Assert.True(turn.HasAnimatedProperties);
+
+            // Hidden or removed: no animation keeps the dispatcher busy.
+            spinner.Visibility = Visibility.Collapsed;
+            Assert.False(turn.HasAnimatedProperties);
+            spinner.Visibility = Visibility.Visible;
+            Assert.True(turn.HasAnimatedProperties);
+            host.Content = null;
+            await Task.Delay(50);
+            await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background);
+            Assert.False(turn.HasAnimatedProperties);
+            host.Close();
+            return 0;
+        });
     }
 }

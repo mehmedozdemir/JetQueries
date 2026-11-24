@@ -45,6 +45,9 @@ public sealed class AppearanceService : IAppearanceService
     /// <summary>The grids' size relative to UiKit's 13 px design, from the grid text size setting.</summary>
     public static double GridScale { get; private set; } = 1;
 
+    /// <summary>Whether result headers show the data type under the column name.</summary>
+    public static bool ShowColumnTypes { get; private set; } = true;
+
     /// <summary>Raised on the UI thread after the appearance changed.</summary>
     public static event EventHandler? Changed;
 
@@ -67,6 +70,7 @@ public sealed class AppearanceService : IAppearanceService
         resources["Font.Code"] = new System.Windows.Media.FontFamily(settings.EditorFontFamily);
         resources["FontSize.Code"] = settings.EditorFontSize;
         GridScale = settings.GridFontSize / 13;
+        ShowColumnTypes = settings.ShowColumnTypes;
 
         // Run, Cancel, Save: icons in each tab, or text buttons in the main toolbar.
         resources["QueryButtons.Tab"] = settings.QueryButtonsInTab ? Visibility.Visible : Visibility.Collapsed;

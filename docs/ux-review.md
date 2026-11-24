@@ -5,6 +5,7 @@ in both themes, from the renderings in `tests/JetQueries.Wpf.Tests/.../screensho
 the same change are marked **fixed**; the rest are open, ordered by priority inside each area.
 
 Priorities: **P1** hurts daily work or safety · **P2** friction or inconsistency · **P3** polish.
+Status (2026-11-24): every finding of this review is fixed; new findings go in a new review.
 
 ## Fixed in this pass
 - **fixed** Submenus never opened: UiKit's `MenuItem` template had no popup, so the explorer's "Script",
@@ -32,9 +33,9 @@ Priorities: **P1** hurts daily work or safety · **P2** friction or inconsistenc
 - **fixed** (P2) The toolbar repeats the menu (New connection, New query, Open, Settings). With a menu bar, an icon-only
   toolbar (with tooltips) would free space and look calmer.
 - **fixed** (P2) No shortcut overview; shortcuts were only discoverable in menus and tooltips. Tools → Keyboard
-  shortcuts (F1) lists them by area, searchable. A full command palette is still open (P3).
-- **P3** Status text appears twice: "3 rows · 28 ms" on the query toolbar and again in the status bar.
-- **P3** Hiding the explorer (View → Explorer) is not remembered at the next start.
+  shortcuts (F1) lists them by area, searchable. A command palette (Ctrl+Shift+P) runs any menu command by name.
+- **fixed** (P3) Status text appears twice: "3 rows · 28 ms" on the query toolbar and again in the status bar.
+- **fixed** (P3) Hiding the explorer (View → Explorer) is not remembered at the next start.
 
 ## Explorer
 - **fixed** (P1) The explorer toolbar was cut off at the default width (280 px). Connect/disconnect is now an
@@ -44,15 +45,15 @@ Priorities: **P1** hurts daily work or safety · **P2** friction or inconsistenc
   repeats what bold and the expanded tree already say.
 - **fixed** (P2) Script errors appear as red text at the bottom of the explorer, far from where the user clicked; a
   toast or inline message on the node would be seen.
-- **P3** Lazy loads show a 36 px progress bar after the name; a spinner in place of the expander arrow is
+- **fixed** (P3) Lazy loads show a 36 px progress bar after the name; a spinner in place of the expander arrow is
   quieter.
-- **P3** No favourites / pinned objects; no object counts on groups ("Tables (128)").
+- **fixed** (P3) No favourites / pinned objects; no object counts on groups ("Tables (128)").
 
 ## Editor and query toolbar
 - **fixed** (P2) Commit / rollback are icon-only (✓ and ↶), told apart by colour; add labels or at least distinct shapes
   and tooltips with shortcuts.
 - **fixed** (P2) The database combo box is wide and visually the heaviest control on the toolbar.
-- **P3** The zoom badge in the editor corner is always visible; show it only away from 100 %.
+- **fixed** (P3) The zoom badge in the editor corner is always visible; show it only away from 100 %.
 
 ## Results
 - **fixed** (P1) Provider option labels, hints and some field labels in the connection editor were English
@@ -66,19 +67,19 @@ Priorities: **P1** hurts daily work or safety · **P2** friction or inconsistenc
   used, or shorten the placeholder.
 - **fixed** (P2) View modes (grid / text / record) sit in a vertical strip on the left of the grid, an unusual place
   that costs width; a segmented control in the result toolbar would be more familiar.
-- **P3** The data-type line under headers makes the header taller; offer it as a setting for users who prefer
+- **fixed** (P3) The data-type line under headers makes the header taller; offer it as a setting for users who prefer
   denser grids.
 
 ## Dialogs and windows
 - **fixed** (P2) Object details open in a separate window, not as an editor tab as in DBeaver; several details windows
   can pile up. Moving them into the document tabs needs the tab area to host more than query tabs.
 - **fixed** (P2) The history window cannot filter by connection or outcome (failed only), only by text.
-- **P3** The environment is a combo box in the connection editor; coloured chips (None / Dev / Test / Prod)
+- **fixed** (P3) The environment is a combo box in the connection editor; coloured chips (None / Dev / Test / Prod)
   would be one click and show the colour that will be used.
 
 ## Accessibility
 - **fixed** (P2) Several icon-only buttons have tooltips but no `AutomationProperties.Name`, so screen readers announce
   them as "button".
 - **fixed** (P2) Muted caption text (`Brush.TextMuted`) on the light theme is below 4.5:1 contrast for small text.
-- **P3** Some custom controls remove the focus visual (`FocusVisualStyle = null`) and rely on a border change
+- **fixed** (P3) Some custom controls remove the focus visual (`FocusVisualStyle = null`) and rely on a border change
   that is subtle in the dark theme.

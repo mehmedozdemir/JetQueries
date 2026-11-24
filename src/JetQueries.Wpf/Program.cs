@@ -50,6 +50,7 @@ internal static class Program
             settings => settings.Directory = userData);
         builder.Services.AddSingleton<IDialogService, WpfDialogService>();
         builder.Services.AddSingleton<IUiDispatcher, WpfUiDispatcher>();
+        builder.Services.AddSingleton<FavoriteObjects>();
         builder.Services.AddSingleton<ConnectionsViewModel>();
         builder.Services.AddSingleton<DocumentsViewModel>();
         builder.Services.AddSingleton<HistoryViewModel>();
