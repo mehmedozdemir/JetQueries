@@ -63,7 +63,7 @@ docs/                              ANALIZ.md, adr/, testing/ (manual test checkl
 - You (Claude Code) cannot click through the UI. At the end of each task, write/refresh a short manual test checklist in `docs/testing/`.
 
 ## Git & versioning
-- Open-source GitHub repo. License not yet chosen — **ask before the first public push** (MIT suggested).
+- Open-source GitHub repo: https://github.com/mehmedozdemir/JetQueries, MIT license (`LICENSE`).
 - SemVer, `0.x` until the MVP gate. Version comes from the git tag (MinVer); never hand-edit versions.
 - Branch per task: `feature/<name>`, `fix/<name>`, `spike/<name>`; merge to `main` via PR. `main` always builds.
 - Conventional Commits (`feat:`, `fix:`, `docs:`, `refactor:`, `chore:`, `test:`, `perf:`).
