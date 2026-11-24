@@ -158,6 +158,12 @@ internal sealed class WpfDialogService(IServiceProvider services) : IDialogServi
         return Task.FromResult(dialog.ShowDialog() == true ? dialog.Text : null);
     }
 
+    public Task<RoutineExecutionChoice> ExecuteRoutineAsync(ExecuteRoutineViewModel routine)
+    {
+        var window = new ExecuteRoutineWindow(routine) { Owner = Owner };
+        return Task.FromResult(window.ShowDialog() == true ? window.Choice : RoutineExecutionChoice.Cancel);
+    }
+
     public Task<bool> ConfirmAsync(string title, string message) =>
         Task.FromResult(new PromptDialog(title, message, askForSecret: false) { Owner = Owner }.ShowDialog() == true);
 

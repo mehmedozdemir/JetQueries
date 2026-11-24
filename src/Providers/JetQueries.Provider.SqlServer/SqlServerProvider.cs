@@ -17,7 +17,7 @@ public sealed class SqlServerExtension : IExtension
 }
 
 /// <summary>Database provider for Microsoft SQL Server and Azure SQL, on Microsoft.Data.SqlClient.</summary>
-public sealed class SqlServerProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport,
+public sealed class SqlServerProvider : IDatabaseProvider, IRoutineExecutionScripting, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport,
     IConnectionStringImport, IProviderAppearance, IObjectScripting
 {
     /// <summary>The provider identifier stored in connection profiles.</summary>
@@ -171,6 +171,10 @@ public sealed class SqlServerProvider : IDatabaseProvider, IConnectionSettingsPr
 
     /// <inheritdoc />
     public string QuoteIdentifier(string identifier) => SqlServerNames.Quote(identifier);
+
+    /// <inheritdoc />
+    public string? ScriptExecute(DatabaseObject routine, SqlSignature signature, IReadOnlyList<RoutineArgument> arguments) =>
+        SqlServerExecuteScript.Build(routine, signature, arguments);
 
     /// <inheritdoc />
     public async Task<IDatabaseConnection> OpenConnectionAsync(

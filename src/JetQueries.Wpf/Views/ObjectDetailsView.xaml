@@ -17,6 +17,8 @@
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
                     <Button Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.Table}" Content="{x:Static res:Strings.DetailsOpenData}"
                             Command="{Binding SelectRowsCommand}" Visibility="{Binding HasData, Converter={StaticResource BoolToVisibility}}" />
+                    <Button Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.Play}" Content="{x:Static res:Strings.DetailsExecute}"
+                            Command="{Binding ExecuteRoutineCommand}" Visibility="{Binding CanExecuteRoutine, Converter={StaticResource BoolToVisibility}}" />
                     <Button Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.Code}" Content="{x:Static res:Strings.DetailsOpenDdl}"
                             Command="{Binding OpenDdlInEditorCommand}" />
                     <Button Style="{StaticResource Btn.Icon.Compact}" c:Ui.Icon="{x:Static c:Icons.Refresh}" Command="{Binding LoadCommand}"

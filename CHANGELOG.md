@@ -6,6 +6,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 ## [Unreleased]
 
 ### Added
+- Execute a stored procedure or function: "Execute…" in the explorer's menu and "Execute" in the details view open a dialog (as SSMS's) listing the routine's parameters (each overload), each passed as a value, an expression, NULL or its default, with the script kept up to date; "Open script" puts it in a query tab, "Run" runs it there. SQL Server: `EXEC @return_value = …` with OUTPUT variables selected afterwards, a scalar function in a SELECT, a table function in a FROM. Oracle: an anonymous block with named arguments that prints OUT values and the result with DBMS_OUTPUT (a ref cursor comes back as a result set). PostgreSQL: `CALL` for a procedure, `SELECT * FROM` for a function. SDK (preview): `IRoutineExecutionScripting`.
 - Oracle: "User and password from the wallet" for a TNS alias (secure external password store): no user or password is asked; the connection logs on as "/" and ODP.NET takes the credential from the wallet. A pasted `User Id=/` with an alias is read as such.
 - SQLite: the details' Constraints tab lists CHECK constraints (column and table ones, with their names and conditions), read from the CREATE TABLE text.
 - PostgreSQL: the explorer lists the server's databases (those the user may connect to); each one opens its schemas and objects, read on a connection to that database. Details, scripts and new query tabs opened from them start in that database.

@@ -47,6 +47,11 @@ public interface IDialogService
     /// <param name="message">What to enter.</param>
     /// <param name="initial">The text the box starts with.</param>
     Task<string?> PromptTextAsync(string title, string message, string initial) => Task.FromResult<string?>(null);
+
+    /// <summary>Shows the Execute dialog of a stored procedure or function (its parameters are read while it is open).</summary>
+    /// <param name="routine">The dialog's view model.</param>
+    Task<ViewModels.RoutineExecutionChoice> ExecuteRoutineAsync(ViewModels.ExecuteRoutineViewModel routine) =>
+        Task.FromResult(ViewModels.RoutineExecutionChoice.Cancel);
 }
 
 /// <summary>The answer to "save changes?".</summary>

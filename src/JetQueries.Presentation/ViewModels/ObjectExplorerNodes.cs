@@ -155,6 +155,9 @@ public sealed class DatabaseObjectNodeViewModel(ExplorerContext context, Databas
 
     public bool IsContainer => Target.Kind is DatabaseObjectKinds.Database or DatabaseObjectKinds.Schema;
 
+    /// <summary>A procedure or function the provider can write a call for (the Execute dialog).</summary>
+    public bool CanExecuteRoutine => ExecuteRoutineViewModel.CanExecute(context.Session, Target);
+
     protected override Task<IReadOnlyList<ExplorerNodeViewModel>> LoadChildrenAsync(bool refresh) => Target.Kind switch
     {
         DatabaseObjectKinds.Database when context.Session.Provider.Capabilities.HasFlag(ProviderCapabilities.Schemas) =>

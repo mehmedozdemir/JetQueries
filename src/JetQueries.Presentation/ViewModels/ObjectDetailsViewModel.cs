@@ -130,6 +130,22 @@ public partial class ObjectDetailsViewModel : ObservableObject
     /// <summary>Raised to open another object's details (a referenced table, a dependency).</summary>
     public event EventHandler<ObjectDetailsRequest>? DetailsRequested;
 
+    /// <summary>Raised to show the Execute dialog of the routine.</summary>
+    public event EventHandler<ObjectDetailsRequest>? ExecuteRequested;
+
+    /// <summary>A procedure or function the provider can write a call for.</summary>
+    public bool CanExecuteRoutine => ExecuteRoutineViewModel.CanExecute(_session, Target);
+
+    /// <summary>Shows the Execute dialog of the routine.</summary>
+    [RelayCommand]
+    private void ExecuteRoutine()
+    {
+        if (CanExecuteRoutine)
+        {
+            ExecuteRequested?.Invoke(this, new ObjectDetailsRequest(ConnectionId, Target));
+        }
+    }
+
     /// <summary>Reads (or reads again) the details and the DDL.</summary>
     /// <remarks>
     /// A provider that reports its progress shows the properties and columns first; the other tabs appear as
