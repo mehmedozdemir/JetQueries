@@ -27,6 +27,11 @@ internal sealed partial class OracleMetadataProvider : IProgressiveObjectDetails
             return await SchemaDetailsAsync(target, cancellationToken).ConfigureAwait(false);
         }
 
+        if (target.Name.Container is { } package && target.Kind is DatabaseObjectKinds.Procedure or DatabaseObjectKinds.Function)
+        {
+            return await MemberDetailsAsync(target, package, cancellationToken).ConfigureAwait(false);
+        }
+
         if (ObjectTypes.FirstOrDefault(t => t.Kind == target.Kind) is not { Type: { } type })
         {
             return null;
@@ -137,6 +142,121 @@ internal sealed partial class OracleMetadataProvider : IProgressiveObjectDetails
         }
 
         return new ObjectDetails(resolved, properties.Build(), [.. sections.OfType<ObjectDetailSection>()]);
+    }
+
+    /// <summary>
+    /// A routine declared in a package: the package's dates and status, the routine's parameters (each overload)
+    /// and what the package depends on.
+    /// </summary>
+    private async Task<ObjectDetails?> MemberDetailsAsync(DatabaseObject target, string package, CancellationToken cancellationToken)
+    {
+        var objectSql = $"""
+            SELECT o.owner, o.object_name, TO_CHAR(o.created, {DateFormat}), TO_CHAR(o.last_ddl_time, {DateFormat}), o.status
+            FROM all_objects o
+            WHERE o.owner = NVL(:owner, SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA')) AND o.object_name = :name AND o.object_type = 'PACKAGE'
+            """;
+        if (await RowsAsync(objectSql, [("owner", target.Name.Schema), ("name", package)], cancellationToken).ConfigureAwait(false) is not [var head, ..])
+        {
+            return null;
+        }
+
+        var owner = head[0]!;
+        const string Sql = """
+            SELECT TO_CHAR(a.overload), TO_CHAR(a.position), a.argument_name, a.data_type, a.type_owner, a.type_name, a.type_subname, a.in_out, a.defaulted
+            FROM all_arguments a
+            WHERE a.owner = :owner AND a.package_name = :package AND a.object_name = :member
+              AND a.data_level = 0 AND (a.argument_name IS NOT NULL OR a.position = 0) AND a.data_type IS NOT NULL
+            ORDER BY a.subprogram_id, a.overload, a.position
+            """;
+        var arguments = await RowsAsync(Sql, [("owner", owner), ("package", head[1]), ("member", target.Name.Name)], cancellationToken).ConfigureAwait(false);
+
+        // Members of a package are found in ALL_PROCEDURES even without parameters.
+        const string Exists = "SELECT TO_CHAR(COUNT(*)) FROM all_procedures p WHERE p.owner = :owner AND p.object_name = :package AND p.procedure_name = :member";
+        if (arguments.Count == 0 && await RowsAsync(Exists, [("owner", owner), ("package", head[1]), ("member", target.Name.Name)], cancellationToken).ConfigureAwait(false) is [["0"]])
+        {
+            return null;
+        }
+
+        var overloaded = arguments.Select(static a => a[0]).Distinct().Count() > 1;
+        (string Key, string Title)[] columns =
+        [
+            (ObjectDetailKeys.Position, "#"),
+            (ObjectDetailKeys.Name, "Name"),
+            (ObjectDetailKeys.DataType, "Data type"),
+            (ObjectDetailKeys.Direction, "Direction"),
+            (ObjectDetailKeys.Default, "Has default"),
+        ];
+        var table = overloaded
+            ? new DetailTable(ObjectDetailKeys.Parameters, "Parameters", [("overload", "Overload"), .. columns])
+            : new DetailTable(ObjectDetailKeys.Parameters, "Parameters", columns);
+        foreach (var a in arguments)
+        {
+            var dataType = a[5] is { } typeName ? (a[4] is { } typeOwner ? typeOwner + "." : string.Empty) + typeName + (a[6] is { } sub ? "." + sub : string.Empty) : a[3];
+            var isReturn = a[1] == "0";
+            string?[] cells = [a[1], isReturn ? "RETURN" : a[2], dataType, isReturn ? "RETURN" : a[7], DetailTable.Flag(a[8] == "Y")];
+            table.Add(overloaded ? [a[0], .. cells] : cells);
+        }
+
+        var resolved = new DatabaseObject(new DatabaseObjectName(null, owner, target.Name.Name) { Container = head[1] }, target.Kind);
+        var properties = new DetailProperties()
+            .Add(ObjectDetailKeys.ObjectType, "Type", target.Kind == DatabaseObjectKinds.Function ? "FUNCTION" : "PROCEDURE")
+            .Add(ObjectDetailKeys.Schema, "Owner", owner)
+            .Add("package", "Package", head[1])
+            .Add(ObjectDetailKeys.Created, "Created", head[2])
+            .Add(ObjectDetailKeys.Modified, "Last DDL", head[3])
+            .Add(ObjectDetailKeys.Status, "Status", head[4]);
+        var dependencies = await DependenciesSectionAsync(owner, head[1]!, "PACKAGE BODY", cancellationToken).ConfigureAwait(false);
+        return new ObjectDetails(resolved, properties.Build(), [.. new[] { table.Build(), dependencies }.OfType<ObjectDetailSection>()]);
+    }
+
+    /// <summary>
+    /// The source of a package member: its declaration in the specification and its implementation in the body
+    /// (each overload), cut from the package's source with the PL/SQL structure parser.
+    /// </summary>
+    private async Task<string?> MemberSourceAsync(string? owner, string package, string member, CancellationToken cancellationToken)
+    {
+        const string Sql = """
+            SELECT s.owner, s.type, s.text FROM all_source s
+            WHERE s.owner = NVL(:owner, SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA')) AND s.name = :package AND s.type IN ('PACKAGE', 'PACKAGE BODY')
+            ORDER BY s.type, s.line
+            """;
+        var spec = new System.Text.StringBuilder();
+        var body = new System.Text.StringBuilder();
+        string? schema = null;
+        foreach (var row in await RowsAsync(Sql, [("owner", owner), ("package", package)], cancellationToken).ConfigureAwait(false))
+        {
+            schema ??= row[0];
+            (row[1] == "PACKAGE" ? spec : body).Append(row[2]);
+        }
+
+        if (schema is null)
+        {
+            return null;
+        }
+
+        var parts = new List<string>();
+        foreach (var (text, what) in new[] { (spec.ToString(), "PACKAGE"), (body.ToString(), "PACKAGE BODY") })
+        {
+            if (text.Length == 0)
+            {
+                continue;
+            }
+
+            // ALL_SOURCE starts at "PACKAGE name …": parsed as a CREATE so the routines are the package's children.
+            var source = "CREATE OR REPLACE " + text;
+            var script = Language.PlStructureParser.Parse(source);
+            foreach (var node in script.Root.Descendants().Where(n =>
+                         n.Kind is Language.PlNodeKind.Procedure or Language.PlNodeKind.Function &&
+                         string.Equals(n.Name?.Trim('"'), member, StringComparison.OrdinalIgnoreCase)))
+            {
+                var start = node.KeywordStart >= 0 ? node.KeywordStart : node.Start;
+                var end = Math.Min(node.End, source.Length);
+                var code = source[start..end].TrimEnd();
+                parts.Add($"-- {what} {schema}.{package}\n" + code + (code.EndsWith(';') ? string.Empty : ";"));
+            }
+        }
+
+        return parts.Count == 0 ? null : string.Join("\n\n", parts) + "\n";
     }
 
     private async Task<ObjectDetails?> SchemaDetailsAsync(DatabaseObject target, CancellationToken cancellationToken)

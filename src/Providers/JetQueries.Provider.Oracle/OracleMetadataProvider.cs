@@ -106,7 +106,7 @@ internal sealed partial class OracleMetadataProvider(OracleConnection connection
                 // Overloads appear once.
                 if (kinds.HasFlag(kind) && seen.Add(row.Name))
                 {
-                    yield return new DatabaseObject(new DatabaseObjectName(null, parent.Name.Schema, row.Name), kind);
+                    yield return new DatabaseObject(new DatabaseObjectName(null, parent.Name.Schema, row.Name) { Container = parent.Name.Name }, kind);
                 }
             }
 
@@ -171,6 +171,11 @@ internal sealed partial class OracleMetadataProvider(OracleConnection connection
     public async Task<string?> GetDefinitionAsync(DatabaseObject target, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(target);
+        if (target.Name.Container is { } package && target.Kind is DatabaseObjectKinds.Procedure or DatabaseObjectKinds.Function)
+        {
+            return await MemberSourceAsync(target.Name.Schema, package, target.Name.Name, cancellationToken).ConfigureAwait(false);
+        }
+
         var owner = target.Name.Schema;
         var name = target.Name.Name;
         switch (target.Kind)

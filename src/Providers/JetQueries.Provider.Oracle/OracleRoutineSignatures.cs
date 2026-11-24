@@ -19,7 +19,12 @@ internal sealed partial class OracleMetadataProvider : IRoutineMetadataProvider
         // standalone routine, or — when a schema part was written — a member of a package of that name.
         string? owner = null, standalone = null, packageOwner = null, package = null, member = name.Name;
         var dot = name.Name.IndexOf('.', StringComparison.Ordinal);
-        if (dot > 0)
+        if (name.Container is { } container)
+        {
+            packageOwner = name.Schema;
+            package = container;
+        }
+        else if (dot > 0)
         {
             packageOwner = name.Schema;
             package = name.Name[..dot];

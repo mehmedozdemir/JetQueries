@@ -15,7 +15,8 @@ namespace JetQueries.Core.Metadata;
 public sealed partial class SqliteMetadataCache : IMetadataCache, IAsyncDisposable, IDisposable
 {
     // Bump when the table layout or the JSON shape changes; an older file is simply emptied.
-    private const int SchemaVersion = 1;
+    // 2: object names carry the package a routine is declared in.
+    private const int SchemaVersion = 2;
 
     private const int ScopeObjects = 1;
     private const int ScopeColumns = 2;

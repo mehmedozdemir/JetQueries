@@ -432,8 +432,7 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 
 ## Known limits
 - SQLite shows no CHECK constraints; Oracle
-  parameter defaults show only whether there is one; routines declared inside an Oracle package have no details
-  of their own (open the package). PostgreSQL keeps no created/modified dates.
+  parameter defaults show only whether there is one; PostgreSQL keeps no created/modified dates.
 - Header sorting and column filters apply to the rows received; the SQL filter box above the grid is the one
   that filters on the server.
 - Nothing stays open on the server between pages (checked on SQL Server and PostgreSQL: DDL on the table is not
@@ -519,4 +518,13 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] Add two column filters (header funnel or "Bu değere göre filtrele"): "Hepsi (VE)" appears before the chips;
       clicking it turns to "Herhangi biri (VEYA)" and the rows matching either filter show; the row count follows.
       With one filter the switch is hidden.
+
+## Oracle package members
+- [ ] In the editor, Ctrl+Click the member part of `pkg.proc(…)`: the details of PROC open (title OWNER.PKG.PROC,
+      Package property, Parameters with an Overload column when the routine is overloaded). Ctrl+Click on the `pkg`
+      part opens the package as before.
+- [ ] F12 on `pkg.proc` opens a tab with its source: "-- PACKAGE OWNER.PKG" and the declaration(s), then
+      "-- PACKAGE BODY OWNER.PKG" and the implementation(s); the other routines of the package are not there.
+- [ ] In the explorer, expand a package: its routines open their own details (Details / F4) and DDL tab.
+- [ ] Signature help on `pkg.proc(` still shows each overload.
 
