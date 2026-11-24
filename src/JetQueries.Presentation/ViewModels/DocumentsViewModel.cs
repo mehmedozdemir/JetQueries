@@ -29,6 +29,9 @@ public sealed record WorkspaceDocument
     public Guid? ConnectionId { get; init; }
 
     public string? Database { get; init; }
+
+    /// <summary>The saved query of the library the tab is linked to.</summary>
+    public Guid? SavedQueryId { get; init; }
 }
 
 /// <summary>The open query tabs, saved while the application runs and restored at the next start.</summary>
@@ -554,6 +557,7 @@ public partial class DocumentsViewModel : ObservableObject
 
                 var document = Open(saved.Title, text, saved.ConnectionId, saved.Database);
                 document.FilePath = saved.FilePath;
+                document.SavedQueryId = saved.SavedQueryId;
                 document.FileEncoding = encoding ?? document.FileEncoding;
                 if (dirty)
                 {
@@ -605,6 +609,7 @@ public partial class DocumentsViewModel : ObservableObject
             IsDirty = d.IsDirty,
             ConnectionId = d.SelectedSession?.Session.Definition.Id ?? d.PendingConnectionId,
             Database = d.SelectedDatabase ?? d.PendingDatabase,
+            SavedQueryId = d.SavedQueryId,
         })],
         SelectedIndex = Selected is null ? 0 : Math.Max(0, Documents.IndexOf(Selected)),
     };

@@ -306,6 +306,39 @@
   <data name="EditNoTable" xml:space="preserve"><value>Bu SELECT'in tablosu bulunamadı.</value></data>
   <data name="EditEditable" xml:space="preserve"><value>Hücreyi düzenlemek için çift tıklayın, F2'ye basın ya da yazmaya başlayın; boş değer NULL'dır</value></data>
   <data name="EditReadOnlyConnection" xml:space="preserve"><value>Bağlantı salt okunur: satırlar değiştirilemez.</value></data>
+  <data name="ParametersBadValue" xml:space="preserve"><value>{0}: "{1}" seçilen türde bir değer değil.</value></data>
+  <data name="ParameterAuto" xml:space="preserve"><value>Otomatik</value></data>
+  <data name="ParameterText" xml:space="preserve"><value>Metin</value></data>
+  <data name="ParameterNumber" xml:space="preserve"><value>Sayı</value></data>
+  <data name="ParameterDate" xml:space="preserve"><value>Tarih</value></data>
+  <data name="ParametersTitle" xml:space="preserve"><value>Sorgu parametreleri</value></data>
+  <data name="ParametersIntro" xml:space="preserve"><value>:ad değerleri parametre olarak gönderilir; ${ad} metni SQL'e yazıldığı gibi eklenir.</value></data>
+  <data name="ParametersRun" xml:space="preserve"><value>Çalıştır</value></data>
+  <data name="ParameterHeaderName" xml:space="preserve"><value>Parametre</value></data>
+  <data name="ParameterHeaderKind" xml:space="preserve"><value>Tür</value></data>
+  <data name="ParameterHeaderValue" xml:space="preserve"><value>Değer</value></data>
+  <data name="ParameterSqlText" xml:space="preserve"><value>SQL metni</value></data>
+  <data name="SavedQueriesTitle" xml:space="preserve"><value>Kayıtlı sorgular</value></data>
+  <data name="SavedQueriesSearch" xml:space="preserve"><value>Ad, klasör, metin ara…</value></data>
+  <data name="SavedQueriesEmpty" xml:space="preserve"><value>Henüz kayıtlı sorgu yok. Bir sorgu penceresinde Sorgu &gt; Kütüphaneye kaydet (Ctrl+Shift+K) sorguyu buraya ekler.</value></data>
+  <data name="SavedQueriesNoMatch" xml:space="preserve"><value>Aramaya uyan kayıtlı sorgu yok.</value></data>
+  <data name="SavedQueriesNoFolder" xml:space="preserve"><value>(Klasörsüz)</value></data>
+  <data name="SavedQueryOpen" xml:space="preserve"><value>Aç</value></data>
+  <data name="SavedQueryRun" xml:space="preserve"><value>Çalıştır</value></data>
+  <data name="SavedQueryEdit" xml:space="preserve"><value>Düzenle…</value></data>
+  <data name="SavedQueryHasParameters" xml:space="preserve"><value>Çalıştırılırken parametre sorar</value></data>
+  <data name="SavedQueryDeleteTitle" xml:space="preserve"><value>Kayıtlı sorguyu sil</value></data>
+  <data name="SavedQueryDeleteMessage" xml:space="preserve"><value>"{0}" kütüphaneden silinsin mi?</value></data>
+  <data name="SavedQuerySaved" xml:space="preserve"><value>"{0}" kütüphaneye kaydedildi.</value></data>
+  <data name="MenuSavedQueries" xml:space="preserve"><value>Kayıtlı sorgular</value></data>
+  <data name="MenuSaveToLibrary" xml:space="preserve"><value>Kütüphaneye kaydet…</value></data>
+  <data name="MenuSaveToLibraryAsNew" xml:space="preserve"><value>Kütüphaneye yeni olarak kaydet…</value></data>
+  <data name="SaveQueryDialogTitle" xml:space="preserve"><value>Sorguyu kütüphaneye kaydet</value></data>
+  <data name="SaveQueryName" xml:space="preserve"><value>Ad</value></data>
+  <data name="SaveQueryFolder" xml:space="preserve"><value>Klasör (alt klasör için /)</value></data>
+  <data name="SaveQueryDescription" xml:space="preserve"><value>Açıklama</value></data>
+  <data name="SaveQueryKeepConnection" xml:space="preserve"><value>{0} bağlantısında aç</value></data>
+  <data name="SaveQueryButton" xml:space="preserve"><value>Kaydet</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Tümünü temizle</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Filtreyi kaldır</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} / {1:N0} satır</value></data>

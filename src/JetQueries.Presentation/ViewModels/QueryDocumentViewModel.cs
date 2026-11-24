@@ -102,6 +102,9 @@ public sealed partial class QueryResultSet : ObservableObject, IResultTab
     /// </summary>
     internal string? PagedSql { get; set; }
 
+    /// <summary>The parameter values the result was read with; its SQL runs again with them (pages, count, export).</summary>
+    internal IReadOnlyList<QueryParameter> Parameters { get; set; } = [];
+
     /// <summary>The result comes from a single SELECT, so a SQL condition can narrow it on the server.</summary>
     [ObservableProperty]
     public partial bool CanFilter { get; set; }
@@ -385,6 +388,9 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
         SelectedTab = Messages;
         RefreshSessions();
     }
+
+    /// <summary>The query of the library this tab was opened from or saved to; saving to the library updates it.</summary>
+    public Guid? SavedQueryId { get; set; }
 
     /// <summary>The tab's name: the file name, or "Query N".</summary>
     [ObservableProperty]
@@ -1181,7 +1187,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
 
         if (LastSql is { } sql)
         {
-            await RunSqlAsync(sql, Tabs.OfType<QueryResultSet>().LastOrDefault(s => s.PagedSql == sql)?.AppliedFilter);
+            await RunSqlAsync(sql, Tabs.OfType<QueryResultSet>().LastOrDefault(s => s.PagedSql == sql)?.AppliedFilter, parameters: _lastParameters);
         }
     }
 
@@ -1213,9 +1219,23 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
     /// Runs <paramref name="sql"/>; with <paramref name="filter"/>, narrowed by that SQL condition (Refresh keeps the
     /// filter); with <paramref name="keepResults"/>, after the results already shown instead of in their place.
     /// </summary>
-    private async Task RunSqlAsync(string sql, string? filter = null, bool keepResults = false)
+    /// <param name="parameters">
+    /// The values of its parameters (Refresh); null to look for placeholders (<c>:name</c>, <c>${name}</c>) and ask for them.
+    /// </param>
+    private async Task RunSqlAsync(string sql, string? filter = null, bool keepResults = false, IReadOnlyList<QueryParameter>? parameters = null)
     {
         var session = SelectedSession!.Session;
+        if (parameters is null)
+        {
+            if (await PrepareParametersAsync(sql, session) is not { } prepared)
+            {
+                Status = Strings.QueryNotSent;
+                return;
+            }
+
+            (sql, parameters) = prepared;
+        }
+
         await CloseCursorAsync();
         if (!keepResults)
         {
@@ -1253,6 +1273,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
         }
 
         LastSql = sql;
+        _lastParameters = parameters;
         var fetchSize = Math.Max(1, FetchSize);
         var pageable = !risk.WritesData && session.Provider is IRowCountQueryBuilder builder && builder.BuildCountQuery(sql) is not null;
         if (!pageable || Filtered(session, sql, filter) is not { } run)
@@ -1279,7 +1300,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
         }
 
         // Batches of one page (within reason), so that a page ends exactly at the fetch size.
-        var request = new QueryRequest(run) { BatchSize = Math.Min(fetchSize, 5000) };
+        var request = new QueryRequest(run) { BatchSize = Math.Min(fetchSize, 5000), Parameters = parameters };
         var cursor = new QueryCursor(channel, request, session, pageable ? fetchSize : MaxRows) { SelectFirst = keepResults };
         _cursor = cursor;
         await ReadPageAsync(cursor);
@@ -1289,6 +1310,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
         if (pageable && cursor.First is { } set)
         {
             set.PagedSql = sql;
+            set.Parameters = parameters;
             set.CanFilter = session.Provider is IResultFilterQueryBuilder;
             set.AppliedFilter = filter;
             set.SqlFilter = filter ?? string.Empty;
@@ -1463,7 +1485,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
         IsRunning = true;
         Status = Format(Strings.QueryRunning, set.RowCount);
         var started = Stopwatch.GetTimestamp();
-        var request = new QueryRequest(sql) { BatchSize = Math.Min(Math.Max(1, FetchSize), 5000) };
+        var request = new QueryRequest(sql) { BatchSize = Math.Min(Math.Max(1, FetchSize), 5000), Parameters = set.Parameters };
         var cursor = new QueryCursor(channel, request, session, target);
         var rows = new List<object?[]>(Math.Min(target, 100_000));
         var resultSets = 0;
@@ -1579,7 +1601,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
         IAsyncEnumerable<object?[]> rows;
         if (export.AllRows && session is not null && sql is not null)
         {
-            rows = ReadAgain(session, sql, database, columns);
+            rows = ReadAgain(session, sql, set.Parameters, database, columns);
         }
         else
         {
@@ -1644,7 +1666,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
 
         // The query again, on a connection of its own in the same database: every row, in batches, to the file.
         static async IAsyncEnumerable<object?[]> ReadAgain(
-            ConnectionSession session, string sql, string? database, IReadOnlyList<int> columns,
+            ConnectionSession session, string sql, IReadOnlyList<QueryParameter> parameters, string? database, IReadOnlyList<int> columns,
             [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             var channel = await session.OpenChannelAsync(cancellationToken).ConfigureAwait(false);
@@ -1655,7 +1677,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
                     await channel.ChangeDatabaseAsync(database, cancellationToken).ConfigureAwait(false);
                 }
 
-                await foreach (var item in channel.ExecuteAsync(new QueryRequest(sql) { BatchSize = 2000 }, cancellationToken).ConfigureAwait(false))
+                await foreach (var item in channel.ExecuteAsync(new QueryRequest(sql) { BatchSize = 2000, Parameters = parameters }, cancellationToken).ConfigureAwait(false))
                 {
                     if (item is RowBatch batch)
                     {
@@ -1697,6 +1719,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
         {
             var database = SelectedDatabase;
             var own = !IsRunning ? _channel : null;
+            var parameters = set.Parameters;
             set.TotalRows = await _jobs.Enqueue<long?>(
                 "Count rows",
                 async context =>
@@ -1710,7 +1733,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
                             await channel.ChangeDatabaseAsync(database, token).ConfigureAwait(false);
                         }
 
-                        await foreach (var item in channel.ExecuteAsync(new QueryRequest(countSql) { MaxRows = 1 }, token).ConfigureAwait(false))
+                        await foreach (var item in channel.ExecuteAsync(new QueryRequest(countSql) { MaxRows = 1, Parameters = parameters }, token).ConfigureAwait(false))
                         {
                             if (item is RowBatch { Rows: [var row, ..] } && row[0] is { } value)
                             {
@@ -2090,6 +2113,65 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
         }
 
         Status = Format(Strings.EditSaved, changes.Count, table);
+    }
+
+    private IReadOnlyList<QueryParameter> _lastParameters = [];
+
+    // The values given in this window, offered again the next time a placeholder of the same name is asked for.
+    private readonly Dictionary<string, (QueryParameterKind Kind, string Value)> _parameterValues = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// The text to run and its parameters: without placeholders the text as it is; with them, the values asked for
+    /// (a dialog) bound as parameters and the texts put in. Null when the user cancels.
+    /// </summary>
+    private async Task<(string Sql, IReadOnlyList<QueryParameter> Parameters)?> PrepareParametersAsync(string sql, ConnectionSession session)
+    {
+        var placeholders = QueryPlaceholders.Find(sql);
+        var syntax = session.Provider as IQueryParameterSyntax;
+        if (syntax is null)
+        {
+            // Values cannot be bound here: only the text placeholders are asked for.
+            placeholders = [.. placeholders.Where(static p => p.IsText)];
+        }
+
+        if (placeholders.Count == 0)
+        {
+            return (sql, []);
+        }
+
+        var items = placeholders
+            .DistinctBy(static p => (p.Name.ToUpperInvariant(), p.IsText))
+            .Select(p =>
+            {
+                var item = new QueryParameterItem(p.Name, p.IsText);
+                if (_parameterValues.TryGetValue((p.IsText ? "$" : ":") + p.Name, out var last))
+                {
+                    (item.Kind, item.Value) = last;
+                }
+
+                return item;
+            })
+            .ToList();
+        var dialog = new QueryParametersViewModel(items);
+        if (!await _dialogs.AskQueryParametersAsync(dialog) || !dialog.TryBuild(out var values, out var texts))
+        {
+            return null;
+        }
+
+        foreach (var item in items)
+        {
+            _parameterValues[(item.IsText ? "$" : ":") + item.Name] = (item.Kind, item.Value);
+        }
+
+        // Each name once, as the placeholders spell it (Oracle binds by name; the others take repeats too).
+        var bound = values.Select(v => v with { Name = placeholders.First(p => !p.IsText && p.Name.Equals(v.Name, StringComparison.OrdinalIgnoreCase)).Name }).ToList();
+        var byName = bound.ToDictionary(static v => v.Name, StringComparer.OrdinalIgnoreCase);
+        var text = QueryPlaceholders.Apply(
+            sql,
+            placeholders,
+            name => syntax!.ParameterReference(byName[name].Name),
+            texts.ToDictionary(static t => t.Key, static t => t.Value, StringComparer.OrdinalIgnoreCase));
+        return (text, bound);
     }
 
     /// <summary>Closes the open cursor of a paged result, if there is one; its rows stay.</summary>

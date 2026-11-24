@@ -19,7 +19,7 @@ public sealed class PostgreSqlExtension : IExtension
 }
 
 /// <summary>Database provider for PostgreSQL, on the Npgsql driver.</summary>
-public sealed class PostgreSqlProvider : IDatabaseProvider, IBulkInsertScripting, IRowEditScripting, IRoutineExecutionScripting, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport,
+public sealed class PostgreSqlProvider : IDatabaseProvider, IBulkInsertScripting, IRowEditScripting, IQueryParameterSyntax, IRoutineExecutionScripting, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport,
     IConnectionStringImport, IProviderAppearance, IObjectScripting
 {
     /// <summary>The provider identifier stored in connection profiles.</summary>
@@ -149,6 +149,9 @@ public sealed class PostgreSqlProvider : IDatabaseProvider, IBulkInsertScripting
 
     /// <inheritdoc />
     public int RowsPerStatement(int columnCount) => Providers.Metadata.BulkInsert.Rows(columnCount, 30000, 1000);
+
+    /// <inheritdoc />
+    public string ParameterReference(string name) => "@" + name;
 
     /// <inheritdoc />
     public string ScriptUpdate(DatabaseObjectName table, IReadOnlyList<string> columns, IReadOnlyList<string> keyColumns)

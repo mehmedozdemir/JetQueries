@@ -74,6 +74,17 @@ internal static class Program
         builder.Services.AddSingleton<ConnectionsViewModel>();
         builder.Services.AddSingleton<DocumentsViewModel>();
         builder.Services.AddSingleton<HistoryViewModel>();
+
+        // The library of saved queries: next to the connections, in the roaming profile (no secrets in it).
+        builder.Services.AddSingleton<Core.Library.ISavedQueryStore>(services => new Core.Library.JsonSavedQueryStore(
+            new Core.Library.SavedQueryStoreOptions { FilePath = Path.Combine(userData, "saved-queries.json") },
+            services.GetRequiredService<Microsoft.Extensions.Logging.ILogger<Core.Library.JsonSavedQueryStore>>()));
+        builder.Services.AddSingleton(services => new SavedQueriesViewModel(
+            services.GetRequiredService<Core.Library.ISavedQueryStore>(),
+            services.GetRequiredService<Core.Connections.IConnectionStore>(),
+            services.GetRequiredService<Core.Jobs.IJobQueue>(),
+            services.GetRequiredService<IDialogService>(),
+            services.GetRequiredService<DocumentsViewModel>()));
         builder.Services.AddSingleton<IThemeService, ThemeService>();
         builder.Services.AddSingleton<IAppearanceService, AppearanceService>();
         builder.Services.AddSingleton<ISnippetService, SnippetService>();

@@ -193,6 +193,15 @@ internal sealed class WpfDialogService(IServiceProvider services) : IDialogServi
         return Task.FromResult(window.ShowDialog() == true ? window.Choice : RoutineExecutionChoice.Cancel);
     }
 
+    public Task<bool> AskQueryParametersAsync(QueryParametersViewModel parameters) =>
+        Task.FromResult(new QueryParametersWindow(parameters) { Owner = Owner }.ShowDialog() == true);
+
+    public Task<bool> EditSavedQueryAsync(SavedQueryEditViewModel query) =>
+        Task.FromResult(new SaveQueryWindow(query) { Owner = ActiveOwner }.ShowDialog() == true);
+
+    // The library window when it is the one in front (Edit from there), else the main window.
+    private Window ActiveOwner => Application.Current.Windows.OfType<SavedQueriesWindow>().FirstOrDefault(static w => w.IsActive) as Window ?? Owner;
+
     public Task<bool> ConfirmAsync(string title, string message) =>
         Task.FromResult(new PromptDialog(title, message, askForSecret: false) { Owner = Owner }.ShowDialog() == true);
 

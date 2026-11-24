@@ -24,6 +24,7 @@ public partial class MainWindow : Window
         viewModel.GoToObjectRequested += (_, goTo) => new GoToObjectWindow(goTo) { Owner = this }.ShowDialog();
 
         viewModel.HistoryRequested += (_, _) => ShowHistory(viewModel);
+        viewModel.SavedQueriesRequested += (_, _) => ShowSavedQueries(viewModel);
         viewModel.ShortcutsRequested += (_, _) =>
         {
             if (OwnedWindows.OfType<ShortcutsWindow>().FirstOrDefault() is { } open)
@@ -90,6 +91,36 @@ public partial class MainWindow : Window
         }
 
         return _history;
+    }
+
+    private SavedQueriesWindow? _savedQueries;
+
+    /// <summary>The saved queries window; one, brought forward when it is open already.</summary>
+    internal SavedQueriesWindow? ShowSavedQueries(MainWindowViewModel viewModel)
+    {
+        if (viewModel.SavedQueries is not { } library)
+        {
+            return null;
+        }
+
+        if (_savedQueries is null)
+        {
+            _savedQueries = new SavedQueriesWindow(library) { Owner = this };
+            _savedQueries.Closed += (_, _) => _savedQueries = null;
+            _ = library.LoadAsync();
+            _savedQueries.Show();
+        }
+        else
+        {
+            if (_savedQueries.WindowState == WindowState.Minimized)
+            {
+                _savedQueries.WindowState = WindowState.Normal;
+            }
+
+            _savedQueries.Activate();
+        }
+
+        return _savedQueries;
     }
 
     private void OnExit(object sender, RoutedEventArgs e) => Close();

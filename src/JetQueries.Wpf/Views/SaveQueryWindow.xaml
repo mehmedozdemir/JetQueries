@@ -1,0 +1,38 @@
+<Window x:Class="JetQueries.Wpf.Views.SaveQueryWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:c="clr-namespace:UiKit.Controls;assembly=UiKit.Wpf"
+        xmlns:res="clr-namespace:JetQueries.Presentation.Resources;assembly=JetQueries.Presentation"
+        Title="{x:Static res:Strings.SaveQueryDialogTitle}" Width="520" SizeToContent="Height" ResizeMode="NoResize"
+        ShowInTaskbar="False" WindowStartupLocation="CenterOwner"
+        Style="{StaticResource Window.App}">
+    <Window.Resources>
+        <Style x:Key="Label" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+            <Setter Property="FontSize" Value="{DynamicResource FontSize.Small}" />
+            <Setter Property="Margin" Value="1,0,0,4" />
+        </Style>
+    </Window.Resources>
+
+    <DockPanel>
+        <Border DockPanel.Dock="Bottom" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,1,0,0" Padding="20,10"
+                Background="{DynamicResource Brush.SurfaceAlt}">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="{x:Static res:Strings.ButtonCancel}" IsCancel="True" MinWidth="84" Margin="0,0,8,0" />
+                <Button x:Name="SaveButton" Style="{StaticResource Btn.Primary}" c:Ui.Icon="{x:Static c:Icons.Save}" Content="{x:Static res:Strings.SaveQueryButton}"
+                        IsDefault="True" MinWidth="96" IsEnabled="{Binding IsValid}" Click="OnSave" />
+            </StackPanel>
+        </Border>
+
+        <StackPanel Margin="20,16,20,16">
+            <TextBlock Text="{x:Static res:Strings.SaveQueryName}" Style="{StaticResource Label}" />
+            <TextBox x:Name="NameBox" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12" />
+            <TextBlock Text="{x:Static res:Strings.SaveQueryFolder}" Style="{StaticResource Label}" />
+            <ComboBox x:Name="FolderBox" IsEditable="True" ItemsSource="{Binding Folders}" Text="{Binding Folder, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12" />
+            <TextBlock Text="{x:Static res:Strings.SaveQueryDescription}" Style="{StaticResource Label}" />
+            <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" Height="64"
+                     VerticalScrollBarVisibility="Auto" VerticalContentAlignment="Top" Padding="8,6" Margin="0,0,0,12" />
+            <CheckBox x:Name="KeepConnectionBox" IsChecked="{Binding KeepConnection}" IsEnabled="{Binding CanKeepConnection}" />
+        </StackPanel>
+    </DockPanel>
+</Window>
