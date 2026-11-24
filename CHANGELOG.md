@@ -6,6 +6,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 ## [Unreleased]
 
 ### Added
+- Compact mode (JetBrains' compact UI): View > Compact mode, or Settings > Appearance > Interface density. Toolbars, explorer and grid rows, tabs, inputs and menus become one step lower with tighter padding; text keeps its size. Switches at once and is remembered.
+- UiKit: density tokens (`Size.Control`, `Size.Input`, `Pad.*`) used by its control styles, and `UiKit.Theming.Density` to switch them between Normal and Compact at runtime.
 - Execute a stored procedure or function: "Execute…" in the explorer's menu and "Execute" in the details view open a dialog (as SSMS's) listing the routine's parameters (each overload), each passed as a value, an expression, NULL or its default, with the script kept up to date; "Open script" puts it in a query tab, "Run" runs it there. SQL Server: `EXEC @return_value = …` with OUTPUT variables selected afterwards, a scalar function in a SELECT, a table function in a FROM. Oracle: an anonymous block with named arguments that prints OUT values and the result with DBMS_OUTPUT (a ref cursor comes back as a result set). PostgreSQL: `CALL` for a procedure, `SELECT * FROM` for a function. SDK (preview): `IRoutineExecutionScripting`.
 - Oracle: "User and password from the wallet" for a TNS alias (secure external password store): no user or password is asked; the connection logs on as "/" and ODP.NET takes the credential from the wallet. A pasted `User Id=/` with an alias is read as such.
 - SQLite: the details' Constraints tab lists CHECK constraints (column and table ones, with their names and conditions), read from the CREATE TABLE text.

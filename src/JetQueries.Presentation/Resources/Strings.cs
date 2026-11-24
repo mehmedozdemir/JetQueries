@@ -162,6 +162,11 @@ public static class Strings
     public static string FilterClear => Get(nameof(FilterClear));
     public static string FilterValueRequired => Get(nameof(FilterValueRequired));
     public static string FilterClearAll => Get(nameof(FilterClearAll));
+    public static string MenuCompactMode => Get(nameof(MenuCompactMode));
+    public static string FieldDensity => Get(nameof(FieldDensity));
+    public static string SettingDensityInfo => Get(nameof(SettingDensityInfo));
+    public static string DensityNormal => Get(nameof(DensityNormal));
+    public static string DensityCompact => Get(nameof(DensityCompact));
     public static string ExplorerExecute => Get(nameof(ExplorerExecute));
     public static string DetailsExecute => Get(nameof(DetailsExecute));
     public static string ExecuteDialogTitle => Get(nameof(ExecuteDialogTitle));

@@ -187,6 +187,11 @@
   <data name="ExecuteRun" xml:space="preserve"><value>Run</value></data>
   <data name="ExecuteHint" xml:space="preserve"><value>A value is written as a literal of the parameter's type (dates as yyyy-mm-dd); an expression is written as it is. OUT parameters and the result are shown after the call.</value></data>
   <data name="ExecuteParametersFailed" xml:space="preserve"><value>The parameters could not be read: {0}</value></data>
+  <data name="MenuCompactMode" xml:space="preserve"><value>Compact mode</value></data>
+  <data name="FieldDensity" xml:space="preserve"><value>Interface density</value></data>
+  <data name="SettingDensityInfo" xml:space="preserve"><value>Compact: lower toolbars, rows, tabs and inputs, as in JetBrains IDEs; text keeps its size.</value></data>
+  <data name="DensityNormal" xml:space="preserve"><value>Normal</value></data>
+  <data name="DensityCompact" xml:space="preserve"><value>Compact</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Clear all</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Remove filter</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} of {1:N0} rows</value></data>

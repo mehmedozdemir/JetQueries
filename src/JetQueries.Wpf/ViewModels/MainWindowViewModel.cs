@@ -25,9 +25,11 @@ public partial class MainWindowViewModel : ObservableObject
     public MainWindowViewModel(
         IThemeService themeService, IUiDispatcher ui, ConnectionsViewModel connections, DocumentsViewModel documents, HistoryViewModel history,
         ISettingsDialog? settings = null, IConnectionManager? manager = null, IMetadataService? metadata = null, IJobQueue? jobs = null,
-        Core.Settings.ISettingsStore? store = null)
+        Core.Settings.ISettingsStore? store = null, IAppearanceService? appearance = null)
     {
         _store = store;
+        _appearance = appearance;
+        Services.AppearanceService.Changed += (_, _) => OnPropertyChanged(nameof(IsCompact));
         _manager = manager;
         _metadata = metadata;
         _jobs = jobs;
@@ -167,6 +169,29 @@ public partial class MainWindowViewModel : ObservableObject
 
     [RelayCommand]
     private void ToggleTheme() => _themeService.Toggle();
+
+    private readonly IAppearanceService? _appearance;
+
+    /// <summary>Whether the compact density is in effect (View > Compact mode).</summary>
+    public bool IsCompact => _appearance?.Current.CompactMode == true;
+
+    /// <summary>View > Compact mode: switches the density at once and remembers it.</summary>
+    [RelayCommand]
+    private void ToggleCompact()
+    {
+        if (_appearance is null)
+        {
+            return;
+        }
+
+        var settings = _appearance.Current with { CompactMode = !_appearance.Current.CompactMode };
+        _appearance.Apply(settings);
+        OnPropertyChanged(nameof(IsCompact));
+        if (_store is { } store && _jobs is { } jobs)
+        {
+            jobs.Enqueue("Save appearance", context => store.SaveAsync(AppearanceSettings.Section, settings, context.CancellationToken), JobPriority.Low);
+        }
+    }
 
     [RelayCommand]
     private void OpenSettings() => _settings?.Show();

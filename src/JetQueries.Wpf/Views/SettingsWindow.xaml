@@ -179,6 +179,16 @@
                                         </StackPanel>
                                     </DockPanel>
                                 </Border>
+                                <Border Style="{StaticResource Settings.Row}">
+                                    <DockPanel>
+                                        <ComboBox x:Name="DensityBox" DockPanel.Dock="Right" Width="160" Margin="24,0,0,0" VerticalAlignment="Center"
+                                                  ItemsSource="{Binding Densities}" SelectedItem="{Binding Density}" DisplayMemberPath="Text" />
+                                        <StackPanel>
+                                            <TextBlock Text="{x:Static res:Strings.FieldDensity}" Style="{StaticResource Settings.RowTitle}" />
+                                            <TextBlock Text="{x:Static res:Strings.SettingDensityInfo}" Style="{StaticResource Settings.RowInfo}" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
                                 <Border Style="{StaticResource Settings.Row}" Background="{DynamicResource Brush.SurfaceAlt}">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="{x:Static c:Icons.Database}" Style="{StaticResource Text.Icon}" Foreground="{DynamicResource Brush.Accent}" />
