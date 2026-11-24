@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <OutputType>Exe</OutputType>
+    <!-- CA1707: test names use underscores. CA1515: xUnit needs public test classes. -->
+    <NoWarn>$(NoWarn);CA1707;CA1515</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="Testcontainers.Redis" />
+    <PackageReference Include="StackExchange.Redis" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\JetQueries.Sdk\JetQueries.Sdk.csproj" />
+    <ProjectReference Include="..\..\src\JetQueries.Core\JetQueries.Core.csproj" />
+    <ProjectReference Include="..\..\src\Providers\JetQueries.Provider.Redis\JetQueries.Provider.Redis.csproj" />
+  </ItemGroup>
+</Project>

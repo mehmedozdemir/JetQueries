@@ -1,0 +1,7 @@
+{
+  "id": "jetqueries.redis",
+  "name": "Redis",
+  "version": "0.1.0",
+  "assembly": "JetQueries.Provider.Redis.dll",
+  "sdk": 0
+}

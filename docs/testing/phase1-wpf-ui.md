@@ -658,3 +658,19 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
       show the same. Edit on one while deleting on the other: the edited item stays on both.
 - [ ] Disconnect the share / rename the folder: the status says it is not reachable; nothing local is lost; it syncs
       again when the folder is back.
+
+## Redis
+- [ ] New connection > Redis: host, port, database, authentication (none / password / ACL user), TLS. Test and
+      connect; the explorer shows db0 (and every database that has keys) with its key count.
+- [ ] Expand a database: keys grouped by ":" with counts ("user (120)"), keys at the leaves. Over 5 000 keys a
+      message says to filter; right-click the database > "Anahtarları filtrele…" with user:* lists only those.
+- [ ] Double-click a key (or right-click > Aç): a tab with its type, TTL and size. A hash: fields and values,
+      the selected one in the editor; change the value > "Öğeyi kaydet", "Yeni olarak ekle", the bin icon removes it.
+      A list (index), set, sorted set (score) and stream (field=value lines) work the same way.
+- [ ] A string: edit and Kaydet (its TTL stays); "JSON biçimlendir" indents JSON. "TTL…" sets seconds (empty: none),
+      "Yeniden adlandır…" refuses a name in use, "Anahtarı sil" asks first.
+- [ ] New query on the connection is the console: `HGETALL user:1`, `LRANGE queue 0 -1`, `INFO memory`, `SELECT 2`
+      (the database selector follows), completion offers commands with arguments. `KEYS *` is refused with the
+      reason. Ctrl+Enter runs the lines around the cursor up to an empty line.
+- [ ] On a read-only connection `SET x 1` is refused and the key tab's buttons are off. On a production connection
+      `DEL x` / `FLUSHDB` ask first, and so does removing an item or a key.

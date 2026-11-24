@@ -585,6 +585,30 @@ public partial class ConnectionsViewModel(
     /// <summary>Raised when an object's details view should open.</summary>
     public event EventHandler<ObjectDetailsRequest>? DetailsRequested;
 
+    /// <summary>A key of a key-value connection is to be shown in a tab.</summary>
+    public event EventHandler<KeyValueViewModel>? KeyRequested;
+
+    /// <summary>Opens a key in a tab (double-click or Enter on it).</summary>
+    [RelayCommand]
+    private void OpenKey(ExplorerNodeViewModel? node)
+    {
+        if ((node ?? Selected) is KeyNodeViewModel key)
+        {
+            KeyRequested?.Invoke(this, new KeyValueViewModel(key.Session, key.Database, key.Key, jobs, dialogs));
+        }
+    }
+
+    /// <summary>Lists only the keys of a database matching a pattern (<c>user:*</c>); an empty one lists all again.</summary>
+    [RelayCommand]
+    private async Task FilterKeysAsync(ExplorerNodeViewModel? node)
+    {
+        if ((node ?? Selected) is KeySpaceNodeViewModel space &&
+            await dialogs.PromptTextAsync(Strings.KeyFilter, Strings.KeyFilterPrompt, space.Pattern == "*" ? string.Empty : space.Pattern) is { } pattern)
+        {
+            await space.FilterAsync(pattern);
+        }
+    }
+
     /// <summary>The last problem writing a script (shown at the top of the explorer); null when none.</summary>
     [ObservableProperty]
     public partial string? ScriptError { get; set; }

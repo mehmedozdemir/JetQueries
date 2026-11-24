@@ -52,6 +52,7 @@ public partial class MainWindowViewModel : ObservableObject
 
         // Details of an object: from the explorer (Details, F4) and from the editor (Ctrl+Click, F12).
         connections.DetailsRequested += (_, request) => ShowDetails(request);
+        connections.KeyRequested += (_, key) => documents.OpenKey(key);
         documents.DetailsRequested += (_, request) => ShowDetails(request);
 
         // A new query starts on the connection that is selected in the explorer.

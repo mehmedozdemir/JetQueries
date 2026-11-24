@@ -355,6 +355,57 @@
   <data name="SyncFolderPlaceholder" xml:space="preserve"><value>e.g. C:\Users\you\OneDrive\JetQueries</value></data>
   <data name="SyncNow" xml:space="preserve"><value>Sync now</value></data>
   <data name="SyncBrowseTitle" xml:space="preserve"><value>Choose the shared folder</value></data>
+  <data name="KeysFiltered" xml:space="preserve"><value>Keys matching {0}</value></data>
+  <data name="KeysMore" xml:space="preserve"><value>The first {0:N0} keys are listed; filter with a pattern (user:*) to see others.</value></data>
+  <data name="KeyTtl" xml:space="preserve"><value>TTL:</value></data>
+  <data name="KeyNoTtl" xml:space="preserve"><value>none</value></data>
+  <data name="KeyDays" xml:space="preserve"><value>{0} d {1} h</value></data>
+  <data name="KeyHours" xml:space="preserve"><value>{0} h {1} min</value></data>
+  <data name="KeyMinutes" xml:space="preserve"><value>{0} min {1} s</value></data>
+  <data name="KeySeconds" xml:space="preserve"><value>{0} s</value></data>
+  <data name="KeyCharacters" xml:space="preserve"><value>{0:N0} characters</value></data>
+  <data name="KeyItems" xml:space="preserve"><value>{0:N0} items</value></data>
+  <data name="KeyTruncated" xml:space="preserve"><value>The first {0:N0} of {1:N0} items are shown.</value></data>
+  <data name="KeyField" xml:space="preserve"><value>Field</value></data>
+  <data name="KeyIndex" xml:space="preserve"><value>Index</value></data>
+  <data name="KeyMember" xml:space="preserve"><value>Member</value></data>
+  <data name="KeyFields" xml:space="preserve"><value>Fields</value></data>
+  <data name="KeyValueColumn" xml:space="preserve"><value>Value</value></data>
+  <data name="KeyScore" xml:space="preserve"><value>Score</value></data>
+  <data name="KeyGone" xml:space="preserve"><value>The key does not exist (any more).</value></data>
+  <data name="KeyRemoveItemTitle" xml:space="preserve"><value>Remove item</value></data>
+  <data name="KeyRemoveItemProduction" xml:space="preserve"><value>Remove "{0}" from {1} on {2}, a production connection?</value></data>
+  <data name="KeyRename" xml:space="preserve"><value>Rename key</value></data>
+  <data name="KeyRenamePrompt" xml:space="preserve"><value>New name (refused if a key has it):</value></data>
+  <data name="KeySetTtl" xml:space="preserve"><value>Time to live</value></data>
+  <data name="KeySetTtlPrompt" xml:space="preserve"><value>Seconds until the key expires; empty keeps it for ever:</value></data>
+  <data name="KeyBadTtl" xml:space="preserve"><value>The time to live is a whole number of seconds.</value></data>
+  <data name="KeyDeleteTitle" xml:space="preserve"><value>Delete key</value></data>
+  <data name="KeyDeleteMessage" xml:space="preserve"><value>Delete the key "{0}"? This cannot be undone.</value></data>
+  <data name="KeyDeleteProduction" xml:space="preserve"><value>Delete the key "{0}" on {1}, a production connection? This cannot be undone.</value></data>
+  <data name="KeyNotJson" xml:space="preserve"><value>The value is not JSON.</value></data>
+  <data name="KeyBadScore" xml:space="preserve"><value>The score is a number.</value></data>
+  <data name="KeyNeedsField" xml:space="preserve"><value>A hash item needs a field name.</value></data>
+  <data name="KeyNotApplied" xml:space="preserve"><value>Not done: the item or key changed meanwhile, or the new name is taken.</value></data>
+  <data name="KeySaved" xml:space="preserve"><value>Saved.</value></data>
+  <data name="KeyItemAdded" xml:space="preserve"><value>Item added.</value></data>
+  <data name="KeyItemRemoved" xml:space="preserve"><value>Item removed.</value></data>
+  <data name="KeyRenamed" xml:space="preserve"><value>Key renamed.</value></data>
+  <data name="KeyDeleted" xml:space="preserve"><value>Key deleted.</value></data>
+  <data name="KeyAdd" xml:space="preserve"><value>Add as new</value></data>
+  <data name="KeySaveItem" xml:space="preserve"><value>Save item</value></data>
+  <data name="KeyRemove" xml:space="preserve"><value>Remove</value></data>
+  <data name="KeySaveText" xml:space="preserve"><value>Save</value></data>
+  <data name="KeyFormatJson" xml:space="preserve"><value>Format JSON</value></data>
+  <data name="KeyRefresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="KeyRenameButton" xml:space="preserve"><value>Rename…</value></data>
+  <data name="KeyTtlButton" xml:space="preserve"><value>TTL…</value></data>
+  <data name="KeyDeleteButton" xml:space="preserve"><value>Delete key</value></data>
+  <data name="KeyFilter" xml:space="preserve"><value>Filter keys…</value></data>
+  <data name="KeyFilterPrompt" xml:space="preserve"><value>A pattern (* any text, ? one character), e.g. user:* — empty lists every key:</value></data>
+  <data name="KeyOpen" xml:space="preserve"><value>Open</value></data>
+  <data name="KeyItemEditor" xml:space="preserve"><value>Selected item</value></data>
+  <data name="KeyReadOnly" xml:space="preserve"><value>Read-only connection: the key can be viewed only.</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Clear all</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Remove filter</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} of {1:N0} rows</value></data>

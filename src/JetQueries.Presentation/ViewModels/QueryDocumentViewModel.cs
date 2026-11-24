@@ -1241,7 +1241,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
         {
             ClearResults();
         }
-        var risk = StatementGuard.Analyze(sql);
+        var risk = StatementGuard.Analyze(sql, session.Provider);
         if (session.Definition.IsReadOnly && risk.WritesData)
         {
             AddMessage(Strings.QueryBlockedReadOnly, isError: true);

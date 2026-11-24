@@ -112,6 +112,11 @@
                                     <MenuItem Header="{x:Static res:Strings.ConnectionDeleteLong}" c:Ui.Icon="{x:Static c:Icons.Delete}" InputGestureText="Del"
                                               Command="{Binding DeleteCommand}" Visibility="{Binding Selected, Converter={x:Static v:IsConnectionToVisibilityConverter.Instance}}" />
                                     <Separator Visibility="{Binding Selected, Converter={x:Static v:IsFolderOrConnectionToVisibilityConverter.Instance}}" />
+                                    <!-- Key-value databases: open a key, filter a database's keys -->
+                                    <MenuItem Header="{x:Static res:Strings.KeyOpen}" c:Ui.Icon="&#xE8A7;" InputGestureText="Enter" Command="{Binding OpenKeyCommand}" CommandParameter="{Binding Selected}"
+                                              Visibility="{Binding Selected, Converter={x:Static v:NodeTypeToVisibilityConverter.Instance}, ConverterParameter=Key}" />
+                                    <MenuItem Header="{x:Static res:Strings.KeyFilter}" c:Ui.Icon="&#xE71C;" Command="{Binding FilterKeysCommand}" CommandParameter="{Binding Selected}"
+                                              Visibility="{Binding Selected, Converter={x:Static v:NodeTypeToVisibilityConverter.Instance}, ConverterParameter=KeySpace}" />
                                     <MenuItem Header="{x:Static res:Strings.QueryNew}" c:Ui.Icon="{x:Static c:Icons.Add}"
                                               Command="{Binding NewQueryCommand}" CommandParameter="{Binding Selected}" />
                                     <MenuItem Header="{Binding ToggleConnectionText}" c:Ui.Icon="{x:Static c:Icons.Plug}" Command="{Binding ToggleConnectionCommand}" />
@@ -224,6 +229,20 @@
                                        Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}" />
                         </StackPanel>
                     </HierarchicalDataTemplate>
+                    <HierarchicalDataTemplate DataType="{x:Type vm:KeySpaceNodeViewModel}" ItemsSource="{Binding Children}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                            <v:Spinner Style="{StaticResource Spinner}" Margin="8,0,0,0"
+                                       Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}" />
+                        </StackPanel>
+                    </HierarchicalDataTemplate>
+                    <HierarchicalDataTemplate DataType="{x:Type vm:KeyFolderNodeViewModel}" ItemsSource="{Binding Children}">
+                        <TextBlock Text="{Binding Name}" Foreground="{DynamicResource Brush.TextSecondary}" VerticalAlignment="Center" />
+                    </HierarchicalDataTemplate>
+                    <DataTemplate DataType="{x:Type vm:KeyNodeViewModel}">
+                        <TextBlock Text="{Binding Name}" ToolTip="{Binding Key}" FontFamily="{DynamicResource Font.Code}" FontSize="{DynamicResource FontSize.Small}"
+                                   VerticalAlignment="Center" />
+                    </DataTemplate>
                     <DataTemplate DataType="{x:Type vm:ColumnNodeViewModel}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />

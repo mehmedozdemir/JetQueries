@@ -22,6 +22,7 @@
   <Folder Name="/src/Providers/">
     <Project Path="src/Providers/JetQueries.Provider.Oracle/JetQueries.Provider.Oracle.csproj" />
     <Project Path="src/Providers/JetQueries.Provider.PostgreSql/JetQueries.Provider.PostgreSql.csproj" />
+    <Project Path="src/Providers/JetQueries.Provider.Redis/JetQueries.Provider.Redis.csproj" />
     <Project Path="src/Providers/JetQueries.Provider.Sqlite/JetQueries.Provider.Sqlite.csproj" />
     <Project Path="src/Providers/JetQueries.Provider.SqlServer/JetQueries.Provider.SqlServer.csproj" />
   </Folder>
@@ -35,6 +36,7 @@
     <Project Path="tests/JetQueries.PlSql.ParseSpike/JetQueries.PlSql.ParseSpike.csproj" />
     <Project Path="tests/JetQueries.Provider.Oracle.Tests/JetQueries.Provider.Oracle.Tests.csproj" />
     <Project Path="tests/JetQueries.Provider.PostgreSql.Tests/JetQueries.Provider.PostgreSql.Tests.csproj" />
+    <Project Path="tests/JetQueries.Provider.Redis.Tests/JetQueries.Provider.Redis.Tests.csproj" />
     <Project Path="tests/JetQueries.Provider.Sqlite.Tests/JetQueries.Provider.Sqlite.Tests.csproj" />
     <Project Path="tests/JetQueries.Provider.SqlServer.Tests/JetQueries.Provider.SqlServer.Tests.csproj" />
     <Project Path="tests/JetQueries.Sdk.Tests/JetQueries.Sdk.Tests.csproj" />

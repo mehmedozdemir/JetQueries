@@ -151,6 +151,25 @@ public partial class DocumentsViewModel : ObservableObject
         return details;
     }
 
+    /// <summary>Shows a key in a tab (the open one for the same key is selected instead) and reads it.</summary>
+    public KeyValueViewModel OpenKey(KeyValueViewModel key)
+    {
+        ArgumentNullException.ThrowIfNull(key);
+        var open = Tabs.OfType<KeyValueViewModel>().FirstOrDefault(k => k.ConnectionId == key.ConnectionId && k.Database == key.Database && k.Key == key.Key);
+        if (open is not null)
+        {
+            SelectedTab = open;
+            _ = open.RefreshAsync();
+            return open;
+        }
+
+        var index = SelectedTab is null ? Tabs.Count : Tabs.IndexOf(SelectedTab) + 1;
+        Tabs.Insert(Math.Clamp(index, 0, Tabs.Count), key);
+        SelectedTab = key;
+        _ = key.RefreshAsync();
+        return key;
+    }
+
     /// <summary>Closes any tab: a query as <see cref="CloseCommand"/> does (asking about changes), a details tab at once.</summary>
     [RelayCommand]
     private async Task CloseTabAsync(object? tab)
@@ -163,6 +182,9 @@ public partial class DocumentsViewModel : ObservableObject
             case ObjectDetailsViewModel details:
                 CloseDetails(details);
                 break;
+            case KeyValueViewModel key:
+                CloseDetails(key);
+                break;
             default:
                 break;
         }
@@ -172,7 +194,7 @@ public partial class DocumentsViewModel : ObservableObject
     [RelayCommand]
     private async Task CloseOtherTabsAsync(object? keep)
     {
-        foreach (var details in Tabs.OfType<ObjectDetailsViewModel>().Where(d => !ReferenceEquals(d, keep)).ToList())
+        foreach (var details in Tabs.Where(t => t is ObjectDetailsViewModel or KeyValueViewModel && !ReferenceEquals(t, keep)).ToList())
         {
             CloseDetails(details);
         }
@@ -188,7 +210,7 @@ public partial class DocumentsViewModel : ObservableObject
     [RelayCommand]
     private Task CloseAllTabsAsync() => CloseOtherTabsAsync(null);
 
-    private void CloseDetails(ObjectDetailsViewModel details)
+    private void CloseDetails(object details)
     {
         var index = Tabs.IndexOf(details);
         if (index < 0)

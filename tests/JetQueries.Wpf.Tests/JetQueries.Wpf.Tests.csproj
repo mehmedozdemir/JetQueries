@@ -12,6 +12,7 @@
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <PackageReference Include="Testcontainers.Redis" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />
@@ -27,6 +28,7 @@
     <ProjectReference Include="..\..\src\Providers\JetQueries.Provider.Oracle\JetQueries.Provider.Oracle.csproj" />
     <ProjectReference Include="..\..\src\Providers\JetQueries.Provider.PostgreSql\JetQueries.Provider.PostgreSql.csproj" />
     <ProjectReference Include="..\..\src\Providers\JetQueries.Provider.Sqlite\JetQueries.Provider.Sqlite.csproj" />
+    <ProjectReference Include="..\..\src\Providers\JetQueries.Provider.Redis\JetQueries.Provider.Redis.csproj" />
     <Compile Include="..\JetQueries.Presentation.Tests\Fakes.cs" Link="Fakes.cs" />
   </ItemGroup>
 </Project>
