@@ -469,6 +469,44 @@ public sealed class OracleIntegrationTests(OracleFixture fixture) : IClassFixtur
     }
 
     [Fact]
+    public async Task The_execute_script_of_a_package_procedure_and_a_function_runs()
+    {
+        await using var connection = await OpenAsync();
+        foreach (var sql in new[]
+                 {
+                     "CREATE OR REPLACE PACKAGE jq_exec AS\n  PROCEDURE twice(p_a IN NUMBER, p_note IN VARCHAR2 DEFAULT 'x', p_out OUT NUMBER, p_when IN DATE DEFAULT NULL);\nEND jq_exec;",
+                     "CREATE OR REPLACE PACKAGE BODY jq_exec AS\n  PROCEDURE twice(p_a IN NUMBER, p_note IN VARCHAR2 DEFAULT 'x', p_out OUT NUMBER, p_when IN DATE DEFAULT NULL) IS\n  BEGIN\n    p_out := p_a * 2 + LENGTH(p_note) + NVL(EXTRACT(DAY FROM p_when), 0);\n  END twice;\nEND jq_exec;",
+                     "CREATE OR REPLACE FUNCTION jq_exec_fn(p_a IN NUMBER) RETURN VARCHAR2 IS BEGIN RETURN 'n=' || p_a; END;",
+                 })
+        {
+            await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest(sql), Token));
+        }
+
+        var provider = new OracleProvider();
+        var routines = (IRoutineMetadataProvider)connection.Metadata;
+        var user = fixture.Credential.UserName!.ToUpperInvariant();
+        async Task<List<string>> RunAsync(DatabaseObject routine, IReadOnlyList<RoutineArgument> arguments)
+        {
+            var script = provider.ScriptExecute(routine, Assert.Single(await routines.GetSignaturesAsync(routine, Token)), arguments);
+            Assert.NotNull(script);
+            var messages = new List<string>();
+            foreach (var batch in provider.SplitBatches(script))
+            {
+                messages.AddRange((await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest(batch.Text), Token))).OfType<QueryMessage>().Select(static m => m.Text));
+            }
+
+            return messages;
+        }
+
+        var twice = new DatabaseObject(new DatabaseObjectName(null, user, "TWICE") { Container = "JQ_EXEC" }, DatabaseObjectKinds.Procedure);
+        var output = await RunAsync(twice, [new RoutineArgument("P_A", RoutineArgumentKind.Value, "20"), new RoutineArgument("P_NOTE", RoutineArgumentKind.Default), new RoutineArgument("P_WHEN", RoutineArgumentKind.Value, "2026-01-05")]);
+        Assert.Contains(output, static m => m.Contains("P_OUT = 46", StringComparison.Ordinal));
+
+        var function = new DatabaseObject(new DatabaseObjectName(null, user, "JQ_EXEC_FN"), DatabaseObjectKinds.Function);
+        Assert.Contains(await RunAsync(function, [new RoutineArgument("P_A", RoutineArgumentKind.Value, "5")]), static m => m.Contains("Result = n=5", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public async Task A_tns_alias_from_a_tnsnames_file_connects()
     {
         Assert.SkipWhen(fixture.SkipReason is not null, fixture.SkipReason ?? string.Empty);

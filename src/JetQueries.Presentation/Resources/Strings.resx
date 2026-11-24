@@ -169,6 +169,24 @@
   <data name="FilterMatchAll" xml:space="preserve"><value>All of (AND)</value></data>
   <data name="FilterMatchAny" xml:space="preserve"><value>Any of (OR)</value></data>
   <data name="FilterMatchTip" xml:space="preserve"><value>Show rows matching all the filters, or any one of them</value></data>
+  <data name="ExplorerExecute" xml:space="preserve"><value>Execute…</value></data>
+  <data name="DetailsExecute" xml:space="preserve"><value>Execute</value></data>
+  <data name="ExecuteDialogTitle" xml:space="preserve"><value>Execute routine</value></data>
+  <data name="ExecuteOverload" xml:space="preserve"><value>Form</value></data>
+  <data name="ExecuteParamName" xml:space="preserve"><value>Parameter</value></data>
+  <data name="ExecuteParamType" xml:space="preserve"><value>Type</value></data>
+  <data name="ExecuteParamDirection" xml:space="preserve"><value>Direction</value></data>
+  <data name="ExecuteParamMode" xml:space="preserve"><value>Pass</value></data>
+  <data name="ExecuteParamValue" xml:space="preserve"><value>Value</value></data>
+  <data name="ExecuteModeValue" xml:space="preserve"><value>Value</value></data>
+  <data name="ExecuteModeExpression" xml:space="preserve"><value>Expression</value></data>
+  <data name="ExecuteModeDefault" xml:space="preserve"><value>Default</value></data>
+  <data name="ExecuteNoParameters" xml:space="preserve"><value>This routine takes no parameters.</value></data>
+  <data name="ExecuteScript" xml:space="preserve"><value>Script</value></data>
+  <data name="ExecuteOpenScript" xml:space="preserve"><value>Open script</value></data>
+  <data name="ExecuteRun" xml:space="preserve"><value>Run</value></data>
+  <data name="ExecuteHint" xml:space="preserve"><value>A value is written as a literal of the parameter's type (dates as yyyy-mm-dd); an expression is written as it is. OUT parameters and the result are shown after the call.</value></data>
+  <data name="ExecuteParametersFailed" xml:space="preserve"><value>The parameters could not be read: {0}</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Clear all</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Remove filter</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} of {1:N0} rows</value></data>

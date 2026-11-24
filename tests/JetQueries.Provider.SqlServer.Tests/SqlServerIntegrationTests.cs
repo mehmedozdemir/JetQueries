@@ -566,6 +566,37 @@ public sealed class SqlServerIntegrationTests(SqlServerFixture fixture) : IClass
         Assert.Equal("master", await context.GetCurrentAsync(Token));
     }
 
+    [Fact]
+    public async Task The_execute_script_of_a_procedure_and_a_function_runs()
+    {
+        await using var connection = await OpenAsync();
+        foreach (var sql in new[]
+                 {
+                     "CREATE OR ALTER PROCEDURE dbo.jq_exec_test @a int, @name nvarchar(20) = N'x', @twice int OUTPUT AS BEGIN SET @twice = @a * 2 + LEN(@name); RETURN 7; END",
+                     "CREATE OR ALTER FUNCTION dbo.jq_exec_fn(@a int, @b int = 10) RETURNS int AS BEGIN RETURN @a + @b; END",
+                 })
+        {
+            await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest(sql), Token));
+        }
+
+        var routines = (IRoutineMetadataProvider)connection.Metadata;
+        var procedure = new DatabaseObject(new DatabaseObjectName(null, "dbo", "jq_exec_test"), DatabaseObjectKinds.Procedure);
+        var script = new SqlServerProvider().ScriptExecute(
+            procedure,
+            Assert.Single(await routines.GetSignaturesAsync(procedure, Token)),
+            [new RoutineArgument("@a", RoutineArgumentKind.Value, "20"), new RoutineArgument("@name", RoutineArgumentKind.Default)]);
+        var row = (await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest(script!), Token))).OfType<RowBatch>().Single().Rows[0];
+        Assert.Equal([7, 41], row.Select(static v => Convert.ToInt32(v, System.Globalization.CultureInfo.InvariantCulture)));
+
+        var function = new DatabaseObject(new DatabaseObjectName(null, "dbo", "jq_exec_fn"), DatabaseObjectKinds.Function);
+        var functionScript = new SqlServerProvider().ScriptExecute(
+            function,
+            Assert.Single(await routines.GetSignaturesAsync(function, Token)),
+            [new RoutineArgument("@a", RoutineArgumentKind.Value, "1"), new RoutineArgument("@b", RoutineArgumentKind.Default)]);
+        var result = (await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest(functionScript!), Token))).OfType<RowBatch>().Single().Rows[0][0];
+        Assert.Equal(11, Convert.ToInt32(result, System.Globalization.CultureInfo.InvariantCulture));
+    }
+
     private async Task<IDatabaseConnection> OpenAsync()
     {
         Assert.SkipWhen(fixture.SkipReason is not null, fixture.SkipReason ?? string.Empty);

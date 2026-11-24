@@ -541,3 +541,18 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] Details of an SQLite table with CHECK constraints: Constraints lists them as CHECK with their name (when given),
       the column (for a column constraint) and the condition; the selected one's condition shows under the list.
 
+## Execute a stored procedure or function
+- [ ] Right-click a procedure or function in the explorer: "Çalıştır…" opens the dialog: header with the routine, then
+      one row per parameter (name, type, IN / OUT / IN OUT, how it is passed, value) and the script below.
+- [ ] Optional parameters start as "Varsayılan", the others as NULL; typing a value turns the row to "Değer"; "İfade"
+      writes the text as it is (GETDATE(), SYSDATE - 1); a pure OUT parameter takes no value. The script follows
+      every change.
+- [ ] SQL Server procedure: DECLARE @return_value and a variable per OUTPUT parameter, EXEC with named arguments,
+      then SELECT of the return value and the outputs. "Çalıştır" opens a query tab in the routine's database and
+      runs it: the grid shows them. Scalar function: SELECT …(…) AS [Result]; table function: SELECT * FROM …(…).
+- [ ] Oracle (also a package member): an anonymous block; after "Çalıştır" the Messages show "P_OUT = …" and
+      "Result = …"; a SYS_REFCURSOR OUT parameter comes back as a result tab.
+- [ ] PostgreSQL: CALL for a procedure (OUT values as a row), SELECT * FROM for a function.
+- [ ] A routine with overloads (Oracle, PostgreSQL) has a "Biçim" list in the header; each form has its own rows.
+- [ ] "Betiği aç" only opens the script; Vazgeç / Esc does nothing. The details view of a routine has "Çalıştır" too.
+

@@ -437,6 +437,41 @@ public sealed class PostgreSqlIntegrationTests(PostgreSqlFixture fixture) : ICla
     }
 
     [Fact]
+    public async Task The_execute_script_of_a_procedure_and_a_function_runs()
+    {
+        if (fixture.SkipReason is { } reason)
+        {
+            Assert.Skip(reason);
+        }
+
+        await using var connection = await OpenAsync();
+        foreach (var sql in new[]
+                 {
+                     "CREATE OR REPLACE PROCEDURE jq_exec_twice(a integer, OUT result integer, note text DEFAULT 'x') LANGUAGE plpgsql AS $$ BEGIN result := a * 2 + length(note); END $$",
+                     "CREATE OR REPLACE FUNCTION jq_exec_fn(a integer, b integer DEFAULT 10, OUT total integer, OUT label text) LANGUAGE sql AS $$ SELECT a + b, 'n' || a $$",
+                 })
+        {
+            await Collect(connection.Executor.ExecuteAsync(new QueryRequest(sql), Token));
+        }
+
+        var provider = new PostgreSqlProvider();
+        var routines = (IRoutineMetadataProvider)connection.Metadata;
+        async Task<object?[]> RunAsync(DatabaseObject routine, IReadOnlyList<RoutineArgument> arguments)
+        {
+            var script = provider.ScriptExecute(routine, Assert.Single(await routines.GetSignaturesAsync(routine, Token)), arguments);
+            return (await Collect(connection.Executor.ExecuteAsync(new QueryRequest(script!), Token))).OfType<RowBatch>().Single().Rows[0];
+        }
+
+        var procedure = new DatabaseObject(new DatabaseObjectName(null, "public", "jq_exec_twice"), DatabaseObjectKinds.Procedure);
+        Assert.Equal(41, Convert.ToInt32((await RunAsync(procedure, [new RoutineArgument("a", RoutineArgumentKind.Value, "20"), new RoutineArgument("note", RoutineArgumentKind.Default)]))[0], System.Globalization.CultureInfo.InvariantCulture));
+
+        var function = new DatabaseObject(new DatabaseObjectName(null, "public", "jq_exec_fn"), DatabaseObjectKinds.Function);
+        var row = await RunAsync(function, [new RoutineArgument("a", RoutineArgumentKind.Value, "1"), new RoutineArgument("b", RoutineArgumentKind.Default)]);
+        Assert.Equal(11, Convert.ToInt32(row[0], System.Globalization.CultureInfo.InvariantCulture));
+        Assert.Equal("n1", row[1]);
+    }
+
+    [Fact]
     public async Task A_script_runs_through_the_session_statement_by_statement()
     {
         if (fixture.SkipReason is { } reason)

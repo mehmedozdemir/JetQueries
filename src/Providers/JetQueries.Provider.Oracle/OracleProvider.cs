@@ -19,7 +19,7 @@ public sealed class OracleExtension : IExtension
 }
 
 /// <summary>Database provider for Oracle Database, on the managed ODP.NET driver (no Oracle client installation needed).</summary>
-public sealed class OracleProvider : IDatabaseProvider, IConnectionSettingsProvider, IConnectionSettingSuggestions, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport,
+public sealed class OracleProvider : IDatabaseProvider, IRoutineExecutionScripting, IConnectionSettingsProvider, IConnectionSettingSuggestions, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport,
     IConnectionStringImport, IProviderAppearance, IObjectScripting
 {
     /// <summary>The provider identifier stored in connection profiles.</summary>
@@ -193,6 +193,10 @@ public sealed class OracleProvider : IDatabaseProvider, IConnectionSettingsProvi
 
     /// <inheritdoc />
     public string QuoteIdentifier(string identifier) => OracleNames.Quote(identifier);
+
+    /// <inheritdoc />
+    public string? ScriptExecute(DatabaseObject routine, SqlSignature signature, IReadOnlyList<RoutineArgument> arguments) =>
+        OracleExecuteScript.Build(routine, signature, arguments);
 
 
     /// <inheritdoc />

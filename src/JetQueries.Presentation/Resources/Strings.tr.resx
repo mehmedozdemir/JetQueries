@@ -169,6 +169,24 @@
   <data name="FilterMatchAll" xml:space="preserve"><value>Hepsi (VE)</value></data>
   <data name="FilterMatchAny" xml:space="preserve"><value>Herhangi biri (VEYA)</value></data>
   <data name="FilterMatchTip" xml:space="preserve"><value>Tüm filtrelere ya da herhangi birine uyan satırları göster</value></data>
+  <data name="ExplorerExecute" xml:space="preserve"><value>Çalıştır…</value></data>
+  <data name="DetailsExecute" xml:space="preserve"><value>Çalıştır</value></data>
+  <data name="ExecuteDialogTitle" xml:space="preserve"><value>Rutini çalıştır</value></data>
+  <data name="ExecuteOverload" xml:space="preserve"><value>Biçim</value></data>
+  <data name="ExecuteParamName" xml:space="preserve"><value>Parametre</value></data>
+  <data name="ExecuteParamType" xml:space="preserve"><value>Tip</value></data>
+  <data name="ExecuteParamDirection" xml:space="preserve"><value>Yön</value></data>
+  <data name="ExecuteParamMode" xml:space="preserve"><value>Geçilen</value></data>
+  <data name="ExecuteParamValue" xml:space="preserve"><value>Değer</value></data>
+  <data name="ExecuteModeValue" xml:space="preserve"><value>Değer</value></data>
+  <data name="ExecuteModeExpression" xml:space="preserve"><value>İfade</value></data>
+  <data name="ExecuteModeDefault" xml:space="preserve"><value>Varsayılan</value></data>
+  <data name="ExecuteNoParameters" xml:space="preserve"><value>Bu rutin parametre almıyor.</value></data>
+  <data name="ExecuteScript" xml:space="preserve"><value>Betik</value></data>
+  <data name="ExecuteOpenScript" xml:space="preserve"><value>Betiği aç</value></data>
+  <data name="ExecuteRun" xml:space="preserve"><value>Çalıştır</value></data>
+  <data name="ExecuteHint" xml:space="preserve"><value>Değer, parametrenin tipine uygun bir sabit olarak yazılır (tarih yyyy-aa-gg); ifade olduğu gibi yazılır. OUT parametreler ve sonuç çağrıdan sonra gösterilir.</value></data>
+  <data name="ExecuteParametersFailed" xml:space="preserve"><value>Parametreler okunamadı: {0}</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Tümünü temizle</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Filtreyi kaldır</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} / {1:N0} satır</value></data>

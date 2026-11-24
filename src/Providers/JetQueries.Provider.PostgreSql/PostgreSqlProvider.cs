@@ -19,7 +19,7 @@ public sealed class PostgreSqlExtension : IExtension
 }
 
 /// <summary>Database provider for PostgreSQL, on the Npgsql driver.</summary>
-public sealed class PostgreSqlProvider : IDatabaseProvider, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport,
+public sealed class PostgreSqlProvider : IDatabaseProvider, IRoutineExecutionScripting, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport,
     IConnectionStringImport, IProviderAppearance, IObjectScripting
 {
     /// <summary>The provider identifier stored in connection profiles.</summary>
@@ -134,6 +134,10 @@ public sealed class PostgreSqlProvider : IDatabaseProvider, IConnectionSettingsP
 
     /// <inheritdoc />
     public string QuoteIdentifier(string identifier) => PostgreSqlNames.Quote(identifier);
+
+    /// <inheritdoc />
+    public string? ScriptExecute(DatabaseObject routine, SqlSignature signature, IReadOnlyList<RoutineArgument> arguments) =>
+        PostgreSqlExecuteScript.Build(routine, signature, arguments);
 
 
     /// <inheritdoc />

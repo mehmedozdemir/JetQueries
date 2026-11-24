@@ -228,7 +228,7 @@ internal sealed class FakeExtensions(IDatabaseProvider provider) : IExtensionHos
 }
 
 /// <summary>A provider with SQL Server-like settings that connects to nothing.</summary>
-internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvider, IRowCountQueryBuilder, IResultFilterQueryBuilder
+internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvider, IRoutineExecutionScripting, IRowCountQueryBuilder, IResultFilterQueryBuilder
 {
     public string? OpenError { get; set; }
 
@@ -283,6 +283,14 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
     ];
 
     public string QuoteIdentifier(string identifier) => identifier;
+
+    /// <summary>The signatures routines have (none by default).</summary>
+    public Func<DatabaseObject, IReadOnlyList<SqlSignature>> Signatures { get; set; } = static _ => [];
+
+    /// <summary>"CALL name(p=kind:text, …)": enough to see what the dialog passed.</summary>
+    public string? ScriptExecute(DatabaseObject routine, SqlSignature signature, IReadOnlyList<RoutineArgument> arguments) =>
+        "CALL " + routine.Name.Name + "(" + string.Join(", ", signature.Parameters.Select(p =>
+            arguments.FirstOrDefault(a => a.Name == p.Name) is { } a ? $"{p.Name}={a.Kind}:{a.Text}" : $"{p.Name}=?")) + ")";
 
     /// <summary>"COUNT(" + the query + ")" for a SELECT; null otherwise.</summary>
     public string? BuildCountQuery(string sql) => sql.StartsWith("SELECT", StringComparison.OrdinalIgnoreCase) ? "COUNT(" + sql + ")" : null;
@@ -469,8 +477,11 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
     }
 
     /// <summary>A small fixed catalog: databases Cards and master, schemas dbo and kart, a few objects in dbo.</summary>
-    private sealed class FakeMetadata(FakeProvider owner) : IMetadataProvider, IProgressiveObjectDetailsProvider
+    private sealed class FakeMetadata(FakeProvider owner) : IMetadataProvider, IProgressiveObjectDetailsProvider, IRoutineMetadataProvider
     {
+        public Task<IReadOnlyList<SqlSignature>> GetSignaturesAsync(DatabaseObject routine, CancellationToken cancellationToken) =>
+            Task.FromResult(owner.Signatures(routine));
+
         public Task<ObjectDetails?> GetDetailsAsync(DatabaseObject target, CancellationToken cancellationToken)
         {
             owner.MetadataCalls.Add($"details:{target.Name}");

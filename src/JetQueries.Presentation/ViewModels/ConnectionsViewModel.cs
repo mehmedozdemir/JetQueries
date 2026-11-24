@@ -536,6 +536,28 @@ public partial class ConnectionsViewModel(
     [RelayCommand]
     private Task ScriptDropAsync(ExplorerNodeViewModel? node) => ScriptAsync(node, ObjectScriptKind.Drop);
 
+    /// <summary>The Execute dialog of a procedure or function; its script opens (or runs) in a query tab.</summary>
+    [RelayCommand]
+    private Task ExecuteRoutineAsync(ExplorerNodeViewModel? node) =>
+        (node ?? Selected) is DatabaseObjectNodeViewModel { Target: var target, Session: var session } ? ExecuteRoutineAsync(session, target) : Task.CompletedTask;
+
+    /// <summary>The Execute dialog of a procedure or function of an open connection (also from the details view).</summary>
+    public async Task ExecuteRoutineAsync(ConnectionSession session, DatabaseObject target)
+    {
+        if (!ExecuteRoutineViewModel.CanExecute(session, target))
+        {
+            return;
+        }
+
+        var routine = new ExecuteRoutineViewModel(session, target, metadata, jobs);
+        _ = routine.LoadAsync();
+        var choice = await dialogs.ExecuteRoutineAsync(routine);
+        if (choice != RoutineExecutionChoice.Cancel)
+        {
+            NewQueryRequested?.Invoke(this, routine.Request(choice == RoutineExecutionChoice.Run));
+        }
+    }
+
     /// <summary>Asks for the details view of an object (columns, keys, indexes, DDL…).</summary>
     [RelayCommand]
     private void OpenDetails(ExplorerNodeViewModel? node)

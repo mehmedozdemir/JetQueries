@@ -111,6 +111,7 @@ public partial class MainWindowViewModel : ObservableObject
         var details = new ObjectDetailsViewModel(session, request.Target, _metadata, _jobs);
         details.NewQueryRequested += (_, query) => _ = Documents.OpenAsync(query);
         details.DetailsRequested += (_, next) => ShowDetails(next);
+        details.ExecuteRequested += (_, routine) => _ = Connections.ExecuteRoutineAsync(session, routine.Target);
 
         // A tab next to the queries (as DBeaver's object editor); an open one for the object is selected instead.
         if (ReferenceEquals(Documents.OpenDetails(details), details))
