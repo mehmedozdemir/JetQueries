@@ -80,7 +80,7 @@ internal sealed partial class SqliteMetadataProvider : IObjectDetailsProvider
                     var foreignKeys = await ForeignKeysAsync(schema, name, cancellationToken).ConfigureAwait(false);
                     var indexes = await IndexesAsync(schema, name, cancellationToken).ConfigureAwait(false);
                     sections.Add(ColumnsSection(columns, foreignKeys, definition));
-                    sections.Add(ConstraintsSection(columns, indexes));
+                    sections.Add(ConstraintsSection(columns, indexes, definition));
                     sections.Add(ForeignKeysSection(schema, foreignKeys));
                     sections.Add(await ReferencesSectionAsync(schema, name, cancellationToken).ConfigureAwait(false));
                     sections.Add(IndexesSection(indexes));
@@ -204,25 +204,31 @@ internal sealed partial class SqliteMetadataProvider : IObjectDetailsProvider
         return table.Build();
     }
 
-    private static ObjectDetailSection? ConstraintsSection(List<Column> columns, List<Index> indexes)
+    private static ObjectDetailSection? ConstraintsSection(List<Column> columns, List<Index> indexes, string? definition)
     {
         // SQLite has no catalog of constraints: the primary key comes from table_xinfo, unique ones from their
-        // automatic indexes. CHECK constraints are only in the CREATE TABLE text.
+        // automatic indexes, CHECK constraints from the CREATE TABLE text.
         var table = new DetailTable(
             ObjectDetailKeys.Constraints,
             "Constraints",
             (ObjectDetailKeys.Name, "Name"),
             (ObjectDetailKeys.Kind, "Kind"),
-            (ObjectDetailKeys.ColumnList, "Columns"));
+            (ObjectDetailKeys.ColumnList, "Columns"),
+            (ObjectDetailKeys.Definition, "Condition"));
         var primaryKey = columns.Where(static c => c.PrimaryKey > 0).OrderBy(static c => c.PrimaryKey).Select(static c => c.Name).ToList();
         if (primaryKey.Count > 0)
         {
-            table.Add([indexes.FirstOrDefault(static i => i.Origin == "pk")?.Name, "PRIMARY KEY", string.Join(", ", primaryKey)]);
+            table.Add([indexes.FirstOrDefault(static i => i.Origin == "pk")?.Name, "PRIMARY KEY", string.Join(", ", primaryKey), null]);
         }
 
         foreach (var index in indexes.Where(static i => i.Origin == "u"))
         {
-            table.Add([index.Name, "UNIQUE", string.Join(", ", index.Columns)]);
+            table.Add([index.Name, "UNIQUE", string.Join(", ", index.Columns), null]);
+        }
+
+        foreach (var check in SqliteCheckConstraints.Parse(definition))
+        {
+            table.Add([check.Name, "CHECK", check.Column, check.Condition], source: check.Condition);
         }
 
         return table.Build();

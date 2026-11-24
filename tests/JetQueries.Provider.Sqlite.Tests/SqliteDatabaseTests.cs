@@ -293,6 +293,21 @@ public sealed class SqliteDatabaseTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Details_show_check_constraints_from_the_table_text()
+    {
+        await Collect(_connection.Executor.ExecuteAsync(
+            new QueryRequest("CREATE TABLE limits (id INTEGER PRIMARY KEY, amount NUMERIC CONSTRAINT ck_amount CHECK (amount >= 0), CONSTRAINT ck_cap CHECK (amount < 1000))"),
+            Token));
+        var details = await ((IObjectDetailsProvider)_connection.Metadata).GetDetailsAsync(new DatabaseObject(new DatabaseObjectName(null, null, "limits"), DatabaseObjectKinds.Table), Token);
+
+        var constraints = Section(details!, ObjectDetailKeys.Constraints);
+        Assert.Equal(["ck_amount", "CHECK", "amount", "amount >= 0"], constraints.Rows[1].Cells);
+        Assert.Equal(["ck_cap", "CHECK", null, "amount < 1000"], constraints.Rows[2].Cells);
+        Assert.Equal("amount >= 0", constraints.Rows[1].Source);
+        await Collect(_connection.Executor.ExecuteAsync(new QueryRequest("DROP TABLE limits"), Token));
+    }
+
+    [Fact]
     public async Task Details_show_columns_keys_indexes_references_and_triggers()
     {
         var details = Assert.IsAssignableFrom<IObjectDetailsProvider>(_connection.Metadata);
@@ -312,8 +327,8 @@ public sealed class SqliteDatabaseTests : IAsyncLifetime
         Assert.NotNull(Cell(columns, 2, ObjectDetailKeys.Nullable));
 
         var constraints = Section(cards, ObjectDetailKeys.Constraints);
-        Assert.Equal([null, "PRIMARY KEY", "id"], constraints.Rows[0].Cells);
-        Assert.Equal(["UNIQUE", "card_no"], constraints.Rows[1].Cells.Skip(1));
+        Assert.Equal([null, "PRIMARY KEY", "id", null], constraints.Rows[0].Cells);
+        Assert.Equal(["UNIQUE", "card_no", null], constraints.Rows[1].Cells.Skip(1));
 
         var reference = Assert.Single(Section(cards, ObjectDetailKeys.References).Rows);
         Assert.Equal(["Müşteri İşlemleri", "card_id", "id", "NO ACTION", "NO ACTION"], reference.Cells);
