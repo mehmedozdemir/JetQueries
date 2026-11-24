@@ -52,6 +52,13 @@ public sealed class ConnectionDialogTests
             Assert.True(editor.IsFormMode);
             await Shoot("form");
 
+            // Through an SSH server.
+            editor.UseSsh = true;
+            editor.SshHost = "bastion.example";
+            editor.SshUser = "jump";
+            await Shoot("ssh");
+            editor.UseSsh = false;
+
             // Oracle by TNS alias: the alias list and the two folders, one to a row.
             editor.ChangeTypeCommand.Execute(null);
             editor.ChooseTypeCommand.Execute(editor.Providers.Single(static p => p.Provider is OracleProvider));

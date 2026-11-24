@@ -17,6 +17,11 @@
     <Using Include="Xunit" />
   </ItemGroup>
   <ItemGroup>
+    <!-- The SSH server image built for the tunnel test. -->
+    <None Include="SshServer\Dockerfile" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\JetQueries.Core\JetQueries.Core.csproj" />
     <ProjectReference Include="..\..\src\JetQueries.Sdk\JetQueries.Sdk.csproj" />
     <ProjectReference Include="..\..\src\Providers\JetQueries.Provider.PostgreSql\JetQueries.Provider.PostgreSql.csproj" />

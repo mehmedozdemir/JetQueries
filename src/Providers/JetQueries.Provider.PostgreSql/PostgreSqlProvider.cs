@@ -87,6 +87,18 @@ public sealed class PostgreSqlProvider : IDatabaseProvider, IRoutineExecutionScr
     }
 
     /// <inheritdoc />
+    public IReadOnlyDictionary<string, string>? WithEndpoint(IReadOnlyDictionary<string, string> settings, NetworkEndpoint endpoint)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        ArgumentNullException.ThrowIfNull(endpoint);
+        return new Dictionary<string, string>(settings, StringComparer.OrdinalIgnoreCase)
+        {
+            [PostgreSqlConnectionSettings.Host] = endpoint.Host,
+            [PostgreSqlConnectionSettings.Port] = endpoint.Port.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        };
+    }
+
+    /// <inheritdoc />
     public IReadOnlyList<ScriptBatch> SplitBatches(string script) =>
         SqlStatementSplitter.Split(script, PostgreSqlSyntax.Tokenizer.Tokenize(script), StatementBlockRule.BeginAtomic);
 

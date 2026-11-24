@@ -138,6 +138,21 @@ public sealed class OracleProvider : IDatabaseProvider, IRoutineExecutionScripti
     }
 
     /// <inheritdoc />
+    /// <remarks>Host and service name only: a TNS alias names its own address.</remarks>
+    public IReadOnlyDictionary<string, string>? WithEndpoint(IReadOnlyDictionary<string, string> settings, NetworkEndpoint endpoint)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        ArgumentNullException.ThrowIfNull(endpoint);
+        return OracleConnectionSettings.IsTns(settings)
+            ? null
+            : new Dictionary<string, string>(settings, StringComparer.OrdinalIgnoreCase)
+            {
+                [OracleConnectionSettings.Host] = endpoint.Host,
+                [OracleConnectionSettings.Port] = endpoint.Port.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            };
+    }
+
+    /// <inheritdoc />
     public IReadOnlyList<ScriptBatch> SplitBatches(string script) => OracleScriptSplitter.Split(script);
 
     /// <inheritdoc />

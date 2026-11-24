@@ -24,6 +24,9 @@ public enum ConnectionOutcome
 
     /// <summary>The server answered but the connection was refused (login, database, encryption, …).</summary>
     Failed,
+
+    /// <summary>The connection goes through an SSH tunnel whose password is needed and was neither given nor stored.</summary>
+    SshPasswordRequired,
 }
 
 /// <summary>Result of testing or opening a connection.</summary>
@@ -57,8 +60,16 @@ public sealed class ConnectionSession : IAsyncDisposable
     private string? _homeDatabase;
     private bool _disposed;
 
-    internal ConnectionSession(ConnectionDefinition definition, IDatabaseProvider provider, IDatabaseConnection connection, ConnectionCredential? credential)
+    // What further connections are opened with: the definition's settings, or the SSH tunnel's local end.
+    private readonly ConnectionProfile _profile;
+    private readonly SshTunnel? _tunnel;
+
+    internal ConnectionSession(
+        ConnectionDefinition definition, IDatabaseProvider provider, IDatabaseConnection connection, ConnectionCredential? credential,
+        ConnectionProfile? profile = null, SshTunnel? tunnel = null)
     {
+        _profile = profile ?? definition.ToProfile();
+        _tunnel = tunnel;
         Definition = definition;
         Provider = provider;
         Connection = connection;
@@ -103,7 +114,7 @@ public sealed class ConnectionSession : IAsyncDisposable
             }
         }
 
-        var connection = await Provider.OpenConnectionAsync(Definition.ToProfile(), _credential, cancellationToken).ConfigureAwait(false);
+        var connection = await Provider.OpenConnectionAsync(_profile, _credential, cancellationToken).ConfigureAwait(false);
         var channel = new QueryChannel(this, connection, isMain: false);
         bool disposed;
         lock (_channelsLock)
@@ -250,7 +261,7 @@ public sealed class ConnectionSession : IAsyncDisposable
             ObjectDisposedException.ThrowIf(_disposed, this);
             if (!_databaseMetadata.TryGetValue(other, out var connection))
             {
-                connection = await Provider.OpenConnectionAsync(Definition.ToProfile(), _credential, cancellationToken).ConfigureAwait(false);
+                connection = await Provider.OpenConnectionAsync(_profile, _credential, cancellationToken).ConfigureAwait(false);
                 try
                 {
                     await ((IDatabaseContext)connection).ChangeAsync(other, cancellationToken).ConfigureAwait(false);
@@ -285,7 +296,7 @@ public sealed class ConnectionSession : IAsyncDisposable
     private async Task<IDatabaseConnection> MetadataConnectionAsync(CancellationToken cancellationToken)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        return _metadataConnection ??= await Provider.OpenConnectionAsync(Definition.ToProfile(), _credential, cancellationToken).ConfigureAwait(false);
+        return _metadataConnection ??= await Provider.OpenConnectionAsync(_profile, _credential, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>Closes every driver connection of the session: query channels, metadata, main.</summary>
@@ -330,7 +341,14 @@ public sealed class ConnectionSession : IAsyncDisposable
         }
 
         await Connection.DisposeAsync().ConfigureAwait(false);
+        if (_tunnel is not null)
+        {
+            await _tunnel.DisposeAsync().ConfigureAwait(false);
+        }
     }
+
+    /// <summary>Whether the session goes through an SSH tunnel.</summary>
+    public bool IsTunneled => _tunnel is not null;
 }
 
 /// <summary>
@@ -555,13 +573,29 @@ public interface IConnectionManager
     /// <param name="definition">The connection, saved or still being edited.</param>
     /// <param name="password">The password to use, or <see langword="null"/> to use the stored one.</param>
     /// <param name="cancellationToken">Cancels the attempt.</param>
-    Task<ConnectionAttempt> TestAsync(ConnectionDefinition definition, string? password, CancellationToken cancellationToken);
+    Task<ConnectionAttempt> TestAsync(ConnectionDefinition definition, string? password, CancellationToken cancellationToken) =>
+        TestAsync(definition, password, null, cancellationToken);
+
+    /// <summary>Tries to connect through the connection's SSH tunnel with an SSH password given now.</summary>
+    /// <param name="definition">The connection to try.</param>
+    /// <param name="password">The database password; null uses the stored one.</param>
+    /// <param name="sshSecret">The SSH password or key passphrase; null uses the stored one.</param>
+    /// <param name="cancellationToken">Cancels the attempt.</param>
+    Task<ConnectionAttempt> TestAsync(ConnectionDefinition definition, string? password, string? sshSecret, CancellationToken cancellationToken);
 
     /// <summary>Opens a session, or returns the existing one for this connection.</summary>
     /// <param name="definition">The saved connection.</param>
     /// <param name="password">The password to use, or <see langword="null"/> to use the stored one.</param>
     /// <param name="cancellationToken">Cancels the attempt.</param>
-    Task<ConnectionAttempt> OpenAsync(ConnectionDefinition definition, string? password, CancellationToken cancellationToken);
+    Task<ConnectionAttempt> OpenAsync(ConnectionDefinition definition, string? password, CancellationToken cancellationToken) =>
+        OpenAsync(definition, password, null, cancellationToken);
+
+    /// <summary>Opens the connection through its SSH tunnel with an SSH password given now.</summary>
+    /// <param name="definition">The connection to open.</param>
+    /// <param name="password">The database password; null uses the stored one.</param>
+    /// <param name="sshSecret">The SSH password or key passphrase; null uses the stored one.</param>
+    /// <param name="cancellationToken">Cancels the attempt.</param>
+    Task<ConnectionAttempt> OpenAsync(ConnectionDefinition definition, string? password, string? sshSecret, CancellationToken cancellationToken);
 
     /// <summary>Closes the session of a connection, if one is open.</summary>
     /// <param name="connectionId">The connection's identity.</param>
@@ -602,6 +636,7 @@ public sealed class ConnectionManager : IConnectionManager, IAsyncDisposable
     private readonly IExtensionHost _extensions;
     private readonly ICredentialStore _credentials;
     private readonly IReachabilityProbe _probe;
+    private readonly SshKnownHosts _knownHosts;
     private readonly Lock _gate = new();
     private readonly Dictionary<Guid, ConnectionSession> _sessions = [];
 
@@ -609,8 +644,10 @@ public sealed class ConnectionManager : IConnectionManager, IAsyncDisposable
     /// <param name="extensions">Source of database providers.</param>
     /// <param name="credentials">Source of stored passwords.</param>
     /// <param name="probe">Reachability check.</param>
-    public ConnectionManager(IExtensionHost extensions, ICredentialStore credentials, IReachabilityProbe probe)
+    /// <param name="knownHosts">The SSH server keys seen before; in memory when not given.</param>
+    public ConnectionManager(IExtensionHost extensions, ICredentialStore credentials, IReachabilityProbe probe, SshKnownHosts? knownHosts = null)
     {
+        _knownHosts = knownHosts ?? new SshKnownHosts(null);
         ArgumentNullException.ThrowIfNull(extensions);
         ArgumentNullException.ThrowIfNull(credentials);
         ArgumentNullException.ThrowIfNull(probe);
@@ -635,19 +672,32 @@ public sealed class ConnectionManager : IConnectionManager, IAsyncDisposable
     }
 
     /// <inheritdoc />
-    public async Task<ConnectionAttempt> TestAsync(ConnectionDefinition definition, string? password, CancellationToken cancellationToken)
+    public Task<ConnectionAttempt> TestAsync(ConnectionDefinition definition, string? password, CancellationToken cancellationToken) =>
+        TestAsync(definition, password, null, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<ConnectionAttempt> OpenAsync(ConnectionDefinition definition, string? password, CancellationToken cancellationToken) =>
+        OpenAsync(definition, password, null, cancellationToken);
+
+    /// <inheritdoc />
+    public async Task<ConnectionAttempt> TestAsync(ConnectionDefinition definition, string? password, string? sshSecret, CancellationToken cancellationToken)
     {
-        var (attempt, connection, _, _) = await ConnectAsync(definition, password, cancellationToken).ConfigureAwait(false);
+        var (attempt, connection, _, _, _, tunnel) = await ConnectAsync(definition, password, sshSecret, cancellationToken).ConfigureAwait(false);
         if (connection is not null)
         {
             await connection.DisposeAsync().ConfigureAwait(false);
+        }
+
+        if (tunnel is not null)
+        {
+            await tunnel.DisposeAsync().ConfigureAwait(false);
         }
 
         return attempt;
     }
 
     /// <inheritdoc />
-    public async Task<ConnectionAttempt> OpenAsync(ConnectionDefinition definition, string? password, CancellationToken cancellationToken)
+    public async Task<ConnectionAttempt> OpenAsync(ConnectionDefinition definition, string? password, string? sshSecret, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(definition);
         lock (_gate)
@@ -658,13 +708,13 @@ public sealed class ConnectionManager : IConnectionManager, IAsyncDisposable
             }
         }
 
-        var (attempt, connection, provider, credential) = await ConnectAsync(definition, password, cancellationToken).ConfigureAwait(false);
+        var (attempt, connection, provider, credential, profile, tunnel) = await ConnectAsync(definition, password, sshSecret, cancellationToken).ConfigureAwait(false);
         if (connection is null)
         {
             return attempt;
         }
 
-        var session = new ConnectionSession(definition, provider!, connection, credential);
+        var session = new ConnectionSession(definition, provider!, connection, credential, profile, tunnel);
         ConnectionSession? winner = null;
         lock (_gate)
         {
@@ -677,7 +727,7 @@ public sealed class ConnectionManager : IConnectionManager, IAsyncDisposable
 
         if (winner is not null)
         {
-            await connection.DisposeAsync().ConfigureAwait(false);
+            await session.DisposeAsync().ConfigureAwait(false);
             return attempt with { Session = winner };
         }
 
@@ -717,8 +767,8 @@ public sealed class ConnectionManager : IConnectionManager, IAsyncDisposable
         }
     }
 
-    private async Task<(ConnectionAttempt Attempt, IDatabaseConnection? Connection, IDatabaseProvider? Provider, ConnectionCredential? Credential)> ConnectAsync(
-        ConnectionDefinition definition, string? password, CancellationToken cancellationToken)
+    private async Task<(ConnectionAttempt Attempt, IDatabaseConnection? Connection, IDatabaseProvider? Provider, ConnectionCredential? Credential, ConnectionProfile? Profile, SshTunnel? Tunnel)> ConnectAsync(
+        ConnectionDefinition definition, string? password, string? sshSecret, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(definition);
         var started = Stopwatch.GetTimestamp();
@@ -729,7 +779,7 @@ public sealed class ConnectionManager : IConnectionManager, IAsyncDisposable
         var provider = _extensions.FindDatabaseProvider(definition.ProviderId);
         if (provider is null)
         {
-            return (Done(ConnectionOutcome.ProviderMissing, definition.ProviderId), null, null, null);
+            return (Done(ConnectionOutcome.ProviderMissing, definition.ProviderId), null, null, null, null, null);
         }
 
         var settings = provider as IConnectionSettingsProvider;
@@ -739,33 +789,87 @@ public sealed class ConnectionManager : IConnectionManager, IAsyncDisposable
             password ??= await _credentials.GetPasswordAsync(definition.Id, cancellationToken).ConfigureAwait(false);
             if (password is null)
             {
-                return (Done(ConnectionOutcome.PasswordRequired), null, provider, null);
+                return (Done(ConnectionOutcome.PasswordRequired), null, provider, null, null, null);
             }
 
             credential = new ConnectionCredential(definition.UserName, password);
         }
 
-        if (settings?.GetEndpoint(definition.Settings) is { } endpoint &&
-            await _probe.ProbeAsync(endpoint, ProbeTimeout, cancellationToken).ConfigureAwait(false) is { } unreachable)
+        var profile = definition.ToProfile();
+        SshTunnel? tunnel = null;
+        if (definition.Ssh is { } ssh)
         {
-            return (Done(ConnectionOutcome.Unreachable, unreachable), null, provider, null);
+            // Through a bastion host: the SSH server must answer; the database is reached from there.
+            if (settings?.GetEndpoint(definition.Settings) is not { } target)
+            {
+                return (Done(ConnectionOutcome.Failed, "An SSH tunnel needs the database's host and port."), null, provider, null, null, null);
+            }
+
+            sshSecret ??= await _credentials.GetPasswordAsync(SshTunnel.SecretId(definition.Id), cancellationToken).ConfigureAwait(false);
+            if (sshSecret is null && string.IsNullOrEmpty(ssh.PrivateKeyPath))
+            {
+                return (Done(ConnectionOutcome.SshPasswordRequired), null, provider, null, null, null);
+            }
+
+            if (await _probe.ProbeAsync(new NetworkEndpoint(ssh.Host, ssh.Port), ProbeTimeout, cancellationToken).ConfigureAwait(false) is { } sshUnreachable)
+            {
+                return (Done(ConnectionOutcome.Unreachable, "SSH: " + sshUnreachable), null, provider, null, null, null);
+            }
+
+            try
+            {
+                tunnel = await SshTunnel.OpenAsync(ssh, sshSecret, target, _knownHosts, cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+#pragma warning disable CA1031 // Whatever the SSH library throws is a failed connection to report.
+            catch (Exception ex)
+#pragma warning restore CA1031
+            {
+                return (Done(ConnectionOutcome.Failed, "SSH: " + ex.Message), null, provider, null, null, null);
+            }
+
+            if (settings.WithEndpoint(definition.Settings, tunnel.Local) is not { } through)
+            {
+                await tunnel.DisposeAsync().ConfigureAwait(false);
+                return (Done(ConnectionOutcome.Failed, "This connection cannot go through an SSH tunnel."), null, provider, null, null, null);
+            }
+
+            profile = profile with { Settings = through };
+        }
+        else if (settings?.GetEndpoint(definition.Settings) is { } endpoint &&
+                 await _probe.ProbeAsync(endpoint, ProbeTimeout, cancellationToken).ConfigureAwait(false) is { } unreachable)
+        {
+            return (Done(ConnectionOutcome.Unreachable, unreachable), null, provider, null, null, null);
         }
 
         try
         {
-            var connection = await provider.OpenConnectionAsync(definition.ToProfile(), credential, cancellationToken).ConfigureAwait(false);
-            return (Done(ConnectionOutcome.Succeeded), connection, provider, credential);
+            var connection = await provider.OpenConnectionAsync(profile, credential, cancellationToken).ConfigureAwait(false);
+            return (Done(ConnectionOutcome.Succeeded), connection, provider, credential, profile, tunnel);
         }
         catch (OperationCanceledException)
         {
+            if (tunnel is not null)
+            {
+                await tunnel.DisposeAsync().ConfigureAwait(false);
+            }
+
             throw;
         }
 #pragma warning disable CA1031 // Whatever a driver throws is a failed connection to report, never a crash.
         catch (Exception ex)
 #pragma warning restore CA1031
         {
+            if (tunnel is not null)
+            {
+                await tunnel.DisposeAsync().ConfigureAwait(false);
+            }
+
             // The driver's message only: exception details may echo settings, and never the connection string.
-            return (Done(ConnectionOutcome.Failed, ex.Message), null, provider, null);
+            return (Done(ConnectionOutcome.Failed, ex.Message), null, provider, null, null, null);
         }
     }
 }

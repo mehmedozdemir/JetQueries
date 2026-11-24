@@ -74,6 +74,18 @@ public partial class ConnectionDialog : Window
     // PasswordBox does not bind its password (by design); it is handed over as it is typed and kept nowhere else.
     private void OnPasswordChanged(object sender, RoutedEventArgs e) => _viewModel.Password = PasswordInput.Password;
 
+    private void OnSshPasswordChanged(object sender, RoutedEventArgs e) => _viewModel.SshPassword = SshPasswordInput.Password;
+
+    // The SSH key: an OpenSSH or PuTTY private key file.
+    private void OnBrowseKey(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFileDialog { Title = Strings.BrowseKeyFile, CheckFileExists = true };
+        if (dialog.ShowDialog(this) == true)
+        {
+            _viewModel.SshKeyPath = dialog.FileName;
+        }
+    }
+
     // A file setting (an SQLite database): pick an existing file; a new one can still be typed. A folder setting
     // (Oracle's TNS and wallet folders): pick a folder.
     private void OnBrowseClick(object sender, RoutedEventArgs e)

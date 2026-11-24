@@ -223,15 +223,6 @@
           "SQLitePCLRaw.core": "2.1.13"
         }
       },
-      "SSH.NET": {
-        "type": "Transitive",
-        "resolved": "2026.0.0",
-        "contentHash": "Yu9dirPq8l3oaat0+OQ7K0nUf5MmYltpia5UGqsApTG4zTPvBC1cxbNnC3NERij26dUST0A3Ef1QdHSn5ArbWQ==",
-        "dependencies": {
-          "BouncyCastle.Cryptography": "2.7.0",
-          "Microsoft.Extensions.Logging.Abstractions": "8.0.3"
-        }
-      },
       "Testcontainers": {
         "type": "Transitive",
         "resolved": "4.17.0",
@@ -317,7 +308,8 @@
           "JetQueries.Sdk": "[1.0.0, )",
           "Microsoft.Data.Sqlite": "[10.0.15, )",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "[10.0.15, )",
-          "Microsoft.Extensions.Logging.Abstractions": "[10.0.15, )"
+          "Microsoft.Extensions.Logging.Abstractions": "[10.0.15, )",
+          "SSH.NET": "[2026.0.1, )"
         }
       },
       "jetqueries.provider.postgresql": {
@@ -346,6 +338,16 @@
         "requested": "[10.0.15, )",
         "resolved": "10.0.15",
         "contentHash": "KczR2nV7ooeimtZxAawPht/FJUHnX+uoWy7y4pba+iaRQBwUM2NwtiqZg+/FpZDHUf2RkkzveGkhMTWDNzmDUA=="
+      },
+      "SSH.NET": {
+        "type": "CentralTransitive",
+        "requested": "[2026.0.1, )",
+        "resolved": "2026.0.1",
+        "contentHash": "74/nnq/n7EZLGLsUTt4aEE+/iet3B6ahi2iFfXgRXb6rNAvxsxLwbhLZ6lzITfAEB1vkmuAI3gXxOp2HcUMa2g==",
+        "dependencies": {
+          "BouncyCastle.Cryptography": "2.7.0",
+          "Microsoft.Extensions.Logging.Abstractions": "8.0.3"
+        }
       }
     },
     "net10.0/win-x64": {

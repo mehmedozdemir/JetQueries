@@ -263,4 +263,51 @@ public sealed class ConnectionEditorStepsTests
         Assert.Equal("PRODDB", definition.Settings["tnsAlias"]);
         Assert.False(definition.Settings.ContainsKey("host"));
     }
+
+    [Fact]
+    public async Task An_ssh_tunnel_is_part_of_the_definition_and_its_password_has_an_entry_of_its_own()
+    {
+        await using var env = new TestEnvironment();
+        var editor = SqlServerForm(env);
+        Assert.True(editor.CanUseSsh);
+        editor.Name = "Behind the bastion";
+        editor.Fields.Single(static f => f.Key == "server").Value = "localhost,1433";
+        editor.UserName = "app";
+        editor.Password = "db-secret";
+
+        // Turned on without its server: refused.
+        editor.UseSsh = true;
+        await editor.SaveCommand.ExecuteAsync(null);
+        Assert.Empty(await env.Store.GetAllAsync(Token));
+        Assert.Equal("Enter the SSH server and user.", editor.ValidationMessage);
+
+        editor.SshHost = "bastion.example";
+        editor.SshPort = "2222";
+        editor.SshUser = "jump";
+        editor.SshPassword = "ssh-secret";
+        await editor.SaveCommand.ExecuteAsync(null);
+
+        var saved = Assert.Single(await env.Store.GetAllAsync(Token));
+        Assert.Equal(new SshTunnelSettings { Host = "bastion.example", Port = 2222, UserName = "jump", SavePassword = true }, saved.Ssh);
+        Assert.Equal("ssh-secret", await env.Credentials.GetPasswordAsync(SshTunnel.SecretId(saved.Id), Token));
+        Assert.Equal("db-secret", await env.Credentials.GetPasswordAsync(saved.Id, Token));
+        Assert.Empty(editor.SshPassword);
+
+        // Editing shows it again; a key instead of a password needs its file.
+        var again = Editor(env, saved);
+        Assert.True(again.UseSsh);
+        Assert.Equal("2222", again.SshPort);
+        again.SshUseKey = true;
+        await again.SaveCommand.ExecuteAsync(null);
+        Assert.Equal("Choose the private key file.", again.ValidationMessage);
+    }
+
+    [Fact]
+    public async Task A_file_database_has_no_ssh_tunnel()
+    {
+        await using var env = new TestEnvironment();
+        var editor = Editor(env);
+        editor.ChooseTypeCommand.Execute(editor.Providers.Single(static p => p.Provider is not SqlServerProvider and not OracleProvider));
+        Assert.False(editor.CanUseSsh);
+    }
 }

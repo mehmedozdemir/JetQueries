@@ -579,3 +579,16 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
       working set instead of 300+); scrolling a large result is still usable. On again after a restart.
 - [ ] `$env:JETQUERIES_BUDGET_EXE="…\artifacts\publish\win-x64\JetQueries.exe"; dotnet test tests/JetQueries.Wpf.Tests --filter BudgetTests`
       passes (window under 1.5 s, idle under 200 MB in software rendering).
+
+## SSH tunnel
+- [ ] Connection editor (SQL Server, PostgreSQL, Oracle by host): "SSH tüneli" opens the SSH fields: server, port,
+      user, Parola / Özel anahtar, key file with Gözat…, the password or passphrase and "SSH parolasını … sakla".
+      SQLite has no such section. The database host and port above are as the SSH server sees them.
+- [ ] Bağlantıyı sına through a real bastion: succeeds; a wrong SSH password says "SSH: …".
+- [ ] Without a saved SSH password, connecting from the explorer asks for "… için SSH parolası" and opens the session.
+- [ ] While connected: queries, the explorer, completion and a second query tab all work (all go through the
+      tunnel); disconnecting closes the tunnel.
+- [ ] If the SSH server's key changes, the connection is refused (the key in ssh_known_hosts.json next to
+      connections.json; delete its line to trust the new key).
+- [ ] Deleting the connection removes its SSH password from Windows Credential Manager too.
+

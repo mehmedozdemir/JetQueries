@@ -166,6 +166,7 @@ public partial class ConnectionEditorViewModel : ObservableObject
         UserName = existing?.UserName ?? string.Empty;
         SavePassword = existing?.SavePassword ?? true;
         Password = string.Empty;
+        ShowSsh(existing?.Ssh);
         TestMessage = string.Empty;
         ValidationMessage = string.Empty;
         SelectedEnvironment = Environments.First(e => e.Value == (existing?.Environment ?? ConnectionEnvironment.Unspecified));
@@ -389,6 +390,7 @@ public partial class ConnectionEditorViewModel : ObservableObject
             ConnectionOutcome.Succeeded => (Strings.OutcomeSucceeded, (object)attempt.Elapsed.TotalMilliseconds),
             ConnectionOutcome.ProviderMissing => (Strings.OutcomeProviderMissing, attempt.Detail ?? string.Empty),
             ConnectionOutcome.PasswordRequired => (Strings.OutcomePasswordRequired, string.Empty),
+            ConnectionOutcome.SshPasswordRequired => (Strings.OutcomeSshPasswordRequired, string.Empty),
             ConnectionOutcome.Unreachable => (Strings.OutcomeUnreachable, attempt.Detail ?? string.Empty),
             _ => (Strings.OutcomeFailed, attempt.Detail ?? string.Empty),
         };
@@ -407,10 +409,66 @@ public partial class ConnectionEditorViewModel : ObservableObject
         IsReadOnly = IsReadOnly,
         UserName = NeedsCredential && UserName.Trim() is { Length: > 0 } user ? user : null,
         SavePassword = NeedsCredential && SavePassword,
+        Ssh = UseSsh && CanUseSsh
+            ? new SshTunnelSettings
+            {
+                Host = SshHost.Trim(),
+                Port = int.TryParse(SshPort.Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out var port) && port is > 0 and < 65536 ? port : 22,
+                UserName = SshUser.Trim(),
+                PrivateKeyPath = SshUseKey && SshKeyPath.Trim() is { Length: > 0 } key ? key : null,
+                SavePassword = SshSavePassword,
+            }
+            : null,
     };
+
+    // ---- SSH tunnel ----
+
+    /// <summary>Whether the type connects to a host and port that an SSH tunnel can stand in for (not a file database).</summary>
+    public bool CanUseSsh =>
+        SelectedProvider?.Provider is IConnectionSettingsProvider settings &&
+        settings.WithEndpoint(new Dictionary<string, string>(), new NetworkEndpoint("127.0.0.1", 1)) is not null;
+
+    /// <summary>Go through an SSH server (a bastion host) to reach the database.</summary>
+    [ObservableProperty]
+    public partial bool UseSsh { get; set; }
+
+    [ObservableProperty]
+    public partial string SshHost { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string SshPort { get; set; } = "22";
+
+    [ObservableProperty]
+    public partial string SshUser { get; set; } = string.Empty;
+
+    /// <summary>Log on to the SSH server with a private key instead of a password.</summary>
+    [ObservableProperty]
+    public partial bool SshUseKey { get; set; }
+
+    [ObservableProperty]
+    public partial string SshKeyPath { get; set; } = string.Empty;
+
+    /// <summary>The SSH password or the key's passphrase, as typed (handed to the credential store on save, never kept).</summary>
+    [ObservableProperty]
+    public partial string SshPassword { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial bool SshSavePassword { get; set; } = true;
+
+    private void ShowSsh(SshTunnelSettings? ssh)
+    {
+        UseSsh = ssh is not null;
+        SshHost = ssh?.Host ?? string.Empty;
+        SshPort = (ssh?.Port ?? 22).ToString(CultureInfo.InvariantCulture);
+        SshUser = ssh?.UserName ?? string.Empty;
+        SshUseKey = ssh?.PrivateKeyPath is not null;
+        SshKeyPath = ssh?.PrivateKeyPath ?? string.Empty;
+        SshSavePassword = ssh?.SavePassword ?? true;
+    }
 
     partial void OnSelectedProviderChanged(ProviderOption? value)
     {
+        OnPropertyChanged(nameof(CanUseSsh));
         ApplyConnectionStringCommand.NotifyCanExecuteChanged();
 
         // A type chosen any other way (the paused Avalonia dialog's list) also ends the first step.
@@ -551,6 +609,14 @@ public partial class ConnectionEditorViewModel : ObservableObject
         {
             ValidationMessage = Strings.ValidationUserRequired;
         }
+        else if (UseSsh && CanUseSsh && (string.IsNullOrWhiteSpace(SshHost) || string.IsNullOrWhiteSpace(SshUser)))
+        {
+            ValidationMessage = Strings.ValidationSshRequired;
+        }
+        else if (UseSsh && CanUseSsh && SshUseKey && string.IsNullOrWhiteSpace(SshKeyPath))
+        {
+            ValidationMessage = Strings.ValidationSshKeyRequired;
+        }
 
         return ValidationMessage.Length == 0;
     }
@@ -574,7 +640,8 @@ public partial class ConnectionEditorViewModel : ObservableObject
         TestMessage = Strings.ConnectionTesting;
         try
         {
-            var job = _jobs.Enqueue("Test connection", context => _manager.TestAsync(definition, password, context.CancellationToken), JobPriority.High);
+            var sshSecret = SshPassword.Length > 0 ? SshPassword : null;
+            var job = _jobs.Enqueue("Test connection", context => _manager.TestAsync(definition, password, sshSecret, context.CancellationToken), JobPriority.High);
             _test = job;
             var attempt = await job.Completion;
             TestSucceeded = attempt.Outcome == ConnectionOutcome.Succeeded;
@@ -604,11 +671,23 @@ public partial class ConnectionEditorViewModel : ObservableObject
 
         var definition = BuildDefinition();
         var password = Password;
+        var sshPassword = SshPassword;
         var job = _jobs.Enqueue(
             "Save connection",
             async context =>
             {
                 await _store.SaveAsync(definition, context.CancellationToken).ConfigureAwait(false);
+
+                // The SSH password or passphrase has an entry of its own; an empty box keeps the saved one.
+                var sshId = SshTunnel.SecretId(definition.Id);
+                if (definition.Ssh is not { SavePassword: true })
+                {
+                    await _credentials.DeletePasswordAsync(sshId, context.CancellationToken).ConfigureAwait(false);
+                }
+                else if (sshPassword.Length > 0)
+                {
+                    await _credentials.SetPasswordAsync(sshId, sshPassword, context.CancellationToken).ConfigureAwait(false);
+                }
                 if (!definition.SavePassword)
                 {
                     await _credentials.DeletePasswordAsync(definition.Id, context.CancellationToken).ConfigureAwait(false);
@@ -623,6 +702,7 @@ public partial class ConnectionEditorViewModel : ObservableObject
 
         // The password has been handed to the credential store; do not keep it in the view model.
         Password = string.Empty;
+        SshPassword = string.Empty;
         CloseRequested?.Invoke(this, true);
     }
 

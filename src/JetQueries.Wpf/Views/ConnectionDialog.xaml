@@ -251,6 +251,55 @@
                         </TextBlock.Visibility>
                     </TextBlock>
 
+                    <!-- SSH tunnel: through a bastion host (not for file databases) -->
+                    <StackPanel Margin="0,0,12,10" Visibility="{Binding CanUseSsh, Converter={StaticResource BoolToVisibility}}">
+                        <ToggleButton x:Name="SshToggle" Style="{StaticResource Disclosure}" IsChecked="{Binding UseSsh}" Content="{x:Static res:Strings.SshSection}" />
+                        <StackPanel Margin="0,10,-12,0" Visibility="{Binding UseSsh, Converter={StaticResource BoolToVisibility}}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="96" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Style="{StaticResource Field}">
+                                    <TextBlock Text="{x:Static res:Strings.SshHost}" Style="{StaticResource Label}" />
+                                    <TextBox x:Name="SshHostInput" Text="{Binding SshHost, UpdateSourceTrigger=PropertyChanged}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Style="{StaticResource Field}">
+                                    <TextBlock Text="{x:Static res:Strings.SshPort}" Style="{StaticResource Label}" />
+                                    <TextBox Text="{Binding SshPort, UpdateSourceTrigger=PropertyChanged}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Style="{StaticResource Field}">
+                                    <TextBlock Text="{x:Static res:Strings.SshUser}" Style="{StaticResource Label}" />
+                                    <TextBox Text="{Binding SshUser, UpdateSourceTrigger=PropertyChanged}" />
+                                </StackPanel>
+                            </Grid>
+                            <StackPanel Orientation="Horizontal" Margin="1,0,0,10">
+                                <RadioButton x:Name="SshPasswordChoice" Content="{x:Static res:Strings.SshAuthPassword}" GroupName="SshAuth" Margin="0,0,20,0" Foreground="{DynamicResource Brush.Text}"
+                                             IsChecked="{Binding SshUseKey, Converter={x:Static v:NotConverter.Instance}}" />
+                                <RadioButton x:Name="SshKeyChoice" Content="{x:Static res:Strings.SshAuthKey}" GroupName="SshAuth" IsChecked="{Binding SshUseKey}" Foreground="{DynamicResource Brush.Text}" />
+                            </StackPanel>
+                            <StackPanel Style="{StaticResource Field}" Visibility="{Binding SshUseKey, Converter={StaticResource BoolToVisibility}}">
+                                <TextBlock Text="{x:Static res:Strings.SshKeyPath}" Style="{StaticResource Label}" />
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right" Margin="8,0,0,0" Content="{x:Static res:Strings.Browse}" Click="OnBrowseKey" />
+                                    <TextBox Text="{Binding SshKeyPath, UpdateSourceTrigger=PropertyChanged}" />
+                                </DockPanel>
+                            </StackPanel>
+                            <StackPanel Style="{StaticResource Field}">
+                                <Grid>
+                                    <TextBlock Text="{x:Static res:Strings.SshPassword}" Style="{StaticResource Label}"
+                                               Visibility="{Binding SshUseKey, Converter={x:Static v:InverseBoolToVisibilityConverter.Instance}}" />
+                                    <TextBlock Text="{x:Static res:Strings.SshPassphrase}" Style="{StaticResource Label}"
+                                               Visibility="{Binding SshUseKey, Converter={StaticResource BoolToVisibility}}" />
+                                </Grid>
+                                <PasswordBox x:Name="SshPasswordInput" PasswordChanged="OnSshPasswordChanged" />
+                            </StackPanel>
+                            <CheckBox Content="{x:Static res:Strings.SshSavePassword}" IsChecked="{Binding SshSavePassword}" Margin="1,0,12,6" />
+                            <TextBlock Text="{x:Static res:Strings.SshHint}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="1,0,12,0" />
+                        </StackPanel>
+                    </StackPanel>
+
                     <!-- Advanced: folder, timeouts, certificate trust and other switches (opens by itself when one is set) -->
                     <StackPanel Margin="0,0,12,10">
                         <ToggleButton x:Name="AdvancedToggle" Style="{StaticResource Disclosure}" IsChecked="{Binding ShowAdvanced}" Content="{x:Static res:Strings.ConnectionAdvanced}" />

@@ -47,6 +47,11 @@
           "xunit.v3.mtp-v1": "[3.2.2]"
         }
       },
+      "BouncyCastle.Cryptography": {
+        "type": "Transitive",
+        "resolved": "2.7.0",
+        "contentHash": "U+12df8UEWHgBi04YVf/Lgi2dy3SItlIYvHjjEVa/BngCQIzDCDRBk50DDByCfDvSbe5pRNFr3b7UrVK2kMcLw=="
+      },
       "Microsoft.ApplicationInsights": {
         "type": "Transitive",
         "resolved": "2.23.0",
@@ -218,7 +223,8 @@
           "JetQueries.Sdk": "[1.0.0, )",
           "Microsoft.Data.Sqlite": "[10.0.15, )",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "[10.0.15, )",
-          "Microsoft.Extensions.Logging.Abstractions": "[10.0.15, )"
+          "Microsoft.Extensions.Logging.Abstractions": "[10.0.15, )",
+          "SSH.NET": "[2026.0.1, )"
         }
       },
       "jetqueries.provider.sqlite": {
@@ -236,6 +242,16 @@
         "requested": "[10.0.15, )",
         "resolved": "10.0.15",
         "contentHash": "KczR2nV7ooeimtZxAawPht/FJUHnX+uoWy7y4pba+iaRQBwUM2NwtiqZg+/FpZDHUf2RkkzveGkhMTWDNzmDUA=="
+      },
+      "SSH.NET": {
+        "type": "CentralTransitive",
+        "requested": "[2026.0.1, )",
+        "resolved": "2026.0.1",
+        "contentHash": "74/nnq/n7EZLGLsUTt4aEE+/iet3B6ahi2iFfXgRXb6rNAvxsxLwbhLZ6lzITfAEB1vkmuAI3gXxOp2HcUMa2g==",
+        "dependencies": {
+          "BouncyCastle.Cryptography": "2.7.0",
+          "Microsoft.Extensions.Logging.Abstractions": "8.0.3"
+        }
       }
     },
     "net10.0/win-x64": {
