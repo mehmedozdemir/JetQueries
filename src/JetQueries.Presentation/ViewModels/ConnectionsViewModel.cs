@@ -791,6 +791,7 @@ public partial class ConnectionsViewModel(
                 await manager.CloseAsync(id).ConfigureAwait(false);
                 await store.DeleteAsync(id, context.CancellationToken).ConfigureAwait(false);
                 await credentials.DeletePasswordAsync(id, context.CancellationToken).ConfigureAwait(false);
+                await credentials.DeletePasswordAsync(SshTunnel.SecretId(id), context.CancellationToken).ConfigureAwait(false);
             },
             JobPriority.High);
         await job.Completion;
@@ -831,6 +832,22 @@ public partial class ConnectionsViewModel(
                 attempt = await OpenAsync(node.Definition, password);
             }
 
+            if (attempt.Outcome == ConnectionOutcome.SshPasswordRequired)
+            {
+                // The SSH password is not stored: asked now, used for this session only.
+                var sshPassword = await dialogs.PromptPasswordAsync(string.Format(CultureInfo.CurrentCulture, CompositeFormat.Parse(Strings.SshPasswordPrompt), node.Name));
+                if (sshPassword is null)
+                {
+                    return;
+                }
+
+                attempt = await OpenAsync(node.Definition, null, sshPassword);
+                if (attempt.Outcome == ConnectionOutcome.PasswordRequired && await dialogs.PromptPasswordAsync(node.Name) is { } password)
+                {
+                    attempt = await OpenAsync(node.Definition, password, sshPassword);
+                }
+            }
+
             if (attempt is { Outcome: ConnectionOutcome.Succeeded, Session: { } session })
             {
                 node.Attach(new ExplorerContext(session, metadata, jobs, favorites));
@@ -864,8 +881,8 @@ public partial class ConnectionsViewModel(
         }
     }
 
-    private Task<ConnectionAttempt> OpenAsync(ConnectionDefinition definition, string? password) =>
-        jobs.Enqueue("Connect", context => manager.OpenAsync(definition, password, context.CancellationToken), JobPriority.High).Completion;
+    private Task<ConnectionAttempt> OpenAsync(ConnectionDefinition definition, string? password, string? sshSecret = null) =>
+        jobs.Enqueue("Connect", context => manager.OpenAsync(definition, password, sshSecret, context.CancellationToken), JobPriority.High).Completion;
 
     private void RefreshCommands()
     {

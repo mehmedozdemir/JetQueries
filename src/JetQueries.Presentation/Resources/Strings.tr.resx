@@ -217,6 +217,23 @@
   <data name="UpdateSourcePlaceholder" xml:space="preserve"><value>https://… ya da pack.ps1'in sürüm klasörü (artifacts/releases/win-x64)</value></data>
   <data name="FieldHardwareRendering" xml:space="preserve"><value>Donanım hızlandırma (GPU)</value></data>
   <data name="SettingHardwareRenderingInfo" xml:space="preserve"><value>Açık: daha akıcı kaydırma. Kapalı: işlemci çizer, yaklaşık 160 MB daha az bellek. Uygulama yeniden açılınca geçerli olur.</value></data>
+  <data name="SshPasswordPrompt" xml:space="preserve"><value>{0} için SSH parolası</value></data>
+  <data name="OutcomeSshPasswordRequired" xml:space="preserve"><value>SSH parolası gerekli.</value></data>
+  <data name="ValidationSshRequired" xml:space="preserve"><value>SSH sunucusunu ve kullanıcısını girin.</value></data>
+  <data name="ValidationSshKeyRequired" xml:space="preserve"><value>Özel anahtar dosyasını seçin.</value></data>
+  <data name="SshSection" xml:space="preserve"><value>SSH tüneli</value></data>
+  <data name="SshUse" xml:space="preserve"><value>Bir SSH sunucusu (bastion) üzerinden bağlan</value></data>
+  <data name="SshHost" xml:space="preserve"><value>SSH sunucusu</value></data>
+  <data name="SshPort" xml:space="preserve"><value>Port</value></data>
+  <data name="SshUser" xml:space="preserve"><value>SSH kullanıcısı</value></data>
+  <data name="SshAuthPassword" xml:space="preserve"><value>Parola</value></data>
+  <data name="SshAuthKey" xml:space="preserve"><value>Özel anahtar</value></data>
+  <data name="SshKeyPath" xml:space="preserve"><value>Anahtar dosyası</value></data>
+  <data name="SshPassword" xml:space="preserve"><value>SSH parolası</value></data>
+  <data name="SshPassphrase" xml:space="preserve"><value>Anahtar parolası (varsa)</value></data>
+  <data name="SshSavePassword" xml:space="preserve"><value>SSH parolasını sistemin kimlik bilgisi deposunda sakla</value></data>
+  <data name="SshHint" xml:space="preserve"><value>Yukarıdaki veritabanı sunucusu ve portu SSH sunucusunun gördüğü adrestir (çoğu zaman localhost). Sunucu anahtarı ilk bağlantıda hatırlanır; değişirse bağlantı reddedilir.</value></data>
+  <data name="BrowseKeyFile" xml:space="preserve"><value>Özel anahtar seçin</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Tümünü temizle</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Filtreyi kaldır</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} / {1:N0} satır</value></data>

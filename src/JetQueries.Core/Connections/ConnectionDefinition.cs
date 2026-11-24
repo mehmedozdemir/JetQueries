@@ -35,6 +35,9 @@ public sealed record ConnectionDefinition
     /// <summary>Whether the password is kept in the operating system's credential store or asked for each time.</summary>
     public bool SavePassword { get; init; }
 
+    /// <summary>An SSH tunnel the connection goes through (a bastion host); null for a direct connection.</summary>
+    public SshTunnelSettings? Ssh { get; init; }
+
     /// <summary>The non-secret part handed to the provider.</summary>
     public ConnectionProfile ToProfile() => new(Id, Name, ProviderId, Settings);
 }

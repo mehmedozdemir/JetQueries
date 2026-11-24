@@ -50,6 +50,9 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<ICredentialStore>(static _ =>
             OperatingSystem.IsWindows() ? new WindowsCredentialStore() : new SessionCredentialStore());
         services.TryAddSingleton<IReachabilityProbe, TcpReachabilityProbe>();
+        // SSH server keys seen before live next to the connections (not secret).
+        services.TryAddSingleton(new SshKnownHosts(
+            connectionOptions.FilePath is { } file ? Path.Combine(Path.GetDirectoryName(file) ?? ".", "ssh_known_hosts.json") : null));
         services.TryAddSingleton<IConnectionManager, ConnectionManager>();
 
         var historyOptions = new QueryHistoryOptions();

@@ -22,6 +22,16 @@ public interface IConnectionSettingsProvider
     /// <param name="settings">The current values of the settings.</param>
     /// <returns>The endpoint, or <see langword="null"/> if it cannot be told from the settings alone.</returns>
     NetworkEndpoint? GetEndpoint(IReadOnlyDictionary<string, string> settings);
+
+    /// <summary>
+    /// The settings changed to connect to another endpoint: the local end of an SSH tunnel the host opened to the
+    /// endpoint of <see cref="GetEndpoint"/>. Everything else (database, options) stays.
+    /// </summary>
+    /// <param name="settings">The connection's settings.</param>
+    /// <param name="endpoint">Where to connect instead (127.0.0.1 and a local port).</param>
+    /// <returns>The new settings, or <see langword="null"/> when the provider cannot connect through a tunnel.</returns>
+    /// <remarks>Preview; defaults to <see langword="null"/>.</remarks>
+    IReadOnlyDictionary<string, string>? WithEndpoint(IReadOnlyDictionary<string, string> settings, NetworkEndpoint endpoint) => null;
 }
 
 /// <summary>One setting of a connection, as shown in the connection form.</summary>

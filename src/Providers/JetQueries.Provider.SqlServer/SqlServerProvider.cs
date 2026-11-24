@@ -115,6 +115,18 @@ public sealed class SqlServerProvider : IDatabaseProvider, IRoutineExecutionScri
     }
 
     /// <inheritdoc />
+    /// <remarks>"host,port" (an instance name is dropped: the tunnel already reaches its port).</remarks>
+    public IReadOnlyDictionary<string, string>? WithEndpoint(IReadOnlyDictionary<string, string> settings, NetworkEndpoint endpoint)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        ArgumentNullException.ThrowIfNull(endpoint);
+        return new Dictionary<string, string>(settings, StringComparer.OrdinalIgnoreCase)
+        {
+            [SqlServerConnectionSettings.Server] = string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{endpoint.Host},{endpoint.Port}"),
+        };
+    }
+
+    /// <inheritdoc />
     /// <remarks>SQL Server cannot nest a WITH query or a plain ORDER BY in a derived table; the ORDER BY is left out.</remarks>
     public string? BuildCountQuery(string sql) =>
         CountQueryBuilder.Build(sql, Language.TSqlLexer.Tokenize(sql), withAllowedInside: false, orderByNeedsPaging: true);
