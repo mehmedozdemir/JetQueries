@@ -137,15 +137,18 @@
                                     <MenuItem Header="{x:Static res:Strings.QueryNew}" c:Ui.Icon="{x:Static c:Icons.Add}"
                                               Command="{Binding NewQueryCommand}" CommandParameter="{Binding Selected}" />
                                     <!-- DBA: the server at a glance, its sessions and blocking, its queries and indexes -->
-                                    <MenuItem x:Name="DashboardMenuItem" Header="{x:Static res:Strings.DashOpen}" c:Ui.Icon="&#xE9D2;"
-                                              Command="{Binding OpenDashboardCommand}" CommandParameter="{Binding Selected}"
-                                              Visibility="{Binding Selected.CanDashboard, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
-                                    <MenuItem x:Name="ActivityMenuItem" Header="{x:Static res:Strings.ActivityOpen}" c:Ui.Icon="&#xE9D9;"
-                                              Command="{Binding OpenActivityCommand}" CommandParameter="{Binding Selected}"
-                                              Visibility="{Binding Selected.CanMonitor, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
-                                    <MenuItem x:Name="PerformanceMenuItem" Header="{x:Static res:Strings.PerfOpen}" c:Ui.Icon="&#xE9F9;"
-                                              Command="{Binding OpenPerformanceCommand}" CommandParameter="{Binding Selected}"
-                                              Visibility="{Binding Selected.CanAnalyze, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
+                                    <MenuItem x:Name="DbaMenuItem" Header="{x:Static res:Strings.MenuDba}" c:Ui.Icon="&#xE9D9;"
+                                              Visibility="{Binding Selected.HasDbaTools, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}">
+                                        <MenuItem x:Name="DashboardMenuItem" Header="{x:Static res:Strings.DashOpen}" c:Ui.Icon="&#xE9D2;"
+                                                  Command="{Binding OpenDashboardCommand}" CommandParameter="{Binding Selected}"
+                                                  Visibility="{Binding Selected.CanDashboard, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
+                                        <MenuItem x:Name="ActivityMenuItem" Header="{x:Static res:Strings.ActivityOpen}" c:Ui.Icon="&#xE9D9;"
+                                                  Command="{Binding OpenActivityCommand}" CommandParameter="{Binding Selected}"
+                                                  Visibility="{Binding Selected.CanMonitor, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
+                                        <MenuItem x:Name="PerformanceMenuItem" Header="{x:Static res:Strings.PerfOpen}" c:Ui.Icon="&#xE9F9;"
+                                                  Command="{Binding OpenPerformanceCommand}" CommandParameter="{Binding Selected}"
+                                                  Visibility="{Binding Selected.CanAnalyze, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
+                                    </MenuItem>
                                     <MenuItem Header="{Binding ToggleConnectionText}" c:Ui.Icon="{x:Static c:Icons.Plug}" Command="{Binding ToggleConnectionCommand}" />
                                     <MenuItem Header="{x:Static res:Strings.ExplorerRefresh}" c:Ui.Icon="{x:Static c:Icons.Refresh}" Command="{Binding ReloadSelectedCommand}" />
                                     <!-- Tables and views: their data; anything with a definition: details and scripts -->

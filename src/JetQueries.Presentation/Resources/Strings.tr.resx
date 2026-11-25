@@ -602,6 +602,136 @@
   <data name="DashOldFullBackup" xml:space="preserve"><value>tam yedek {0} gün önce</value></data>
   <data name="DashNoLogBackup" xml:space="preserve"><value>FULL modda 24 saattir log yedeği yok</value></data>
   <data name="DashWaiting" xml:space="preserve"><value>İkinci ölçüm bekleniyor…</value></data>
+  <data name="MenuDba" xml:space="preserve"><value>DBA</value></data>
+  <data name="MenuDbaHelp" xml:space="preserve"><value>Açıklamalar (i)</value></data>
+  <data name="FieldDbaHelp" xml:space="preserve"><value>DBA ekranlarında açıklamalar</value></data>
+  <data name="SettingDbaHelpInfo" xml:space="preserve"><value>DBA ekranlarındaki her kutucuk, grafik ve listenin yanında küçük bir "i": neyi gösterdiğini, hangi değerlerin normal olduğunu ve ne yapılacağını anlatır.</value></data>
+  <data name="HelpTip" xml:space="preserve"><value>Bu nedir? Normal değerler ve ne yapmalı</value></data>
+  <data name="HelpWhat" xml:space="preserve"><value>Ne gösterir</value></data>
+  <data name="HelpLevels" xml:space="preserve"><value>Nasıl okunur</value></data>
+  <data name="HelpGood" xml:space="preserve"><value>Normal</value></data>
+  <data name="HelpWatch" xml:space="preserve"><value>Dikkat</value></data>
+  <data name="HelpBad" xml:space="preserve"><value>Sorun</value></data>
+  <data name="HelpAction" xml:space="preserve"><value>Ne yapmalı</value></data>
+  <data name="Help_DashCpu_Title" xml:space="preserve"><value>CPU</value></data>
+  <data name="Help_DashCpu_What" xml:space="preserve"><value>Makinenin işlemcilerinin ne kadar meşgul olduğu: veritabanı sunucusunun kullandığı kısım ve makinedeki diğer her şeyin (antivirüs, başka servisler, başka programlar) kullandığı kısım.</value></data>
+  <data name="Help_DashCpu_Good" xml:space="preserve"><value>Çoğu zaman %60'ın altında; kısa sıçramalar normaldir.</value></data>
+  <data name="Help_DashCpu_Watch" xml:space="preserve"><value>Uzun süre %60–80: yoğun saatler için az pay kalmış demektir.</value></data>
+  <data name="Help_DashCpu_Bad" xml:space="preserve"><value>Dakikalarca %80 üstü ya da "diğer" yüksek: sorgular yavaşlar, işlemci sırası bekler (SOS_SCHEDULER_YIELD beklemeleri).</value></data>
+  <data name="Help_DashCpu_Action" xml:space="preserve"><value>Performans analizi &gt; Ağır sorgular'ı toplam CPU'ya göre açın: yükün çoğunu genelde birkaç deyim yapar; Eksik index'ler'deki bir index çoğu zaman bir taramayı ortadan kaldırır. "Diğer" yüksekse o makinedeki diğer programlara bakın.</value></data>
+  <data name="Help_DashMemory_Title" xml:space="preserve"><value>Kullanılan bellek</value></data>
+  <data name="Help_DashMemory_What" xml:space="preserve"><value>Veritabanı sunucusunun tuttuğu bellek, çoğu tablo ve index sayfalarının önbelleği; "hedef" kullanmak istediği miktar, "makinede boş" işletim sisteminde kalan bellektir.</value></data>
+  <data name="Help_DashMemory_Good" xml:space="preserve"><value>Kullanılan, hedefe yakın ve orada sabit: SQL Server okuduğunu bilerek bellekte tutar; dolu önbellek sağlıklıdır.</value></data>
+  <data name="Help_DashMemory_Watch" xml:space="preserve"><value>Makinedeki boş bellek toplamın %5–10'unun altında.</value></data>
+  <data name="Help_DashMemory_Bad" xml:space="preserve"><value>Boş bellek ~500 MB'ın altında ya da hedef düşüyor: işletim sistemi belleğe sıkışmış, geri istiyor; sayfalar diskten yeniden okunur (düşük PLE).</value></data>
+  <data name="Help_DashMemory_Action" xml:space="preserve"><value>SQL Server'ın "max server memory" ayarını işletim sistemine %10–20 (en az 2–4 GB) kalacak şekilde verin. PLE'ye ve çok okuma yapan sorgulara bakın.</value></data>
+  <data name="Help_DashBatches_Title" xml:space="preserve"><value>Saniyedeki istek</value></data>
+  <data name="Help_DashBatches_What" xml:space="preserve"><value>Sunucunun saniyede aldığı istek (uygulamaların gönderdiği deyim veya batch) sayısı: iş hacmi. Saniyedeki derleme, bunlardan kaçı için yeni plan gerektiğidir.</value></data>
+  <data name="Help_DashBatches_Good" xml:space="preserve"><value>Herkese uyan bir sayı yok: bu sunucu için normal, bu saatte genelde yaptığıdır. Derlemeler isteklerin ~%10'unun altında.</value></data>
+  <data name="Help_DashBatches_Watch" xml:space="preserve"><value>Ani sıçrama (bir iş, uygulamada döngü) ya da ani düşüş (bir uygulama durdu ya da engellendi).</value></data>
+  <data name="Help_DashBatches_Bad" xml:space="preserve"><value>Derlemeler isteklerin %20'sinden fazla: planlar yeniden kullanılmıyor (SQL metninde sabit değerler), bu CPU harcar.</value></data>
+  <data name="Help_DashBatches_Action" xml:space="preserve"><value>SQL'e yazılan değerler yerine parametre kullanın. Ağır sorgular'ı çalışma sayısına göre sıralamak en sık çalışanı gösterir.</value></data>
+  <data name="Help_DashRequests_Title" xml:space="preserve"><value>Çalışan istek</value></data>
+  <data name="Help_DashRequests_What" xml:space="preserve"><value>Şu anda çalışan (ya da çalışırken bir şey bekleyen) deyimler ve açık bağlantı sayısı. Hiçbir şey yapmayan açık bağlantı çalışan istek değildir.</value></data>
+  <data name="Help_DashRequests_Good" xml:space="preserve"><value>Çoğu zaman CPU sayısından az.</value></data>
+  <data name="Help_DashRequests_Watch" xml:space="preserve"><value>Sık sık CPU sayısından fazla: istekler işlemci kuyruğunda ya da bir şey bekliyor.</value></data>
+  <data name="Help_DashRequests_Bad" xml:space="preserve"><value>Çok ve artıyor, uzun süre bekliyorlar (kilit, disk): sunucu yetişemiyor.</value></data>
+  <data name="Help_DashRequests_Action" xml:space="preserve"><value>Etkinlik izleyiciyi açın: her isteğin ne çalıştırdığını ve neyi beklediğini gösterir.</value></data>
+  <data name="Help_DashBlocked_Title" xml:space="preserve"><value>Engellenen istek</value></data>
+  <data name="Help_DashBlocked_What" xml:space="preserve"><value>Başka bir oturum ihtiyaç duydukları satır veya tablolarda kilit tuttuğu için bekleyen istekler. Kilit, veritabanının veriyi tutarlı tutma yoludur; kısa beklemek normaldir, uzun beklemek değildir.</value></data>
+  <data name="Help_DashBlocked_Good" xml:space="preserve"><value>0 ya da bir iki saniyede çözülen birkaç tane.</value></data>
+  <data name="Help_DashBlocked_Watch" xml:space="preserve"><value>Birkaç saniye boyunca kalan engellenmiş istekler.</value></data>
+  <data name="Help_DashBlocked_Bad" xml:space="preserve"><value>30 saniyeden uzun süren ya da birinin arkasında çok sayıda istek biriktiren engelleme: kullanıcılar zaman aşımı görür.</value></data>
+  <data name="Help_DashBlocked_Action" xml:space="preserve"><value>Etkinlik izleyiciyi açın: kilitlenme zinciri baştaki oturumu gösterir. Çoğu zaman açık bırakılmış bir transaction ile boşta duran bir oturumdur (unutulmuş COMMIT); sahibinden commit ya da rollback isteyin, son çare olarak oturumu sonlandırın.</value></data>
+  <data name="Help_DashPle_Title" xml:space="preserve"><value>Sayfa ömrü (PLE)</value></data>
+  <data name="Help_DashPle_What" xml:space="preserve"><value>Diskten okunan bir sayfanın bellekten atılmadan önce kaç saniye kaldığı. Uzunsa önbellek çalışılan veriyi tutuyor; kısaysa veri diskten tekrar tekrar okunuyor.</value></data>
+  <data name="Help_DashPle_Good" xml:space="preserve"><value>Binlerce saniye ve sabit. Yaygın bir kural: her 4 GB önbellek için en az 300 saniye (64 GB'lık sunucuda 4.800+).</value></data>
+  <data name="Help_DashPle_Watch" xml:space="preserve"><value>Ani düşüşler: büyük bir tarama ya da rapor bir anda çok veri okudu.</value></data>
+  <data name="Help_DashPle_Bad" xml:space="preserve"><value>Sürekli bu kuralın altında: bellek baskısı; disk okumaları (PAGEIOLATCH beklemeleri) sorguları yavaşlatır.</value></data>
+  <data name="Help_DashPle_Action" xml:space="preserve"><value>En çok okuma yapan sorguları (Ağır sorgular &gt; Toplam okuma) ve eksik index'leri bulun; veri gerçekten sığmıyorsa sunucuya bellek gerekir.</value></data>
+  <data name="Help_DashLatency_Title" xml:space="preserve"><value>G/Ç gecikmesi</value></data>
+  <data name="Help_DashLatency_What" xml:space="preserve"><value>Son aralıkta bir veri veya log dosyası okumasının ya da yazmasının ortalama ne kadar sürdüğü ve saniyede kaç MB okunup yazıldığı.</value></data>
+  <data name="Help_DashLatency_Good" xml:space="preserve"><value>SSD diskte 5 ms'nin, diğerlerinde 10 ms'nin altında.</value></data>
+  <data name="Help_DashLatency_Watch" xml:space="preserve"><value>10–20 ms: depolama meşgul.</value></data>
+  <data name="Help_DashLatency_Bad" xml:space="preserve"><value>Uzun süre 20 ms üstü (50 ms üstü ciddi): sorgular diski bekler (PAGEIOLATCH, WRITELOG beklemeleri).</value></data>
+  <data name="Help_DashLatency_Action" xml:space="preserve"><value>Önce okumaları azaltın (index'ler, ağır sorgular); aynı anda bir yedekleme ya da büyük bir iş çalışıyor mu bakın; sonra depolamanın kendisine (paylaşılan diskler, sanal makine sınırları).</value></data>
+  <data name="Help_DashCpuChart_Title" xml:space="preserve"><value>Son bir saatte CPU</value></data>
+  <data name="Help_DashCpuChart_What" xml:space="preserve"><value>Sunucunun (mavi) ve makinenin geri kalanının (turuncu) CPU'su, dakikada bir nokta; SQL Server bu geçmişi kendisi tutar, pano açılır açılmaz görünür. Bir dakikayı okumak için grafiğin üzerine gelin.</value></data>
+  <data name="Help_DashCpuChart_Good" xml:space="preserve"><value>İş gününe göre inip çıkan ve düşük bir seviyeye dönen çizgi.</value></data>
+  <data name="Help_DashCpuChart_Watch" xml:space="preserve"><value>Aşağı inmeyen bir plato: sürekli çalışan bir şey var.</value></data>
+  <data name="Help_DashCpuChart_Bad" xml:space="preserve"><value>Uzun süre %100'e yakın ya da turuncu çizgi yüksek: başka bir program sunucuyla yarışıyor.</value></data>
+  <data name="Help_DashCpuChart_Action" xml:space="preserve"><value>Tepenin saatini not edin; Ağır sorgular'a ve o saatte planlanmış işlere bakın.</value></data>
+  <data name="Help_DashBatchChart_Title" xml:space="preserve"><value>Saniyedeki istek, son 10 dakika</value></data>
+  <data name="Help_DashBatchChart_What" xml:space="preserve"><value>Son dakikalardaki istek hacmi, her ölçümde bir nokta. Yükün şeklini gösterir: sabit, artan ya da patlamalı.</value></data>
+  <data name="Help_DashBatchChart_Good" xml:space="preserve"><value>Bu sunucunun diğer günler bu saatte yaptığına yakın.</value></data>
+  <data name="Help_DashBatchChart_Watch" xml:space="preserve"><value>Kalıcı bir sıçrama: yeni bir iş ya da uygulama, veya döngü içinde çağrı yapan bir uygulama.</value></data>
+  <data name="Help_DashBatchChart_Bad" xml:space="preserve"><value>Kullanıcılar çalışırken neredeyse sıfıra ani düşüş: istekler engellenmiş ya da bir uygulama bağlanamıyor olabilir.</value></data>
+  <data name="Help_DashBatchChart_Action" xml:space="preserve"><value>Aynı anda Engellenen kutucuğu ve etkinlik izleyiciyle karşılaştırın.</value></data>
+  <data name="Help_DashIoChart_Title" xml:space="preserve"><value>Dosya G/Ç, son 10 dakika</value></data>
+  <data name="Help_DashIoChart_What" xml:space="preserve"><value>Veri ve log dosyalarından saniyede okunan (mavi) ve yazılan (turuncu) MB.</value></data>
+  <data name="Help_DashIoChart_Good" xml:space="preserve"><value>Düşük ve sabit okuma (çoğunu önbellek karşılıyor), işe göre değişen yazma.</value></data>
+  <data name="Help_DashIoChart_Watch" xml:space="preserve"><value>Okuma patlamaları: büyük tablo taramaları, raporlar ya da yedekleme.</value></data>
+  <data name="Help_DashIoChart_Bad" xml:space="preserve"><value>Okumalar sürekli yüksek, PLE düşük ve gecikme yüksek: çalışılan veri belleğe sığmıyor ya da index'ler eksik.</value></data>
+  <data name="Help_DashIoChart_Action" xml:space="preserve"><value>Ağır sorgular'ı toplam okumaya göre ve Eksik index'ler'i inceleyin.</value></data>
+  <data name="Help_DashWaits_Title" xml:space="preserve"><value>Sunucu neyi bekliyor</value></data>
+  <data name="Help_DashWaits_What" xml:space="preserve"><value>Her istek zamanını ya çalışarak ya da bir şey bekleyerek geçirir; bu liste beklemeleri nedenine göre toplar, pano açıldığından beri (ikinci ölçümden önce: sunucu açıldığından beri). En uzun çubuk zamanın gittiği yerdir. Zararsız arka plan beklemeleri gösterilmez.</value></data>
+  <data name="Help_DashWaits_Good" xml:space="preserve"><value>Diğerlerinden çok önde tek bir tür yok; toplamlar geçen zamana göre küçük.</value></data>
+  <data name="Help_DashWaits_Watch" xml:space="preserve"><value>PAGEIOLATCH_*: sayfaları diskten okuma (bellek, index'ler). WRITELOG: log yazma (log diski, çok sayıda küçük transaction). CXPACKET / CXCONSUMER: paralel sorguların birbirini beklemesi (genelde sorun değil). ASYNC_NETWORK_IO: istemci sonuçları yavaş okuyor.</value></data>
+  <data name="Help_DashWaits_Bad" xml:space="preserve"><value>LCK_M_*: kilit bekleme (engelleme). SOS_SCHEDULER_YIELD: yetersiz CPU. RESOURCE_SEMAPHORE: sorgular çalışmak için bellek bekliyor.</value></data>
+  <data name="Help_DashWaits_Action" xml:space="preserve"><value>En üstteki beklemeyi takip edin: kilit → etkinlik izleyici; disk okuma → index'ler ve çok okuyan sorgular; CPU → CPU'ya göre ağır sorgular; WRITELOG → log diski ve commit'leri toplu yapmak.</value></data>
+  <data name="Help_DashDatabases_Title" xml:space="preserve"><value>Veritabanları ve yedekler</value></data>
+  <data name="Help_DashDatabases_What" xml:space="preserve"><value>Her veritabanının durumu, kurtarma modeli, veri ve log dosyalarının boyutu, son tam ve log yedeği. Uyarı sütunu bir yedek eksik ya da eskiyse bunu söyler.</value></data>
+  <data name="Help_DashDatabases_Good" xml:space="preserve"><value>En az haftada bir (genelde her gün) tam yedek; FULL kurtarma modelinde 15–60 dakikada bir log yedeği.</value></data>
+  <data name="Help_DashDatabases_Watch" xml:space="preserve"><value>Log normalden çok büyük: FULL modda log ancak log yedeği alınınca boşalır.</value></data>
+  <data name="Help_DashDatabases_Bad" xml:space="preserve"><value>Tam yedek yok, bir haftadan eski ya da FULL modda log yedeği yok: o zamandan beri olan veri geri getirilemez, log disk dolana kadar büyür.</value></data>
+  <data name="Help_DashDatabases_Action" xml:space="preserve"><value>Yedeklemeyi kim yapıyorsa (bakım planı, agent işi, yedekleme ürünü) ona sorun. Belirli bir ana dönmek gerekmiyorsa SIMPLE kurtarma modeli log yedeği ihtiyacını kaldırır. "?" yedeklerin okunamadığı anlamına gelir (msdb erişimi yok).</value></data>
+  <data name="Help_ActSessions_Title" xml:space="preserve"><value>Oturumlar</value></data>
+  <data name="Help_ActSessions_What" xml:space="preserve"><value>Sunucuya her bağlantı bir oturumdur. Liste kim olduğunu (kullanıcı, makine, program), şu an ne yaptığını (komut, durum, SQL), neyi beklediğini ve ne kadar kaynak kullandığını (CPU, okuma, yazma) gösterir. Boştaki ve sistem oturumları istenmedikçe gizlidir. Durumlar: running = çalışıyor; runnable = CPU sırası bekliyor; suspended = bir şey bekliyor (Bekleme'ye bakın); sleeping = bağlı, bir şey yapmıyor.</value></data>
+  <data name="Help_ActSessions_Good" xml:space="preserve"><value>Hızla biten birkaç çalışan istek; engellenen yok.</value></data>
+  <data name="Help_ActSessions_Watch" xml:space="preserve"><value>Dakikalardır süren bir istek ya da açık transaction'ı olan uyuyan oturum (Açık tran. &gt; 0): kilit tutuyor olabilir.</value></data>
+  <data name="Help_ActSessions_Bad" xml:space="preserve"><value>Bir oturumun arkasında biriken engellenmiş oturumlar.</value></data>
+  <data name="Help_ActSessions_Action" xml:space="preserve"><value>SQL'ini görmek için bir oturum seçin; "Sorgu sekmesinde aç" incelemenizi sağlar. Engelleme için sağdaki zincirlere bakın.</value></data>
+  <data name="Help_ActBlocking_Title" xml:space="preserve"><value>Kilitlenme zincirleri</value></data>
+  <data name="Help_ActBlocking_What" xml:space="preserve"><value>Kim kimi bekliyor. En üstteki oturum (zincir başı) bir kilit tutuyor; altındakiler o kilidi, onların altındakiler de onları bekliyor. Baştakini çözmek tüm zinciri çözer.</value></data>
+  <data name="Help_ActBlocking_Good" xml:space="preserve"><value>Zincir yok ya da bir sonraki ölçümde kayboluyor.</value></data>
+  <data name="Help_ActBlocking_Watch" xml:space="preserve"><value>Aynı zincir başı birkaç ölçümden fazla duruyor.</value></data>
+  <data name="Help_ActBlocking_Bad" xml:space="preserve"><value>"Boşta, transaction açık" olan zincir başı: bir program ya da kişi transaction başlatmış ama commit etmemiş; edene kadar engellemeye devam eder.</value></data>
+  <data name="Help_ActBlocking_Action" xml:space="preserve"><value>Baştaki oturumun sahibini bulun (kullanıcı, makine, program) ve commit ya da rollback yapmasını isteyin. Mümkün değilse oturumu sonlandırmak (KILL) işini geri alır ve diğerlerini serbest bırakır.</value></data>
+  <data name="Help_ActKill_Title" xml:space="preserve"><value>Oturumu sonlandırma</value></data>
+  <data name="Help_ActKill_What" xml:space="preserve"><value>Seçili oturumu sunucuda sonlandırır (KILL). Çalışan deyimi durur, açık transaction'ı geri alınır, programı bir hata alır.</value></data>
+  <data name="Help_ActKill_Watch" xml:space="preserve"><value>Geri alma, geri aldığı iş kadar sürer: milyonlarca satırı güncellemiş bir oturumu sonlandırmak uzun sürebilir ve kilitler geri alma bitene kadar kalır.</value></data>
+  <data name="Help_ActKill_Bad" xml:space="preserve"><value>Çalışan bir işin ya da uygulamanın oturumunu sonlandırmak onların işini yarıda bırakır: tekrar denemeleri gerekir.</value></data>
+  <data name="Help_ActKill_Action" xml:space="preserve"><value>Son çare olarak kullanın: önce sahibine sorun. JetQueries sonlandırmadan önce sorar, üretim sunucusunda iki kez sorar, kendi oturumunu ve salt okunur bağlantıda hiçbir oturumu sonlandırmaz.</value></data>
+  <data name="Help_ActWaits_Title" xml:space="preserve"><value>Bekleme türleri</value></data>
+  <data name="Help_ActWaits_What" xml:space="preserve"><value>Bekleyen bir isteğin neyi ve ne kadar süredir beklediği. En yaygınları: LCK_M_S / LCK_M_X / LCK_M_U: başka bir oturumun tuttuğu kilit (Engelleyen'e bakın). PAGEIOLATCH_SH: diskten okunan bir sayfa. WRITELOG: commit sırasında log yazımı. CXPACKET / CXCONSUMER: paralel bir sorgunun parçalarının birbirini beklemesi. ASYNC_NETWORK_IO: istemcinin sonuçları okumaması. SOS_SCHEDULER_YIELD: CPU bekleme. RESOURCE_SEMAPHORE: başlamak için bellek bekleme.</value></data>
+  <data name="Help_ActWaits_Good" xml:space="preserve"><value>Birkaç milisaniyelik beklemeler.</value></data>
+  <data name="Help_ActWaits_Watch" xml:space="preserve"><value>Birkaç saniyelik kilit beklemeleri; her biri ~20 ms'den uzun disk beklemeleri.</value></data>
+  <data name="Help_ActWaits_Bad" xml:space="preserve"><value>Onlarca saniye ve üstü kilit beklemeleri; hiç bitmeyen ASYNC_NETWORK_IO (sonuçları açık tutup kilitleri bırakmayan uygulama).</value></data>
+  <data name="Help_ActWaits_Action" xml:space="preserve"><value>Kilit → kilitlenme zinciri; disk → index'ler ve çok okuyan sorgular; CPU → CPU'ya göre ağır sorgular; ağ → sonuçları satır satır okuyan uygulama.</value></data>
+  <data name="Help_PerfHeavy_Title" xml:space="preserve"><value>Ağır sorgular</value></data>
+  <data name="Help_PerfHeavy_What" xml:space="preserve"><value>Sunucuya en çok maliyeti olan deyimler, plan önbelleğinden. Yalnızca değerleri farklı deyimler birlikte sayılır. Toplam = tüm çalışmaların maliyeti (sunucuyu yoran); ortalama = tek çalışma (kullanıcının beklediği); çalışma = ne sıklıkta çalıştığı.</value></data>
+  <data name="Help_PerfHeavy_Good" xml:space="preserve"><value>En maliyetli deyimler uygulamanın gerçekten ihtiyaç duyduklarıdır ve ortalama süreleri kullanıcıları için kabul edilebilir.</value></data>
+  <data name="Help_PerfHeavy_Watch" xml:space="preserve"><value>Kullanıcıların beklediği bir iş için ortalaması yüksek (saniyeler) bir deyim; milyonlarca kez çalışan ucuz bir deyim (çoğu zaman uygulamada döngü).</value></data>
+  <data name="Help_PerfHeavy_Bad" xml:space="preserve"><value>Toplam CPU'nun ya da okumanın çoğunu bir iki deyim alıyor: sunucunun yükünü onlar belirliyor.</value></data>
+  <data name="Help_PerfHeavy_Action" xml:space="preserve"><value>Deyimi bir sorgu sekmesinde açıp neyi okuduğuna bakın: eksik index, WHERE'de sütun üzerinde fonksiyon ya da geniş satırların SELECT * ile okunması yaygın nedenlerdir. Rakamlar sunucu yeniden başlayınca ya da plan önbellekten çıkınca sıfırlanır.</value></data>
+  <data name="Help_PerfMissing_Title" xml:space="preserve"><value>Eksik index'ler</value></data>
+  <data name="Help_PerfMissing_What" xml:space="preserve"><value>Optimize edicinin sorguları derlerken olmasını istediği index'ler. Eşitlik = ile karşılaştırılan sütunlar, Eşitsizlik = &gt;, &lt;, BETWEEN ile, Include = sadece okunan sütunlar. Etki = o sorguların ne kadar ucuzlayacağı; Puan maliyeti, etkiyi ve ne sıklıkta çalıştıklarını birleştirir.</value></data>
+  <data name="Help_PerfMissing_Good" xml:space="preserve"><value>Az ve düşük puanlı öneri.</value></data>
+  <data name="Help_PerfMissing_Watch" xml:space="preserve"><value>Aynı tabloda birkaç öneri: çoğu zaman tek bir index'te birleştirilebilir.</value></data>
+  <data name="Help_PerfMissing_Bad" xml:space="preserve"><value>Sürekli sorgulanan bir tabloda yüksek puan ve yüksek etki (~%80 üstü).</value></data>
+  <data name="Help_PerfMissing_Action" xml:space="preserve"><value>Her öneriyi oluşturmayın: her index yazmaları yavaşlatır ve yer kaplar. Tablonun mevcut index'leriyle karşılaştırın (Index kullanımı), benzerleri birleştirin, sakin bir saatte oluşturun ve sonra ağır sorgulara bakın.</value></data>
+  <data name="Help_PerfUsage_Title" xml:space="preserve"><value>Index kullanımı</value></data>
+  <data name="Help_PerfUsage_What" xml:space="preserve"><value>Veritabanının her index'i ve sunucu açıldığından beri sorguların onu nasıl kullandığı: Seek = satırları doğrudan buldu (en iyisi), Scan = tüm index'i okudu, Lookup = satırın kalanını getirdi, Güncelleme = onu güncellemek zorunda kalan yazmalar. Bulgu, verdiğinden fazlasını götüren index'leri gösterir.</value></data>
+  <data name="Help_PerfUsage_Good" xml:space="preserve"><value>Seek'i olan index'ler, az ya da hiç bulgu yok.</value></data>
+  <data name="Help_PerfUsage_Watch" xml:space="preserve"><value>"kullanılmıyor": okuma yok ama güncelleme var, yalnızca yazma maliyeti. Güvenmeden önce sunucunun ay sonu veya yıllık işleri kapsayacak kadar uzun süredir açık olduğuna bakın.</value></data>
+  <data name="Help_PerfUsage_Bad" xml:space="preserve"><value>"… ile aynı" ya da "… tarafından kapsanıyor": başka bir index zaten işini yapıyor; sadece yazma ve yer maliyeti var.</value></data>
+  <data name="Help_PerfUsage_Action" xml:space="preserve"><value>Betik bir DROP INDEX önerisidir: emin olana kadar bekletin (index bir kısıtı, koddaki bir ipucunu ya da nadir bir raporu karşılıyor olabilir). Birincil anahtarlar, benzersiz kısıtlar ve kümelenmiş index'ler asla önerilmez.</value></data>
+  <data name="Help_PerfFragmentation_Title" xml:space="preserve"><value>Parçalanma</value></data>
+  <data name="Help_PerfFragmentation_What" xml:space="preserve"><value>Bir index'in sayfalarının diskte ne kadar sırasız olduğu, yüzde olarak. Sırasız sayfalar aralık taramalarının küçük parçalar halinde okumasına neden olur. Ölçüm index sayfalarını okur, bu yüzden sadece Ölç'e basınca çalışır.</value></data>
+  <data name="Help_PerfFragmentation_Good" xml:space="preserve"><value>%5'in altı ya da küçük index'lerde (~1.000 sayfanın altı) herhangi bir değer: önemsemeyin.</value></data>
+  <data name="Help_PerfFragmentation_Watch" xml:space="preserve"><value>%5–30: REORGANIZE (çevrimiçi, durdurulabilir).</value></data>
+  <data name="Help_PerfFragmentation_Bad" xml:space="preserve"><value>Taranan büyük index'lerde %30 üstü: REBUILD.</value></data>
+  <data name="Help_PerfFragmentation_Action" xml:space="preserve"><value>SSD depolamada parçalanma, güncel istatistiklerden çok daha az önemlidir; bakım penceresinde rebuild edin (REBUILD, Enterprise sürümde ONLINE = ON olmadıkça tabloyu kilitler).</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Tümünü temizle</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Filtreyi kaldır</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} / {1:N0} satır</value></data>

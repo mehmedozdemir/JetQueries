@@ -42,6 +42,9 @@ public sealed record AppearanceSettings
     /// <summary>A text or date column chosen after WHERE, AND, SET… gets <c> = ''</c> with the caret in the quotes.</summary>
     public bool ValueSnippets { get; init; } = true;
 
+    /// <summary>DBA screens show "i" buttons that explain each tile, chart and list.</summary>
+    public bool DbaHelp { get; init; } = true;
+
     /// <summary>Resting the mouse on a table or column in the editor shows its details.</summary>
     public bool HoverInfo { get; init; } = true;
 
@@ -477,6 +480,11 @@ public partial class SettingsViewModel : ObservableObject
     partial void OnValueSnippetsChanged(bool value) => Preview();
 
     [ObservableProperty]
+    public partial bool DbaHelp { get; set; } = true;
+
+    partial void OnDbaHelpChanged(bool value) => Preview();
+
+    [ObservableProperty]
     public partial bool HoverInfo { get; set; }
 
     partial void OnHoverInfoChanged(bool value) => Preview();
@@ -500,6 +508,7 @@ public partial class SettingsViewModel : ObservableObject
         FetchSize = FetchSize,
         ShowColumnTypes = ShowColumnTypes,
         ValueSnippets = ValueSnippets,
+        DbaHelp = DbaHelp,
         HoverInfo = HoverInfo,
         FormatKeywordCase = FormatKeywordCase?.Value ?? SqlKeywordCase.Upper,
         FormatIndent = FormatIndent?.Value ?? 4,
@@ -621,6 +630,7 @@ public partial class SettingsViewModel : ObservableObject
             FetchSize = settings.FetchSize;
             ShowColumnTypes = settings.ShowColumnTypes;
             ValueSnippets = settings.ValueSnippets;
+            DbaHelp = settings.DbaHelp;
             HoverInfo = settings.HoverInfo;
             FormatKeywordCase = KeywordCases.FirstOrDefault(c => c.Value == settings.FormatKeywordCase) ?? KeywordCases[0];
             FormatIndent = Indents.FirstOrDefault(c => c.Value == settings.FormatIndent) ?? Indents[1];

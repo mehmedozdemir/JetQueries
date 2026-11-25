@@ -101,6 +101,9 @@ public sealed class AppearanceService : IAppearanceService
         // Run, Cancel, Save: icons in each tab, or text buttons in the main toolbar.
         resources["QueryButtons.Tab"] = settings.QueryButtonsInTab ? Visibility.Visible : Visibility.Collapsed;
         resources["QueryButtons.Toolbar"] = settings.QueryButtonsInTab ? Visibility.Collapsed : Visibility.Visible;
+
+        // DBA screens: the "i" buttons that explain what a tile, chart or list shows.
+        resources["DbaHelp.Visibility"] = settings.DbaHelp ? Visibility.Visible : Visibility.Collapsed;
         Changed?.Invoke(this, EventArgs.Empty);
     }
 }

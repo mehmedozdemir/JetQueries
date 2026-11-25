@@ -755,3 +755,11 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] Waits: "Sunucu açıldığından beri" first, then "Pano açıldığından beri" with what was waited for since.
 - [ ] Databases: sizes, recovery model, last full / log backup; a FULL database without a recent log backup, one without a full backup, or one older than a week is flagged; tempdb never. A login without msdb access shows "?" and no warnings. The refresh icon reads databases again.
 - [ ] Switch to another tab and back: it pauses while hidden. Close it: its connection is closed.
+
+## DBA menu and explanations
+- [ ] The main menu has "DBA" between Sorgu and Görünüm with Sunucu panosu, Etkinlik izleyici (Ctrl+Shift+A), Performans analizi and "Açıklamalar (i)"; Araçlar no longer lists them.
+- [ ] Right-click a connected SQL Server: one "DBA" item with the three screens; on a database node only Performans analizi; on a disconnected connection, a folder or a table no DBA item.
+- [ ] Dashboard: an "i" in each of the 7 tiles, beside each chart title, the waits and Veritabanları. Click one: a card with Ne gösterir / Nasıl okunur (Normal, Dikkat, Sorun with icons) / Ne yapmalı; Esc, the X or a click elsewhere closes it.
+- [ ] Activity monitor: "i" beside the counters, Kilitlenme zincirleri, the chosen session's title and the end-session button. Performance analysis: one "i" before the note; it explains the part shown (heavy queries, missing indexes, index use, fragmentation).
+- [ ] DBA > Açıklamalar (i) unticked: every "i" disappears at once; ticked again: back. The same switch is in Settings > Görünüm and is remembered after a restart.
+- [ ] In English (Settings > Dil > English, restart) the cards are in English.
