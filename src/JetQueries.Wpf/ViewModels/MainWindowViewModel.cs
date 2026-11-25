@@ -55,6 +55,7 @@ public partial class MainWindowViewModel : ObservableObject
         connections.KeyRequested += (_, key) => documents.OpenKey(key);
         connections.ActivityRequested += (_, monitor) => documents.OpenActivity(monitor);
         connections.PerformanceRequested += (_, analysis) => documents.OpenPerformance(analysis);
+        connections.DashboardRequested += (_, dashboard) => documents.OpenDashboard(dashboard);
         documents.DetailsRequested += (_, request) => ShowDetails(request);
 
         // A new query starts on the connection that is selected in the explorer.
@@ -195,6 +196,23 @@ public partial class MainWindowViewModel : ObservableObject
             FindConnection(Connections.Roots, session.Definition.Id) is { CanMonitor: true } open)
         {
             Connections.OpenActivityCommand.Execute(open);
+        }
+    }
+
+    /// <summary>Main menu: Tools, Server dashboard: of the connection chosen in the explorer, else of the query tab's.</summary>
+    [RelayCommand]
+    private void ShowDashboard()
+    {
+        if (Connections.Selected is ConnectionNodeViewModel { CanDashboard: true } node)
+        {
+            Connections.OpenDashboardCommand.Execute(node);
+            return;
+        }
+
+        if (Documents.Selected?.SelectedSession?.Session is { SupportsDashboard: true } session &&
+            FindConnection(Connections.Roots, session.Definition.Id) is { CanDashboard: true } open)
+        {
+            Connections.OpenDashboardCommand.Execute(open);
         }
     }
 

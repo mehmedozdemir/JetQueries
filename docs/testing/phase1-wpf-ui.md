@@ -746,3 +746,12 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] A login without VIEW SERVER STATE: the error says what is missing; the screen stays usable.
 - [ ] Switch parts quickly while one is loading: the part shown last is read.
 - [ ] Close the tab: its connection is closed.
+
+## Server dashboard (SQL Server)
+- [ ] Right-click a connected SQL Server: "Sunucu panosu"; also Tools > Sunucu panosu. The header shows product, edition, version, host, CPUs, memory and uptime.
+- [ ] The tiles fill at once; batches a second and I/O latency after the second reading (5 s). The CPU chart already shows up to an hour of history.
+- [ ] Hover a chart: a vertical line with the time and each series' value; leaving the chart removes it. Switch theme: the charts repaint in the other theme's colours.
+- [ ] Run a heavy query in another tab: CPU, batches and I/O move; make a blocking pair (BEGIN TRAN; UPDATE … / SELECT the same row): "Engellenen" shows the count with a warning icon and a red outline.
+- [ ] Waits: "Sunucu açıldığından beri" first, then "Pano açıldığından beri" with what was waited for since.
+- [ ] Databases: sizes, recovery model, last full / log backup; a FULL database without a recent log backup, one without a full backup, or one older than a week is flagged; tempdb never. A login without msdb access shows "?" and no warnings. The refresh icon reads databases again.
+- [ ] Switch to another tab and back: it pauses while hidden. Close it: its connection is closed.

@@ -555,6 +555,53 @@
   <data name="PerfColPartition" xml:space="preserve"><value>Bölüm</value></data>
   <data name="PerfColAction" xml:space="preserve"><value>İşlem</value></data>
   <data name="PerfEmpty" xml:space="preserve"><value>Gösterilecek bir şey yok.</value></data>
+  <data name="DashTitle" xml:space="preserve"><value>Pano</value></data>
+  <data name="DashOpen" xml:space="preserve"><value>Sunucu panosu</value></data>
+  <data name="DashOpenTip" xml:space="preserve"><value>Sunucuya genel bakış: CPU, bellek, istekler, G/Ç, beklemeler ve veritabanları</value></data>
+  <data name="DashUnsupported" xml:space="preserve"><value>Bu veritabanı türü yükünü bildirmiyor.</value></data>
+  <data name="DashUptime" xml:space="preserve"><value>açık {0}</value></data>
+  <data name="DashDaysHours" xml:space="preserve"><value>{0} gün {1} sa</value></data>
+  <data name="DashHoursMinutes" xml:space="preserve"><value>{0} sa {1} dk</value></data>
+  <data name="DashCpu" xml:space="preserve"><value>CPU</value></data>
+  <data name="DashCpuDetail" xml:space="preserve"><value>sunucu {0} · diğer {1}</value></data>
+  <data name="DashNoCpu" xml:space="preserve"><value>bildirilmiyor</value></data>
+  <data name="DashMemory" xml:space="preserve"><value>Kullanılan bellek</value></data>
+  <data name="DashMemoryTarget" xml:space="preserve"><value>hedef {0}</value></data>
+  <data name="DashMemoryFree" xml:space="preserve"><value>makinede boş {0}</value></data>
+  <data name="DashBatchesTile" xml:space="preserve"><value>İstek / sn</value></data>
+  <data name="DashCompilations" xml:space="preserve"><value>{0} derleme / sn</value></data>
+  <data name="DashRequests" xml:space="preserve"><value>Çalışan istek</value></data>
+  <data name="DashConnections" xml:space="preserve"><value>{0} bağlantı</value></data>
+  <data name="DashBlocked" xml:space="preserve"><value>Engellenen</value></data>
+  <data name="DashBlockedDetail" xml:space="preserve"><value>kilit bekliyor</value></data>
+  <data name="DashPle" xml:space="preserve"><value>Sayfa ömrü (PLE)</value></data>
+  <data name="DashPleDetail" xml:space="preserve"><value>düşük = bellek baskısı</value></data>
+  <data name="DashLatency" xml:space="preserve"><value>G/Ç gecikmesi</value></data>
+  <data name="DashIoDetail" xml:space="preserve"><value>{0} MB/sn okuma · {1} yazma</value></data>
+  <data name="DashCpuChart" xml:space="preserve"><value>CPU % (dakikada bir nokta, son 1 saat)</value></data>
+  <data name="DashBatchChart" xml:space="preserve"><value>Saniyedeki istek (son 10 dk)</value></data>
+  <data name="DashIoChart" xml:space="preserve"><value>Dosya G/Ç, saniyede MB (son 10 dk)</value></data>
+  <data name="DashCpuServer" xml:space="preserve"><value>Sunucu</value></data>
+  <data name="DashCpuOther" xml:space="preserve"><value>Diğer</value></data>
+  <data name="DashBatches" xml:space="preserve"><value>İstek/sn</value></data>
+  <data name="DashRead" xml:space="preserve"><value>Okuma</value></data>
+  <data name="DashWritten" xml:space="preserve"><value>Yazma</value></data>
+  <data name="DashWaits" xml:space="preserve"><value>Beklemeler</value></data>
+  <data name="DashWaitsStarted" xml:space="preserve"><value>Sunucu açıldığından beri en çok bekleme</value></data>
+  <data name="DashWaitsOpened" xml:space="preserve"><value>Pano açıldığından beri en çok bekleme</value></data>
+  <data name="DashNoWaits" xml:space="preserve"><value>Gösterilecek bekleme yok.</value></data>
+  <data name="DashDatabases" xml:space="preserve"><value>Veritabanları</value></data>
+  <data name="DashReloadDatabases" xml:space="preserve"><value>Veritabanlarını ve yedekleri yeniden oku</value></data>
+  <data name="DashColRecovery" xml:space="preserve"><value>Kurtarma</value></data>
+  <data name="DashColData" xml:space="preserve"><value>Veri</value></data>
+  <data name="DashColLog" xml:space="preserve"><value>Log</value></data>
+  <data name="DashColFullBackup" xml:space="preserve"><value>Son tam yedek</value></data>
+  <data name="DashColLogBackup" xml:space="preserve"><value>Son log yedeği</value></data>
+  <data name="DashColWarning" xml:space="preserve"><value>Uyarı</value></data>
+  <data name="DashNoFullBackup" xml:space="preserve"><value>tam yedek yok</value></data>
+  <data name="DashOldFullBackup" xml:space="preserve"><value>tam yedek {0} gün önce</value></data>
+  <data name="DashNoLogBackup" xml:space="preserve"><value>FULL modda 24 saattir log yedeği yok</value></data>
+  <data name="DashWaiting" xml:space="preserve"><value>İkinci ölçüm bekleniyor…</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Tümünü temizle</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Filtreyi kaldır</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} / {1:N0} satır</value></data>

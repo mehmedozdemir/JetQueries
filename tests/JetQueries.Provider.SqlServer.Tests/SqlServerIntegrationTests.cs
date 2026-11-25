@@ -747,6 +747,40 @@ public sealed class SqlServerIntegrationTests(SqlServerFixture fixture) : IClass
         Assert.EndsWith("ON [JqPerf].[dbo].[Scattered] REBUILD;", scattered.MaintenanceScript, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task The_dashboard_reads_what_the_server_is_and_its_load()
+    {
+        await using var connection = await OpenAsync();
+        var dashboard = Assert.IsAssignableFrom<IServerDashboard>(connection);
+
+        var overview = await dashboard.GetOverviewAsync(Token);
+        Assert.StartsWith("SQL Server 20", overview.Product, StringComparison.Ordinal);
+        Assert.StartsWith("16.", overview.Version, StringComparison.Ordinal);
+        Assert.NotNull(overview.Edition);
+        Assert.True(overview.CpuCount > 0);
+        Assert.True(overview.PhysicalMemoryMb > 0);
+        Assert.True(overview.StartedAt < DateTimeOffset.Now);
+        var master = Assert.Single(overview.Databases, static d => d.Name == "master");
+        Assert.Equal("ONLINE", master.State);
+        Assert.True(master.DataMb > 0 && master.LogMb > 0);
+        Assert.True(master.BackupsKnown);
+        Assert.Null(master.LastFullBackup);
+        Assert.Contains(overview.Databases[^1].Name, (string[])["master", "model", "msdb", "tempdb"]);
+
+        var first = await dashboard.GetSampleAsync(Token);
+        await RunAsync(connection, "SELECT COUNT(*) FROM sys.all_objects a CROSS JOIN sys.all_objects b WHERE a.object_id > b.object_id;");
+        var second = await dashboard.GetSampleAsync(Token);
+        Assert.True(second.BatchRequests > first.BatchRequests);
+        Assert.True(second.MemoryUsedMb > 0 && second.MemoryTargetMb > 0);
+        Assert.True(second.AvailableMemoryMb > 0);
+        Assert.True(second.Connections >= 1);
+        Assert.True(second.PageLifeExpectancy >= 0);
+        Assert.True(second.BytesRead > 0 && second.IoOperations > 0);
+        Assert.NotEmpty(second.Waits);
+        Assert.DoesNotContain(second.Waits, static w => w.Type is "LAZYWRITER_SLEEP" or "SLEEP_TASK" or "XE_TIMER_EVENT");
+        Assert.Equal(0, second.BlockedRequests);
+    }
+
     private static async Task<string> SpidAsync(IDatabaseConnection connection) =>
         Convert.ToString((await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest("SELECT @@SPID"), Token))).OfType<RowBatch>().Single().Rows[0][0],
             System.Globalization.CultureInfo.InvariantCulture)!;

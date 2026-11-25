@@ -250,8 +250,12 @@ public sealed class SqlServerProvider : IDatabaseProvider, IBulkInsertScripting,
     }
 }
 
-internal sealed class SqlServerConnection(SqlConnection connection) : IDatabaseConnection, IDatabaseContext, ITransactionControl, IActivityMonitor, IPerformanceAdvisor
+internal sealed class SqlServerConnection(SqlConnection connection) : IDatabaseConnection, IDatabaseContext, ITransactionControl, IActivityMonitor, IPerformanceAdvisor, IServerDashboard
 {
+    public Task<ServerOverview> GetOverviewAsync(CancellationToken cancellationToken) => SqlServerDashboard.OverviewAsync(connection, cancellationToken);
+
+    public Task<ServerSample> GetSampleAsync(CancellationToken cancellationToken) => SqlServerDashboard.SampleAsync(connection, cancellationToken);
+
     public Task<HeavyQueryReport> GetHeavyQueriesAsync(HeavyQueryRequest request, CancellationToken cancellationToken) =>
         SqlServerPerformance.HeavyAsync(connection, request, cancellationToken);
 

@@ -51,6 +51,11 @@
                             <v:PerformanceView Margin="0,6,0,0" />
                         </DataTemplate>
                     </v:DocumentTemplateSelector.Performance>
+                    <v:DocumentTemplateSelector.Dashboard>
+                        <DataTemplate>
+                            <v:DashboardView Margin="0,6,0,0" />
+                        </DataTemplate>
+                    </v:DocumentTemplateSelector.Dashboard>
                 </v:DocumentTemplateSelector>
             </TabControl.ContentTemplateSelector>
             <TabControl.ItemContainerStyle>

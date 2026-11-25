@@ -89,12 +89,15 @@ public sealed class DocumentTemplateSelector : DataTemplateSelector
 
     public DataTemplate? Performance { get; set; }
 
+    public DataTemplate? Dashboard { get; set; }
+
     public override DataTemplate? SelectTemplate(object item, DependencyObject container) => item switch
     {
         ObjectDetailsViewModel => Details,
         KeyValueViewModel => Key,
         ActivityMonitorViewModel => Activity,
         PerformanceViewModel => Performance,
+        DashboardViewModel => Dashboard,
         _ => Query,
     };
 }
@@ -110,7 +113,8 @@ public sealed class DocumentIconConverter : IValueConverter
         ObjectDetailsViewModel => UiKit.Controls.Icons.Info,
         KeyValueViewModel => UiKit.Controls.Icons.Key,
         ActivityMonitorViewModel => "",
-        PerformanceViewModel => "",
+        PerformanceViewModel => "\uE9F9",
+        DashboardViewModel => "\uE9D2",
         _ => UiKit.Controls.Icons.Code,
     };
 

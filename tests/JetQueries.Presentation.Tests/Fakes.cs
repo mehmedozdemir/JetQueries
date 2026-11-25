@@ -381,6 +381,13 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
 
     public List<string> PerformanceLog { get; } = [];
 
+    /// <summary>What the dashboard reads: the overview, and samples whose totals grow with each read.</summary>
+    public ServerOverview Overview { get; set; } = FakeDashboard.Overview();
+
+    public int SampleCount { get; private set; }
+
+    internal ServerSample NextSample() => FakeDashboard.Sample(SampleCount++);
+
     /// <summary>What the activity monitor reads; the sessions it was asked to end.</summary>
     public ActivitySnapshot? Activity { get; set; }
 
@@ -430,8 +437,12 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
         return Task.FromResult<IDatabaseConnection>(SupportsDatabaseContext ? new FakeContextConnection(this) : new FakeConnection(this));
     }
 
-    private sealed class FakeConnection(FakeProvider owner) : IDatabaseConnection, ITransactionControl, IActivityMonitor, IPerformanceAdvisor
+    private sealed class FakeConnection(FakeProvider owner) : IDatabaseConnection, ITransactionControl, IActivityMonitor, IPerformanceAdvisor, IServerDashboard
     {
+        public Task<ServerOverview> GetOverviewAsync(CancellationToken cancellationToken) => Task.FromResult(OwnerOf().Overview);
+
+        public Task<ServerSample> GetSampleAsync(CancellationToken cancellationToken) => Task.FromResult(OwnerOf().NextSample());
+
         public Task<HeavyQueryReport> GetHeavyQueriesAsync(HeavyQueryRequest request, CancellationToken cancellationToken)
         {
             OwnerOf().PerformanceLog.Add($"heavy:{request.Order}:{request.Top}:{request.Database}");
@@ -478,8 +489,12 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
     }
 
     /// <summary>A connection with a current database that starts at "Cards" and follows USE.</summary>
-    internal sealed class FakeContextConnection : IDatabaseConnection, IDatabaseContext, ITransactionControl, IActivityMonitor, IPerformanceAdvisor
+    internal sealed class FakeContextConnection : IDatabaseConnection, IDatabaseContext, ITransactionControl, IActivityMonitor, IPerformanceAdvisor, IServerDashboard
     {
+        public Task<ServerOverview> GetOverviewAsync(CancellationToken cancellationToken) => Task.FromResult(OwnerOf().Overview);
+
+        public Task<ServerSample> GetSampleAsync(CancellationToken cancellationToken) => Task.FromResult(OwnerOf().NextSample());
+
         public Task<HeavyQueryReport> GetHeavyQueriesAsync(HeavyQueryRequest request, CancellationToken cancellationToken)
         {
             OwnerOf().PerformanceLog.Add($"heavy:{request.Order}:{request.Top}:{request.Database}");
@@ -702,4 +717,54 @@ public static class FakePerformance
         new("dbo.Orders", "IX_Orders_Customer_Date") { FragmentationPercent = 62.5, Pages = 12000, Rebuild = true, MaintenanceScript = "ALTER INDEX [IX_Orders_Customer_Date] ON [Cards].[dbo].[Orders] REBUILD;" },
         new("dbo.Orders", "PK_Orders") { FragmentationPercent = 12.0, Pages = 40000, MaintenanceScript = "ALTER INDEX [PK_Orders] ON [Cards].[dbo].[Orders] REORGANIZE;" },
     ];
+}
+
+/// <summary>A server's overview and load for the dashboard's tests: samples 5 s apart, totals that grow.</summary>
+public static class FakeDashboard
+{
+    public static readonly DateTimeOffset Start = new(2026, 11, 25, 9, 0, 0, TimeSpan.FromHours(3));
+
+    public static ServerOverview Overview() => new("SQL Server 2022", "16.0.4135.4 RTM")
+    {
+        Edition = "Developer Edition (64-bit)",
+        Host = "SQL01",
+        StartedAt = Start - TimeSpan.FromDays(3) - TimeSpan.FromHours(4),
+        CpuCount = 8,
+        PhysicalMemoryMb = 32768,
+        CpuHistory = [.. Enumerable.Range(0, 30).Select(static i => new CpuPoint(Start - TimeSpan.FromMinutes(30 - i), 20 + (i % 7) * 4, 5 + (i % 3)))],
+        Databases =
+        [
+            new("Cards") { State = "ONLINE", RecoveryModel = "FULL", DataMb = 2048, LogMb = 512, BackupsKnown = true, LastFullBackup = Start - TimeSpan.FromHours(10), LastLogBackup = Start - TimeSpan.FromMinutes(15) },
+            new("Sales") { State = "ONLINE", RecoveryModel = "FULL", DataMb = 51200, LogMb = 4096, BackupsKnown = true, LastFullBackup = Start - TimeSpan.FromDays(1) },
+            new("Archive") { State = "ONLINE", RecoveryModel = "SIMPLE", DataMb = 120, LogMb = 8, BackupsKnown = true },
+            new("master") { State = "ONLINE", RecoveryModel = "SIMPLE", DataMb = 6, LogMb = 2, BackupsKnown = true, LastFullBackup = Start - TimeSpan.FromDays(10) },
+            new("tempdb") { State = "ONLINE", RecoveryModel = "SIMPLE", DataMb = 64, LogMb = 8, BackupsKnown = true },
+        ],
+    };
+
+    public static ServerSample Sample(int n) => new(Start + TimeSpan.FromSeconds(5 * n))
+    {
+        Cpu = new CpuPoint(Start + TimeSpan.FromMinutes(n / 12), 30 + n % 5, 6),
+        MemoryUsedMb = 12_000,
+        MemoryTargetMb = 14_000,
+        AvailableMemoryMb = 3_200,
+        PageLifeExpectancy = 4_200,
+        Connections = 142,
+        ActiveRequests = 7,
+        BlockedRequests = n % 4 == 3 ? 2 : 0,
+        BatchRequests = 1_000_000 + n * 5_000 + 600 * (n % 3),
+        Compilations = 10_000 + n * 50,
+        Transactions = 500_000 + n * 2_000,
+        BytesRead = 10_000_000_000 + n * 50L * 1024 * 1024,
+        BytesWritten = 2_000_000_000 + n * 10L * 1024 * 1024,
+        IoOperations = 1_000_000 + n * 1_000,
+        IoStallMs = 3_000_000 + n * 3_500,
+        Waits =
+        [
+            new("PAGEIOLATCH_SH", 9_000_000 + n * 4_000),
+            new("LCK_M_X", 2_000_000 + n * 6_000),
+            new("CXPACKET", 8_000_000 + n * 1_000),
+            new("WRITELOG", 1_000_000 + n * 500),
+        ],
+    };
 }

@@ -136,7 +136,10 @@
                                               Visibility="{Binding Selected, Converter={x:Static v:NodeTypeToVisibilityConverter.Instance}, ConverterParameter=KeySpace}" />
                                     <MenuItem Header="{x:Static res:Strings.QueryNew}" c:Ui.Icon="{x:Static c:Icons.Add}"
                                               Command="{Binding NewQueryCommand}" CommandParameter="{Binding Selected}" />
-                                    <!-- DBA: the server's sessions and blocking, for an open connection whose provider reports them -->
+                                    <!-- DBA: the server at a glance, its sessions and blocking, its queries and indexes -->
+                                    <MenuItem x:Name="DashboardMenuItem" Header="{x:Static res:Strings.DashOpen}" c:Ui.Icon="&#xE9D2;"
+                                              Command="{Binding OpenDashboardCommand}" CommandParameter="{Binding Selected}"
+                                              Visibility="{Binding Selected.CanDashboard, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
                                     <MenuItem x:Name="ActivityMenuItem" Header="{x:Static res:Strings.ActivityOpen}" c:Ui.Icon="&#xE9D9;"
                                               Command="{Binding OpenActivityCommand}" CommandParameter="{Binding Selected}"
                                               Visibility="{Binding Selected.CanMonitor, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
