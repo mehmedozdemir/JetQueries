@@ -1078,6 +1078,13 @@
   <data name="ConnectionDatabasesHint" xml:space="preserve"><value>Gezgin ve sorgu sekmelerinin veritabanı listeleri yalnızca işaretli veritabanlarını gösterir; varsayılan veritabanı her zaman aralarındadır.</value></data>
   <data name="ConnectionDatabasesRequired" xml:space="preserve"><value>En az bir veritabanı işaretleyin ya da tümünü gösterin.</value></data>
   <data name="ExplorerHiddenDatabases" xml:space="preserve"><value>{0} veritabanı gizli — göstermek için bağlantıyı düzenleyin</value></data>
+  <data name="Scheme_Dark_Slate" xml:space="preserve"><value>Arduvaz (loş)</value></data>
+  <data name="Scheme_Dark_Frost" xml:space="preserve"><value>Kırağı (loş)</value></data>
+  <data name="Scheme_Dark_Mocha" xml:space="preserve"><value>Mokka (loş, sıcak)</value></data>
+  <data name="Scheme_Dark_Forest" xml:space="preserve"><value>Orman (loş)</value></data>
+  <data name="Scheme_Light_Sepia" xml:space="preserve"><value>Sepya (yumuşak)</value></data>
+  <data name="Scheme_Light_Sage" xml:space="preserve"><value>Adaçayı (yumuşak)</value></data>
+  <data name="Scheme_Light_Mist" xml:space="preserve"><value>Sis (yumuşak)</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Tümünü temizle</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Filtreyi kaldır</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} / {1:N0} satır</value></data>

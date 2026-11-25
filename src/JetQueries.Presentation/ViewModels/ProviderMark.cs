@@ -3,7 +3,7 @@ using JetQueries.Sdk;
 
 namespace JetQueries.Presentation.ViewModels;
 
-/// <summary>How a database type is drawn: a white mark (SVG path data on a 24 × 24 canvas) on a colour.</summary>
+/// <summary>How a database type is drawn: its mark (SVG path data on a 24 × 24 canvas) in its colour, on a light tile.</summary>
 /// <param name="PathData">The mark.</param>
 /// <param name="Color">The colour, <c>#RRGGBB</c>.</param>
 public sealed record ProviderMark(string PathData, string Color)

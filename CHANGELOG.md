@@ -6,6 +6,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 ## [Unreleased]
 
 ### Added
+- Easy-on-the-eye colour schemes: light Sepya, Adaçayı and Sis (soft surfaces without white glare, softened text) and dark Arduvaz, Kırağı, Mokka and Orman (dim rather than near-black). Every text, accent and syntax colour meets WCAG contrast (text ≥ 7:1, secondary and muted ≥ 4.5:1).
+- Database types show their product's logo (SQL Server, Oracle, PostgreSQL, SQLite, Redis; Simple Icons, CC0) in the brand colour on a light tile, so that they are told apart at a glance in the explorer, tabs and the connection dialog.
 - Databases a connection shows: in the connection dialog, "Gezginde görünen veritabanları" is All or "Yalnızca seçtiklerim"; the list is read from the server (a short connection), filtered and checked. The explorer shows only those (and how many are hidden); the query tabs' database lists follow. The start database ("Veritabanı" field) is now a pick-or-type list filled from the server and always among those shown.
 - Query toolbar: Format, comment lines, UPPER/lower case, undo and redo beside the run buttons; Settings > Query tabs can hide them (shortcuts unchanged).
 - DBA tables sort (header click, Shift for more columns; numbers with units such as ms, s, MB and % sort as numbers), filter per column (the header's filter button, "filter by this value") and export the rows as shown (cell menu, or the Export button of the activity monitor and the performance analysis) through the result Export dialog. Sorts and filters stay across refreshes.

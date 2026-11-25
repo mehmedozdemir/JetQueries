@@ -23,10 +23,10 @@ public enum AppTheme
 public static class ThemeManager
 {
     /// <summary>The dark schemes; the first is the default.</summary>
-    public static IReadOnlyList<string> DarkSchemes { get; } = ["Midnight", "Graphite", "Ocean", "Contrast"];
+    public static IReadOnlyList<string> DarkSchemes { get; } = ["Midnight", "Graphite", "Ocean", "Contrast", "Slate", "Frost", "Mocha", "Forest"];
 
     /// <summary>The light schemes; the first is the default.</summary>
-    public static IReadOnlyList<string> LightSchemes { get; } = ["Paper", "Sky", "Sand", "Contrast"];
+    public static IReadOnlyList<string> LightSchemes { get; } = ["Paper", "Sky", "Sand", "Contrast", "Sepia", "Sage", "Mist"];
 
     private const string DarkBase = "Graphite";
     private const string LightBase = "Paper";

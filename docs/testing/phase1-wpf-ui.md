@@ -809,3 +809,7 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] Query toolbar: Format (Ctrl+Shift+F), -- (Ctrl+/), AB, ab, undo, redo act on the editor; Settings > Sorgu sekmeleri > "Sorgu araç çubuğunda düzenleme düğmeleri" off hides them.
 - [ ] Edit a connection > "Gezginde görünen veritabanları" > Yalnızca seçtiklerim: the list is read from the server; check a few, filter, save. The explorer shows only those and "N gizli — …"; the query tab's database list too (its current database stays). The "Veritabanı" field's list fills from the server when opened; the chosen start database is always shown. Back to Tümü: all return.
 
+## Soft colour schemes and database logos
+- [ ] Settings > Appearance: the light theme offers Sepya, Adaçayı, Sis; the dark one Arduvaz, Kırağı, Mokka, Orman. Each applies at once: editor, grid, explorer, dialogs readable; primary buttons' text readable on the accent.
+- [ ] The explorer, the connection type chooser and query tabs show the SQL Server, Oracle, PostgreSQL, SQLite and Redis logos, told apart at a glance in both themes.
+

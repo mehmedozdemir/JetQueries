@@ -155,10 +155,17 @@ public sealed record ColorScheme(string Key, bool IsDark, string Window, string 
         new("Graphite", true, "#15171C", "#20242C", "#E7E9EE", "#5B8CFF", "#7AA2FF", "#7FD1A8"),
         new("Ocean", true, "#0B141D", "#13212D", "#E8F1F8", "#22B8F0", "#4CC8F5", "#8BE0B8"),
         new("Contrast", true, "#000000", "#121212", "#FFFFFF", "#6AA8FF", "#7DB4FF", "#8CF0BE"),
+        new("Slate", true, "#272C34", "#303740", "#D8DDE4", "#7AA6E3", "#82AEEA", "#9CCB8E"),
+        new("Frost", true, "#2E3440", "#373E4C", "#D8DEE9", "#88B6D6", "#8AAED0", "#A9C493"),
+        new("Mocha", true, "#2A2623", "#342F2B", "#E4DBD0", "#D69A62", "#E0A06A", "#AFC48A"),
+        new("Forest", true, "#242C27", "#2D3731", "#DAE3DC", "#6CBF92", "#7CC39C", "#C9C98A"),
         new("Paper", false, "#F3F4F7", "#FFFFFF", "#1C2128", "#2F6FEB", "#2F5FD0", "#1F8A5B"),
         new("Sky", false, "#EAF1F8", "#FFFFFF", "#0F1B2A", "#0A63D1", "#0A5BC4", "#1F8A5B"),
         new("Sand", false, "#F3EFE8", "#FFFDF8", "#1F1A14", "#B4531B", "#A9451A", "#1F8A5B"),
         new("Contrast", false, "#FFFFFF", "#F5F5F5", "#000000", "#0047B3", "#0041A8", "#1F8A5B"),
+        new("Sepia", false, "#EDE5D5", "#F7F2E6", "#3A3127", "#8A5A2C", "#8A4519", "#4C7334"),
+        new("Sage", false, "#E3E9E1", "#EFF3EC", "#25302A", "#2D7354", "#2A6448", "#6A6A1E"),
+        new("Mist", false, "#E2E6EB", "#EDF0F4", "#29303A", "#3866AD", "#2F5AA0", "#2E7550"),
     ];
 }
 

@@ -9,7 +9,7 @@ public interface IProviderAppearance
 {
     /// <summary>
     /// The mark of the database type: SVG path data (<c>d</c> attribute syntax) on a 24 × 24 canvas, drawn in
-    /// white on <see cref="AccentColor"/>.
+    /// <see cref="AccentColor"/> on a light tile. The product's own logo is best: it tells types apart at a glance.
     /// </summary>
     string IconPathData { get; }
 

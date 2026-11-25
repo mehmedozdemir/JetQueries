@@ -6,7 +6,10 @@ using System.Windows.Shapes;
 
 namespace JetQueries.Wpf.Views;
 
-/// <summary>The mark of a database type: a white shape on a rounded tile of the type's colour.</summary>
+/// <summary>
+/// The mark of a database type: its logo in the type's colour on a light rounded tile (the same in light and dark
+/// themes, like an application icon), so that SQL Server, Oracle and Redis, all red, still differ by shape.
+/// </summary>
 public sealed class ProviderMarkView : Border
 {
     public static readonly DependencyProperty MarkProperty = DependencyProperty.Register(
@@ -17,7 +20,11 @@ public sealed class ProviderMarkView : Border
 
     private static readonly Dictionary<string, Geometry?> Geometries = new(StringComparer.Ordinal);
 
-    private readonly Path _shape = new() { Fill = Brushes.White };
+    private static readonly SolidColorBrush Tile = Frozen(Color.FromRgb(0xF7, 0xF8, 0xFA));
+
+    private static readonly SolidColorBrush Edge = Frozen(Color.FromArgb(0x26, 0x00, 0x00, 0x00));
+
+    private readonly Path _shape = new();
 
     public ProviderMarkView()
     {
@@ -48,8 +55,11 @@ public sealed class ProviderMarkView : Border
         var mark = Mark ?? ProviderMark.Default;
         Width = Height = Size;
         CornerRadius = new CornerRadius(Math.Round(Size * 0.24));
-        Padding = new Thickness(Math.Round(Size * 0.12));
-        Background = Brush(mark.Color);
+        Padding = new Thickness(Math.Max(1, Math.Round(Size * 0.1)));
+        Background = Tile;
+        BorderBrush = Edge;
+        BorderThickness = new Thickness(Size >= 24 ? 1 : 0.5);
+        _shape.Fill = Brush(mark.Color);
 
         // A mark an extension got wrong falls back to the default one rather than failing the view.
         _shape.Data = GeometryOf(mark.PathData) ?? GeometryOf(ProviderMark.Default.PathData);
@@ -59,6 +69,13 @@ public sealed class ProviderMarkView : Border
     {
         var value = uint.Parse(color.AsSpan(1), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
         var brush = new SolidColorBrush(Color.FromRgb((byte)(value >> 16), (byte)(value >> 8), (byte)value));
+        brush.Freeze();
+        return brush;
+    }
+
+    private static SolidColorBrush Frozen(Color color)
+    {
+        var brush = new SolidColorBrush(color);
         brush.Freeze();
         return brush;
     }
