@@ -6,6 +6,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 ## [Unreleased]
 
 ### Added
+- Interface density on five levels (Settings > Appearance > Yoğunluk: Çok sıkı, Sıkı, Normal, Rahat, Geniş, with − and + buttons); toolbars, tabs, rows, inputs and the result grid's rows follow at once. Settings saved with the old compact switch keep their look.
+- Explorer grouping ("…" > Gruplama): by folders (as before, the default), by environment (production first, then test, development, none) or by database type; folders stay inside each group. Groups start open; the ones closed and the chosen grouping are remembered.
+- Folder colours: a folder's menu > Renk (nine colours, or none) colours its icon; also for the other folders picked with Ctrl+click. Colours follow renames and moves.
+- Picking several in the explorer: Ctrl+click picks connections and folders, Shift+click everything between; the menu then connects, disconnects or deletes the picked connections together (Del too), and they can still be dragged into a folder at once.
 - Easy-on-the-eye colour schemes: light Sepya, Adaçayı and Sis (soft surfaces without white glare, softened text) and dark Arduvaz, Kırağı, Mokka and Orman (dim rather than near-black). Every text, accent and syntax colour meets WCAG contrast (text ≥ 7:1, secondary and muted ≥ 4.5:1).
 - Database types show their product's logo (SQL Server, Oracle, PostgreSQL, SQLite, Redis; Simple Icons, CC0) in the brand colour on a light tile, so that they are told apart at a glance in the explorer, tabs and the connection dialog.
 - Databases a connection shows: in the connection dialog, "Gezginde görünen veritabanları" is All or "Yalnızca seçtiklerim"; the list is read from the server (a short connection), filtered and checked. The explorer shows only those (and how many are hidden); the query tabs' database lists follow. The start database ("Veritabanı" field) is now a pick-or-type list filled from the server and always among those shown.

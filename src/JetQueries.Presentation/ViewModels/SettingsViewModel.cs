@@ -58,6 +58,15 @@ public sealed record AppearanceSettings
     public bool CompactMode { get; init; }
 
     /// <summary>
+    /// The interface density, -2 (very compact) to 2 (spacious); null in settings saved before levels existed,
+    /// which then follow <see cref="CompactMode"/>.
+    /// </summary>
+    public int? DensityLevel { get; init; }
+
+    /// <summary>The density level in effect.</summary>
+    public int EffectiveDensity => Math.Clamp(DensityLevel ?? (CompactMode ? -1 : 0), -2, 2);
+
+    /// <summary>
     /// Draw with the GPU (smoother scrolling). Off draws in software: about 160 MB less memory, more CPU while
     /// drawing. Takes effect at the next start.
     /// </summary>
@@ -345,14 +354,30 @@ public partial class SettingsViewModel : ObservableObject
     public IReadOnlyList<SettingChoice<bool>> QueryButtonPlaces { get; } =
         [new(true, Strings.QueryButtonsInTab), new(false, Strings.QueryButtonsInToolbar)];
 
-    /// <summary>Normal or compact interface density.</summary>
-    public IReadOnlyList<SettingChoice<bool>> Densities { get; } =
-        [new(false, Strings.DensityNormal), new(true, Strings.DensityCompact)];
+    /// <summary>The interface density, from very compact to spacious.</summary>
+    public IReadOnlyList<SettingChoice<int>> Densities { get; } =
+    [
+        new(-2, Strings.DensityVeryCompact), new(-1, Strings.DensityCompact), new(0, Strings.DensityNormal), new(1, Strings.DensityComfortable),
+        new(2, Strings.DensitySpacious),
+    ];
 
     [ObservableProperty]
-    public partial SettingChoice<bool>? Density { get; set; }
+    [NotifyCanExecuteChangedFor(nameof(DenserCommand), nameof(LooserCommand))]
+    public partial SettingChoice<int>? Density { get; set; }
 
-    partial void OnDensityChanged(SettingChoice<bool>? value) => Preview();
+    partial void OnDensityChanged(SettingChoice<int>? value) => Preview();
+
+    private bool CanDenser() => Density is not { Value: <= -2 };
+
+    private bool CanLooser() => Density is not { Value: >= 2 };
+
+    /// <summary>One step more compact.</summary>
+    [RelayCommand(CanExecute = nameof(CanDenser))]
+    private void Denser() => Density = Densities.First(d => d.Value == Math.Max(-2, (Density?.Value ?? 0) - 1));
+
+    /// <summary>One step more room.</summary>
+    [RelayCommand(CanExecute = nameof(CanLooser))]
+    private void Looser() => Density = Densities.First(d => d.Value == Math.Min(2, (Density?.Value ?? 0) + 1));
 
     /// <summary>Draw with the GPU; applies at the next start.</summary>
     [ObservableProperty]
@@ -517,7 +542,8 @@ public partial class SettingsViewModel : ObservableObject
         EditorFontSize = EditorFontSize,
         GridFontSize = GridFontSize,
         QueryButtonsInTab = QueryButtonPlace?.Value ?? true,
-        CompactMode = Density?.Value ?? false,
+        CompactMode = (Density?.Value ?? 0) < 0,
+        DensityLevel = Density?.Value is { } level and not 0 ? level : null, // normal is stored as before: no level
         HardwareRendering = HardwareRendering,
         Language = Language?.Value ?? string.Empty,
         FetchSize = FetchSize,
@@ -640,7 +666,7 @@ public partial class SettingsViewModel : ObservableObject
             EditorFontSize = settings.EditorFontSize;
             GridFontSize = settings.GridFontSize;
             QueryButtonPlace = QueryButtonPlaces.First(p => p.Value == settings.QueryButtonsInTab);
-            Density = Densities.First(d => d.Value == settings.CompactMode);
+            Density = Densities.First(d => d.Value == settings.EffectiveDensity);
             HardwareRendering = settings.HardwareRendering;
             Language = Languages.FirstOrDefault(l => string.Equals(l.Value, settings.Language, StringComparison.OrdinalIgnoreCase)) ?? Languages[0];
             FetchSize = settings.FetchSize;

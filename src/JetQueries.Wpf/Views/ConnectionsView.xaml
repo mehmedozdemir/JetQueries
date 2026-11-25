@@ -32,6 +32,15 @@
                             <MenuItem Header="{x:Static res:Strings.ConnectionDeleteLong}" c:Ui.Icon="{x:Static c:Icons.Delete}" InputGestureText="Del"
                                       Command="{Binding DeleteCommand}" />
                             <Separator />
+                            <MenuItem x:Name="GroupByMenu" Header="{x:Static res:Strings.ExplorerGroupBy}" c:Ui.Icon="&#xF168;">
+                                <MenuItem Header="{x:Static res:Strings.ExplorerGroupFolders}" IsCheckable="True" IsChecked="{Binding IsGroupedByFolders, Mode=OneWay}"
+                                          Command="{Binding GroupByCommand}" CommandParameter="Folders" />
+                                <MenuItem Header="{x:Static res:Strings.ExplorerGroupEnvironment}" IsCheckable="True" IsChecked="{Binding IsGroupedByEnvironment, Mode=OneWay}"
+                                          Command="{Binding GroupByCommand}" CommandParameter="Environment" />
+                                <MenuItem Header="{x:Static res:Strings.ExplorerGroupType}" IsCheckable="True" IsChecked="{Binding IsGroupedByType, Mode=OneWay}"
+                                          Command="{Binding GroupByCommand}" CommandParameter="DatabaseType" />
+                            </MenuItem>
+                            <Separator />
                             <MenuItem Header="{x:Static res:Strings.ImportTip}" c:Ui.Icon="&#xE8B5;" Command="{Binding ImportCommand}" />
                         </ContextMenu>
                     </Button.ContextMenu>
@@ -116,6 +125,14 @@
                         <Setter Property="ContextMenu">
                             <Setter.Value>
                                 <ContextMenu DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
+                                    <!-- Several connections picked (Ctrl+click, Shift+click): act on them together -->
+                                    <MenuItem Header="{x:Static res:Strings.PickedConnect}" c:Ui.Icon="{x:Static c:Icons.Plug}" Command="{Binding ConnectPickedCommand}"
+                                              Visibility="{Binding HasSeveralPicked, Converter={StaticResource BoolToVisibility}}" />
+                                    <MenuItem Header="{x:Static res:Strings.PickedDisconnect}" Command="{Binding DisconnectPickedCommand}"
+                                              Visibility="{Binding HasSeveralPicked, Converter={StaticResource BoolToVisibility}}" />
+                                    <MenuItem Header="{x:Static res:Strings.PickedDelete}" c:Ui.Icon="{x:Static c:Icons.Delete}" Command="{Binding DeletePickedCommand}"
+                                              Visibility="{Binding HasSeveralPicked, Converter={StaticResource BoolToVisibility}}" />
+                                    <Separator Visibility="{Binding HasSeveralPicked, Converter={StaticResource BoolToVisibility}}" />
                                     <!-- Folders: a subfolder, rename, delete (what is inside moves up) -->
                                     <MenuItem Header="{x:Static res:Strings.FolderNew}" c:Ui.Icon="&#xE8F4;" Command="{Binding NewFolderCommand}" CommandParameter="{Binding Selected}"
                                               Visibility="{Binding Selected, Converter={x:Static v:IsFolderOrConnectionToVisibilityConverter.Instance}}" />
@@ -123,6 +140,25 @@
                                               Visibility="{Binding Selected, Converter={x:Static v:IsFolderToVisibilityConverter.Instance}}" />
                                     <MenuItem Header="{x:Static res:Strings.FolderDelete}" c:Ui.Icon="{x:Static c:Icons.Delete}" Command="{Binding DeleteFolderCommand}" CommandParameter="{Binding Selected}" InputGestureText="Del"
                                               Visibility="{Binding Selected, Converter={x:Static v:IsFolderToVisibilityConverter.Instance}}" />
+                                    <!-- Folders: a colour (also for the other folders picked with Ctrl+click) -->
+                                    <MenuItem x:Name="FolderColorMenu" Header="{x:Static res:Strings.FolderColor}" c:Ui.Icon="&#xE790;"
+                                              Visibility="{Binding Selected, Converter={x:Static v:IsFolderToVisibilityConverter.Instance}}"
+                                              ItemsSource="{x:Static vm:ConnectionsViewModel.FolderColorOptions}">
+                                        <MenuItem.ItemContainerStyle>
+                                            <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+                                                <Setter Property="Command" Value="{Binding DataContext.SetFolderColorCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                                <Setter Property="CommandParameter" Value="{Binding Color}" />
+                                                <Setter Property="Header" Value="{Binding Name}" />
+                                                <Setter Property="Icon">
+                                                    <Setter.Value>
+                                                        <Border Width="12" Height="12" CornerRadius="3" Background="{Binding Color, Converter={x:Static v:HexBrushConverter.Instance}}" />
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </MenuItem.ItemContainerStyle>
+                                    </MenuItem>
+                                    <MenuItem Header="{x:Static res:Strings.FolderColorNone}" Command="{Binding SetFolderColorCommand}" CommandParameter="{x:Null}"
+                                              Visibility="{Binding Selected.HasColor, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
                                     <!-- Connections: edit and delete (F2, Del) -->
                                     <MenuItem Header="{x:Static res:Strings.ConnectionEditLong}" c:Ui.Icon="{x:Static c:Icons.Edit}" InputGestureText="F2"
                                               Command="{Binding EditCommand}" Visibility="{Binding Selected, Converter={x:Static v:IsConnectionToVisibilityConverter.Instance}}" />
@@ -217,7 +253,29 @@
                 </TreeView.ItemContainerStyle>
                 <TreeView.Resources>
                     <HierarchicalDataTemplate DataType="{x:Type vm:FolderNodeViewModel}" ItemsSource="{Binding Children}">
-                        <TextBlock Text="{Binding Name}" Foreground="{DynamicResource Brush.TextSecondary}" FontWeight="SemiBold" />
+                        <StackPanel Orientation="Horizontal">
+                            <!-- The folder's own icon, in its colour when it has one -->
+                            <TextBlock x:Name="FolderIcon" Text="{x:Static v:ExplorerIconConverter.FolderGlyph}" Style="{StaticResource Text.Icon}" FontSize="13"
+                                       Foreground="{DynamicResource Brush.TextSecondary}" Margin="0,0,8,0" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding Name}" Foreground="{DynamicResource Brush.TextSecondary}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <HierarchicalDataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding HasColor}" Value="True">
+                                <Setter TargetName="FolderIcon" Property="Foreground" Value="{Binding Color, Converter={x:Static v:HexBrushConverter.Instance}}" />
+                            </DataTrigger>
+                        </HierarchicalDataTemplate.Triggers>
+                    </HierarchicalDataTemplate>
+                    <!-- A group (by environment or database type): its colour or logo, its name, how many connections -->
+                    <HierarchicalDataTemplate DataType="{x:Type vm:GroupNodeViewModel}" ItemsSource="{Binding Children}">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Width="9" Height="9" Margin="0,0,8,0" VerticalAlignment="Center"
+                                     Fill="{Binding Environment, Converter={x:Static v:EnvironmentBrushConverter.Instance}}"
+                                     Visibility="{Binding IsEnvironment, Converter={StaticResource BoolToVisibility}}" />
+                            <v:ProviderMarkView Mark="{Binding Mark}" Size="16" Margin="0,0,8,0" VerticalAlignment="Center"
+                                                Visibility="{Binding IsDatabaseType, Converter={StaticResource BoolToVisibility}}" />
+                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding Count, StringFormat=' ({0})'}" Foreground="{DynamicResource Brush.TextMuted}" VerticalAlignment="Center" />
+                        </StackPanel>
                     </HierarchicalDataTemplate>
                     <HierarchicalDataTemplate DataType="{x:Type vm:ConnectionNodeViewModel}" ItemsSource="{Binding Children}">
                         <StackPanel Orientation="Horizontal" ToolTip="{Binding Error}" ToolTipService.IsEnabled="{Binding HasError}">

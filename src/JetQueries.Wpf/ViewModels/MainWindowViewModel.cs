@@ -328,7 +328,7 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     /// <summary>Whether the compact density is in effect (View > Compact mode).</summary>
-    public bool IsCompact => _appearance?.Current.CompactMode == true;
+    public bool IsCompact => _appearance?.Current.EffectiveDensity < 0;
 
     /// <summary>View > Compact mode: switches the density at once and remembers it.</summary>
     [RelayCommand]
@@ -339,7 +339,8 @@ public partial class MainWindowViewModel : ObservableObject
             return;
         }
 
-        var settings = _appearance.Current with { CompactMode = !_appearance.Current.CompactMode };
+        var compact = !IsCompact;
+        var settings = _appearance.Current with { CompactMode = compact, DensityLevel = compact ? -1 : 0 };
         _appearance.Apply(settings);
         OnPropertyChanged(nameof(IsCompact));
         if (_store is { } store && _jobs is { } jobs)

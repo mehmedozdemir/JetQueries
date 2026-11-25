@@ -189,7 +189,7 @@
   <data name="ExecuteParametersFailed" xml:space="preserve"><value>Parametreler okunamadı: {0}</value></data>
   <data name="MenuCompactMode" xml:space="preserve"><value>Kompakt mod</value></data>
   <data name="FieldDensity" xml:space="preserve"><value>Arayüz yoğunluğu</value></data>
-  <data name="SettingDensityInfo" xml:space="preserve"><value>Kompakt: JetBrains IDE'lerindeki gibi daha alçak araç çubukları, satırlar, sekmeler ve kutular; yazı boyutu değişmez.</value></data>
+  <data name="SettingDensityInfo" xml:space="preserve"><value>Çok sıkıdan genişe: araç çubuklarının, satırların, sekmelerin ve kutuların yüksekliği ve çevrelerindeki boşluk; yazı boyutu değişmez.</value></data>
   <data name="DensityNormal" xml:space="preserve"><value>Normal</value></data>
   <data name="DensityCompact" xml:space="preserve"><value>Kompakt</value></data>
   <data name="UpdateIdle" xml:space="preserve"><value>Henüz denetlenmedi.</value></data>
@@ -1085,6 +1085,32 @@
   <data name="Scheme_Light_Sepia" xml:space="preserve"><value>Sepya (yumuşak)</value></data>
   <data name="Scheme_Light_Sage" xml:space="preserve"><value>Adaçayı (yumuşak)</value></data>
   <data name="Scheme_Light_Mist" xml:space="preserve"><value>Sis (yumuşak)</value></data>
+  <data name="DensityVeryCompact" xml:space="preserve"><value>Çok sıkı</value></data>
+  <data name="DensityComfortable" xml:space="preserve"><value>Rahat</value></data>
+  <data name="DensitySpacious" xml:space="preserve"><value>Geniş</value></data>
+  <data name="DensityDenserTip" xml:space="preserve"><value>Daha sıkı</value></data>
+  <data name="DensityLooserTip" xml:space="preserve"><value>Daha geniş</value></data>
+  <data name="EnvironmentUnspecifiedGroup" xml:space="preserve"><value>Ortamı belirtilmemiş</value></data>
+  <data name="ExplorerGroupBy" xml:space="preserve"><value>Gruplama</value></data>
+  <data name="ExplorerGroupFolders" xml:space="preserve"><value>Klasörler</value></data>
+  <data name="ExplorerGroupEnvironment" xml:space="preserve"><value>Ortam</value></data>
+  <data name="ExplorerGroupType" xml:space="preserve"><value>Veritabanı türü</value></data>
+  <data name="FolderColor" xml:space="preserve"><value>Renk</value></data>
+  <data name="FolderColorNone" xml:space="preserve"><value>Renk yok</value></data>
+  <data name="FolderColor_Red" xml:space="preserve"><value>Kırmızı</value></data>
+  <data name="FolderColor_Orange" xml:space="preserve"><value>Turuncu</value></data>
+  <data name="FolderColor_Yellow" xml:space="preserve"><value>Sarı</value></data>
+  <data name="FolderColor_Green" xml:space="preserve"><value>Yeşil</value></data>
+  <data name="FolderColor_Teal" xml:space="preserve"><value>Turkuaz</value></data>
+  <data name="FolderColor_Blue" xml:space="preserve"><value>Mavi</value></data>
+  <data name="FolderColor_Purple" xml:space="preserve"><value>Mor</value></data>
+  <data name="FolderColor_Pink" xml:space="preserve"><value>Pembe</value></data>
+  <data name="FolderColor_Gray" xml:space="preserve"><value>Gri</value></data>
+  <data name="PickedConnect" xml:space="preserve"><value>Seçilen bağlantıları bağla</value></data>
+  <data name="PickedDisconnect" xml:space="preserve"><value>Seçilen bağlantıların bağlantısını kes</value></data>
+  <data name="PickedDelete" xml:space="preserve"><value>Seçilen bağlantıları sil…</value></data>
+  <data name="DeleteManyConfirmMessage" xml:space="preserve"><value>Bu {0} bağlantı silinsin mi? {1}
+Kayıtlı parolaları da kaldırılır.</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Tümünü temizle</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Filtreyi kaldır</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} / {1:N0} satır</value></data>
