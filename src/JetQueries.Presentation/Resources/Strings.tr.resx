@@ -432,6 +432,8 @@
   <data name="SettingLanguageInfo" xml:space="preserve"><value>Menülerin ve mesajların dili. Sayılar ve tarihler Windows'un bölge biçimine uyar. Bir sonraki açılışta geçerli olur.</value></data>
   <data name="HistoryRowsFetched" xml:space="preserve"><value>{0:N0} satır alındı</value></data>
   <data name="HistoryRowsAffected" xml:space="preserve"><value>{0:N0} satır etkilendi</value></data>
+  <data name="DatabaseFilterPlaceholder" xml:space="preserve"><value>Veritabanlarını filtrele…</value></data>
+  <data name="DatabaseFilterNone" xml:space="preserve"><value>Eşleşen veritabanı yok.</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Tümünü temizle</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Filtreyi kaldır</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} / {1:N0} satır</value></data>

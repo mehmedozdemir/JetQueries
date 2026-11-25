@@ -162,6 +162,8 @@ public static class Strings
     public static string FilterClear => Get(nameof(FilterClear));
     public static string FilterValueRequired => Get(nameof(FilterValueRequired));
     public static string FilterClearAll => Get(nameof(FilterClearAll));
+    public static string DatabaseFilterPlaceholder => Get(nameof(DatabaseFilterPlaceholder));
+    public static string DatabaseFilterNone => Get(nameof(DatabaseFilterNone));
     public static string HistoryRowsFetched => Get(nameof(HistoryRowsFetched));
     public static string HistoryRowsAffected => Get(nameof(HistoryRowsAffected));
     public static string LanguageSystem => Get(nameof(LanguageSystem));

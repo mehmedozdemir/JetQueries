@@ -514,6 +514,28 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
     /// <summary>The databases (or, for Oracle, schemas) of the connection, for the window's database selector.</summary>
     public ObservableCollection<string> Databases { get; } = [];
 
+    /// <summary>Text the database picker's list is narrowed by (any part of the name, ignoring case); empty shows all.</summary>
+    [ObservableProperty]
+    public partial string DatabaseFilter { get; set; } = string.Empty;
+
+    /// <summary>The databases (schemas) whose names contain <see cref="DatabaseFilter"/>, in the server's order.</summary>
+    public ObservableCollection<string> ShownDatabases { get; } = [];
+
+    partial void OnDatabaseFilterChanged(string value) => FilterDatabases();
+
+    private void FilterDatabases()
+    {
+        var filter = DatabaseFilter.Trim();
+        ShownDatabases.Clear();
+        foreach (var name in Databases)
+        {
+            if (filter.Length == 0 || CultureInfo.CurrentCulture.CompareInfo.IndexOf(name, filter, CompareOptions.IgnoreCase) >= 0)
+            {
+                ShownDatabases.Add(name);
+            }
+        }
+    }
+
     /// <summary>
     /// The window's current database (schema for Oracle), as the server reports it; it follows a <c>USE</c> run in
     /// the window. Choosing another one switches the window's connection, as SSMS's database selector does.
@@ -1021,6 +1043,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
                 Databases.Add(current);
             }
 
+            FilterDatabases();
             SelectedDatabase = current;
             CanChangeDatabase = kind is not null;
             SwitchesSchema = kind == DatabaseContextKind.Schema;

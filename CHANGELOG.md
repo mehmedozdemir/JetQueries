@@ -6,6 +6,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 ## [Unreleased]
 
 ### Added
+- Query toolbar: the database (schema) picker has a filter box: type any part of a name (Turkish-aware, ignoring case); Down goes into the list, Enter takes the highlighted or first match, Esc closes. For servers with hundreds of databases.
 - Query toolbar: the tab's connection, with its environment's colour, beside the database; another open connection can be chosen there (not while running or with a transaction open). "Çalıştır" is a named button. The tab's tooltip names the connection and the database.
 - Status bar: the caret's line and column, and how many characters are selected.
 - Explorer: SQL Server's own databases (master, model, msdb, tempdb) are kept in a closed "Sistem veritabanları" folder after the user's. SDK (preview): `ISystemObjectClassifier`.

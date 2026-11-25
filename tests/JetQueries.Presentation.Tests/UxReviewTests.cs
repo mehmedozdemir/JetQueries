@@ -73,4 +73,25 @@ public sealed class UxReviewTests
         query.HasOpenTransaction = true;
         Assert.False(query.CanChangeSession);
     }
+
+    [Fact]
+    public async Task The_database_list_is_narrowed_by_any_part_of_the_name()
+    {
+        CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("tr-TR");
+        await using var env = new TestEnvironment();
+        var query = env.Query();
+        foreach (var name in new[] { "Cards", "İşlemler", "master", "CardsArchive", "msdb" })
+        {
+            query.Databases.Add(name);
+        }
+
+        query.DatabaseFilter = "card";
+        Assert.Equal(["Cards", "CardsArchive"], query.ShownDatabases);
+        query.DatabaseFilter = "işlem";
+        Assert.Equal(["İşlemler"], query.ShownDatabases);
+        query.DatabaseFilter = "zzz";
+        Assert.Empty(query.ShownDatabases);
+        query.DatabaseFilter = string.Empty;
+        Assert.Equal(5, query.ShownDatabases.Count);
+    }
 }

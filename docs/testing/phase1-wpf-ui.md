@@ -710,3 +710,10 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] History: a SELECT says "satır alındı", an UPDATE "satır etkilendi"; dates line up on the right; the chosen row is tinted, not boxed.
 - [ ] Settings > Görünüm > Dil: choose English, restart: menus and messages are English, numbers still Turkish style; back to "Windows dili".
 - [ ] Turkish screens say "Sütun", "Veri türü" (details, import, export, record view).
+
+## Database picker with a filter
+- [ ] Click the database box in a query tab: a list opens with the caret in "Veritabanlarını filtrele…", the current database highlighted.
+- [ ] Type part of a name (e.g. "arş" for "Arşiv"): only matching databases remain; nothing matches: "Eşleşen veritabanı yok."
+- [ ] Enter takes the first match (or the one chosen with Down / Up); a click takes one; the editor gets the focus back and the next run goes to that database.
+- [ ] Esc or a click outside closes without changing; clicking the box again while open closes it.
+- [ ] Oracle: the same picker lists schemas.
