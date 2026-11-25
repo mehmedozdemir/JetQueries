@@ -1,0 +1,228 @@
+<UserControl x:Class="JetQueries.Wpf.Views.ActivityMonitorView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:UiKit.Controls;assembly=UiKit.Wpf"
+             xmlns:res="clr-namespace:JetQueries.Presentation.Resources;assembly=JetQueries.Presentation"
+             xmlns:vm="clr-namespace:JetQueries.Presentation.ViewModels;assembly=JetQueries.Presentation"
+             xmlns:e="clr-namespace:JetQueries.Wpf.Editor"
+             xmlns:v="clr-namespace:JetQueries.Wpf.Views">
+    <UserControl.InputBindings>
+        <KeyBinding Key="F5" Command="{Binding RefreshCommand}" />
+    </UserControl.InputBindings>
+    <UserControl.Resources>
+        <Style x:Key="Label" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+            <Setter Property="FontSize" Value="{DynamicResource FontSize.Small}" />
+            <Setter Property="Margin" Value="0,3,12,3" />
+        </Style>
+        <Style x:Key="Value" TargetType="TextBlock">
+            <Setter Property="Margin" Value="0,3,0,3" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+        <!-- A counter: number over its name -->
+        <Style x:Key="Counter" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource Brush.Chip}" />
+            <Setter Property="CornerRadius" Value="{StaticResource Radius.Control}" />
+            <Setter Property="Padding" Value="12,6" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="MinWidth" Value="92" />
+        </Style>
+    </UserControl.Resources>
+
+    <DockPanel Margin="12,4,12,10">
+        <!-- Header: what and where; refresh, every N seconds, when -->
+        <DockPanel DockPanel.Dock="Top" Margin="0,4,0,10">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="{Binding UpdatedText}" Style="{StaticResource Text.Caption}" VerticalAlignment="Center" Margin="0,0,12,0" />
+                <ProgressBar IsIndeterminate="{Binding IsLoading}" Width="40" VerticalAlignment="Center" Margin="0,0,10,0"
+                             Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}" />
+                <CheckBox x:Name="AutoRefreshBox" Content="{x:Static res:Strings.ActivityAutoRefresh}" IsChecked="{Binding AutoRefresh}"
+                          ToolTip="{x:Static res:Strings.ActivityAutoRefreshTip}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                <ComboBox x:Name="IntervalBox" ItemsSource="{x:Static vm:ActivityMonitorViewModel.Intervals}" SelectedItem="{Binding Interval}"
+                          Width="78" Height="28" IsEnabled="{Binding AutoRefresh}" Margin="0,0,8,0">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock><Run Text="{Binding Mode=OneWay}" /><Run Text=" " /><Run Text="{x:Static res:Strings.UnitSeconds}" /></TextBlock>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <Button x:Name="RefreshButton" Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.Refresh}"
+                        Command="{Binding RefreshCommand}" ToolTip="{x:Static res:Strings.ActivityRefreshTip}" />
+            </StackPanel>
+            <Border Width="34" Height="34" CornerRadius="10" Background="{DynamicResource Brush.AccentSoft}" Margin="0,0,10,0">
+                <TextBlock Text="&#xE9D9;" Style="{StaticResource Text.Icon}" FontSize="16" Foreground="{DynamicResource Brush.Accent}" />
+            </Border>
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Text="{x:Static res:Strings.ActivityOpen}" Style="{StaticResource Text.Subtitle}" />
+                <StackPanel Orientation="Horizontal">
+                    <Ellipse Width="7" Height="7" Margin="0,0,6,0" VerticalAlignment="Center"
+                             Fill="{Binding Environment, Converter={x:Static v:EnvironmentBrushConverter.Instance}}" />
+                    <TextBlock Text="{Binding ConnectionName}" Style="{StaticResource Text.Caption}" />
+                </StackPanel>
+            </StackPanel>
+        </DockPanel>
+
+        <!-- Counters; the filter and what to include -->
+        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                <CheckBox x:Name="ShowIdleBox" Content="{x:Static res:Strings.ActivityShowIdle}" IsChecked="{Binding ShowIdle}" VerticalAlignment="Center" Margin="12,0,12,0" />
+                <CheckBox x:Name="ShowSystemBox" Content="{x:Static res:Strings.ActivityShowSystem}" IsChecked="{Binding ShowSystem}" VerticalAlignment="Center" Margin="0,0,12,0" />
+                <c:SearchBox x:Name="FilterBox" Width="260" Height="28" FontSize="{DynamicResource FontSize.Small}"
+                             Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged, Delay=200}" c:Ui.Placeholder="{x:Static res:Strings.ActivityFilter}" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Border Style="{StaticResource Counter}">
+                    <StackPanel>
+                        <TextBlock x:Name="SessionCountText" Text="{Binding SessionCount}" FontSize="18" FontWeight="SemiBold" />
+                        <TextBlock Text="{x:Static res:Strings.ActivitySessions}" Style="{StaticResource Text.Caption}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Counter}">
+                    <StackPanel>
+                        <TextBlock Text="{Binding ActiveCount}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource Brush.Accent}" />
+                        <TextBlock Text="{x:Static res:Strings.ActivityActive}" Style="{StaticResource Text.Caption}" />
+                    </StackPanel>
+                </Border>
+                <Border x:Name="BlockedCounter">
+                    <Border.Style>
+                        <Style TargetType="Border" BasedOn="{StaticResource Counter}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasBlocking}" Value="True">
+                                    <Setter Property="BorderBrush" Value="{DynamicResource Brush.Danger}" />
+                                    <Setter Property="BorderThickness" Value="1" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <StackPanel>
+                        <TextBlock x:Name="BlockedCountText" Text="{Binding BlockedCount}" FontSize="18" FontWeight="SemiBold">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasBlocking}" Value="True">
+                                            <Setter Property="Foreground" Value="{DynamicResource Brush.Danger}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <TextBlock Text="{x:Static res:Strings.ActivityBlocked}" Style="{StaticResource Text.Caption}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Counter}">
+                    <StackPanel>
+                        <TextBlock Text="{Binding HeadBlockerCount}" FontSize="18" FontWeight="SemiBold" />
+                        <TextBlock Text="{x:Static res:Strings.ActivityHeadBlockers}" Style="{StaticResource Text.Caption}" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </DockPanel>
+
+        <!-- Only part of the server is visible; the last read failed -->
+        <Border x:Name="LimitationBanner" DockPanel.Dock="Top" Margin="0,0,0,8" Padding="10,6" CornerRadius="{StaticResource Radius.Control}"
+                Background="{DynamicResource Brush.SurfaceAlt}" BorderBrush="{DynamicResource Brush.Warning}" BorderThickness="3,0,0,0"
+                Visibility="{Binding Limitation, Converter={x:Static v:NotNullToVisibilityConverter.Instance}}">
+            <DockPanel>
+                <TextBlock Text="{x:Static c:Icons.Warning}" Style="{StaticResource Text.Icon}" FontSize="13" Foreground="{DynamicResource Brush.Warning}" Margin="0,0,8,0" />
+                <TextBlock Text="{Binding Limitation}" TextWrapping="Wrap" />
+            </DockPanel>
+        </Border>
+        <Border x:Name="ErrorBanner" DockPanel.Dock="Top" Margin="0,0,0,8" Padding="10,6" CornerRadius="{StaticResource Radius.Control}"
+                Background="{DynamicResource Brush.SurfaceAlt}" BorderBrush="{DynamicResource Brush.Danger}" BorderThickness="3,0,0,0"
+                Visibility="{Binding Error, Converter={x:Static v:NotNullToVisibilityConverter.Instance}}">
+            <DockPanel>
+                <TextBlock Text="{x:Static c:Icons.Error}" Style="{StaticResource Text.Icon}" FontSize="13" Foreground="{DynamicResource Brush.Danger}" Margin="0,0,8,0" />
+                <TextBlock Text="{Binding Error}" TextWrapping="Wrap" />
+            </DockPanel>
+        </Border>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" MinWidth="360" />
+                <ColumnDefinition Width="8" />
+                <ColumnDefinition Width="380" MinWidth="260" />
+            </Grid.ColumnDefinitions>
+
+            <!-- The sessions -->
+            <Border Style="{StaticResource Card.Surface}">
+                <Grid>
+                    <c:VirtualGrid x:Name="SessionsGrid" NullText="" ShowTypeTags="False" ShowFilterButtons="False" />
+                    <TextBlock x:Name="EmptyText" Text="{x:Static res:Strings.ActivityEmpty}" Style="{StaticResource Text.Caption}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed" />
+                </Grid>
+            </Border>
+
+            <GridSplitter Grid.Column="1" Width="8" HorizontalAlignment="Stretch" ResizeBehavior="PreviousAndNext" />
+
+            <DockPanel Grid.Column="2">
+                <!-- Who blocks whom: each head blocker, the sessions waiting on it under it -->
+                <Border x:Name="ChainsCard" DockPanel.Dock="Top" Style="{StaticResource Card.Surface}" Padding="10,8" Margin="0,0,0,8"
+                        Visibility="{Binding HasBlocking, Converter={StaticResource BoolToVisibility}}">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,2">
+                            <TextBlock Text="{x:Static c:Icons.Warning}" Style="{StaticResource Text.Icon}" FontSize="12" Foreground="{DynamicResource Brush.Danger}" Margin="0,0,6,0" />
+                            <TextBlock Text="{x:Static res:Strings.ActivityChains}" FontWeight="SemiBold" />
+                        </StackPanel>
+                        <TextBlock DockPanel.Dock="Top" Text="{x:Static res:Strings.ActivityChainsHint}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="0,0,0,6" />
+                        <TreeView x:Name="ChainsTree" ItemsSource="{Binding BlockingChains}" MaxHeight="220" BorderThickness="0" Background="Transparent"
+                                  SelectedItemChanged="OnChainSelected">
+                            <TreeView.ItemContainerStyle>
+                                <Style TargetType="TreeViewItem" BasedOn="{StaticResource {x:Type TreeViewItem}}">
+                                    <Setter Property="IsExpanded" Value="True" />
+                                </Style>
+                            </TreeView.ItemContainerStyle>
+                            <TreeView.ItemTemplate>
+                                <HierarchicalDataTemplate DataType="{x:Type vm:BlockingNode}" ItemsSource="{Binding Children}">
+                                    <TextBlock Text="{Binding Text}" FontFamily="{DynamicResource Font.Code}" FontSize="{DynamicResource FontSize.Small}" />
+                                </HierarchicalDataTemplate>
+                            </TreeView.ItemTemplate>
+                        </TreeView>
+                    </DockPanel>
+                </Border>
+
+                <!-- The chosen session -->
+                <Border Style="{StaticResource Card.Surface}" Padding="12,10">
+                    <Grid>
+                        <TextBlock Text="{x:Static res:Strings.ActivityNoSelection}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Visibility="{Binding HasSelection, Converter={x:Static v:InverseBoolToVisibilityConverter.Instance}}" />
+                        <DockPanel x:Name="SessionPanel" Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibility}}">
+                            <DockPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+                                <Border DockPanel.Dock="Right" Style="{StaticResource Badge}" ToolTip="{x:Static res:Strings.ActivityOwn}"
+                                        Visibility="{Binding Selected.IsOwn, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}">
+                                    <TextBlock Text="{x:Static res:Strings.ActivityOwn}" FontSize="{DynamicResource FontSize.Small}" />
+                                </Border>
+                                <TextBlock Text="{Binding Selected.Title}" Style="{StaticResource Text.Subtitle}" />
+                            </DockPanel>
+                            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+                                <Button x:Name="OpenSqlButton" Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="&#xE8A7;" Content="{x:Static res:Strings.ActivityOpenSql}"
+                                        Command="{Binding OpenSqlCommand}" CommandParameter="{Binding Selected}" Margin="0,0,6,0" />
+                                <Button x:Name="KillButton" Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="&#xE711;" Content="{x:Static res:Strings.ActivityKill}"
+                                        Command="{Binding KillCommand}" CommandParameter="{Binding Selected}" Foreground="{DynamicResource Brush.Danger}"
+                                        Visibility="{Binding CanKillSessions, Converter={StaticResource BoolToVisibility}}" />
+                            </StackPanel>
+                            <ItemsControl x:Name="SessionFacts" DockPanel.Dock="Top" Margin="0,0,0,8" ItemsSource="{Binding Selected.Details}"
+                                          Grid.IsSharedSizeScope="True" Focusable="False">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Label" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding Key}" Style="{StaticResource Label}" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Value}" Style="{StaticResource Value}" ToolTip="{Binding Value}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Border BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" CornerRadius="{StaticResource Radius.Control}" Padding="2">
+                                <e:SqlEditor x:Name="SqlView" IsReadOnly="True" />
+                            </Border>
+                        </DockPanel>
+                    </Grid>
+                </Border>
+            </DockPanel>
+        </Grid>
+    </DockPanel>
+</UserControl>

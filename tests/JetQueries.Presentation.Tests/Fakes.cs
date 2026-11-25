@@ -370,6 +370,24 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
     /// <summary>Begin / commit / rollback calls, in order.</summary>
     public List<string> TransactionLog { get; } = [];
 
+    /// <summary>What the activity monitor reads; the sessions it was asked to end.</summary>
+    public ActivitySnapshot? Activity { get; set; }
+
+    public List<string> Killed { get; } = [];
+
+    internal Task<ActivitySnapshot> ReadActivity() => Task.FromResult(Activity ?? new ActivitySnapshot(DateTimeOffset.Now, [], null));
+
+    internal Task Kill(string id)
+    {
+        Killed.Add(id);
+        if (Activity is { } activity)
+        {
+            Activity = activity with { Sessions = [.. activity.Sessions.Where(s => s.Id != id).Select(s => s.BlockedBy == id ? s with { BlockedBy = null, WaitType = null } : s)] };
+        }
+
+        return Task.CompletedTask;
+    }
+
     /// <summary>Whether the fake server holds an open transaction; the error a commit fails with.</summary>
     public bool TransactionOpen { get; set; }
 
@@ -401,8 +419,12 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
         return Task.FromResult<IDatabaseConnection>(SupportsDatabaseContext ? new FakeContextConnection(this) : new FakeConnection(this));
     }
 
-    private sealed class FakeConnection(FakeProvider owner) : IDatabaseConnection, ITransactionControl
+    private sealed class FakeConnection(FakeProvider owner) : IDatabaseConnection, ITransactionControl, IActivityMonitor
     {
+        public Task<ActivitySnapshot> GetActivityAsync(CancellationToken cancellationToken) => OwnerOf().ReadActivity();
+
+        public Task KillSessionAsync(string sessionId, CancellationToken cancellationToken) => OwnerOf().Kill(sessionId);
+
         public Task BeginAsync(CancellationToken cancellationToken) => owner.Transaction("begin", open: true);
 
         public Task<bool> HasOpenTransactionAsync(CancellationToken cancellationToken) => Task.FromResult(owner.TransactionOpen);
@@ -410,6 +432,8 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
         public Task CommitAsync(CancellationToken cancellationToken) => owner.Transaction("commit", open: false);
 
         public Task RollbackAsync(CancellationToken cancellationToken) => owner.Transaction("rollback", open: false);
+
+        private FakeProvider OwnerOf() => owner;
 
         public IQueryExecutor Executor { get; } = new FakeExecutor(owner, null);
 
@@ -419,8 +443,12 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
     }
 
     /// <summary>A connection with a current database that starts at "Cards" and follows USE.</summary>
-    internal sealed class FakeContextConnection : IDatabaseConnection, IDatabaseContext, ITransactionControl
+    internal sealed class FakeContextConnection : IDatabaseConnection, IDatabaseContext, ITransactionControl, IActivityMonitor
     {
+        public Task<ActivitySnapshot> GetActivityAsync(CancellationToken cancellationToken) => OwnerOf().ReadActivity();
+
+        public Task KillSessionAsync(string sessionId, CancellationToken cancellationToken) => OwnerOf().Kill(sessionId);
+
         private readonly FakeProvider owner;
 
         public FakeContextConnection(FakeProvider owner)
@@ -430,6 +458,8 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
             Executor = new FakeExecutor(owner, this);
             Metadata = new FakeMetadata(owner);
         }
+
+        private FakeProvider OwnerOf() => owner;
 
         public string Current { get; set; } = "Cards";
 
@@ -564,4 +594,19 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
         public Task<string?> GetDefinitionAsync(DatabaseObject target, CancellationToken cancellationToken) =>
             Task.FromResult(target.Kind == DatabaseObjectKinds.View ? $"CREATE VIEW {target.Name} AS SELECT 1 AS n;" : null);
     }
+}
+
+/// <summary>A server's sessions for the activity monitor's tests: a blocking chain 52 → 53 → 54, a running query, idle and system sessions.</summary>
+public static class FakeActivity
+{
+    public static ActivitySnapshot Snapshot() => new(DateTimeOffset.Now,
+    [
+        new("5") { Login = "sa", Status = "background", Command = "LAZY WRITER", IsUserSession = false },
+        new("51") { Login = "app", Host = "PC-1", Program = "JetQueries", Status = "running", Command = "SELECT", Sql = "SELECT * FROM sys.dm_exec_sessions" },
+        new("52") { Login = "ali", Host = "PC-2", Program = "SSMS", Database = "Cards", Status = "sleeping", OpenTransactions = 1, Sql = "UPDATE dbo.Cards SET Balance = 0 WHERE Id = 1" },
+        new("53") { Login = "ayse", Host = "PC-3", Database = "Cards", Status = "suspended", Command = "SELECT", WaitType = "LCK_M_S", WaitTime = TimeSpan.FromSeconds(12.4), BlockedBy = "52", Sql = "SELECT * FROM dbo.Cards" },
+        new("54") { Login = "batch", Host = "SRV", Database = "Cards", Status = "suspended", Command = "UPDATE", WaitType = "LCK_M_X", WaitTime = TimeSpan.FromSeconds(3), BlockedBy = "53", Sql = "UPDATE dbo.Cards SET City = N'İzmir'" },
+        new("55") { Login = "report", Host = "PC-4", Database = "Sales", Status = "running", Command = "SELECT", Elapsed = TimeSpan.FromSeconds(75), CpuTime = TimeSpan.FromMilliseconds(850), Reads = 12345, Sql = "SELECT SUM(Total) FROM dbo.Orders" },
+        new("56") { Login = "idle", Host = "PC-5", Status = "sleeping" },
+    ], OwnSessionId: "51");
 }

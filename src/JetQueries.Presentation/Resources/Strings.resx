@@ -434,6 +434,57 @@
   <data name="HistoryRowsAffected" xml:space="preserve"><value>{0:N0} rows affected</value></data>
   <data name="DatabaseFilterPlaceholder" xml:space="preserve"><value>Filter databases…</value></data>
   <data name="DatabaseFilterNone" xml:space="preserve"><value>No database matches.</value></data>
+  <data name="ActivityTitle" xml:space="preserve"><value>Activity</value></data>
+  <data name="ActivityOpen" xml:space="preserve"><value>Activity monitor</value></data>
+  <data name="ActivityOpenTip" xml:space="preserve"><value>The server's sessions, what they run and wait for, who blocks whom</value></data>
+  <data name="ActivityLimited" xml:space="preserve"><value>Only your own sessions are visible: the login needs the VIEW SERVER STATE permission to see the whole server.</value></data>
+  <data name="ActivityUpdated" xml:space="preserve"><value>Updated {0}</value></data>
+  <data name="ActivityKillTitle" xml:space="preserve"><value>End session</value></data>
+  <data name="ActivityKillMessage" xml:space="preserve"><value>End session {0} ({1}) on {2}?
+
+What it is running stops and its open transaction is rolled back; the client gets an error.</value></data>
+  <data name="ActivityKillProduction" xml:space="preserve"><value>{0} is a PRODUCTION server. End the session anyway?</value></data>
+  <data name="ActivityUnsupported" xml:space="preserve"><value>This database type does not report its sessions.</value></data>
+  <data name="ActivityStateBlocking" xml:space="preserve"><value>blocking ({0})</value></data>
+  <data name="ActivityStateBlocked" xml:space="preserve"><value>blocked</value></data>
+  <data name="ActivityIdleInTransaction" xml:space="preserve"><value>idle, transaction open</value></data>
+  <data name="UnitSeconds" xml:space="preserve"><value>s</value></data>
+  <data name="ActivitySessions" xml:space="preserve"><value>Sessions</value></data>
+  <data name="ActivityActive" xml:space="preserve"><value>Running</value></data>
+  <data name="ActivityBlocked" xml:space="preserve"><value>Blocked</value></data>
+  <data name="ActivityHeadBlockers" xml:space="preserve"><value>Head blockers</value></data>
+  <data name="ActivityFilter" xml:space="preserve"><value>Filter by any text…</value></data>
+  <data name="ActivityShowIdle" xml:space="preserve"><value>Idle sessions</value></data>
+  <data name="ActivityShowSystem" xml:space="preserve"><value>System sessions</value></data>
+  <data name="ActivityAutoRefresh" xml:space="preserve"><value>Every</value></data>
+  <data name="ActivityAutoRefreshTip" xml:space="preserve"><value>Read again on its own while the tab is shown</value></data>
+  <data name="ActivityRefreshTip" xml:space="preserve"><value>Read now (F5)</value></data>
+  <data name="ActivityChains" xml:space="preserve"><value>Blocking chains</value></data>
+  <data name="ActivityChainsHint" xml:space="preserve"><value>The first session holds what the ones under it wait for.</value></data>
+  <data name="ActivitySession" xml:space="preserve"><value>Session</value></data>
+  <data name="ActivityNoSelection" xml:space="preserve"><value>Choose a session to see what it runs.</value></data>
+  <data name="ActivityOpenSql" xml:space="preserve"><value>Open in a query tab</value></data>
+  <data name="ActivityKill" xml:space="preserve"><value>End session…</value></data>
+  <data name="ActivityOwn" xml:space="preserve"><value>This monitor's own session</value></data>
+  <data name="ActivityEmpty" xml:space="preserve"><value>No session matches.</value></data>
+  <data name="ActivityColId" xml:space="preserve"><value>Session</value></data>
+  <data name="ActivityColState" xml:space="preserve"><value>State</value></data>
+  <data name="ActivityColLogin" xml:space="preserve"><value>Login</value></data>
+  <data name="ActivityColHost" xml:space="preserve"><value>Host</value></data>
+  <data name="ActivityColProgram" xml:space="preserve"><value>Program</value></data>
+  <data name="ActivityColDatabase" xml:space="preserve"><value>Database</value></data>
+  <data name="ActivityColCommand" xml:space="preserve"><value>Command</value></data>
+  <data name="ActivityColWait" xml:space="preserve"><value>Wait</value></data>
+  <data name="ActivityColWaitTime" xml:space="preserve"><value>Waited</value></data>
+  <data name="ActivityColBlockedBy" xml:space="preserve"><value>Blocked by</value></data>
+  <data name="ActivityColElapsed" xml:space="preserve"><value>Running for</value></data>
+  <data name="ActivityColCpu" xml:space="preserve"><value>CPU</value></data>
+  <data name="ActivityColReads" xml:space="preserve"><value>Reads</value></data>
+  <data name="ActivityColWrites" xml:space="preserve"><value>Writes</value></data>
+  <data name="ActivityColTransactions" xml:space="preserve"><value>Open tran.</value></data>
+  <data name="ActivityColLogin2" xml:space="preserve"><value>Logged in</value></data>
+  <data name="ActivityColSql" xml:space="preserve"><value>SQL</value></data>
+  <data name="ActivityDisconnected" xml:space="preserve"><value>The connection was closed. Connect again and reopen the monitor.</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Clear all</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Remove filter</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} of {1:N0} rows</value></data>

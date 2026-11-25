@@ -14,6 +14,7 @@
         <KeyBinding Gesture="Ctrl+Shift+S" Command="{Binding Documents.SaveAsCommand}" />
         <KeyBinding Gesture="Ctrl+Shift+N" Command="{Binding GoToObjectCommand}" />
         <KeyBinding Gesture="Ctrl+Shift+H" Command="{Binding ShowHistoryCommand}" />
+        <KeyBinding Gesture="Ctrl+Shift+A" Command="{Binding ShowActivityCommand}" />
         <KeyBinding Gesture="Ctrl+Shift+Q" Command="{Binding ShowSavedQueriesCommand}" />
         <KeyBinding Gesture="Ctrl+Shift+K" Command="{Binding SavedQueries.SaveCurrentCommand}" />
         <KeyBinding Key="F1" Command="{Binding ShowShortcutsCommand}" />
@@ -86,6 +87,8 @@
                         </MenuItem>
                         <MenuItem Header="{x:Static res:Strings.MenuTools}">
                             <MenuItem Header="{x:Static res:Strings.MenuHistory}" c:Ui.Icon="{x:Static c:Icons.History}" InputGestureText="Ctrl+Shift+H" Command="{Binding ShowHistoryCommand}" />
+                            <MenuItem x:Name="ActivityMenuItem" Header="{x:Static res:Strings.ActivityOpen}" c:Ui.Icon="&#xE9D9;" InputGestureText="Ctrl+Shift+A"
+                                      Command="{Binding ShowActivityCommand}" ToolTip="{x:Static res:Strings.ActivityOpenTip}" />
                             <MenuItem Header="{x:Static res:Strings.MenuSavedQueries}" c:Ui.Icon="&#xE734;" InputGestureText="Ctrl+Shift+Q" Command="{Binding ShowSavedQueriesCommand}" />
                             <MenuItem Header="{x:Static res:Strings.MenuCommandPalette}" c:Ui.Icon="&#xE721;" InputGestureText="Ctrl+Shift+P" Click="OnCommandPaletteClick" />
                             <MenuItem Header="{x:Static res:Strings.MenuShortcuts}" c:Ui.Icon="&#xE765;" InputGestureText="F1" Command="{Binding ShowShortcutsCommand}" />

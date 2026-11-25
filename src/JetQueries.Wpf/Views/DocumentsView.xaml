@@ -41,6 +41,11 @@
                             <v:KeyValueView Margin="0,6,0,0" />
                         </DataTemplate>
                     </v:DocumentTemplateSelector.Key>
+                    <v:DocumentTemplateSelector.Activity>
+                        <DataTemplate>
+                            <v:ActivityMonitorView Margin="0,6,0,0" />
+                        </DataTemplate>
+                    </v:DocumentTemplateSelector.Activity>
                 </v:DocumentTemplateSelector>
             </TabControl.ContentTemplateSelector>
             <TabControl.ItemContainerStyle>

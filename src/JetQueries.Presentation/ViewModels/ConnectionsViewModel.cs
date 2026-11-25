@@ -126,7 +126,11 @@ public sealed partial class ConnectionNodeViewModel(ConnectionDefinition definit
     public bool IsProduction => Definition.Environment == ConnectionEnvironment.Production;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanMonitor))]
     public partial bool IsConnected { get; set; }
+
+    /// <summary>Open, on a provider that reports the server's sessions: the activity monitor can be opened.</summary>
+    public bool CanMonitor => IsConnected && _context?.Session.SupportsActivity == true;
 
     [ObservableProperty]
     public partial bool IsBusy { get; set; }
@@ -648,6 +652,19 @@ public partial class ConnectionsViewModel(
 
     /// <summary>A key of a key-value connection is to be shown in a tab.</summary>
     public event EventHandler<KeyValueViewModel>? KeyRequested;
+
+    /// <summary>The activity monitor of an open connection is to be shown in a tab.</summary>
+    public event EventHandler<ActivityMonitorViewModel>? ActivityRequested;
+
+    /// <summary>Opens the activity monitor (sessions, blocking) of the chosen open connection (its menu item shows only then).</summary>
+    [RelayCommand]
+    private void OpenActivity(ExplorerNodeViewModel? node)
+    {
+        if ((node ?? Selected) is ConnectionNodeViewModel { CanMonitor: true, Context.Session: var session })
+        {
+            ActivityRequested?.Invoke(this, new ActivityMonitorViewModel(session, jobs, dialogs));
+        }
+    }
 
     /// <summary>Opens a key in a tab (double-click or Enter on it).</summary>
     [RelayCommand]
