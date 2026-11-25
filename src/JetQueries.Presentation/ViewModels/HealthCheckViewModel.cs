@@ -149,7 +149,21 @@ public sealed partial class HealthCheckViewModel : ObservableObject, IAsyncDispo
     public partial int OkCount { get; set; }
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(CancelLoadCommand))]
     public partial bool IsLoading { get; set; }
+
+    // The read now running, so that it can be stopped.
+    private JetQueries.Core.Jobs.JobHandle? _load;
+
+    private Task<T> Track<T>(JetQueries.Core.Jobs.JobHandle<T> job)
+    {
+        _load = job;
+        return job.Completion;
+    }
+
+    /// <summary>Stops the read now running (the query on the server is cancelled).</summary>
+    [RelayCommand(CanExecute = nameof(IsLoading))]
+    private void CancelLoad() => _load?.Cancel();
 
     [ObservableProperty]
     public partial string CheckedText { get; set; } = string.Empty;
@@ -173,11 +187,11 @@ public sealed partial class HealthCheckViewModel : ObservableObject, IAsyncDispo
         IsLoading = true;
         try
         {
-            var findings = await _jobs.Enqueue("Health check", async context =>
+            var findings = await Track(_jobs.Enqueue("Health check", async context =>
             {
                 var channel = await ChannelAsync(context.CancellationToken).ConfigureAwait(false);
                 return await channel.Health!.CheckAsync(context.CancellationToken).ConfigureAwait(false);
-            }).Completion;
+            }));
             if (_disposed)
             {
                 return;

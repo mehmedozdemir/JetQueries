@@ -441,7 +441,7 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
     {
         public Task<DatabaseDetail> GetDatabaseDetailAsync(string database, CancellationToken cancellationToken) => Task.FromResult(FakeDatabaseDetail.Of(database));
 
-        public Task<IReadOnlyList<HealthFinding>> CheckAsync(CancellationToken cancellationToken) => Task.FromResult(FakeHealth.Findings());
+        public Task<IReadOnlyList<HealthFinding>> CheckAsync(CancellationToken cancellationToken) => FakeHealth.CheckAsync(cancellationToken);
 
         public Task<ServerOverview> GetOverviewAsync(CancellationToken cancellationToken) => Task.FromResult(OwnerOf().Overview);
 
@@ -497,7 +497,7 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
     {
         public Task<DatabaseDetail> GetDatabaseDetailAsync(string database, CancellationToken cancellationToken) => Task.FromResult(FakeDatabaseDetail.Of(database));
 
-        public Task<IReadOnlyList<HealthFinding>> CheckAsync(CancellationToken cancellationToken) => Task.FromResult(FakeHealth.Findings());
+        public Task<IReadOnlyList<HealthFinding>> CheckAsync(CancellationToken cancellationToken) => FakeHealth.CheckAsync(cancellationToken);
 
         public Task<ServerOverview> GetOverviewAsync(CancellationToken cancellationToken) => Task.FromResult(OwnerOf().Overview);
 
@@ -780,6 +780,19 @@ public static class FakeDashboard
 /// <summary>Findings of every severity and category for the health check's tests.</summary>
 public static class FakeHealth
 {
+    /// <summary>When set, a check waits until cancelled (a slow server).</summary>
+    public static bool Slow { get; set; }
+
+    public static async Task<IReadOnlyList<HealthFinding>> CheckAsync(CancellationToken cancellationToken)
+    {
+        if (Slow)
+        {
+            await Task.Delay(Timeout.Infinite, cancellationToken);
+        }
+
+        return Findings();
+    }
+
     public static IReadOnlyList<HealthFinding> Findings() =>
     [
         new("CostThreshold", HealthCategory.Performance, HealthSeverity.Warning, "Cost threshold for parallelism is the default 5")

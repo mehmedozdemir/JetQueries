@@ -117,7 +117,21 @@ public sealed partial class DatabaseDetailViewModel : ObservableObject, IAsyncDi
         [Strings.PerfColKind, Strings.DbColFinished, Strings.DbColTook, Strings.PerfColSize, Strings.DbColCompressed, Strings.DbColCopyOnly, Strings.DbColDevice];
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(CancelLoadCommand))]
     public partial bool IsLoading { get; set; }
+
+    // The read now running, so that it can be stopped.
+    private JetQueries.Core.Jobs.JobHandle? _load;
+
+    private Task<T> Track<T>(JetQueries.Core.Jobs.JobHandle<T> job)
+    {
+        _load = job;
+        return job.Completion;
+    }
+
+    /// <summary>Stops the read now running (the query on the server is cancelled).</summary>
+    [RelayCommand(CanExecute = nameof(IsLoading))]
+    private void CancelLoad() => _load?.Cancel();
 
     [ObservableProperty]
     public partial string LoadedText { get; set; } = string.Empty;
@@ -138,11 +152,11 @@ public sealed partial class DatabaseDetailViewModel : ObservableObject, IAsyncDi
         try
         {
             var database = Database;
-            var detail = await _jobs.Enqueue("Read database detail", async context =>
+            var detail = await Track(_jobs.Enqueue("Read database detail", async context =>
             {
                 var channel = await ChannelAsync(context.CancellationToken).ConfigureAwait(false);
                 return await channel.DatabaseDetails!.GetDatabaseDetailAsync(database, context.CancellationToken).ConfigureAwait(false);
-            }).Completion;
+            }));
             if (_disposed)
             {
                 return;

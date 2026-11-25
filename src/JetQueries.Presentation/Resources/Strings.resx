@@ -1024,6 +1024,7 @@ What it is running stops and its open transaction is rolled back; the client get
   <data name="DbProp_profile" xml:space="preserve"><value>Profile</value></data>
   <data name="DbProp_passwordExpires" xml:space="preserve"><value>Password expires</value></data>
   <data name="DbProp_authentication" xml:space="preserve"><value>Authentication</value></data>
+  <data name="DbaCancelTip" xml:space="preserve"><value>Stop reading (cancels the query on the server)</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Clear all</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Remove filter</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} of {1:N0} rows</value></data>

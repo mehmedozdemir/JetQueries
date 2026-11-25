@@ -45,6 +45,40 @@ public sealed class HealthCheckTests
     }
 
     [Fact]
+    public async Task A_slow_check_is_stopped_by_cancel()
+    {
+        await using var env = new TestEnvironment();
+        var definition = await env.OpenAsync(TestEnvironment.Definition("Kartlar"));
+        var session = env.Manager.Sessions.Single(s => s.Definition.Id == definition.Id);
+        await using var health = new HealthCheckViewModel(session, env.Jobs);
+        FakeHealth.Slow = true;
+        try
+        {
+            Assert.False(health.CancelLoadCommand.CanExecute(null));
+            var running = health.RunAsync();
+            for (var i = 0; i < 100 && !health.CancelLoadCommand.CanExecute(null); i++)
+            {
+                await Task.Delay(10, TestContext.Current.CancellationToken);
+            }
+
+            Assert.True(health.IsLoading);
+            Assert.True(health.CancelLoadCommand.CanExecute(null));
+            health.CancelLoadCommand.Execute(null);
+            await running.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            Assert.False(health.IsLoading);
+            Assert.Null(health.Error);
+            Assert.Empty(health.Rows);
+        }
+        finally
+        {
+            FakeHealth.Slow = false;
+        }
+
+        await health.RunAsync();
+        Assert.NotEmpty(health.Rows);
+    }
+
+    [Fact]
     public async Task Findings_come_most_severe_first_with_counts_filters_and_scripts()
     {
         await using var env = new TestEnvironment();
