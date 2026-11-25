@@ -6,6 +6,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 ## [Unreleased]
 
 ### Added
+- Query toolbar: the tab's connection, with its environment's colour, beside the database; another open connection can be chosen there (not while running or with a transaction open). "Çalıştır" is a named button. The tab's tooltip names the connection and the database.
+- Status bar: the caret's line and column, and how many characters are selected.
+- Explorer: SQL Server's own databases (master, model, msdb, tempdb) are kept in a closed "Sistem veritabanları" folder after the user's. SDK (preview): `ISystemObjectClassifier`.
+- Settings > Appearance > Language: Windows' language, Türkçe or English (takes effect at the next start; numbers and dates keep Windows' regional format).
 - Explorer: "Tümünü genişlet" opens every folder and every node already loaded (nothing new is read from a database), "Tümünü daralt" closes the tree to its top level. Both sit beside the filter box, which is now smaller (26 px, small text).
 - Explorer pin: pinned by default, beside the tabs. Unpinned, the tabs get its room and a narrow "Gezgin" rail stays at the left edge; clicking it opens the explorer over the tabs, and a click elsewhere or Esc closes it. Remembered with the layout.
 - SQL editor: a text, date, time or identifier column chosen from the completion list after WHERE, AND, OR, NOT, ON, HAVING, WHEN or in UPDATE … SET (also after a comma there) gets ` = ''` with the caret between the quotes; Unicode columns (nvarchar, nchar, ntext, nvarchar2, nclob) get ` = N''`. Numbers, bits and binary columns, the select list, ORDER BY and INSERT column lists are left alone.
@@ -173,6 +177,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
   (mark as SVG path data, colour, description).
 
 ### Changed
+- Results: decimal(p,s), numeric and NUMBER(p,s) values are shown with their declared scale (1500.00, not 1500.0) in the grid, text, record, copy and export.
+- Result footer: "Satır/sayfa" instead of "Sayfa", a smaller box, the fetch status with its full text as a tooltip, separators between groups.
+- Explorer: the toolbar keeps New, Connect, Refresh, Go to object; New folder, Edit, Delete and Import moved under "…".
+- History: "3 satır alındı" for queries, "3 satır etkilendi" for INSERT / UPDATE / DELETE / MERGE; rows use the full width, the chosen one in the accent's soft colour (also in saved queries, go to object and the command palette).
+- Turkish: "Sütun" and "Veri türü" everywhere (no more "Kolon" / "Veri tipi" / "Tip").
 - Results: the filter and the grid / text / record switch beside the result tabs are icons only and no taller than the tab row, so they no longer reach over the grid's header.
 - UiKit: SearchBox's clear button is 22 px, so a smaller search box keeps it inside.
 - One title bar: the main window draws its own caption (WindowChrome) with the menu in it; the toolbar's new connection / new query / open icons are gone and a "+" ends the query tab row.

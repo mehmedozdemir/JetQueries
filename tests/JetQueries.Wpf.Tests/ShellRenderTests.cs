@@ -90,6 +90,10 @@ public sealed class ShellRenderTests
 
             // The result's view and SQL filter sit in the result tab row and act on the shown result.
             var queryView = Find<QueryDocumentView>(window);
+
+            // The tab's connection is in sight beside its database, and Run is named.
+            Assert.True(((FrameworkElement)queryView.FindName("ConnectionBox")).IsVisible);
+            Assert.True(((FrameworkElement)queryView.FindName("RunButton")).IsVisible);
             Assert.True(((FrameworkElement)queryView.FindName("ResultTools")).IsVisible);
             var set = (QueryResultSet)query.Tabs[0];
             ((RadioButton)queryView.FindName("TextMode")).IsChecked = true;

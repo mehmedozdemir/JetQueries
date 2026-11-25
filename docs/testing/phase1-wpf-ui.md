@@ -698,3 +698,15 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] Restart the app: it comes back unpinned; pin it again: it sits beside the tabs at its former width.
 - [ ] View > Gezgin hides both the panel and the rail.
 - [ ] Results: the filter icon and the grid / text / record icons sit inside the result tab row and do not cover the column headers; tooltips name them; the chosen view is highlighted.
+
+## UX review pass
+- [ ] Query toolbar: "Çalıştır" with a label; the connection box shows the tab's connection with its colour dot (green / amber / red). Pick another open connection: the database box and IntelliSense follow it. While a query runs or a transaction is open, the box is disabled.
+- [ ] Hover the tab: file or name, then "connection · database".
+- [ ] Status bar right: "Sat 5, Süt 12"; select text: "· 42 seçili".
+- [ ] A decimal(12,2) column on SQL Server and a NUMBER(12,2) on Oracle show 1500.00 (grid, Text, Record, copy as Markdown, export CSV).
+- [ ] Result footer: "Satır/sayfa" with a smaller box; hovering the fetch status shows it in full.
+- [ ] Explorer toolbar: +, connect, refresh, search, "…"; "…" opens New folder, Edit, Delete, Import, each working on the selection.
+- [ ] A SQL Server connection: user databases first, then a closed "Sistem veritabanları" folder with master, model, msdb, tempdb.
+- [ ] History: a SELECT says "satır alındı", an UPDATE "satır etkilendi"; dates line up on the right; the chosen row is tinted, not boxed.
+- [ ] Settings > Görünüm > Dil: choose English, restart: menus and messages are English, numbers still Turkish style; back to "Windows dili".
+- [ ] Turkish screens say "Sütun", "Veri türü" (details, import, export, record view).

@@ -233,3 +233,52 @@ public sealed record SqlHoverInfo(string Title, string Kind, string? Subtitle)
     /// <summary>The most columns a table's card lists.</summary>
     public const int MaxColumns = 20;
 }
+
+/// <summary>The scale a decimal column declares, and its values written with exactly that many decimals.</summary>
+public static class DecimalScale
+{
+    /// <summary>
+    /// The scale of <c>decimal(12,2)</c>, <c>numeric(10, 3)</c>, <c>NUMBER(12,2)</c>, <c>dec(5,1)</c>; null for any
+    /// other type, a type without a scale, or one larger than a .NET decimal can hold (28).
+    /// </summary>
+    public static int? Of(string? dataType)
+    {
+        if (string.IsNullOrWhiteSpace(dataType))
+        {
+            return null;
+        }
+
+        var open = dataType.IndexOf('(', StringComparison.Ordinal);
+        var close = dataType.IndexOf(')', StringComparison.Ordinal);
+        if (open <= 0 || close < open)
+        {
+            return null;
+        }
+
+        var name = dataType[..open].Trim();
+        if (!(name.Equals("decimal", StringComparison.OrdinalIgnoreCase) || name.Equals("numeric", StringComparison.OrdinalIgnoreCase) ||
+              name.Equals("number", StringComparison.OrdinalIgnoreCase) || name.Equals("dec", StringComparison.OrdinalIgnoreCase)))
+        {
+            return null;
+        }
+
+        var parts = dataType[(open + 1)..close].Split(',');
+        return parts.Length == 2 && int.TryParse(parts[1].Trim(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var scale) &&
+               scale is >= 0 and <= 28
+            ? scale
+            : null;
+    }
+
+    /// <summary><paramref name="value"/> with exactly <paramref name="scale"/> decimals (trailing zeros added, more rounded away).</summary>
+    public static decimal Apply(decimal value, int scale)
+    {
+        if (value.Scale == scale)
+        {
+            return value;
+        }
+
+        // Adding a zero of the wanted scale keeps the larger scale; rounding then trims to it.
+        var widened = value.Scale < scale ? value + new decimal(0, 0, 0, false, (byte)scale) : value;
+        return decimal.Round(widened, scale, MidpointRounding.AwayFromZero);
+    }
+}

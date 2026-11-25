@@ -86,6 +86,7 @@ public sealed class ExplorerIconConverter : IValueConverter
         // A connection shows the mark of its database type instead (in its template).
         ConnectionNodeViewModel => null,
         CategoryNodeViewModel => Group,
+        SystemGroupNodeViewModel => Folder,
         FavoritesNodeViewModel => "\uE735",
         ColumnNodeViewModel { IsPrimaryKey: true } => Icons.Key,
         ColumnNodeViewModel => Icons.Column,

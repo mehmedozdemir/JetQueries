@@ -17,6 +17,10 @@ public partial class QueryDocumentView : UserControl
             }
         };
 
+        // Line and column (and the selection's length) for the status bar.
+        Editor.CaretMoved += (_, _) => ShowCaret();
+        DataContextChanged += (_, _) => Dispatcher.BeginInvoke(ShowCaret, System.Windows.Threading.DispatcherPriority.Background);
+
         // The editor asks whichever query it is showing at that moment.
         Editor.CompletionSource = (text, offset, token) => DataContext is QueryDocumentViewModel viewModel
             ? viewModel.CompleteAsync(text, offset, token)
@@ -248,6 +252,14 @@ public partial class QueryDocumentView : UserControl
         {
             viewModel.CancelCommand.Execute(null);
             e.Handled = true;
+        }
+    }
+
+    private void ShowCaret()
+    {
+        if (DataContext is QueryDocumentViewModel viewModel)
+        {
+            viewModel.SetCaret(Editor.CaretLine, Editor.CaretColumn, Editor.SelectionLength);
         }
     }
 }

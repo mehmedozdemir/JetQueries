@@ -42,7 +42,7 @@ public sealed class ObjectDetailsTests
         Assert.Equal("dbo.Cards", details.Title);
         Assert.StartsWith("Tablo · Kartlar", details.Subtitle, StringComparison.Ordinal);
         Assert.Equal([("Tür", "USER TABLE"), ("Satır (tahmini)", "1,024"), ("Custom", "x")], details.Properties.Select(static p => (p.Label, p.Value)));
-        Assert.Equal(["Kolonlar (1)", "Referanslar (1)"], details.Sections.Select(static s => s.Header));
+        Assert.Equal(["Sütunlar (1)", "Referanslar (1)"], details.Sections.Select(static s => s.Header));
         Assert.Equal(["Ad", "Other"], details.Sections[1].Headers);
         Assert.True(details.Sections[1].HasTargets);
         Assert.False(details.Sections[0].HasTargets);
@@ -122,7 +122,7 @@ public sealed class ObjectDetailsTests
 
         var columns = Assert.Single(details.Sections);
         Assert.Equal(ObjectDetailKeys.Columns, columns.Key);
-        Assert.Equal(["#", "Ad", "Veri tipi", "Null olabilir", "Anahtar"], columns.Headers);
+        Assert.Equal(["#", "Ad", "Veri türü", "Null olabilir", "Anahtar"], columns.Headers);
         Assert.Equal(["1", "Id", "bigint", null, "PK"], columns.Rows[0].Cells);
     }
 

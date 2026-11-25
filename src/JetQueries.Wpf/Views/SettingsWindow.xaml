@@ -194,6 +194,16 @@
                                 </Border>
                                 <Border Style="{StaticResource Settings.Row}">
                                     <DockPanel>
+                                        <ComboBox x:Name="LanguageBox" DockPanel.Dock="Right" Width="160" Margin="24,0,0,0" VerticalAlignment="Center"
+                                                  ItemsSource="{Binding Languages}" SelectedItem="{Binding Language}" DisplayMemberPath="Text" />
+                                        <StackPanel>
+                                            <TextBlock Text="{x:Static res:Strings.FieldLanguage}" Style="{StaticResource Settings.RowTitle}" />
+                                            <TextBlock Text="{x:Static res:Strings.SettingLanguageInfo}" Style="{StaticResource Settings.RowInfo}" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
+                                <Border Style="{StaticResource Settings.Row}">
+                                    <DockPanel>
                                         <CheckBox x:Name="HardwareRenderingSwitch" DockPanel.Dock="Right" Style="{StaticResource Switch}" Margin="24,0,0,0"
                                                   VerticalAlignment="Center" IsChecked="{Binding HardwareRendering}" />
                                         <StackPanel>

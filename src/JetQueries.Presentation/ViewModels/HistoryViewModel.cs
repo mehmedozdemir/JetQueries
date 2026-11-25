@@ -27,7 +27,7 @@ public sealed class HistoryEntryViewModel(QueryHistoryEntry entry)
         QueryOutcome.Failed => $"{entry.ConnectionName} · {Strings.HistoryFailed}",
         QueryOutcome.Canceled => $"{entry.ConnectionName} · {Strings.HistoryCanceled}",
         _ when entry.RowCount is { } rows =>
-            $"{entry.ConnectionName} · {string.Format(CultureInfo.CurrentCulture, CompositeFormat.Parse(Strings.HistoryRows), rows)} · {Milliseconds(entry.Duration)}",
+            $"{entry.ConnectionName} · {string.Format(CultureInfo.CurrentCulture, CompositeFormat.Parse(RowsFormat(entry.Sql)), rows)} · {Milliseconds(entry.Duration)}",
         _ => $"{entry.ConnectionName} · {Milliseconds(entry.Duration)}",
     };
 
@@ -35,6 +35,53 @@ public sealed class HistoryEntryViewModel(QueryHistoryEntry entry)
 
     /// <summary>The whole text and, for a failure, the database's message.</summary>
     public string ToolTip => Entry.Error is null ? Entry.Sql : Entry.Error + "\n\n" + Entry.Sql;
+
+    // "12 rows fetched" for a query, "3 rows affected" for INSERT / UPDATE / DELETE / MERGE, else "12 rows".
+    private static string RowsFormat(string sql)
+    {
+        var first = FirstWord(sql);
+        return first.ToUpperInvariant() switch
+        {
+            "SELECT" or "WITH" or "VALUES" or "TABLE" or "SHOW" => Strings.HistoryRowsFetched,
+            "INSERT" or "UPDATE" or "DELETE" or "MERGE" or "UPSERT" or "REPLACE" => Strings.HistoryRowsAffected,
+            _ => Strings.HistoryRows,
+        };
+    }
+
+    // The first word of the text, past blanks, -- and /* */ comments.
+    internal static string FirstWord(string sql)
+    {
+        var i = 0;
+        while (i < sql.Length)
+        {
+            if (char.IsWhiteSpace(sql[i]) || sql[i] == '(')
+            {
+                i++;
+            }
+            else if (sql[i] == '-' && i + 1 < sql.Length && sql[i + 1] == '-')
+            {
+                var end = sql.IndexOf('\n', i);
+                i = end < 0 ? sql.Length : end + 1;
+            }
+            else if (sql[i] == '/' && i + 1 < sql.Length && sql[i + 1] == '*')
+            {
+                var end = sql.IndexOf("*/", i + 2, StringComparison.Ordinal);
+                i = end < 0 ? sql.Length : end + 2;
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        var start = i;
+        while (i < sql.Length && (char.IsLetter(sql[i]) || sql[i] == '_'))
+        {
+            i++;
+        }
+
+        return sql[start..i];
+    }
 
     private static string Milliseconds(TimeSpan duration) =>
         duration.TotalSeconds >= 1

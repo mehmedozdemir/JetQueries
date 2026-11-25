@@ -18,8 +18,18 @@ public sealed class SqlServerExtension : IExtension
 
 /// <summary>Database provider for Microsoft SQL Server and Azure SQL, on Microsoft.Data.SqlClient.</summary>
 public sealed class SqlServerProvider : IDatabaseProvider, IBulkInsertScripting, IRowEditScripting, IQueryParameterSyntax, IRoutineExecutionScripting, IConnectionSettingsProvider, IScriptSplitter, IRowCountQueryBuilder, IResultFilterQueryBuilder, IRowLimitedSelect, IConnectionImport,
-    IConnectionStringImport, IProviderAppearance, IObjectScripting
+    IConnectionStringImport, IProviderAppearance, IObjectScripting, ISystemObjectClassifier
 {
+    // The databases every SQL Server has (database_id 1 to 4).
+    private static readonly HashSet<string> SystemDatabases = new(StringComparer.OrdinalIgnoreCase) { "master", "model", "msdb", "tempdb" };
+
+    /// <inheritdoc />
+    public bool IsSystemObject(DatabaseObject databaseObject)
+    {
+        ArgumentNullException.ThrowIfNull(databaseObject);
+        return databaseObject.Kind == DatabaseObjectKinds.Database && SystemDatabases.Contains(databaseObject.Name.Name);
+    }
+
     /// <summary>The provider identifier stored in connection profiles.</summary>
     public const string ProviderId = "sqlserver";
 

@@ -32,7 +32,7 @@
                            TextWrapping="Wrap" TextAlignment="Center" Margin="0,14,0,0" MaxWidth="240" />
             </StackPanel>
 
-            <ListBox x:Name="List" ItemsSource="{Binding Entries}" SelectedItem="{Binding Selected}"
+            <ListBox x:Name="List" ItemsSource="{Binding Entries}" SelectedItem="{Binding Selected}" HorizontalContentAlignment="Stretch"
                      BorderThickness="0" Background="Transparent" Padding="4"
                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                      Visibility="{Binding IsEmpty, Converter={x:Static v:InverseBoolToVisibilityConverter.Instance}}"

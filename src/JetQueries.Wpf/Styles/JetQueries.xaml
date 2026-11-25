@@ -110,6 +110,33 @@
         <Setter Property="Padding" Value="{DynamicResource Pad.AppTreeItem}" />
     </Style>
 
+    <!-- Lists of the application (history, saved queries, go to object, command palette): full-width rows, the
+         hovered one tinted, the chosen one in the accent's soft colour, as the explorer's tree does. -->
+    <Style TargetType="ListBoxItem">
+        <Setter Property="Padding" Value="6,4" />
+        <Setter Property="Margin" Value="0,1" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Border x:Name="Root" Background="Transparent" CornerRadius="5" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.Hover}" />
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Brush.AccentSoft}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- Windows of the application. -->
     <Style x:Key="Window.App" TargetType="Window">
         <Setter Property="Background" Value="{DynamicResource Brush.Window}" />

@@ -57,6 +57,9 @@ public sealed record AppearanceSettings
     /// </summary>
     public bool HardwareRendering { get; init; } = true;
 
+    /// <summary>The language of the interface: "" follows Windows, "tr" or "en". Takes effect at the next start.</summary>
+    public string Language { get; init; } = string.Empty;
+
     /// <summary>How Format SQL writes keywords.</summary>
     public SqlKeywordCase FormatKeywordCase { get; init; } = SqlKeywordCase.Upper;
 
@@ -342,6 +345,14 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     public partial bool HardwareRendering { get; set; } = true;
 
+    /// <summary>The interface languages: Windows' own, Turkish, English (each named in itself).</summary>
+    public IReadOnlyList<SettingChoice<string>> Languages { get; } =
+        [new(string.Empty, Strings.LanguageSystem), new("tr", "Türkçe"), new("en", "English")];
+
+    /// <summary>The interface language; applies at the next start.</summary>
+    [ObservableProperty]
+    public partial SettingChoice<string>? Language { get; set; }
+
     [ObservableProperty]
     public partial SettingChoice<bool>? QueryButtonPlace { get; set; }
 
@@ -485,6 +496,7 @@ public partial class SettingsViewModel : ObservableObject
         QueryButtonsInTab = QueryButtonPlace?.Value ?? true,
         CompactMode = Density?.Value ?? false,
         HardwareRendering = HardwareRendering,
+        Language = Language?.Value ?? string.Empty,
         FetchSize = FetchSize,
         ShowColumnTypes = ShowColumnTypes,
         ValueSnippets = ValueSnippets,
@@ -605,6 +617,7 @@ public partial class SettingsViewModel : ObservableObject
             QueryButtonPlace = QueryButtonPlaces.First(p => p.Value == settings.QueryButtonsInTab);
             Density = Densities.First(d => d.Value == settings.CompactMode);
             HardwareRendering = settings.HardwareRendering;
+            Language = Languages.FirstOrDefault(l => string.Equals(l.Value, settings.Language, StringComparison.OrdinalIgnoreCase)) ?? Languages[0];
             FetchSize = settings.FetchSize;
             ShowColumnTypes = settings.ShowColumnTypes;
             ValueSnippets = settings.ValueSnippets;

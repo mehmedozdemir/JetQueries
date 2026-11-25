@@ -186,6 +186,16 @@ public sealed class FavoritesNodeViewModel(ExplorerContext context) : LazyNodeVi
             [.. (context.Favorites?.Of(context.Session.Definition.Id) ?? []).Select(o => new DatabaseObjectNodeViewModel(context, o))]);
 }
 
+/// <summary>"System databases": the server's own databases, kept apart from the user's (closed at first).</summary>
+public sealed class SystemGroupNodeViewModel : ExplorerNodeViewModel
+{
+    public SystemGroupNodeViewModel()
+        : base(Strings.ExplorerSystemDatabases)
+    {
+        IsExpanded = false;
+    }
+}
+
 /// <summary>A group such as "Tables" or "Views" under a schema or database.</summary>
 public sealed class CategoryNodeViewModel(ExplorerContext context, string title, DatabaseObject? parent, DatabaseObjectKinds kind)
     : LazyNodeViewModel(title, expandable: true)
@@ -235,12 +245,36 @@ internal static class ExplorerTree
         var capabilities = context.Session.Provider.Capabilities;
         if (capabilities.HasFlag(ProviderCapabilities.MultipleDatabases))
         {
-            return LoadObjectsAsync(context, null, DatabaseObjectKinds.Database, refresh);
+            return GroupSystemAsync(context, LoadObjectsAsync(context, null, DatabaseObjectKinds.Database, refresh));
         }
 
         return capabilities.HasFlag(ProviderCapabilities.Schemas)
             ? LoadObjectsAsync(context, null, DatabaseObjectKinds.Schema, refresh)
             : Task.FromResult(Categories(context, null));
+    }
+
+    // The server's own databases (master, msdb…) go into a closed "System databases" folder after the user's.
+    private static async Task<IReadOnlyList<ExplorerNodeViewModel>> GroupSystemAsync(ExplorerContext context, Task<IReadOnlyList<ExplorerNodeViewModel>> load)
+    {
+        var nodes = await load.ConfigureAwait(true);
+        if (context.Session.Provider is not ISystemObjectClassifier classifier)
+        {
+            return nodes;
+        }
+
+        var system = nodes.OfType<DatabaseObjectNodeViewModel>().Where(n => classifier.IsSystemObject(n.Target)).ToList();
+        if (system.Count == 0 || system.Count == nodes.Count)
+        {
+            return nodes;
+        }
+
+        var group = new SystemGroupNodeViewModel();
+        foreach (var node in system)
+        {
+            group.Children.Add(node);
+        }
+
+        return [.. nodes.Except(system), group];
     }
 
     public static IReadOnlyList<ExplorerNodeViewModel> Categories(ExplorerContext context, DatabaseObject? parent)

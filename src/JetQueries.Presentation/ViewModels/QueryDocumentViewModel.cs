@@ -87,6 +87,32 @@ public sealed partial class QueryResultSet : ObservableObject, IResultTab
         }
 
         Columns = gridColumns;
+        _scales = [.. columns.Select(static c => DecimalScale.Of(c.DataType))];
+        _rescale = _scales.Any(static s => s is not null);
+    }
+
+    // The declared scale of decimal(p,s) / numeric / NUMBER columns: their values are shown with that many
+    // decimals (12.50, not 12.5), whatever the driver returned.
+    private readonly int?[] _scales;
+    private readonly bool _rescale;
+
+    private void Rescale(IReadOnlyList<object?[]> rows)
+    {
+        if (!_rescale)
+        {
+            return;
+        }
+
+        foreach (var row in rows)
+        {
+            for (var c = 0; c < _scales.Length && c < row.Length; c++)
+            {
+                if (_scales[c] is { } scale && row[c] is decimal value)
+                {
+                    row[c] = DecimalScale.Apply(value, scale);
+                }
+            }
+        }
     }
 
     public event EventHandler? RowCountChanged;
@@ -309,6 +335,7 @@ public sealed partial class QueryResultSet : ObservableObject, IResultTab
         ArgumentNullException.ThrowIfNull(rows);
         Editor?.Clear();
         _rows.Clear();
+        Rescale(rows);
         _rows.AddRange(rows);
         RowCountChanged?.Invoke(this, EventArgs.Empty);
         OnPropertyChanged(nameof(RowsText));
@@ -317,6 +344,7 @@ public sealed partial class QueryResultSet : ObservableObject, IResultTab
     public void AddRows(IReadOnlyList<object?[]> rows)
     {
         ArgumentNullException.ThrowIfNull(rows);
+        Rescale(rows);
         _rows.AddRange(rows);
         RowCountChanged?.Invoke(this, EventArgs.Empty);
         OnPropertyChanged(nameof(RowsText));
@@ -410,8 +438,16 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
     /// <summary>The tab header: the name, with a star while there are unsaved changes (as in SSMS).</summary>
     public string HeaderText => IsDirty ? Title + " *" : Title;
 
-    /// <summary>The tab's tool tip: the file's full path, or the name.</summary>
-    public string ToolTip => SelectedSession is { } session ? (FilePath ?? Title) + "\n" + session.Name : FilePath ?? Title;
+    /// <summary>The tab's tool tip: the file's full path (or the name), then the connection and its database.</summary>
+    public string ToolTip => SelectedSession is { } session
+        ? (FilePath ?? Title) + "\n" + session.Name + (SelectedDatabase is { Length: > 0 } database ? " · " + database : string.Empty)
+        : FilePath ?? Title;
+
+    /// <summary>
+    /// Whether the tab may be moved to another open connection: not while it runs, nor while a transaction is open
+    /// on the one it is on (its changes would be left behind).
+    /// </summary>
+    public bool CanChangeSession => !IsRunning && !HasOpenTransaction;
 
     /// <summary>The encoding of the file the query came from; new files are written as UTF-8.</summary>
     public System.Text.Encoding FileEncoding { get; set; } = new System.Text.UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
@@ -433,6 +469,17 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
     public ObservableCollection<IResultTab> Tabs { get; } = [];
 
     public QueryMessagesTab Messages { get; } = new();
+
+    /// <summary>"Sat 12, Süt 5" and the selection's length, for the status bar; empty until the editor reports.</summary>
+    [ObservableProperty]
+    public partial string CaretText { get; set; } = string.Empty;
+
+    /// <summary>Where the editor's caret is (line and column from 1) and how many characters are selected.</summary>
+    public void SetCaret(int line, int column, int selectionLength)
+    {
+        var text = Format(Strings.CaretPosition, line, column);
+        CaretText = selectionLength > 0 ? text + " · " + Format(Strings.CaretSelection, selectionLength) : text;
+    }
 
     /// <summary>The text selected in the editor; when not empty, only this part is run.</summary>
     public string SelectedText { get; set; } = string.Empty;
@@ -472,6 +519,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
     /// the window. Choosing another one switches the window's connection, as SSMS's database selector does.
     /// </summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ToolTip))]
     public partial string? SelectedDatabase { get; set; }
 
     /// <summary>Whether the connection can switch databases (SQLite cannot).</summary>
@@ -773,6 +821,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(RunCommand), nameof(RunInNewTabCommand), nameof(RunStatementCommand), nameof(CancelCommand), nameof(RefreshCommand), nameof(CloseResultCommand), nameof(SaveChangesCommand))]
+    [NotifyPropertyChangedFor(nameof(CanChangeSession))]
     public partial bool IsRunning { get; set; }
 
     [ObservableProperty]
@@ -1075,7 +1124,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
     /// <summary>A transaction with changes is open on the tab's connection (also one the user began in SQL).</summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(CommitCommand), nameof(RollbackCommand))]
-    [NotifyPropertyChangedFor(nameof(ShowTransactionButtons))]
+    [NotifyPropertyChangedFor(nameof(ShowTransactionButtons), nameof(CanChangeSession))]
     public partial bool HasOpenTransaction { get; set; }
 
     /// <summary>"Auto-commit" or "Manual commit", for the toggle.</summary>
