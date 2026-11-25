@@ -120,3 +120,46 @@ public sealed record DatabaseObject(DatabaseObjectName Name, DatabaseObjectKinds
 /// <param name="Ordinal">One-based position within the table.</param>
 /// <param name="IsPrimaryKey">Whether the column is part of the primary key.</param>
 public sealed record ColumnInfo(string Name, string DataType, bool IsNullable, int Ordinal, bool IsPrimaryKey = false);
+
+/// <summary>
+/// Optional for an <see cref="IMetadataProvider"/>: the columns of every table and view of a schema in one read,
+/// so that the host can fill its cache before the first completion instead of one table at a time.
+/// </summary>
+/// <remarks>Preview contract: may change until SDK 1.0.</remarks>
+public interface IBulkColumnMetadataProvider
+{
+    /// <summary>Gets the columns of every table and view directly under <paramref name="schema"/>, in one round trip.</summary>
+    /// <param name="schema">
+    /// The schema (as the language service's completion lists it), or <see langword="null"/> for the connection's
+    /// current schema or search path.
+    /// </param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <returns>Each table's or view's name, named as <see cref="IMetadataProvider.GetObjectsAsync"/> names it, and its columns in ordinal order.</returns>
+    Task<IReadOnlyList<TableColumns>> GetAllColumnsAsync(DatabaseObject? schema, CancellationToken cancellationToken);
+}
+
+/// <summary>The columns of one table or view, from <see cref="IBulkColumnMetadataProvider"/>.</summary>
+/// <param name="Table">The table or view.</param>
+/// <param name="Columns">Its columns in ordinal order.</param>
+public sealed record TableColumns(DatabaseObjectName Table, IReadOnlyList<ColumnInfo> Columns);
+
+/// <summary>
+/// Optional for the metadata handed to a language service in <see cref="SqlDocument.Metadata"/> (the host's
+/// cache): fills it ahead of use, so that the first completion does not wait for the database.
+/// </summary>
+/// <remarks>Preview contract: may change until SDK 1.0.</remarks>
+public interface IMetadataPreloader
+{
+    /// <summary>
+    /// Reads the columns of every table and view under <paramref name="schema"/> in one round trip (when the
+    /// provider can) and keeps them for later <see cref="IMetadataProvider.GetColumnsAsync"/> calls.
+    /// </summary>
+    /// <param name="schema">As for <see cref="IBulkColumnMetadataProvider.GetAllColumnsAsync"/>.</param>
+    /// <param name="lookupName">
+    /// The name the language service will ask a table's columns by (for an unqualified name in a query), from the
+    /// name the provider gives it; the columns are kept under both.
+    /// </param>
+    /// <param name="cancellationToken">Cancels the read.</param>
+    /// <returns>How many tables and views were read; 0 when they were fresh already or the provider cannot read them at once.</returns>
+    Task<int> PreloadColumnsAsync(DatabaseObject? schema, Func<DatabaseObjectName, DatabaseObjectName> lookupName, CancellationToken cancellationToken);
+}

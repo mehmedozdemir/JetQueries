@@ -15,7 +15,7 @@ namespace JetQueries.Provider.SqlServer;
 /// Naming convention of the objects returned: a database is <c>(null, null, database)</c>, a schema is
 /// <c>(database, null, schema)</c>, everything else is <c>(database, schema, name)</c>.
 /// </remarks>
-internal sealed partial class SqlServerMetadataProvider(SqlConnection connection) : IMetadataProvider, IObjectDetailsProvider
+internal sealed partial class SqlServerMetadataProvider(SqlConnection connection) : IMetadataProvider, IObjectDetailsProvider, IBulkColumnMetadataProvider
 {
     // sys.objects.type codes per kind. Literals chosen here, never user input.
     private static readonly (DatabaseObjectKinds Kind, string[] Types)[] ObjectTypes =
@@ -153,6 +153,77 @@ internal sealed partial class SqlServerMetadataProvider(SqlConnection connection
         }
 
         return columns;
+    }
+
+    /// <summary>
+    /// The columns of every user table and view of one schema in one query (a schema in another database is read
+    /// through its catalog views); no schema means dbo.
+    /// </summary>
+    public async Task<IReadOnlyList<TableColumns>> GetAllColumnsAsync(DatabaseObject? schema, CancellationToken cancellationToken)
+    {
+        var database = schema?.Name.Database;
+        var prefix = SqlServerNames.CatalogPrefix(database);
+        var sql = $"""
+            SELECT o.name AS object_name, c.name, t.name AS type_name, bt.name AS base_type_name, t.is_user_defined,
+                   c.max_length, c.precision, c.scale, c.is_nullable, c.column_id,
+                   CAST(CASE WHEN pk.column_id IS NULL THEN 0 ELSE 1 END AS bit) AS is_primary_key, s.name AS schema_name
+            FROM {prefix}sys.objects o
+            JOIN {prefix}sys.schemas s ON s.schema_id = o.schema_id
+            JOIN {prefix}sys.columns c ON c.object_id = o.object_id
+            JOIN {prefix}sys.types t ON t.user_type_id = c.user_type_id
+            LEFT JOIN {prefix}sys.types bt ON bt.user_type_id = c.system_type_id
+            LEFT JOIN (SELECT ic.object_id, ic.column_id
+                       FROM {prefix}sys.indexes i
+                       JOIN {prefix}sys.index_columns ic ON ic.object_id = i.object_id AND ic.index_id = i.index_id
+                       WHERE i.is_primary_key = 1) pk ON pk.object_id = c.object_id AND pk.column_id = c.column_id
+            WHERE s.name = @schema AND o.type IN ('U', 'V') AND o.is_ms_shipped = 0
+            ORDER BY o.object_id, c.column_id;
+            """;
+
+        var tables = new List<TableColumns>();
+        string? current = null;
+        string? currentSchema = null;
+        var columns = new List<ColumnInfo>();
+        await foreach (var (table, tableSchema, column) in QueryAsync(
+                           sql,
+                           "@schema",
+                           schema?.Name.Name ?? "dbo",
+                           static r => (r.GetString(0), r.GetString(11), new ColumnInfo(
+                               r.GetString(1),
+                               SqlServerTypeFormatter.Format(
+                                   r.GetString(2),
+                                   r.IsDBNull(3) ? null : r.GetString(3),
+                                   r.GetInt16(5),
+                                   r.GetByte(6),
+                                   r.GetByte(7),
+                                   r.GetBoolean(4)),
+                               r.GetBoolean(8),
+                               r.GetInt32(9),
+                               r.GetBoolean(10))),
+                           cancellationToken).ConfigureAwait(false))
+        {
+            if (!string.Equals(table, current, StringComparison.Ordinal))
+            {
+                Flush();
+                current = table;
+                currentSchema = tableSchema;
+            }
+
+            columns.Add(column);
+        }
+
+        Flush();
+        return tables;
+
+        void Flush()
+        {
+            if (current is not null && columns.Count > 0)
+            {
+                tables.Add(new TableColumns(new DatabaseObjectName(database, currentSchema, current), [.. columns]));
+            }
+
+            columns.Clear();
+        }
     }
 
     public async Task<string?> GetDefinitionAsync(DatabaseObject target, CancellationToken cancellationToken)

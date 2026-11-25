@@ -822,3 +822,10 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 ## Hover card stays open
 - [ ] Rest the mouse on a table name or alias in the editor: the card opens. Move the mouse onto it: it stays; a long table's columns scroll with the wheel. "Ayrıntıları aç (Ctrl+Tık)" opens the table details tab and closes the card.
 - [ ] Move the mouse away from both the name and the card: it closes a moment later. Typing, a click in the editor, scrolling the editor or Esc close it at once; switching to another window closes it too.
+
+## IntelliSense reads ahead
+- [ ] Connect to a database not opened before (or after Refresh), open a query tab: the status bar shows "<db> yapısı IntelliSense için okunuyor…" with a moving bar, which goes away after a moment (a large schema over VPN: a few seconds).
+- [ ] Once it has gone: `SELECT * FROM ` lists the tables at once; `SELECT c. FROM <table> c` lists the columns at once, for any table of the default schema (dbo / your Oracle schema / public).
+- [ ] Type straight away while it is still reading: a small "Veritabanı yapısı okunuyor…" note appears under the caret, and the list opens when the structure arrives, filtered by what you typed meanwhile.
+- [ ] Switch the tab to another database: it is read once (status bar again); switching back does not read again. Restart within 12 hours: nothing is read again.
+

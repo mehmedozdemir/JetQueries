@@ -45,6 +45,25 @@ public interface IMetadataCache
     Task SetColumnsAsync(
         Guid connectionId, DatabaseObjectName tableOrView, IReadOnlyList<ColumnInfo> columns, CancellationToken cancellationToken);
 
+    /// <summary>Stores the columns of many tables and views at once (a schema read ahead), in one write.</summary>
+    /// <param name="connectionId">The <see cref="ConnectionProfile.Id"/> the metadata belongs to.</param>
+    /// <param name="tables">Each table or view, under every name it is looked up by, with its columns.</param>
+    /// <param name="cancellationToken">Cancels the write.</param>
+    Task SetManyColumnsAsync(
+        Guid connectionId, IReadOnlyList<(DatabaseObjectName Name, IReadOnlyList<ColumnInfo> Columns)> tables, CancellationToken cancellationToken);
+
+    /// <summary>When something named <paramref name="key"/> was last done for a connection (a schema read ahead), if it was.</summary>
+    /// <param name="connectionId">The connection.</param>
+    /// <param name="key">What was done.</param>
+    /// <param name="cancellationToken">Cancels the lookup.</param>
+    Task<DateTimeOffset?> GetMarkAsync(Guid connectionId, string key, CancellationToken cancellationToken);
+
+    /// <summary>Notes that something named <paramref name="key"/> was done now for a connection.</summary>
+    /// <param name="connectionId">The connection.</param>
+    /// <param name="key">What was done.</param>
+    /// <param name="cancellationToken">Cancels the write.</param>
+    Task SetMarkAsync(Guid connectionId, string key, CancellationToken cancellationToken);
+
     /// <summary>Removes everything cached for one connection, for example after "Refresh" or when it is deleted.</summary>
     /// <param name="connectionId">The <see cref="ConnectionProfile.Id"/> to forget.</param>
     /// <param name="cancellationToken">Cancels the operation.</param>

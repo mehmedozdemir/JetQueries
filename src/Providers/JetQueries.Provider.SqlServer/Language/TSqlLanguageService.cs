@@ -7,7 +7,7 @@ namespace JetQueries.Provider.SqlServer.Language;
 /// Language service for T-SQL: colouring and completion. Both work on tokens, not on a parse tree, because the
 /// text being typed is almost never a complete statement.
 /// </summary>
-internal sealed class TSqlLanguageService : ISqlLanguageService, ISqlFormatter, ISignatureHelpProvider
+internal sealed class TSqlLanguageService : ISqlLanguageService, ISqlMetadataWarmUp, ISqlFormatter, ISignatureHelpProvider
 {
     /// <inheritdoc />
     public string Format(string sql, SqlFormatOptions options) => SqlLayout.Format(sql, TSqlLexer.Tokenize, options);
@@ -31,6 +31,13 @@ internal sealed class TSqlLanguageService : ISqlLanguageService, ISqlFormatter, 
 
         // Parsing is CPU work with no awaits in it: keep it off whoever called.
         return Task.Run(() => TSqlDiagnostics.Check(document.Text), cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task<int> WarmUpAsync(SqlDocument document, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        return SqlCompletionEngine.WarmUpAsync(TSqlDialect.Instance, document, cancellationToken);
     }
 
     public Task<IReadOnlyList<CompletionItem>> GetCompletionsAsync(SqlDocument document, int offset, CancellationToken cancellationToken)

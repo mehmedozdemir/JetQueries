@@ -417,6 +417,17 @@ public sealed class PostgreSqlIntegrationTests(PostgreSqlFixture fixture) : ICla
         Assert.Contains("only_here", await CompleteAsync("jq_other", "SELECT * FROM only_|"));
         Assert.Contains("label", await CompleteAsync("jq_other", "SELECT o.| FROM only_here o"));
 
+        // Read ahead in the selected database: every column of its current schema in one read, kept under the
+        // name an unqualified table is asked by there.
+        using (var fresh = new JetQueries.Core.Metadata.SqliteMetadataCache(
+                   new JetQueries.Core.Metadata.MetadataCacheOptions(), TimeProvider.System, Microsoft.Extensions.Logging.Abstractions.NullLogger<JetQueries.Core.Metadata.SqliteMetadataCache>.Instance))
+        {
+            var ahead = new JetQueries.Core.Metadata.SessionMetadataProvider(session, new JetQueries.Core.Metadata.MetadataService(fresh, TimeProvider.System), "jq_other");
+            Assert.True(await ((ISqlMetadataWarmUp)language).WarmUpAsync(new SqlDocument(string.Empty, ahead) { DefaultDatabase = "jq_other" }, Token) > 0);
+            var preloaded = await fresh.GetColumnsAsync(session.MetadataCacheId("jq_other"), new DatabaseObjectName(null, null, "only_here"), Token);
+            Assert.Contains("label", preloaded!.Value.Select(static c => c.Name));
+        }
+
         // What is found there keeps its database, so its details are read there too.
         var found = await new JetQueries.Core.Metadata.SessionMetadataProvider(session, service, "jq_other")
             .GetObjectsAsync(null, DatabaseObjectKinds.Table, Token).ToListAsync(Token);

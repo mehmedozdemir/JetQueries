@@ -15,7 +15,7 @@ namespace JetQueries.Provider.PostgreSql;
 /// <c>(null, schema, name)</c>, with names as the catalog stores them. A null schema in a request means the
 /// session's search path, resolved by the server.
 /// </remarks>
-internal sealed partial class PostgreSqlMetadataProvider(Func<NpgsqlConnection> currentConnection) : IMetadataProvider
+internal sealed partial class PostgreSqlMetadataProvider(Func<NpgsqlConnection> currentConnection) : IMetadataProvider, IBulkColumnMetadataProvider
 {
     // The oid of the table or view a (schema, name) pair means; without a schema, the search path decides.
     private const string Relation = """
@@ -193,6 +193,53 @@ internal sealed partial class PostgreSqlMetadataProvider(Func<NpgsqlConnection> 
         }
 
         return columns;
+    }
+
+    /// <summary>The columns of every table and view of one schema (the current one when none) in one query; partitions are left out.</summary>
+    public async Task<IReadOnlyList<TableColumns>> GetAllColumnsAsync(DatabaseObject? schema, CancellationToken cancellationToken)
+    {
+        const string Sql = """
+            SELECT n.nspname, c.relname, a.attname, format_type(a.atttypid, a.atttypmod), NOT a.attnotnull, a.attnum::int,
+                   COALESCE(a.attnum = ANY(pk.indkey), false)
+            FROM pg_class c
+            JOIN pg_namespace n ON n.oid = c.relnamespace
+            JOIN pg_attribute a ON a.attrelid = c.oid AND a.attnum > 0 AND NOT a.attisdropped
+            LEFT JOIN pg_index pk ON pk.indrelid = c.oid AND pk.indisprimary
+            WHERE n.nspname = COALESCE(@schema, current_schema()) AND c.relkind IN ('r', 'p', 'f', 'v', 'm') AND NOT c.relispartition
+            ORDER BY c.relname, a.attnum
+            """;
+
+        var tables = new List<TableColumns>();
+        (string Schema, string Name)? current = null;
+        var columns = new List<ColumnInfo>();
+        await foreach (var row in QueryAsync(
+                           Sql,
+                           [Text("schema", schema?.Name.Name)],
+                           static r => (Schema: r.GetString(0), Table: r.GetString(1),
+                               Column: new ColumnInfo(r.GetString(2), r.GetString(3), r.GetBoolean(4), r.GetInt32(5), r.GetBoolean(6))),
+                           cancellationToken).ConfigureAwait(false))
+        {
+            if (current is not { } open || !string.Equals(open.Name, row.Table, StringComparison.Ordinal))
+            {
+                Flush();
+                current = (row.Schema, row.Table);
+            }
+
+            columns.Add(row.Column);
+        }
+
+        Flush();
+        return tables;
+
+        void Flush()
+        {
+            if (current is { } table && columns.Count > 0)
+            {
+                tables.Add(new TableColumns(new DatabaseObjectName(null, table.Schema, table.Name), [.. columns]));
+            }
+
+            columns.Clear();
+        }
     }
 
     public async Task<string?> GetDefinitionAsync(DatabaseObject target, CancellationToken cancellationToken)

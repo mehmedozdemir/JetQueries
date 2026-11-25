@@ -20,6 +20,7 @@ public sealed partial class SqliteMetadataCache : IMetadataCache, IAsyncDisposab
 
     private const int ScopeObjects = 1;
     private const int ScopeColumns = 2;
+    private const int ScopeMarks = 3;
     private const char Separator = '\u001f';
 
     private readonly string? _path;
@@ -80,6 +81,60 @@ public sealed partial class SqliteMetadataCache : IMetadataCache, IAsyncDisposab
         ArgumentNullException.ThrowIfNull(columns);
         return SetAsync(connectionId, ScopeColumns, NameKey(tableOrView), columns.ToArray(), MetadataJson.Default.ColumnInfoArray, cancellationToken);
     }
+
+    /// <inheritdoc />
+    public Task SetManyColumnsAsync(
+        Guid connectionId, IReadOnlyList<(DatabaseObjectName Name, IReadOnlyList<ColumnInfo> Columns)> tables, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(tables);
+        var loadedAt = _time.GetUtcNow();
+        var rows = new List<(string Key, string Payload)>(tables.Count);
+        foreach (var (name, columns) in tables)
+        {
+            var value = columns.ToArray();
+            var key = NameKey(name);
+            _memory[(connectionId, ScopeColumns, key)] = new Entry(value, loadedAt);
+            rows.Add((key, JsonSerializer.Serialize(value, MetadataJson.Default.ColumnInfoArray)));
+        }
+
+        // One transaction: thousands of single writes would each wait for the disk.
+        return OnDiskAsync(
+            connection =>
+            {
+                using var transaction = connection.BeginTransaction();
+                using var command = connection.CreateCommand();
+                command.Transaction = transaction;
+                command.CommandText =
+                    """
+                    INSERT INTO entries (connection_id, scope, key, payload, loaded_at)
+                    VALUES ($connection, $scope, $key, $payload, $loadedAt)
+                    ON CONFLICT (connection_id, scope, key) DO UPDATE SET payload = excluded.payload, loaded_at = excluded.loaded_at
+                    """;
+                command.Parameters.AddWithValue("$connection", connectionId.ToString("N"));
+                command.Parameters.AddWithValue("$scope", ScopeColumns);
+                var key = command.Parameters.Add("$key", SqliteType.Text);
+                var payload = command.Parameters.Add("$payload", SqliteType.Text);
+                command.Parameters.AddWithValue("$loadedAt", loadedAt.ToUnixTimeMilliseconds());
+                foreach (var row in rows)
+                {
+                    key.Value = row.Key;
+                    payload.Value = row.Payload;
+                    command.ExecuteNonQuery();
+                }
+
+                transaction.Commit();
+                return true;
+            },
+            cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<DateTimeOffset?> GetMarkAsync(Guid connectionId, string key, CancellationToken cancellationToken) =>
+        (await GetAsync(connectionId, ScopeMarks, key, MetadataJson.Default.ColumnInfoArray, cancellationToken).ConfigureAwait(false))?.LoadedAt;
+
+    /// <inheritdoc />
+    public Task SetMarkAsync(Guid connectionId, string key, CancellationToken cancellationToken) =>
+        SetAsync(connectionId, ScopeMarks, key, Array.Empty<ColumnInfo>(), MetadataJson.Default.ColumnInfoArray, cancellationToken);
 
     /// <inheritdoc />
     public async Task InvalidateAsync(Guid connectionId, CancellationToken cancellationToken)

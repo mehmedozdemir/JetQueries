@@ -41,16 +41,18 @@ public sealed class DatabaseSelectorTests
     {
         await using var env = new TestEnvironment();
         await env.OpenAsync(TestEnvironment.Definition("Cards"));
-        Assert.Equal(1, env.Provider.OpenCount);
+
+        // The session's connection, and its metadata connection opened right after in the background.
+        await Until(() => env.Provider.OpenCount == 2);
 
         var first = env.Query();
         await Until(() => first.SelectedDatabase == "Cards");
 
         // The first window uses the session's connection; the second opens one of its own.
-        Assert.Equal(1, env.Provider.OpenCount);
+        Assert.Equal(2, env.Provider.OpenCount);
         var second = env.Query();
         await Until(() => second.SelectedDatabase == "Cards");
-        Assert.Equal(2, env.Provider.OpenCount);
+        Assert.Equal(3, env.Provider.OpenCount);
 
         second.SelectedDatabase = "master";
         await Until(() => second.SelectedDatabase == "master");
@@ -62,7 +64,7 @@ public sealed class DatabaseSelectorTests
         await first.CloseAsync();
         var third = env.Query();
         await Until(() => third.SelectedDatabase is not null);
-        Assert.Equal(2, env.Provider.OpenCount);
+        Assert.Equal(3, env.Provider.OpenCount);
     }
 
     [Fact]

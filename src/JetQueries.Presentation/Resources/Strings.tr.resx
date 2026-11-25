@@ -410,6 +410,8 @@
   <data name="HoverColumns" xml:space="preserve"><value>{0} sütun</value></data>
   <data name="HoverMoreColumns" xml:space="preserve"><value>… ve {0} sütun daha</value></data>
   <data name="HoverOpenDetails" xml:space="preserve"><value>Ayrıntıları aç (Ctrl+Tık)</value></data>
+  <data name="SchemaReadingHint" xml:space="preserve"><value>Veritabanı yapısı okunuyor…</value></data>
+  <data name="SchemaReading" xml:space="preserve"><value>{0} yapısı IntelliSense için okunuyor…</value></data>
   <data name="HoverPrimaryKey" xml:space="preserve"><value>Birincil anahtar</value></data>
   <data name="HoverNullable" xml:space="preserve"><value>NULL olabilir</value></data>
   <data name="HoverNotNull" xml:space="preserve"><value>NOT NULL</value></data>

@@ -262,6 +262,9 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
 
     public string? MetadataError { get; set; }
 
+    /// <summary>When set, metadata reads wait for it (to see what happens while the database is slow).</summary>
+    public TaskCompletionSource? MetadataGate { get; set; }
+
     /// <summary>What the details view reads; null: the catalog has no such object.</summary>
     public Func<DatabaseObject, ObjectDetails?> Details { get; set; } = static _ => null;
 
@@ -612,7 +615,7 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
     }
 
     /// <summary>A small fixed catalog: databases Cards and master, schemas dbo and kart, a few objects in dbo.</summary>
-    private sealed class FakeMetadata(FakeProvider owner) : IMetadataProvider, IProgressiveObjectDetailsProvider, IRoutineMetadataProvider
+    private sealed class FakeMetadata(FakeProvider owner) : IMetadataProvider, IProgressiveObjectDetailsProvider, IRoutineMetadataProvider, IBulkColumnMetadataProvider
     {
         public Task<IReadOnlyList<SqlSignature>> GetSignaturesAsync(DatabaseObject routine, CancellationToken cancellationToken) =>
             Task.FromResult(owner.Signatures(routine));
@@ -630,7 +633,16 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
             DatabaseObject? parent, DatabaseObjectKinds kinds, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             await Task.Yield();
-            owner.MetadataCalls.Add($"objects:{parent?.Name.ToString().Replace('.', '/') ?? "(root)"}:{kinds}");
+            if (owner.MetadataGate is { } gate)
+            {
+                await gate.Task.WaitAsync(cancellationToken);
+            }
+
+            lock (owner.MetadataCalls)
+            {
+                owner.MetadataCalls.Add($"objects:{parent?.Name.ToString().Replace('.', '/') ?? "(root)"}:{kinds}");
+            }
+
             if (owner.MetadataError is not null)
             {
                 throw new InvalidOperationException(owner.MetadataError);
@@ -648,30 +660,61 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
             }
             else if (parent?.Name.Name is "dbo" or null)
             {
-                var names = kinds switch
+                foreach (var (kind, names) in new (DatabaseObjectKinds, string[])[]
+                         {
+                             (DatabaseObjectKinds.Table, ["Cards", "Müşteri İşlemleri", "Transactions"]),
+                             (DatabaseObjectKinds.View, ["CardSummary"]),
+                             (DatabaseObjectKinds.Procedure, ["PurgeOldLogs"]),
+                         })
                 {
-                    DatabaseObjectKinds.Table => new[] { "Cards", "Müşteri İşlemleri", "Transactions" },
-                    DatabaseObjectKinds.View => ["CardSummary"],
-                    DatabaseObjectKinds.Procedure => ["PurgeOldLogs"],
-                    _ => [],
-                };
-                foreach (var name in names)
-                {
-                    yield return new(new(parent?.Name.Database, parent?.Name.Name, name), kinds);
+                    if (!kinds.HasFlag(kind))
+                    {
+                        continue;
+                    }
+
+                    foreach (var name in names)
+                    {
+                        yield return new(new(parent?.Name.Database, parent?.Name.Name, name), kind);
+                    }
                 }
             }
         }
 
         public Task<IReadOnlyList<ColumnInfo>> GetColumnsAsync(DatabaseObjectName tableOrView, CancellationToken cancellationToken)
         {
-            owner.MetadataCalls.Add($"columns:{tableOrView.Name}");
-            return Task.FromResult<IReadOnlyList<ColumnInfo>>(
-            [
-                new("Id", "bigint", false, 1, true),
-                new("CardNo", "varchar(19)", false, 2),
-                new("Balance", "decimal(12,2)", true, 3),
-            ]);
+            lock (owner.MetadataCalls)
+            {
+                owner.MetadataCalls.Add($"columns:{tableOrView.Name}");
+            }
+
+            return Task.FromResult(Columns);
         }
+
+        public async Task<IReadOnlyList<TableColumns>> GetAllColumnsAsync(DatabaseObject? schema, CancellationToken cancellationToken)
+        {
+            if (owner.MetadataGate is { } gate)
+            {
+                await gate.Task.WaitAsync(cancellationToken);
+            }
+
+            lock (owner.MetadataCalls)
+            {
+                owner.MetadataCalls.Add($"allcolumns:{schema?.Name.Database}/{schema?.Name.Name}");
+            }
+
+            return
+            [
+                new(new(schema?.Name.Database, schema?.Name.Name ?? "dbo", "Cards"), Columns),
+                new(new(schema?.Name.Database, schema?.Name.Name ?? "dbo", "Transactions"), Columns),
+            ];
+        }
+
+        private static readonly IReadOnlyList<ColumnInfo> Columns =
+        [
+            new("Id", "bigint", false, 1, true),
+            new("CardNo", "varchar(19)", false, 2),
+            new("Balance", "decimal(12,2)", true, 3),
+        ];
 
         public Task<string?> GetDefinitionAsync(DatabaseObject target, CancellationToken cancellationToken) =>
             Task.FromResult(target.Kind == DatabaseObjectKinds.View ? $"CREATE VIEW {target.Name} AS SELECT 1 AS n;" : null);

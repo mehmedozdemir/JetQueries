@@ -47,7 +47,7 @@ internal abstract class GenericSqlDialect(GenericSqlTokenizer tokenizer) : SqlDi
 /// tokens and metadata, and an error for a string or comment that is never closed. Syntax beyond that is left
 /// to the database, which reports it when the statement runs.
 /// </summary>
-internal sealed class GenericLanguageService(GenericSqlDialect dialect) : ISqlLanguageService, ISqlFormatter, ISignatureHelpProvider
+internal sealed class GenericLanguageService(GenericSqlDialect dialect) : ISqlLanguageService, ISqlMetadataWarmUp, ISqlFormatter, ISignatureHelpProvider
 {
     /// <inheritdoc />
     public string Format(string sql, SqlFormatOptions options) => SqlLayout.Format(sql, dialect.Tokenize, options);
@@ -69,6 +69,13 @@ internal sealed class GenericLanguageService(GenericSqlDialect dialect) : ISqlLa
     {
         ArgumentNullException.ThrowIfNull(document);
         return Task.Run(() => dialect.Tokenizer.Diagnose(document.Text), cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task<int> WarmUpAsync(SqlDocument document, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        return SqlCompletionEngine.WarmUpAsync(dialect, document, cancellationToken);
     }
 
     public Task<IReadOnlyList<CompletionItem>> GetCompletionsAsync(SqlDocument document, int offset, CancellationToken cancellationToken)
