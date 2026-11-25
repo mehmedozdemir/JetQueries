@@ -992,13 +992,16 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
             return;
         }
 
+        // The databases the connection shows (all, or those chosen in its settings).
+        var session = SelectedSession?.Session;
+        IReadOnlyList<string> Shown(IReadOnlyList<string> names) => session?.VisibleDatabases is { Count: > 0 } ? [.. names.Where(session.ShowsDatabase)] : names;
         try
         {
             var (current, list) = await _jobs.Enqueue<(string? Current, IReadOnlyList<string>? List)>(
                     "Read databases",
                     async context => (
                         await channel.GetCurrentDatabaseAsync(context.CancellationToken).ConfigureAwait(false),
-                        withList ? await channel.GetDatabasesAsync(context.CancellationToken).ConfigureAwait(false) : null),
+                        withList ? Shown(await channel.GetDatabasesAsync(context.CancellationToken).ConfigureAwait(false)) : null),
                     JobPriority.High)
                 .Completion.ConfigureAwait(false);
             _ui.Post(() =>

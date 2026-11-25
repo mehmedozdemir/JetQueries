@@ -1068,6 +1068,16 @@ What it is running stops and its open transaction is rolled back; the client get
   <data name="EditorRedoTip" xml:space="preserve"><value>Redo — Ctrl+Y</value></data>
   <data name="FieldEditorTools" xml:space="preserve"><value>Editing buttons in the query toolbar</value></data>
   <data name="SettingEditorToolsInfo" xml:space="preserve"><value>Format, comment lines, upper and lower case, undo and redo beside the run buttons. Their shortcuts work either way.</value></data>
+  <data name="ConnectionDatabases" xml:space="preserve"><value>Databases in the explorer</value></data>
+  <data name="ConnectionDatabasesAll" xml:space="preserve"><value>All</value></data>
+  <data name="ConnectionDatabasesChosen" xml:space="preserve"><value>Only the ones I choose</value></data>
+  <data name="ConnectionDatabasesLoad" xml:space="preserve"><value>Read from the server</value></data>
+  <data name="ConnectionDatabasesLoading" xml:space="preserve"><value>Reading the databases…</value></data>
+  <data name="ConnectionDatabasesNone" xml:space="preserve"><value>The server listed no databases.</value></data>
+  <data name="ConnectionDatabasesFilter" xml:space="preserve"><value>Filter</value></data>
+  <data name="ConnectionDatabasesHint" xml:space="preserve"><value>The explorer and the database lists of query tabs show only the checked databases; the default one is always among them.</value></data>
+  <data name="ConnectionDatabasesRequired" xml:space="preserve"><value>Check at least one database, or show all.</value></data>
+  <data name="ExplorerHiddenDatabases" xml:space="preserve"><value>{0} hidden — edit the connection to show more</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Clear all</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Remove filter</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} of {1:N0} rows</value></data>

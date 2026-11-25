@@ -208,7 +208,7 @@
                                     <ComboBox ItemsSource="{Binding Options}" SelectedItem="{Binding SelectedOption}" DisplayMemberPath="DisplayName"
                                               Visibility="{Binding IsChoice, Converter={StaticResource BoolToVisibility}}" />
                                     <!-- Suggested values (TNS aliases): pick one, or type any other -->
-                                    <ComboBox IsEditable="True" ItemsSource="{Binding Suggestions}" DisplayMemberPath="DisplayName" TextSearch.TextPath="Value"
+                                    <ComboBox IsEditable="True" ItemsSource="{Binding Suggestions}" DisplayMemberPath="DisplayName" TextSearch.TextPath="Value" DropDownOpened="OnSuggestionsOpened"
                                               Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" c:Ui.Placeholder="{Binding Hint}"
                                               Visibility="{Binding IsSuggested, Converter={StaticResource BoolToVisibility}}" />
                                     <CheckBox IsChecked="{Binding BooleanValue}" Content="{Binding Label}" Margin="0,2,0,0"
@@ -297,6 +297,43 @@
                             </StackPanel>
                             <CheckBox Content="{x:Static res:Strings.SshSavePassword}" IsChecked="{Binding SshSavePassword}" Margin="1,0,12,6" />
                             <TextBlock Text="{x:Static res:Strings.SshHint}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="1,0,12,0" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Databases in the explorer: all, or only those checked (read from the server); the start database stays among them -->
+                    <StackPanel Margin="0,0,12,10" Visibility="{Binding CanChooseDatabases, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Text="{x:Static res:Strings.ConnectionDatabases}" Style="{StaticResource Label}" />
+                        <StackPanel Orientation="Horizontal" Margin="1,2,0,6">
+                            <RadioButton x:Name="AllDatabasesChoice" Content="{x:Static res:Strings.ConnectionDatabasesAll}" GroupName="Databases" Margin="0,0,20,0"
+                                         Foreground="{DynamicResource Brush.Text}" IsChecked="{Binding ShowAllDatabases}" />
+                            <RadioButton x:Name="ChosenDatabasesChoice" Content="{x:Static res:Strings.ConnectionDatabasesChosen}" GroupName="Databases"
+                                         Foreground="{DynamicResource Brush.Text}" IsChecked="{Binding ShowAllDatabases, Converter={x:Static v:NotConverter.Instance}}" />
+                        </StackPanel>
+                        <StackPanel Visibility="{Binding ChoosesDatabases, Converter={StaticResource BoolToVisibility}}">
+                            <DockPanel Margin="0,0,0,6">
+                                <Button DockPanel.Dock="Right" Margin="8,0,0,0" Command="{Binding LoadDatabasesCommand}" Content="{x:Static res:Strings.ConnectionDatabasesLoad}" />
+                                <TextBox Text="{Binding DatabaseFilter, UpdateSourceTrigger=PropertyChanged}" c:Ui.Placeholder="{x:Static res:Strings.ConnectionDatabasesFilter}" />
+                            </DockPanel>
+                            <Border BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" CornerRadius="6" MaxHeight="170" Padding="8,6">
+                                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                    <ItemsControl x:Name="DatabaseChoiceList" ItemsSource="{Binding DatabaseChoices}" Focusable="False">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <CheckBox Content="{Binding Name}" IsChecked="{Binding IsChecked}" Width="180" Margin="0,2,8,2"
+                                                          Visibility="{Binding IsVisible, Converter={StaticResource BoolToVisibility}}" />
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                            </Border>
+                            <TextBlock Text="{Binding DatabasesMessage}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="1,6,0,0"
+                                       Visibility="{Binding DatabasesMessage, Converter={x:Static v:EmptyToCollapsedConverter.Instance}}" />
+                            <TextBlock Text="{x:Static res:Strings.ConnectionDatabasesHint}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="1,6,0,0" />
                         </StackPanel>
                     </StackPanel>
 

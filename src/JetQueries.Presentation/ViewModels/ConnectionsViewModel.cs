@@ -904,6 +904,7 @@ public partial class ConnectionsViewModel(
             siblings.Add(node);
             if (open.TryGetValue(definition.Id, out var session))
             {
+                session.VisibleDatabases = definition.VisibleDatabases;
                 node.Attach(new ExplorerContext(session, metadata, jobs, favorites));
             }
 

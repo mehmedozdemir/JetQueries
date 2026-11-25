@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using JetQueries.Core.Connections;
 using JetQueries.Core.Jobs;
@@ -256,12 +258,32 @@ internal static class ExplorerTree
         var capabilities = context.Session.Provider.Capabilities;
         if (capabilities.HasFlag(ProviderCapabilities.MultipleDatabases))
         {
-            return GroupSystemAsync(context, LoadObjectsAsync(context, null, DatabaseObjectKinds.Database, refresh));
+            return GroupSystemAsync(context, ShownAsync(context, LoadObjectsAsync(context, null, DatabaseObjectKinds.Database, refresh)));
         }
 
         return capabilities.HasFlag(ProviderCapabilities.Schemas)
-            ? LoadObjectsAsync(context, null, DatabaseObjectKinds.Schema, refresh)
+            ? ShownAsync(context, LoadObjectsAsync(context, null, DatabaseObjectKinds.Schema, refresh))
             : Task.FromResult(Categories(context, null));
+    }
+
+    // Only the databases (schemas) the connection shows, and a line saying how many are hidden.
+    private static async Task<IReadOnlyList<ExplorerNodeViewModel>> ShownAsync(ExplorerContext context, Task<IReadOnlyList<ExplorerNodeViewModel>> load)
+    {
+        var nodes = await load.ConfigureAwait(true);
+        var session = context.Session;
+        if (session.VisibleDatabases is not { Count: > 0 })
+        {
+            return nodes;
+        }
+
+        var shown = nodes.Where(n => n is not DatabaseObjectNodeViewModel { Target.Kind: DatabaseObjectKinds.Database or DatabaseObjectKinds.Schema } node ||
+            session.ShowsDatabase(node.Target.Name.Name)).ToList();
+        if (shown.Count < nodes.Count)
+        {
+            shown.Add(new MessageNodeViewModel(string.Format(CultureInfo.CurrentCulture, CompositeFormat.Parse(Strings.ExplorerHiddenDatabases), nodes.Count - shown.Count)));
+        }
+
+        return shown;
     }
 
     // The server's own databases (master, msdb…) go into a closed "System databases" folder after the user's.

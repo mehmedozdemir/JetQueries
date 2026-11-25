@@ -38,6 +38,16 @@ public sealed record ConnectionDefinition
     /// <summary>An SSH tunnel the connection goes through (a bastion host); null for a direct connection.</summary>
     public SshTunnelSettings? Ssh { get; init; }
 
+    /// <summary>
+    /// The databases (schemas on Oracle) the explorer and the database lists show; null or empty shows all. The
+    /// current database of a query is shown even when it is not in the list.
+    /// </summary>
+    public IReadOnlyList<string>? VisibleDatabases { get; init; }
+
+    /// <summary>Whether a database is shown (always, when no list is chosen).</summary>
+    public bool ShowsDatabase(string name) =>
+        VisibleDatabases is not { Count: > 0 } list || list.Contains(name, StringComparer.OrdinalIgnoreCase);
+
     /// <summary>The non-secret part handed to the provider.</summary>
     public ConnectionProfile ToProfile() => new(Id, Name, ProviderId, Settings);
 }
