@@ -507,6 +507,7 @@ public static class Strings
     public static string HoverColumn => Get(nameof(HoverColumn));
     public static string HoverColumns => Get(nameof(HoverColumns));
     public static string HoverMoreColumns => Get(nameof(HoverMoreColumns));
+    public static string HoverOpenDetails => Get(nameof(HoverOpenDetails));
     public static string HoverPrimaryKey => Get(nameof(HoverPrimaryKey));
     public static string HoverNullable => Get(nameof(HoverNullable));
     public static string HoverNotNull => Get(nameof(HoverNotNull));

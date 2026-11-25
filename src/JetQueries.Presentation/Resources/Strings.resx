@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
   <resheader name="version"><value>2.0</value></resheader>
@@ -409,6 +409,7 @@
   <data name="HoverColumn" xml:space="preserve"><value>Column</value></data>
   <data name="HoverColumns" xml:space="preserve"><value>{0} columns</value></data>
   <data name="HoverMoreColumns" xml:space="preserve"><value>… and {0} more</value></data>
+  <data name="HoverOpenDetails" xml:space="preserve"><value>Open details (Ctrl+Click)</value></data>
   <data name="HoverPrimaryKey" xml:space="preserve"><value>Primary key</value></data>
   <data name="HoverNullable" xml:space="preserve"><value>Nullable</value></data>
   <data name="HoverNotNull" xml:space="preserve"><value>NOT NULL</value></data>

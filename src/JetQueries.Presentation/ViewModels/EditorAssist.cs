@@ -231,7 +231,7 @@ public sealed record SqlHoverInfo(string Title, string Kind, string? Subtitle)
     public ColumnInfo? Column { get; init; }
 
     /// <summary>The most columns a table's card lists.</summary>
-    public const int MaxColumns = 20;
+    public const int MaxColumns = 500;
 }
 
 /// <summary>The scale a decimal column declares, and its values written with exactly that many decimals.</summary>

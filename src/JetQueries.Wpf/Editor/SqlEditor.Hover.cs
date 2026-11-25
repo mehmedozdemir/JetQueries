@@ -2,6 +2,10 @@ using System.Globalization;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Threading;
 using System.Windows.Media;
 using JetQueries.Presentation.Resources;
 using JetQueries.Presentation.ViewModels;
@@ -18,8 +22,16 @@ public partial class SqlEditor
     // Only the newest hover shows its card: an older answer, or one after the mouse moved on, is dropped.
     private int _hoverVersion;
 
+    // The card is a popup the mouse can enter (a tooltip closes the moment the mouse leaves the word): it stays
+    // while the mouse is on the word or on the card, and closes a moment after the mouse left both.
+    private Popup? _hoverPopup;
+    private DispatcherTimer? _hoverCloseTimer;
+
     /// <summary>The card shown last, for tests.</summary>
     internal SqlHoverInfo? LastHover { get; private set; }
+
+    /// <summary>The open hover card, for tests.</summary>
+    internal FrameworkElement? HoverCardShown => _hoverPopup is { IsOpen: true, Child: FrameworkElement card } ? card : null;
 
     /// <summary>Looks up the name at <paramref name="offset"/> and shows its card at the mouse.</summary>
     internal async Task ShowHoverAsync(int offset)
@@ -45,16 +57,117 @@ public partial class SqlEditor
             return;
         }
 
+        // The mouse is reading the card already: a hover behind it does not replace it.
+        if (_hoverPopup is { IsOpen: true, Child: UIElement { IsMouseOver: true } })
+        {
+            return;
+        }
+
         LastHover = info;
-        _toolTip.PlacementTarget = this;
-        _toolTip.Content = Card(info);
-        _toolTip.IsOpen = true;
+        _toolTip.IsOpen = false;
+        _hoverPopup ??= CreateHoverPopup();
+        _hoverPopup.IsOpen = false;
+        _hoverPopup.Child = HoverCard(info, () =>
+        {
+            CloseHover();
+            NavigationRequested?.Invoke(this, offset);
+        });
+        _hoverPopup.PlacementTarget = this;
+        _hoverPopup.IsOpen = true;
+        _hoverCloseTimer?.Stop();
     }
 
+    /// <summary>The mouse left the word: the card closes soon unless the mouse reaches it.</summary>
     private void StopHover()
     {
         _hoverVersion++;
         _toolTip.IsOpen = false;
+        if (_hoverPopup is { IsOpen: true })
+        {
+            _hoverCloseTimer ??= CreateHoverCloseTimer();
+            _hoverCloseTimer.Stop();
+            _hoverCloseTimer.Start();
+        }
+    }
+
+    /// <summary>Closes the card at once (typing, a click, scrolling, Esc, the window left).</summary>
+    internal void CloseHover()
+    {
+        _hoverVersion++;
+        _hoverCloseTimer?.Stop();
+        if (_hoverPopup is { IsOpen: true })
+        {
+            _hoverPopup.IsOpen = false;
+        }
+    }
+
+    private DispatcherTimer CreateHoverCloseTimer()
+    {
+        var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(350) };
+        timer.Tick += (_, _) =>
+        {
+            timer.Stop();
+            if (_hoverPopup is { IsOpen: true, Child: UIElement { IsMouseOver: false } })
+            {
+                _hoverPopup.IsOpen = false;
+            }
+        };
+        return timer;
+    }
+
+    private Popup CreateHoverPopup()
+    {
+        var popup = new Popup
+        {
+            AllowsTransparency = true,
+            StaysOpen = true,
+            Focusable = false,
+            Placement = PlacementMode.Mouse,
+            PopupAnimation = PopupAnimation.Fade,
+        };
+
+        // Leaving the card closes it a moment later (back on a word, a new hover takes over).
+        popup.MouseLeave += (_, _) => StopHover();
+        popup.MouseEnter += (_, _) => _hoverCloseTimer?.Stop();
+        return popup;
+    }
+
+    /// <summary>The card in its frame: scrolls when a table has many columns, with a link to the object's details.</summary>
+    internal static Border HoverCard(SqlHoverInfo info, Action? openDetails)
+    {
+        var body = Card(info);
+        var content = new DockPanel();
+        if (openDetails is not null)
+        {
+            var link = new Hyperlink(new Run(Strings.HoverOpenDetails)) { TextDecorations = null, Cursor = Cursors.Hand, Focusable = false };
+            link.SetResourceReference(TextElement.ForegroundProperty, "Brush.Accent");
+            link.Click += (_, _) => openDetails();
+            var footer = new TextBlock(link) { Margin = new Thickness(2, 8, 2, 0), FontSize = 11.5 };
+            DockPanel.SetDock(footer, Dock.Bottom);
+            content.Children.Add(footer);
+        }
+
+        content.Children.Add(new ScrollViewer
+        {
+            Content = body,
+            MaxHeight = 420,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+        });
+
+        var card = new Border
+        {
+            Child = content,
+            CornerRadius = new CornerRadius(8),
+            Padding = new Thickness(10, 8, 10, 8),
+            BorderThickness = new Thickness(1),
+            Margin = new Thickness(0, 0, 8, 8),
+            Effect = new System.Windows.Media.Effects.DropShadowEffect { BlurRadius = 14, ShadowDepth = 2, Opacity = 0.25 },
+        };
+        card.SetResourceReference(Border.BackgroundProperty, "Brush.Card");
+        card.SetResourceReference(Border.BorderBrushProperty, "Brush.BorderStrong");
+        card.SetResourceReference(TextElement.ForegroundProperty, "Brush.Text");
+        return card;
     }
 
     internal static StackPanel Card(SqlHoverInfo info)

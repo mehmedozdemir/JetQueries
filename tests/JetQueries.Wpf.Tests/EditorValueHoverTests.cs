@@ -2,6 +2,7 @@ using System.Globalization;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using JetQueries.Presentation.ViewModels;
 using JetQueries.Sdk;
 using JetQueries.Wpf.Editor;
@@ -53,7 +54,24 @@ public sealed class EditorValueHoverTests
             await editor.ShowHoverAsync(20);
             await EditorActionsTests.Idle();
             Assert.Equal("dbo.Cards", editor.LastHover!.Title);
-            var host = new Window { Content = new Border { Child = SqlEditor.Card(editor.LastHover), Padding = new Thickness(12) }, SizeToContent = SizeToContent.WidthAndHeight, Left = -20000, Top = 0, ShowActivated = false, ShowInTaskbar = false };
+
+            // The card is a popup the mouse can enter; its link opens the details, as Ctrl+Click does.
+            var shown = Assert.IsType<Border>(editor.HoverCardShown);
+            Assert.True(shown.IsHitTestVisible);
+            var opened = -1;
+            editor.NavigationRequested += (_, offset) => opened = offset;
+            var link = FindLink(shown);
+            Assert.Equal("Ayrıntıları aç (Ctrl+Tık)", ((Run)link.Inlines.FirstInline).Text);
+            link.RaiseEvent(new RoutedEventArgs(Hyperlink.ClickEvent));
+            Assert.Equal(20, opened);
+            Assert.Null(editor.HoverCardShown);
+
+            await editor.ShowHoverAsync(20);
+            Assert.NotNull(editor.HoverCardShown);
+            editor.CloseHover();
+            Assert.Null(editor.HoverCardShown);
+
+            var host = new Window { Content = new Border { Child = SqlEditor.HoverCard(editor.LastHover, static () => { }), Padding = new Thickness(12) }, SizeToContent = SizeToContent.WidthAndHeight, Left = -20000, Top = 0, ShowActivated = false, ShowInTaskbar = false };
             host.SetResourceReference(Window.BackgroundProperty, "Brush.Surface");
             host.SetResourceReference(Window.ForegroundProperty, "Brush.Text");
             host.Show();
@@ -65,5 +83,24 @@ public sealed class EditorValueHoverTests
         });
 
         Assert.True(colours > 6, $"rendered only {colours} distinct colours.");
+    }
+
+    private static Hyperlink FindLink(DependencyObject root) =>
+        Links(root).FirstOrDefault() ?? throw new InvalidOperationException("No link on the card.");
+
+    private static IEnumerable<Hyperlink> Links(DependencyObject node)
+    {
+        if (node is TextBlock { Inlines.FirstInline: Hyperlink link })
+        {
+            yield return link;
+        }
+
+        foreach (var child in LogicalTreeHelper.GetChildren(node).OfType<DependencyObject>())
+        {
+            foreach (var found in Links(child))
+            {
+                yield return found;
+            }
+        }
     }
 }

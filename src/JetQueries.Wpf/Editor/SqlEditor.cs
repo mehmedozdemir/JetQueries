@@ -142,6 +142,10 @@ public partial class SqlEditor : UserControl
         _editor.MouseHover += OnMouseHover;
         _editor.MouseHoverStopped += (_, _) => StopHover();
         _editor.TextArea.PreviewMouseLeftButtonDown += OnPreviewMouseDown;
+        _editor.TextArea.PreviewMouseDown += (_, _) => CloseHover();
+        _editor.TextArea.TextView.ScrollOffsetChanged += (_, _) => CloseHover();
+        _editor.TextArea.LostKeyboardFocus += (_, _) => CloseHover();
+        _editor.TextArea.Unloaded += (_, _) => CloseHover();
 
         // A right click outside the selection moves the caret there first, so the menu acts where it was opened.
         _editor.TextArea.PreviewMouseRightButtonDown += OnPreviewRightButtonDown;
@@ -654,6 +658,11 @@ public partial class SqlEditor : UserControl
 
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
+        if (e.Key is not (Key.LeftCtrl or Key.RightCtrl))
+        {
+            CloseHover();
+        }
+
         if (e.Key is Key.LeftCtrl or Key.RightCtrl)
         {
             UpdateLinkFromKeyboard();
