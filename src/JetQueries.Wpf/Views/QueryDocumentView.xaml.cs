@@ -255,6 +255,83 @@ public partial class QueryDocumentView : UserControl
         }
     }
 
+    // The database picker: opening clears the filter and puts the caret in it; Down goes to the list, Enter takes
+    // the highlighted (or first) database, Esc closes.
+    private void OnDatabasePickerOpened(object sender, System.Windows.RoutedEventArgs e)
+    {
+        if (DataContext is QueryDocumentViewModel viewModel)
+        {
+            viewModel.DatabaseFilter = string.Empty;
+        }
+
+        Dispatcher.BeginInvoke(() =>
+        {
+            DatabaseFilterBox.Focus();
+            Keyboard.Focus(DatabaseFilterBox);
+            if (DatabaseList.SelectedItem is { } current)
+            {
+                DatabaseList.ScrollIntoView(current);
+            }
+        }, System.Windows.Threading.DispatcherPriority.Input);
+    }
+
+    private void OnDatabaseFilterKeyDown(object sender, KeyEventArgs e)
+    {
+        switch (e.Key)
+        {
+            case Key.Down when DatabaseList.Items.Count > 0:
+                DatabaseList.SelectedIndex = Math.Max(0, DatabaseList.SelectedIndex);
+                (DatabaseList.ItemContainerGenerator.ContainerFromIndex(DatabaseList.SelectedIndex) as System.Windows.UIElement)?.Focus();
+                e.Handled = true;
+                break;
+            case Key.Enter:
+                ChooseDatabase(DatabaseList.SelectedItem as string ?? (DatabaseList.Items.Count > 0 ? DatabaseList.Items[0] as string : null));
+                e.Handled = true;
+                break;
+            case Key.Escape:
+                DatabaseBox.IsChecked = false;
+                e.Handled = true;
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void OnDatabaseListKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            ChooseDatabase(DatabaseList.SelectedItem as string);
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Escape)
+        {
+            DatabaseBox.IsChecked = false;
+            e.Handled = true;
+        }
+    }
+
+    private void OnDatabaseListClick(object sender, MouseButtonEventArgs e)
+    {
+        if (e.OriginalSource is System.Windows.DependencyObject source &&
+            System.Windows.Controls.ItemsControl.ContainerFromElement(DatabaseList, source) is System.Windows.Controls.ListBoxItem { DataContext: string name })
+        {
+            ChooseDatabase(name);
+        }
+    }
+
+    /// <summary>Switches the window to <paramref name="name"/> and closes the picker.</summary>
+    internal void ChooseDatabase(string? name)
+    {
+        if (name is not null && DataContext is QueryDocumentViewModel viewModel)
+        {
+            viewModel.SelectedDatabase = name;
+        }
+
+        DatabaseBox.IsChecked = false;
+        Editor.FocusText();
+    }
+
     private void ShowCaret()
     {
         if (DataContext is QueryDocumentViewModel viewModel)

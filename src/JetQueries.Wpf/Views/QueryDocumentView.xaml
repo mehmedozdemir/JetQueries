@@ -63,8 +63,47 @@
                         Visibility="{Binding CanChangeDatabase, Converter={StaticResource BoolToVisibility}}">
                 <TextBlock Text="{x:Static c:Icons.Database}" Style="{StaticResource Text.Icon}" FontSize="13" Margin="0,0,6,0"
                            Foreground="{DynamicResource Brush.Accent}" />
-                <ComboBox x:Name="DatabaseBox" ItemsSource="{Binding Databases}" SelectedItem="{Binding SelectedDatabase}" MinWidth="140" MaxWidth="240" Height="28"
-                          ToolTip="{x:Static res:Strings.QueryDatabase}" />
+                <!-- A list with a filter box: a server may have hundreds of databases -->
+                <ToggleButton x:Name="DatabaseBox" Style="{StaticResource Btn.Secondary}" Width="200" Height="28" Padding="10,0,8,0"
+                              HorizontalContentAlignment="Stretch" ToolTip="{x:Static res:Strings.QueryDatabase}"
+                              AutomationProperties.Name="{x:Static res:Strings.QueryDatabase}" Checked="OnDatabasePickerOpened"
+                              IsHitTestVisible="{Binding IsOpen, ElementName=DatabasePopup, Converter={x:Static v:NotConverter.Instance}}">
+                    <DockPanel Width="180">
+                        <TextBlock DockPanel.Dock="Right" Text="&#xE70D;" Style="{StaticResource Text.Icon}" FontSize="10" Margin="10,0,0,0"
+                                   Foreground="{DynamicResource Brush.TextSecondary}" />
+                        <TextBlock Text="{Binding SelectedDatabase}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                    </DockPanel>
+                </ToggleButton>
+                <Popup x:Name="DatabasePopup" PlacementTarget="{Binding ElementName=DatabaseBox}" Placement="Bottom" VerticalOffset="4"
+                       StaysOpen="False" AllowsTransparency="True" IsOpen="{Binding IsChecked, ElementName=DatabaseBox, Mode=TwoWay}">
+                    <Border Background="{DynamicResource Brush.Card}" BorderBrush="{DynamicResource Brush.BorderStrong}" BorderThickness="1"
+                            CornerRadius="{StaticResource Radius.Control}" Padding="6" Width="300" Margin="0,0,10,10">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.25" />
+                        </Border.Effect>
+                        <DockPanel>
+                            <c:SearchBox x:Name="DatabaseFilterBox" DockPanel.Dock="Top" Height="28" FontSize="{DynamicResource FontSize.Small}"
+                                         Text="{Binding DatabaseFilter, UpdateSourceTrigger=PropertyChanged}"
+                                         c:Ui.Placeholder="{x:Static res:Strings.DatabaseFilterPlaceholder}" PreviewKeyDown="OnDatabaseFilterKeyDown" />
+                            <TextBlock DockPanel.Dock="Bottom" Text="{x:Static res:Strings.DatabaseFilterNone}" Style="{StaticResource Text.Caption}" Margin="6,8,6,4"
+                                       Visibility="{Binding ShownDatabases.Count, Converter={x:Static v:ZeroToVisibleConverter.Instance}}" />
+                            <ListBox x:Name="DatabaseList" ItemsSource="{Binding ShownDatabases}" SelectedItem="{Binding SelectedDatabase, Mode=OneWay}"
+                                     MaxHeight="360" Margin="0,6,0,0" BorderThickness="0" Background="Transparent"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled" VirtualizingPanel.IsVirtualizing="True"
+                                     PreviewMouseLeftButtonUp="OnDatabaseListClick" PreviewKeyDown="OnDatabaseListKeyDown">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{x:Static c:Icons.Database}" Style="{StaticResource Text.Icon}" FontSize="12" Margin="0,0,8,0"
+                                                       Foreground="{DynamicResource Brush.TextSecondary}" />
+                                            <TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </DockPanel>
+                    </Border>
+                </Popup>
             </StackPanel>
             <!-- Auto-commit or manual commit; Commit / Rollback; a warning while a transaction is open -->
             <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Margin="8,0,0,0"

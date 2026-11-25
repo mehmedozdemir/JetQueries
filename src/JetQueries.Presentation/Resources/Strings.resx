@@ -432,6 +432,8 @@
   <data name="SettingLanguageInfo" xml:space="preserve"><value>The language of menus and messages. Numbers and dates follow Windows' regional format. Takes effect at the next start.</value></data>
   <data name="HistoryRowsFetched" xml:space="preserve"><value>{0:N0} rows fetched</value></data>
   <data name="HistoryRowsAffected" xml:space="preserve"><value>{0:N0} rows affected</value></data>
+  <data name="DatabaseFilterPlaceholder" xml:space="preserve"><value>Filter databases…</value></data>
+  <data name="DatabaseFilterNone" xml:space="preserve"><value>No database matches.</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Clear all</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Remove filter</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} of {1:N0} rows</value></data>

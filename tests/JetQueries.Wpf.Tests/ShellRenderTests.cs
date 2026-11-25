@@ -94,6 +94,20 @@ public sealed class ShellRenderTests
             // The tab's connection is in sight beside its database, and Run is named.
             Assert.True(((FrameworkElement)queryView.FindName("ConnectionBox")).IsVisible);
             Assert.True(((FrameworkElement)queryView.FindName("RunButton")).IsVisible);
+
+            // The database picker filters its list and switches the window's database.
+            var picker = (System.Windows.Controls.Primitives.ToggleButton)queryView.FindName("DatabaseBox");
+            picker.IsChecked = true;
+            await Idle();
+            Assert.True(((System.Windows.Controls.Primitives.Popup)queryView.FindName("DatabasePopup")).IsOpen);
+            query.DatabaseFilter = "mas";
+            await Idle();
+            Assert.Equal(["master"], query.ShownDatabases);
+            results["wpf-database-picker.png"] = ResultGridViewTests.Capture((FrameworkElement)((System.Windows.Controls.Primitives.Popup)queryView.FindName("DatabasePopup")).Child,
+                Path.Combine(directory, "wpf-database-picker.png"));
+            picker.IsChecked = false;
+            query.DatabaseFilter = string.Empty;
+            await Idle();
             Assert.True(((FrameworkElement)queryView.FindName("ResultTools")).IsVisible);
             var set = (QueryResultSet)query.Tabs[0];
             ((RadioButton)queryView.FindName("TextMode")).IsChecked = true;
@@ -307,7 +321,7 @@ public sealed class ShellRenderTests
             return results;
         });
 
-        Assert.Equal(35, colours.Count); // 27 renderings and the 8 colour schemes
+        Assert.Equal(36, colours.Count); // 28 renderings and the 8 colour schemes
         Assert.All(colours, static pair => Assert.True(pair.Value > 12, $"{pair.Key} rendered only {pair.Value} distinct colours."));
     }
 
