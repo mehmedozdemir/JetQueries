@@ -162,6 +162,16 @@ public static class Strings
     public static string FilterClear => Get(nameof(FilterClear));
     public static string FilterValueRequired => Get(nameof(FilterValueRequired));
     public static string FilterClearAll => Get(nameof(FilterClearAll));
+    public static string ConnectionDatabases => Get(nameof(ConnectionDatabases));
+    public static string ConnectionDatabasesAll => Get(nameof(ConnectionDatabasesAll));
+    public static string ConnectionDatabasesChosen => Get(nameof(ConnectionDatabasesChosen));
+    public static string ConnectionDatabasesLoad => Get(nameof(ConnectionDatabasesLoad));
+    public static string ConnectionDatabasesLoading => Get(nameof(ConnectionDatabasesLoading));
+    public static string ConnectionDatabasesNone => Get(nameof(ConnectionDatabasesNone));
+    public static string ConnectionDatabasesFilter => Get(nameof(ConnectionDatabasesFilter));
+    public static string ConnectionDatabasesHint => Get(nameof(ConnectionDatabasesHint));
+    public static string ConnectionDatabasesRequired => Get(nameof(ConnectionDatabasesRequired));
+    public static string ExplorerHiddenDatabases => Get(nameof(ExplorerHiddenDatabases));
     public static string EditorFormatTip => Get(nameof(EditorFormatTip));
     public static string EditorCommentTip => Get(nameof(EditorCommentTip));
     public static string EditorUpperTip => Get(nameof(EditorUpperTip));

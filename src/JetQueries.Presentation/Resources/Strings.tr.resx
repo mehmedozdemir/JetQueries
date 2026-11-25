@@ -1068,6 +1068,16 @@
   <data name="EditorRedoTip" xml:space="preserve"><value>Yinele — Ctrl+Y</value></data>
   <data name="FieldEditorTools" xml:space="preserve"><value>Sorgu araç çubuğunda düzenleme düğmeleri</value></data>
   <data name="SettingEditorToolsInfo" xml:space="preserve"><value>Çalıştır düğmelerinin yanında biçimlendir, satır yorumla, büyük/küçük harf, geri al ve yinele. Kısayolları her durumda çalışır.</value></data>
+  <data name="ConnectionDatabases" xml:space="preserve"><value>Gezginde görünen veritabanları</value></data>
+  <data name="ConnectionDatabasesAll" xml:space="preserve"><value>Tümü</value></data>
+  <data name="ConnectionDatabasesChosen" xml:space="preserve"><value>Yalnızca seçtiklerim</value></data>
+  <data name="ConnectionDatabasesLoad" xml:space="preserve"><value>Sunucudan getir</value></data>
+  <data name="ConnectionDatabasesLoading" xml:space="preserve"><value>Veritabanları okunuyor…</value></data>
+  <data name="ConnectionDatabasesNone" xml:space="preserve"><value>Sunucu hiç veritabanı listelemedi.</value></data>
+  <data name="ConnectionDatabasesFilter" xml:space="preserve"><value>Filtrele</value></data>
+  <data name="ConnectionDatabasesHint" xml:space="preserve"><value>Gezgin ve sorgu sekmelerinin veritabanı listeleri yalnızca işaretli veritabanlarını gösterir; varsayılan veritabanı her zaman aralarındadır.</value></data>
+  <data name="ConnectionDatabasesRequired" xml:space="preserve"><value>En az bir veritabanı işaretleyin ya da tümünü gösterin.</value></data>
+  <data name="ExplorerHiddenDatabases" xml:space="preserve"><value>{0} veritabanı gizli — göstermek için bağlantıyı düzenleyin</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Tümünü temizle</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Filtreyi kaldır</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} / {1:N0} satır</value></data>

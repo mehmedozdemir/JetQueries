@@ -71,6 +71,7 @@ public sealed class ConnectionSession : IAsyncDisposable
         _profile = profile ?? definition.ToProfile();
         _tunnel = tunnel;
         Definition = definition;
+        _visibleDatabases = definition.VisibleDatabases;
         Provider = provider;
         Connection = connection;
         _credential = credential;
@@ -79,6 +80,22 @@ public sealed class ConnectionSession : IAsyncDisposable
 
     /// <summary>The saved connection the session was opened from.</summary>
     public ConnectionDefinition Definition { get; }
+
+    /// <summary>
+    /// The databases shown in the explorer and the database lists; null shows all. Starts as the definition's and
+    /// follows edits of the connection while the session is open.
+    /// </summary>
+    public IReadOnlyList<string>? VisibleDatabases
+    {
+        get => Volatile.Read(ref _visibleDatabases);
+        set => Volatile.Write(ref _visibleDatabases, value);
+    }
+
+    private IReadOnlyList<string>? _visibleDatabases;
+
+    /// <summary>Whether a database (or schema) is shown.</summary>
+    public bool ShowsDatabase(string name) =>
+        VisibleDatabases is not { Count: > 0 } list || list.Contains(name, StringComparer.OrdinalIgnoreCase);
 
     /// <summary>The provider that opened it.</summary>
     public IDatabaseProvider Provider { get; }
@@ -622,6 +639,16 @@ public interface IConnectionManager
     /// <param name="cancellationToken">Cancels the attempt.</param>
     Task<ConnectionAttempt> TestAsync(ConnectionDefinition definition, string? password, string? sshSecret, CancellationToken cancellationToken);
 
+    /// <summary>Connects for a moment to read the databases (or schemas) of a connection being edited.</summary>
+    /// <param name="definition">The connection as entered.</param>
+    /// <param name="password">The database password; null uses the stored one.</param>
+    /// <param name="sshSecret">The SSH password or key passphrase; null uses the stored one.</param>
+    /// <param name="cancellationToken">Cancels the attempt.</param>
+    /// <returns>How connecting went and, when it succeeded, the names (empty where the provider has no list).</returns>
+    Task<(ConnectionAttempt Attempt, IReadOnlyList<string> Databases)> ListDatabasesAsync(
+        ConnectionDefinition definition, string? password, string? sshSecret, CancellationToken cancellationToken) =>
+        Task.FromResult<(ConnectionAttempt, IReadOnlyList<string>)>((new ConnectionAttempt(ConnectionOutcome.Failed, null, TimeSpan.Zero), []));
+
     /// <summary>Opens a session, or returns the existing one for this connection.</summary>
     /// <param name="definition">The saved connection.</param>
     /// <param name="password">The password to use, or <see langword="null"/> to use the stored one.</param>
@@ -733,6 +760,30 @@ public sealed class ConnectionManager : IConnectionManager, IAsyncDisposable
         }
 
         return attempt;
+    }
+
+    /// <inheritdoc />
+    public async Task<(ConnectionAttempt Attempt, IReadOnlyList<string> Databases)> ListDatabasesAsync(
+        ConnectionDefinition definition, string? password, string? sshSecret, CancellationToken cancellationToken)
+    {
+        var (attempt, connection, _, _, _, tunnel) = await ConnectAsync(definition, password, sshSecret, cancellationToken).ConfigureAwait(false);
+        try
+        {
+            IReadOnlyList<string> names = connection is IDatabaseContext context ? await context.GetAvailableAsync(cancellationToken).ConfigureAwait(false) : [];
+            return (attempt, names);
+        }
+        finally
+        {
+            if (connection is not null)
+            {
+                await connection.DisposeAsync().ConfigureAwait(false);
+            }
+
+            if (tunnel is not null)
+            {
+                await tunnel.DisposeAsync().ConfigureAwait(false);
+            }
+        }
     }
 
     /// <inheritdoc />

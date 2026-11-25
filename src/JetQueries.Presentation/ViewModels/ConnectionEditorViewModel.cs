@@ -58,10 +58,16 @@ public partial class SettingFieldViewModel : ObservableObject
 
     public bool IsRequired => Descriptor.IsRequired;
 
-    public bool IsText => Descriptor.Kind is ConnectionSettingKind.Text or ConnectionSettingKind.Number && !Descriptor.HasSuggestions;
+    public bool IsText => Descriptor.Kind is ConnectionSettingKind.Text or ConnectionSettingKind.Number && !IsSuggested;
 
-    /// <summary>Text the provider can suggest values for (TNS aliases): a list the user may still type over.</summary>
-    public bool IsSuggested => Descriptor.HasSuggestions;
+    /// <summary>
+    /// Text with a list to pick from that the user may still type over: the provider's suggestions (TNS aliases),
+    /// or the server's databases for the database a connection starts in.
+    /// </summary>
+    public bool IsSuggested => Descriptor.HasSuggestions || IsDatabase;
+
+    /// <summary>The database a connection starts in (its list comes from the server, on request).</summary>
+    public bool IsDatabase => string.Equals(Descriptor.Key, "database", StringComparison.OrdinalIgnoreCase) && Descriptor.Kind == ConnectionSettingKind.Text;
 
     /// <summary>The provider's suggestions, read in the background when the field is shown.</summary>
     public ObservableCollection<ConnectionSettingOption> Suggestions { get; } = [];
@@ -167,6 +173,11 @@ public partial class ConnectionEditorViewModel : ObservableObject
         SavePassword = existing?.SavePassword ?? true;
         Password = string.Empty;
         ShowSsh(existing?.Ssh);
+        ShowAllDatabases = existing?.VisibleDatabases is not { Count: > 0 };
+        foreach (var name in existing?.VisibleDatabases ?? [])
+        {
+            DatabaseChoices.Add(new DatabaseChoice(name) { IsChecked = true });
+        }
         TestMessage = string.Empty;
         ValidationMessage = string.Empty;
         SelectedEnvironment = Environments.First(e => e.Value == (existing?.Environment ?? ConnectionEnvironment.Unspecified));
@@ -419,7 +430,130 @@ public partial class ConnectionEditorViewModel : ObservableObject
                 SavePassword = SshSavePassword,
             }
             : null,
+        VisibleDatabases = ShowAllDatabases || !CanChooseDatabases ? null : ChosenDatabases(),
     };
+
+    // ---- Databases shown ----
+
+    /// <summary>The type has databases or schemas to choose from (not a single-file database, not Redis).</summary>
+    public bool CanChooseDatabases =>
+        SelectedProvider?.Provider.Capabilities is { } capabilities &&
+        (capabilities.HasFlag(ProviderCapabilities.MultipleDatabases) || capabilities.HasFlag(ProviderCapabilities.Schemas));
+
+    /// <summary>The explorer shows every database (else only the chosen ones).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ChoosesDatabases))]
+    public partial bool ShowAllDatabases { get; set; } = true;
+
+    public bool ChoosesDatabases => !ShowAllDatabases;
+
+    /// <summary>The databases read from the server (and those chosen before), each with a check box.</summary>
+    public ObservableCollection<DatabaseChoice> DatabaseChoices { get; } = [];
+
+    /// <summary>Narrows the list (a server may have hundreds).</summary>
+    [ObservableProperty]
+    public partial string DatabaseFilter { get; set; } = string.Empty;
+
+    partial void OnDatabaseFilterChanged(string value)
+    {
+        foreach (var choice in DatabaseChoices)
+        {
+            choice.IsVisible = value.Trim().Length == 0 || choice.Name.Contains(value.Trim(), StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(LoadDatabasesCommand))]
+    public partial bool IsLoadingDatabases { get; set; }
+
+    /// <summary>How reading the list went (empty when it went well).</summary>
+    [ObservableProperty]
+    public partial string DatabasesMessage { get; set; } = string.Empty;
+
+    /// <summary>The provider's "database" field (the database a connection starts in), when it has one.</summary>
+    public SettingFieldViewModel? DefaultDatabaseField => Fields.FirstOrDefault(static f => f.IsDatabase);
+
+    partial void OnShowAllDatabasesChanged(bool value)
+    {
+        if (!value && DatabaseChoices.Count == 0 && LoadDatabasesCommand.CanExecute(null))
+        {
+            _ = LoadDatabasesCommand.ExecuteAsync(null);
+        }
+    }
+
+    private List<string>? ChosenDatabases()
+    {
+        var chosen = DatabaseChoices.Where(static c => c.IsChecked).Select(static c => c.Name).ToList();
+
+        // The default database is always among those shown.
+        if (DefaultDatabaseField?.Value.Trim() is { Length: > 0 } start && !chosen.Contains(start, StringComparer.OrdinalIgnoreCase))
+        {
+            chosen.Insert(0, start);
+        }
+
+        return chosen.Count == 0 ? null : chosen;
+    }
+
+    private bool CanLoadDatabases() => !IsLoadingDatabases && !IsChoosingType;
+
+    /// <summary>Connects for a moment and lists the databases; earlier choices stay checked.</summary>
+    [RelayCommand(CanExecute = nameof(CanLoadDatabases))]
+    private async Task LoadDatabasesAsync()
+    {
+        if (!Validate())
+        {
+            DatabasesMessage = ValidationMessage;
+            return;
+        }
+
+        var definition = BuildDefinition();
+        var password = Password.Length > 0 || _existing is not { SavePassword: true } ? Password : null;
+        var sshSecret = SshPassword.Length > 0 ? SshPassword : null;
+        IsLoadingDatabases = true;
+        DatabasesMessage = Strings.ConnectionDatabasesLoading;
+        try
+        {
+            var (attempt, names) = await _jobs.Enqueue("List databases", context => _manager.ListDatabasesAsync(definition, password, sshSecret, context.CancellationToken),
+                JobPriority.High).Completion;
+            if (attempt.Outcome != ConnectionOutcome.Succeeded)
+            {
+                DatabasesMessage = Describe(attempt);
+                return;
+            }
+
+            var checkedNames = DatabaseChoices.Where(static c => c.IsChecked).Select(static c => c.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            DatabaseChoices.Clear();
+            foreach (var name in names.Concat(checkedNames.Where(n => !names.Contains(n, StringComparer.OrdinalIgnoreCase))).Order(StringComparer.OrdinalIgnoreCase))
+            {
+                DatabaseChoices.Add(new DatabaseChoice(name) { IsChecked = checkedNames.Contains(name) });
+            }
+
+            OnDatabaseFilterChanged(DatabaseFilter);
+            if (DefaultDatabaseField is { } start)
+            {
+                start.Suggestions.Clear();
+                foreach (var name in names)
+                {
+                    start.Suggestions.Add(new ConnectionSettingOption(name, name));
+                }
+            }
+            DatabasesMessage = names.Count == 0 ? Strings.ConnectionDatabasesNone : string.Empty;
+        }
+        catch (OperationCanceledException)
+        {
+            DatabasesMessage = Strings.OutcomeCanceled;
+        }
+#pragma warning disable CA1031 // The server's reason is shown under the list.
+        catch (Exception ex)
+#pragma warning restore CA1031
+        {
+            DatabasesMessage = ex.Message;
+        }
+        finally
+        {
+            IsLoadingDatabases = false;
+        }
+    }
 
     // ---- SSH tunnel ----
 
@@ -469,6 +603,8 @@ public partial class ConnectionEditorViewModel : ObservableObject
     partial void OnSelectedProviderChanged(ProviderOption? value)
     {
         OnPropertyChanged(nameof(CanUseSsh));
+        OnPropertyChanged(nameof(CanChooseDatabases));
+        OnPropertyChanged(nameof(DefaultDatabaseField));
         ApplyConnectionStringCommand.NotifyCanExecuteChanged();
 
         // A type chosen any other way (the paused Avalonia dialog's list) also ends the first step.
@@ -529,7 +665,7 @@ public partial class ConnectionEditorViewModel : ObservableObject
 
         var version = ++_suggestionsVersion;
         var settings = CurrentSettings();
-        foreach (var field in Fields.Where(static f => f.IsSuggested && f.IsVisible).ToList())
+        foreach (var field in Fields.Where(static f => f.Descriptor.HasSuggestions && f.IsVisible).ToList())
         {
             _ = LoadAsync(field);
         }
@@ -669,6 +805,12 @@ public partial class ConnectionEditorViewModel : ObservableObject
             return;
         }
 
+        if (CanChooseDatabases && !ShowAllDatabases && ChosenDatabases() is null)
+        {
+            ValidationMessage = Strings.ConnectionDatabasesRequired;
+            return;
+        }
+
         var definition = BuildDefinition();
         var password = Password;
         var sshPassword = SshPassword;
@@ -714,4 +856,17 @@ public partial class ConnectionEditorViewModel : ObservableObject
         ConnectionString = string.Empty;
         CloseRequested?.Invoke(this, false);
     }
+}
+
+/// <summary>A database in the connection's "shown in the explorer" list.</summary>
+public sealed partial class DatabaseChoice(string name) : ObservableObject
+{
+    public string Name { get; } = name;
+
+    [ObservableProperty]
+    public partial bool IsChecked { get; set; }
+
+    /// <summary>Passes the list's filter.</summary>
+    [ObservableProperty]
+    public partial bool IsVisible { get; set; } = true;
 }

@@ -122,4 +122,14 @@ public partial class ConnectionDialog : Window
             field.Value = dialog.FileName;
         }
     }
+
+    // The start database's list is read from the server the first time it is opened.
+    private void OnSuggestionsOpened(object? sender, EventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: SettingFieldViewModel { IsDatabase: true, Suggestions.Count: 0 } } &&
+            DataContext is ConnectionEditorViewModel editor && editor.LoadDatabasesCommand.CanExecute(null))
+        {
+            _ = editor.LoadDatabasesCommand.ExecuteAsync(null);
+        }
+    }
 }
