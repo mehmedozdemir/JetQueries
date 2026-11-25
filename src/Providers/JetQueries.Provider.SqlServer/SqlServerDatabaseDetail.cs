@@ -1,5 +1,6 @@
 using System.Data;
 using System.Globalization;
+using JetQueries.Provider.SqlServer.Resources;
 using JetQueries.Sdk;
 using Microsoft.Data.SqlClient;
 
@@ -67,7 +68,7 @@ internal static class SqlServerDatabaseDetail
         await ReadAsync(connection, StateSql, command => command.Parameters.Add(Name(database)), reader => state = reader.GetString(0), cancellationToken).ConfigureAwait(false);
         if (state is null)
         {
-            throw new ArgumentException("No database named " + database + " on this server.", nameof(database));
+            throw new ArgumentException(Messages.NoSuchDatabase(database), nameof(database));
         }
 
         var (backups, known) = await BackupsAsync(connection, database, cancellationToken).ConfigureAwait(false);

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="ActivityLimited" xml:space="preserve"><value>The role lacks pg_read_all_stats: the statements of other users' sessions are hidden.</value></data>
+  <data name="KillFailed" xml:space="preserve"><value>PostgreSQL did not end process {0} (it may have ended already, or the role may not end it).</value></data>
+  <data name="NoStatStatements" xml:space="preserve"><value>The pg_stat_statements extension is not installed in this database: add it to shared_preload_libraries, restart PostgreSQL and run CREATE EXTENSION pg_stat_statements;</value></data>
+  <data name="NoPgStatTuple" xml:space="preserve"><value>Measuring index fragmentation needs the pgstattuple extension in this database: CREATE EXTENSION pgstattuple;</value></data>
+</root>

@@ -1,4 +1,5 @@
 using System.Globalization;
+using JetQueries.Provider.PostgreSql.Resources;
 using JetQueries.Sdk;
 using Npgsql;
 
@@ -69,7 +70,7 @@ internal static class PostgreSqlDba
 
         return new ActivitySnapshot(DateTimeOffset.Now, sessions, own)
         {
-            Limitation = seesAll ? null : "The role lacks pg_read_all_stats: the statements of other users' sessions are hidden.",
+            Limitation = seesAll ? null : Messages.ActivityLimited,
         };
     }
 
@@ -84,7 +85,7 @@ internal static class PostgreSqlDba
         command.Parameters.AddWithValue("pid", pid);
         if (await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false) is not true)
         {
-            throw new InvalidOperationException("PostgreSQL did not end process " + sessionId + " (it may have ended already, or the role may not end it).");
+            throw new InvalidOperationException(Messages.KillFailed(sessionId));
         }
     }
 
@@ -106,8 +107,7 @@ internal static class PostgreSqlDba
     {
         if (!await HasExtensionAsync(connection, "pg_stat_statements", cancellationToken).ConfigureAwait(false))
         {
-            throw new InvalidOperationException(
-                "The pg_stat_statements extension is not installed in this database: add it to shared_preload_libraries, restart PostgreSQL and run CREATE EXTENSION pg_stat_statements;");
+            throw new InvalidOperationException(Messages.NoStatStatements);
         }
 
         var queries = new List<HeavyQuery>();
@@ -239,7 +239,7 @@ internal static class PostgreSqlDba
     {
         if (!await HasExtensionAsync(connection, "pgstattuple", cancellationToken).ConfigureAwait(false))
         {
-            throw new InvalidOperationException("Measuring index fragmentation needs the pgstattuple extension in this database: CREATE EXTENSION pgstattuple;");
+            throw new InvalidOperationException(Messages.NoPgStatTuple);
         }
 
         var indexes = new List<IndexFragmentation>();
