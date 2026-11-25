@@ -136,7 +136,10 @@ public sealed class DatabaseObjectNodeViewModel(ExplorerContext context, Databas
     /// <summary>A database whose provider gives performance advice: its performance analysis can be opened.</summary>
     public bool CanAnalyze => Target.Kind == DatabaseObjectKinds.Database && Session.SupportsPerformance;
 
-    public override bool HasDbaTools => CanAnalyze;
+    /// <summary>A database whose provider shows database details: its detail screen can be opened.</summary>
+    public bool CanDetail => Target.Kind == DatabaseObjectKinds.Database && Session.SupportsDatabaseDetails;
+
+    public override bool HasDbaTools => CanAnalyze || CanDetail;
 
     public DatabaseObject Target { get; } = databaseObject;
 

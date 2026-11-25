@@ -832,6 +832,118 @@
   <data name="Help_Health_Watch" xml:space="preserve"><value>Bilgi: bilmekte fayda var, genelde işlem gerekmez. Uyarı: uygun bir zamanda, tercihen bir sonraki bakım penceresinde düzeltin.</value></data>
   <data name="Help_Health_Bad" xml:space="preserve"><value>Kritik: veri ya da erişilebilirlik risk altında (yedek yok, bozuk sayfalar): bugün düzeltin.</value></data>
   <data name="Help_Health_Action" xml:space="preserve"><value>Önce Kritik'lerle, sonra Uyarı'larla başlayın. Neden önemli olduğunu okumak için bir bulgu seçin; "Sorgu sekmesinde aç" düzeltmesini çalıştırmadan bir sorgu sekmesine koyar. Düzelttikten sonra yeniden kontrol edin.</value></data>
+  <data name="DbDetailTitle" xml:space="preserve"><value>Veritabanı ayrıntıları</value></data>
+  <data name="DbDetailOpen" xml:space="preserve"><value>Veritabanı ayrıntıları</value></data>
+  <data name="DbDetailOpenTip" xml:space="preserve"><value>Bir veritabanının ayrıntısı: alan, log, yedekler, bütünlük, en büyük tablolar, dosyalar, ayarlar</value></data>
+  <data name="DbDetailUnsupported" xml:space="preserve"><value>Bu veritabanı türü veritabanı ayrıntılarını bildirmiyor.</value></data>
+  <data name="DbCompatibility" xml:space="preserve"><value>uyumluluk</value></data>
+  <data name="DbOwner" xml:space="preserve"><value>sahibi {0}</value></data>
+  <data name="DbCreated" xml:space="preserve"><value>oluşturuldu {0}</value></data>
+  <data name="DbTileData" xml:space="preserve"><value>Veri</value></data>
+  <data name="DbTileLog" xml:space="preserve"><value>Log</value></data>
+  <data name="DbTileVlf" xml:space="preserve"><value>Sanal log dosyası (VLF)</value></data>
+  <data name="DbTileFullBackup" xml:space="preserve"><value>Son tam yedek</value></data>
+  <data name="DbTileLogBackup" xml:space="preserve"><value>Son log yedeği</value></data>
+  <data name="DbTileCheckDb" xml:space="preserve"><value>Son temiz CHECKDB</value></data>
+  <data name="DbTileTables" xml:space="preserve"><value>Tablolar</value></data>
+  <data name="DbDataUsed" xml:space="preserve"><value>{0} kullanılıyor · %{1}</value></data>
+  <data name="DbLogUsed" xml:space="preserve"><value>%{0} dolu</value></data>
+  <data name="DbLogHeldBy" xml:space="preserve"><value>tutan: {0}</value></data>
+  <data name="DbVlfDetail" xml:space="preserve"><value>log'u oluşturan parça sayısı</value></data>
+  <data name="DbBackupsUnknown" xml:space="preserve"><value>yedekler okunamıyor</value></data>
+  <data name="DbLogBackupNotNeeded" xml:space="preserve"><value>{0}: gerekmez</value></data>
+  <data name="DbNever" xml:space="preserve"><value>hiç yok</value></data>
+  <data name="DbDaysAgo" xml:space="preserve"><value>{0} gün önce</value></data>
+  <data name="DbHoursAgo" xml:space="preserve"><value>{0} saat önce</value></data>
+  <data name="DbMinutesAgo" xml:space="preserve"><value>{0} dakika önce</value></data>
+  <data name="DbRows" xml:space="preserve"><value>{0} satır</value></data>
+  <data name="DbLargestTables" xml:space="preserve"><value>En büyük tablolar (ayrılmış alan)</value></data>
+  <data name="DbOptions" xml:space="preserve"><value>Ayarlar</value></data>
+  <data name="DbAllTables" xml:space="preserve"><value>Tablolar (en büyük 50)</value></data>
+  <data name="DbFiles" xml:space="preserve"><value>Dosyalar</value></data>
+  <data name="DbBackups" xml:space="preserve"><value>Yedek geçmişi (son 30)</value></data>
+  <data name="DbNoBackups" xml:space="preserve"><value>Kayıtlı yedek yok.</value></data>
+  <data name="DbColRows" xml:space="preserve"><value>Satır</value></data>
+  <data name="DbColReserved" xml:space="preserve"><value>Ayrılmış</value></data>
+  <data name="DbColIndexes" xml:space="preserve"><value>Index'ler</value></data>
+  <data name="DbColFile" xml:space="preserve"><value>Dosya</value></data>
+  <data name="DbColFilegroup" xml:space="preserve"><value>Dosya grubu</value></data>
+  <data name="DbColUsed" xml:space="preserve"><value>Kullanılan</value></data>
+  <data name="DbColFree" xml:space="preserve"><value>Boş</value></data>
+  <data name="DbColGrowth" xml:space="preserve"><value>Büyüme</value></data>
+  <data name="DbColMax" xml:space="preserve"><value>Azami</value></data>
+  <data name="DbColPath" xml:space="preserve"><value>Yol</value></data>
+  <data name="DbColFinished" xml:space="preserve"><value>Bitiş</value></data>
+  <data name="DbColTook" xml:space="preserve"><value>Süre</value></data>
+  <data name="DbColCompressed" xml:space="preserve"><value>Sıkıştırılmış</value></data>
+  <data name="DbColCopyOnly" xml:space="preserve"><value>Copy only</value></data>
+  <data name="DbColDevice" xml:space="preserve"><value>Yazıldığı yer</value></data>
+  <data name="DbBackupFull" xml:space="preserve"><value>Tam</value></data>
+  <data name="DbBackupDifferential" xml:space="preserve"><value>Fark</value></data>
+  <data name="DbBackupLog" xml:space="preserve"><value>Log</value></data>
+  <data name="DbBackupOther" xml:space="preserve"><value>Diğer</value></data>
+  <data name="DbProp_userAccess" xml:space="preserve"><value>Kullanıcı erişimi</value></data>
+  <data name="DbProp_readOnly" xml:space="preserve"><value>Salt okunur</value></data>
+  <data name="DbProp_readCommittedSnapshot" xml:space="preserve"><value>Read committed snapshot (RCSI)</value></data>
+  <data name="DbProp_snapshotIsolation" xml:space="preserve"><value>Snapshot isolation</value></data>
+  <data name="DbProp_encrypted" xml:space="preserve"><value>Şifreli (TDE)</value></data>
+  <data name="DbProp_pageVerify" xml:space="preserve"><value>Sayfa doğrulama</value></data>
+  <data name="DbProp_autoClose" xml:space="preserve"><value>Otomatik kapanma</value></data>
+  <data name="DbProp_autoShrink" xml:space="preserve"><value>Otomatik küçültme</value></data>
+  <data name="DbProp_autoCreateStats" xml:space="preserve"><value>İstatistikleri otomatik oluştur</value></data>
+  <data name="DbProp_autoUpdateStats" xml:space="preserve"><value>İstatistikleri otomatik güncelle</value></data>
+  <data name="DbProp_autoUpdateStatsAsync" xml:space="preserve"><value>İstatistikleri arka planda güncelle</value></data>
+  <data name="DbProp_trustworthy" xml:space="preserve"><value>Trustworthy</value></data>
+  <data name="DbProp_delayedDurability" xml:space="preserve"><value>Gecikmeli kalıcılık</value></data>
+  <data name="DbProp_queryStore" xml:space="preserve"><value>Query Store</value></data>
+  <data name="Help_DbSpace_Title" xml:space="preserve"><value>Veri alanı</value></data>
+  <data name="Help_DbSpace_What" xml:space="preserve"><value>Veritabanının veri dosyalarının boyutu ve bunun ne kadarının veriyle dolu olduğu. Dosya içindeki boş alan normaldir: yeni satırlar dosya büyümek zorunda kalmadan oraya yazılır.</value></data>
+  <data name="Help_DbSpace_Good" xml:space="preserve"><value>Dosyaların nadiren büyümesi için biraz boş alan (%10–30).</value></data>
+  <data name="Help_DbSpace_Watch" xml:space="preserve"><value>Neredeyse dolu (~%90 üstü kullanımda): sonraki eklemeler dosyayı büyütür, bu da yazmaları duraklatır; ya da disk doluyor.</value></data>
+  <data name="Help_DbSpace_Bad" xml:space="preserve"><value>Büyük bir silmeden sonra çok boş alan kalması tek başına sorun değildir; geri küçültmek index'leri parçalar.</value></data>
+  <data name="Help_DbSpace_Action" xml:space="preserve"><value>Dosyaları sakin bir saatte önceden büyütün; alanı neyin kapladığını görmek için en büyük tablolara bakın.</value></data>
+  <data name="Help_DbLog_Title" xml:space="preserve"><value>İşlem günlüğü (log)</value></data>
+  <data name="Help_DbLog_What" xml:space="preserve"><value>Log, her değişikliği geri alınabilmesi ya da yeniden yapılabilmesi için kaydeder. Boyutu, ne kadar dolu olduğu ve yeniden kullanılamıyorsa onu neyin tuttuğu (LOG_BACKUP: log yedekleri eksik; ACTIVE_TRANSACTION: uzun süredir açık transaction; REPLICATION / AVAILABILITY_REPLICA: geride kalan okuyucu).</value></data>
+  <data name="Help_DbLog_Good" xml:space="preserve"><value>Çoğunlukla boş ve yeniden kullanılıyor (tutan bir şey yok).</value></data>
+  <data name="Help_DbLog_Watch" xml:space="preserve"><value>%75'ten fazla dolu ya da dolarken bir şey onu tutuyor.</value></data>
+  <data name="Help_DbLog_Bad" xml:space="preserve"><value>%90'dan fazla dolu: dolup büyüyemediğinde veritabanındaki her değişiklik hatayla durur.</value></data>
+  <data name="Help_DbLog_Action" xml:space="preserve"><value>Onu tutan nedeni kaldırın: log yedeği alın (FULL modda), açık transaction'ı commit edin ya da sonlandırın, geride kalan okuyucuyu düzeltin. Log'u ancak bundan sonra, bir kez küçültün.</value></data>
+  <data name="Help_DbVlf_Title" xml:space="preserve"><value>Sanal log dosyaları (VLF)</value></data>
+  <data name="Help_DbVlf_What" xml:space="preserve"><value>Log içeride sanal log dosyası denen parçalara bölünür; her büyüdüğünde birkaç parça eklenir. Çok sayıda küçük adımla büyümüş bir log'da binlercesi olur.</value></data>
+  <data name="Help_DbVlf_Good" xml:space="preserve"><value>Birkaç yüzün altında.</value></data>
+  <data name="Help_DbVlf_Watch" xml:space="preserve"><value>300–1.000.</value></data>
+  <data name="Help_DbVlf_Bad" xml:space="preserve"><value>1.000'den fazla: veritabanı yavaş açılır ve geri yüklenir, log yedekleri ve replikasyon yavaşlar.</value></data>
+  <data name="Help_DbVlf_Action" xml:space="preserve"><value>Sakin bir saatte, bir log yedeğinden sonra: log'u küçük bir boyuta küçültün, sonra bir ya da birkaç büyük adımda (örneğin 8 GB) yeniden büyütün ve büyümesini 512 MB gibi sabit bir boyuta ayarlayın.</value></data>
+  <data name="Help_DbBackups_Title" xml:space="preserve"><value>Yedekler</value></data>
+  <data name="Help_DbBackups_What" xml:space="preserve"><value>Veritabanının en son ne zaman tam yedeğinin alındığı ve FULL kurtarma modunda log'unun en son ne zaman yedeklendiği. Geçmiş, son yedekleri boyutu, süresi ve yazıldığı yerle listeler.</value></data>
+  <data name="Help_DbBackups_Good" xml:space="preserve"><value>Bir gün içinde tam yedek (ya da günlük fark yedekleriyle bir hafta); FULL modda 15–60 dakikada bir log yedeği.</value></data>
+  <data name="Help_DbBackups_Watch" xml:space="preserve"><value>Bir günden eski tam yedek, bir saatten eski log yedeği.</value></data>
+  <data name="Help_DbBackups_Bad" xml:space="preserve"><value>Tam yedek yok ya da bir haftadan eski; FULL modda bir gündür log yedeği yok: o zamandan beri olan veri kurtarılamaz ve log büyümeye devam eder.</value></data>
+  <data name="Help_DbBackups_Action" xml:space="preserve"><value>Yedeklemeyi kimin yaptığını sorun (bakım planı, agent işi, yedekleme ürünü) ve ara ara geri yüklemeyi deneyin. Copy-only yedekler (✓) yedek zincirine sayılmaz.</value></data>
+  <data name="Help_DbCheckDb_Title" xml:space="preserve"><value>Son temiz CHECKDB</value></data>
+  <data name="Help_DbCheckDb_What" xml:space="preserve"><value>DBCC CHECKDB'nin tüm veritabanını en son ne zaman denetleyip bozulma bulmadığı. Bulunmayan bozulma sonraki her yedeğe geçer.</value></data>
+  <data name="Help_DbCheckDb_Good" xml:space="preserve"><value>Bir hafta içinde.</value></data>
+  <data name="Help_DbCheckDb_Watch" xml:space="preserve"><value>Bir haftadan eski.</value></data>
+  <data name="Help_DbCheckDb_Bad" xml:space="preserve"><value>Hiç yapılmamış ya da bir aydan eski.</value></data>
+  <data name="Help_DbCheckDb_Action" xml:space="preserve"><value>DBCC CHECKDB'yi haftalık olarak sakin bir saate planlayın (her şeyi okur); çok büyük veritabanlarında dosya grubuna bölün ya da geri yüklenmiş bir kopyada çalıştırın.</value></data>
+  <data name="Help_DbTables_Title" xml:space="preserve"><value>En büyük tablolar</value></data>
+  <data name="Help_DbTables_What" xml:space="preserve"><value>En çok yer kaplayan tablolar: ayrılmış alan; veri, index'ler ve onlar için ayrılmış boş sayfalardır. Yandaki liste en büyük 50 tablonun satır, veri ve index alanlarını gösterir.</value></data>
+  <data name="Help_DbTables_Good" xml:space="preserve"><value>İşe uygun büyüme: en üstte beklediğiniz tablolar.</value></data>
+  <data name="Help_DbTables_Watch" xml:space="preserve"><value>Index alanı veri alanından büyük: çok sayıda ya da geniş index (Performans analizi &gt; Index kullanımı'na bakın).</value></data>
+  <data name="Help_DbTables_Bad" xml:space="preserve"><value>Sadece büyüyen bir log, denetim ya da ara tablo: kimse temizlemiyor.</value></data>
+  <data name="Help_DbTables_Action" xml:space="preserve"><value>Sürekli büyüyen tabloların eski satırlarını küçük gruplar halinde arşivleyin ya da silin; kullanılmayan index'leri kaldırın; büyük ve az değişen tablolar için sayfa sıkıştırmayı düşünün.</value></data>
+  <data name="Help_DbFiles_Title" xml:space="preserve"><value>Dosyalar</value></data>
+  <data name="Help_DbFiles_What" xml:space="preserve"><value>Veritabanının veri ve log dosyaları: sunucuda nerede oldukları, boyutları, içlerinde kullanılan alan, nasıl büyüdükleri ve sınırları (∞ = sınırsız).</value></data>
+  <data name="Help_DbFiles_Good" xml:space="preserve"><value>Sabit boyutla büyüme (256–1.024 MB), yoğun sunucularda veri ve log ayrı disklerde.</value></data>
+  <data name="Help_DbFiles_Watch" xml:space="preserve"><value>Yüzdeyle ya da 1 MB ile büyüme; azami boyutun mevcut boyuta yakın olması.</value></data>
+  <data name="Help_DbFiles_Bad" xml:space="preserve"><value>Azami boyutuna ulaşmış dosya ya da dolu disk: yazmalar hatayla durur.</value></data>
+  <data name="Help_DbFiles_Action" xml:space="preserve"><value>Sabit büyüme ayarlayın (Sağlık kontrolü betiğini verir) ve dosyaların bulunduğu disklerin boş alanını izleyin.</value></data>
+  <data name="Help_DbOptions_Title" xml:space="preserve"><value>Ayarlar</value></data>
+  <data name="Help_DbOptions_What" xml:space="preserve"><value>Veritabanının ana seçenekleri: kim bağlanabilir, salt okunur, satır sürümleme (RCSI / snapshot isolation: okuyanlar yazanları engellemez), şifreleme, sayfa doğrulama, otomatik kapanma / küçültme / istatistik, TRUSTWORTHY, gecikmeli kalıcılık ve Query Store.</value></data>
+  <data name="Help_DbOptions_Good" xml:space="preserve"><value>Sayfa doğrulama CHECKSUM; otomatik kapanma ve küçültme OFF; istatistikler ON; TRUSTWORTHY OFF; Query Store READ_WRITE.</value></data>
+  <data name="Help_DbOptions_Watch" xml:space="preserve"><value>Okuyan ve yazanların birbirini engellediği yoğun bir OLTP veritabanında RCSI OFF; Query Store OFF (plan geçmişi yok).</value></data>
+  <data name="Help_DbOptions_Bad" xml:space="preserve"><value>Otomatik küçültme ya da kapanma ON, CHECKSUM dışında sayfa doğrulama, TRUSTWORTHY ON: nedeni ve düzeltmesi için Sağlık kontrolü'ne bakın.</value></data>
+  <data name="Help_DbOptions_Action" xml:space="preserve"><value>Sağlık kontrolünü çalıştırın: her veritabanının riskli ayarlarını düzelten betikle birlikte listeler.</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Tümünü temizle</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Filtreyi kaldır</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} / {1:N0} satır</value></data>

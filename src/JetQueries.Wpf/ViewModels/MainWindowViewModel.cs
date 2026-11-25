@@ -61,6 +61,7 @@ public partial class MainWindowViewModel : ObservableObject
         connections.PerformanceRequested += (_, analysis) => documents.OpenPerformance(analysis);
         connections.DashboardRequested += (_, dashboard) => documents.OpenDashboard(dashboard);
         connections.HealthRequested += (_, health) => documents.OpenHealth(health);
+        connections.DatabaseDetailRequested += (_, detail) => documents.OpenDatabaseDetail(detail);
         documents.DetailsRequested += (_, request) => ShowDetails(request);
 
         // A new query starts on the connection that is selected in the explorer.
@@ -201,6 +202,22 @@ public partial class MainWindowViewModel : ObservableObject
             FindConnection(Connections.Roots, session.Definition.Id) is { CanMonitor: true } open)
         {
             Connections.OpenActivityCommand.Execute(open);
+        }
+    }
+
+    /// <summary>Main menu: DBA, Database detail: of the database chosen in the explorer, else of the query tab's database.</summary>
+    [RelayCommand]
+    private void ShowDatabaseDetail()
+    {
+        if (Connections.Selected is DatabaseObjectNodeViewModel { CanDetail: true } node)
+        {
+            Connections.OpenDatabaseDetailCommand.Execute(node);
+            return;
+        }
+
+        if (Documents.Selected is { SelectedSession.Session: { SupportsDatabaseDetails: true } session, SelectedDatabase: { Length: > 0 } database })
+        {
+            Connections.RequestDatabaseDetail(session, database);
         }
     }
 

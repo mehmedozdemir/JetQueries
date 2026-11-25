@@ -772,3 +772,12 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] Untick "Yalnızca sorunlar": passing rules appear (Sorunsuz, green check); the category box narrows the list.
 - [ ] A login without msdb access: "Yedekler okunamadı" (Bilgi) instead of missing backups.
 - [ ] The "i" beside the title explains the screen and the severities; in English the rules are in English.
+
+## Database detail (SQL Server)
+- [ ] Right-click a database under a connected SQL Server > DBA > Veritabanı ayrıntıları: a tab "<database> · <connection>" opens and fills; the same again selects it. DBA > Veritabanı ayrıntıları works for the selected database node, else the query tab's current database.
+- [ ] The header shows state, recovery, compatibility, collation, owner and creation date.
+- [ ] Tiles: data used of allocated; log size with "% dolu" and, when held, "tutan: LOG_BACKUP"; VLF count; last full / log backup as "N gün önce" with the date; last clean CHECKDB; tables and rows. A FULL database without log backups shows Kritik with an icon; a SIMPLE one says log backups are not needed.
+- [ ] Largest tables as bars with size and rows; Ayarlar lists page verification, auto shrink, Query Store…; Tablolar, Dosyalar (with path, growth, max) and Yedek geçmişi fill.
+- [ ] Take a backup in a query tab and press F5: it appears first in the history and the tile updates.
+- [ ] Every tile and section has an "i" that explains it (11 on the screen).
+- [ ] The query tab using that connection keeps its database (the screen does not switch it).
