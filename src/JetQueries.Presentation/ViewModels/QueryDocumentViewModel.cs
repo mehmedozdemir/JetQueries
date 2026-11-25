@@ -849,6 +849,79 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
     [ObservableProperty]
     public partial string Status { get; set; }
 
+    /// <summary>
+    /// What is read in the background for completion right now ("Reading the structure of Sales…"), or null.
+    /// Shown in the status bar, so that a list that is slow to come the first time has a visible reason.
+    /// </summary>
+    [ObservableProperty]
+    public partial string? SchemaStatus { get; set; }
+
+    // The connection and database whose structure was read ahead last, so that it is read once per choice.
+    private string? _warmedFor;
+
+    /// <summary>
+    /// Reads ahead, in the background, what completion asks first for the chosen connection and database: the
+    /// tables and views of its default schema and all of their columns. Called on the UI thread when the
+    /// database is known; a choice already read (or being read) is not read again.
+    /// </summary>
+    private void WarmUpSchema()
+    {
+        if (SelectedSession?.Session is not { Provider.LanguageService: ISqlMetadataWarmUp warmUp } session || _channel is not { } channel || session.IsKeyValue)
+        {
+            return;
+        }
+
+        var database = channel.ContextKind is null ? null : SelectedDatabase;
+        if (channel.ContextKind is not null && database is null)
+        {
+            return;
+        }
+
+        var key = session.Definition.Id.ToString("N") + "/" + database;
+        if (string.Equals(key, _warmedFor, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        _warmedFor = key;
+        var document = Document(string.Empty, SessionMetadata(session));
+        SchemaStatus = Format(Strings.SchemaReading, database ?? session.Definition.Name);
+        _ = WarmUpAsync(warmUp, document, key);
+    }
+
+    private async Task WarmUpAsync(ISqlMetadataWarmUp warmUp, SqlDocument document, string key)
+    {
+        var done = true;
+        try
+        {
+            await _jobs.Enqueue("Read schema for completion", context => warmUp.WarmUpAsync(document, context.CancellationToken), JobPriority.Low)
+                .Completion.ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            done = false;
+        }
+#pragma warning disable CA1031 // A head start only: completion reads what it needs itself when this fails.
+        catch (Exception)
+#pragma warning restore CA1031
+        {
+            done = false;
+        }
+
+        _ui.Post(() =>
+        {
+            if (string.Equals(key, _warmedFor, StringComparison.Ordinal))
+            {
+                SchemaStatus = null;
+                if (!done)
+                {
+                    // Tried again on the next choice of this database.
+                    _warmedFor = null;
+                }
+            }
+        });
+    }
+
     /// <summary>Brings the connection list in line with the open sessions, keeping the choice where possible.</summary>
     public void RefreshSessions()
     {
@@ -934,6 +1007,12 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
         {
             _ui.Post(() => SupportsTransactions = channel.SupportsTransactions);
             await RefreshDatabaseAsync(channel, withList: true).ConfigureAwait(false);
+
+            // No database to choose (SQLite): the structure is read ahead now.
+            if (channel.ContextKind is null)
+            {
+                _ui.Post(WarmUpSchema);
+            }
         }
     }
 
@@ -1055,6 +1134,8 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
         {
             _applyingDatabase = false;
         }
+
+        WarmUpSchema();
     }
 
     private async Task ChangeDatabaseAsync(QueryChannel channel, string database)

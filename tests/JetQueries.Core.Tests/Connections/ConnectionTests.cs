@@ -255,14 +255,21 @@ public sealed class ConnectionManagerTests
         Assert.Equal(ConnectionOutcome.Succeeded, first.Outcome);
         Assert.Same(first.Session, second.Session);
         Assert.Same(first.Session, Assert.Single(manager.Sessions));
-        Assert.Equal(2, provider.Opened);
+
+        // The test's connection, the session's, and its metadata connection opened right after in the background.
+        for (var i = 0; i < 200 && provider.Opened < 3; i++)
+        {
+            await Task.Delay(10, Token);
+        }
+
+        Assert.Equal(3, provider.Opened);
         Assert.Equal(1, changes);
 
         await manager.CloseAsync(definition.Id);
         await manager.CloseAsync(definition.Id);
 
         Assert.Empty(manager.Sessions);
-        Assert.Equal(2, provider.Disposed);
+        Assert.Equal(3, provider.Disposed);
         Assert.Equal(2, changes);
     }
 

@@ -353,6 +353,56 @@ public partial class SqlEditor
         }, DispatcherPriority.Loaded);
     }
 
+    // "Reading the database structure…" at the caret while a completion waits for the database.
+    private Popup? _readingHint;
+
+    /// <summary>The reading hint, when shown (for tests).</summary>
+    internal bool ReadingHintShown => _readingHint is { IsOpen: true };
+
+    /// <summary>Shows the hint if the answer is still not there after a moment (a quick answer shows nothing).</summary>
+    private async Task ShowReadingHintAsync(Task asking, int version)
+    {
+        await Task.WhenAny(asking, Task.Delay(ReadingHintDelay));
+        if (asking.IsCompleted || version != _completionVersion || _completionWindow is not null)
+        {
+            return;
+        }
+
+        var text = new TextBlock { Text = Strings.SchemaReadingHint, FontSize = 11.5 };
+        text.SetResourceReference(TextBlock.ForegroundProperty, "Brush.TextSecondary");
+        var bar = new ProgressBar { IsIndeterminate = true, Width = 28, Height = 3, Margin = new Thickness(0, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center };
+        var row = new StackPanel { Orientation = Orientation.Horizontal };
+        row.Children.Add(bar);
+        row.Children.Add(text);
+        var card = new Border { Child = row, CornerRadius = new CornerRadius(6), Padding = new Thickness(8, 4, 10, 5), BorderThickness = new Thickness(1) };
+        card.SetResourceReference(Border.BackgroundProperty, "Brush.Card");
+        card.SetResourceReference(Border.BorderBrushProperty, "Brush.BorderStrong");
+
+        _readingHint ??= new Popup { AllowsTransparency = true, StaysOpen = true, Focusable = false, IsHitTestVisible = false, Placement = PlacementMode.Relative };
+        _readingHint.Child = card;
+
+        // Below the caret's line, where the list will open.
+        var view = _editor.TextArea.TextView;
+        var location = _editor.Document.GetLocation(_editor.CaretOffset);
+        var point = view.GetVisualPosition(new TextViewPosition(location), VisualYPosition.LineBottom) - view.ScrollOffset;
+        var inEditor = view.TranslatePoint(point, this);
+        _readingHint.PlacementTarget = this;
+        _readingHint.HorizontalOffset = Math.Max(0, inEditor.X);
+        _readingHint.VerticalOffset = inEditor.Y + 2;
+        _readingHint.IsOpen = true;
+    }
+
+    /// <summary>How long a completion may take before the reading hint shows.</summary>
+    internal static TimeSpan ReadingHintDelay { get; set; } = TimeSpan.FromMilliseconds(250);
+
+    private void CloseReadingHint()
+    {
+        if (_readingHint is { IsOpen: true })
+        {
+            _readingHint.IsOpen = false;
+        }
+    }
+
     private static Popup CreateSignaturePopup() => new()
     {
         AllowsTransparency = true,

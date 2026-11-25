@@ -247,6 +247,16 @@ public sealed class ConnectionManagerIntegrationTests(SqlServerFixture fixture) 
         var schemas = await service.GetCompletionsAsync(new SqlDocument("SELECT * FROM tempdb.", metadata), 21, Token);
         Assert.Contains(schemas, static t => t is { Label: "dbo", Kind: CompletionItemKind.Schema });
 
+        // Read ahead: the tables of dbo and every one of their columns in one read, kept under the name an
+        // unqualified table is asked by.
+        await using var fresh = new SqliteMetadataCache(new MetadataCacheOptions(), TimeProvider.System, NullLogger<SqliteMetadataCache>.Instance);
+        var ahead = new SessionMetadataProvider(session, new MetadataService(fresh, TimeProvider.System));
+        Assert.True(await ((ISqlMetadataWarmUp)service).WarmUpAsync(new SqlDocument(string.Empty, ahead), Token) > 0);
+        var preloaded = await fresh.GetColumnsAsync(definition.Id, new DatabaseObjectName(null, "dbo", "jq_go"), Token);
+        Assert.Equal(["id", "Açıklama Metni"], preloaded!.Value.Select(static c => c.Name));
+        Assert.Equal("int", preloaded.Value[0].DataType);
+        Assert.True(preloaded.Value[0].IsPrimaryKey);
+
         // Go to definition: a procedure's stored source, and a script written from the catalog for a table.
         var procedure = await service.GetDefinitionAsync(new SqlDocument("EXEC dbo.jq_go_count", metadata), 12, Token);
         Assert.Equal(DatabaseObjectKinds.Procedure, procedure!.Target!.Kind);

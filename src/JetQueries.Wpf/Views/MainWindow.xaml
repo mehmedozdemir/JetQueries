@@ -186,6 +186,12 @@
         <DockPanel Grid.Row="2" Height="26" Margin="10,0">
             <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
                 <TextBlock Text="{Binding Documents.Selected.Status}" Style="{StaticResource Text.Status}" Foreground="{DynamicResource Brush.Text}" />
+                <!-- The structure read ahead for IntelliSense: why the first list may take a moment -->
+                <StackPanel x:Name="SchemaStatusPanel" Orientation="Horizontal" Margin="16,0,0,0"
+                            Visibility="{Binding Documents.Selected.SchemaStatus, Converter={x:Static v:NotNullToVisibilityConverter.Instance}, FallbackValue=Collapsed}">
+                    <ProgressBar IsIndeterminate="True" Width="36" Height="3" Margin="0,0,8,0" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding Documents.Selected.SchemaStatus}" Style="{StaticResource Text.Status}" Foreground="{DynamicResource Brush.TextSecondary}" />
+                </StackPanel>
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <!-- An update found, downloading or ready: what to do next -->

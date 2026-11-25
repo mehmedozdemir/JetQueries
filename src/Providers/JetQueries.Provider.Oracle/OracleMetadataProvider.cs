@@ -17,7 +17,7 @@ namespace JetQueries.Provider.Oracle;
 /// Naming convention of the objects returned: a schema is <c>(null, null, SCHEMA)</c>, everything else is
 /// <c>(null, SCHEMA, NAME)</c>, with names as the dictionary stores them (upper case unless created quoted).
 /// </remarks>
-internal sealed partial class OracleMetadataProvider(OracleConnection connection) : IMetadataProvider
+internal sealed partial class OracleMetadataProvider(OracleConnection connection) : IMetadataProvider, IBulkColumnMetadataProvider
 {
     // ALL_OBJECTS.OBJECT_TYPE per kind. Literals chosen here, never user input.
     private static readonly (DatabaseObjectKinds Kind, string Type)[] ObjectTypes =
@@ -166,6 +166,67 @@ internal sealed partial class OracleMetadataProvider(OracleConnection connection
         }
 
         return columns;
+    }
+
+    /// <summary>The columns of every table and view of one owner (the current schema when none) in one query.</summary>
+    public async Task<IReadOnlyList<TableColumns>> GetAllColumnsAsync(DatabaseObject? schema, CancellationToken cancellationToken)
+    {
+        const string Sql = """
+            SELECT c.table_name, c.column_name, c.data_type, c.data_length, c.data_precision, c.data_scale, c.nullable, c.column_id,
+                   c.char_length, c.char_used, NVL2(pk.column_name, 1, 0) AS is_key, c.owner
+            FROM all_tab_columns c
+            LEFT JOIN (SELECT kc.table_name, kc.column_name
+                       FROM all_constraints k
+                       JOIN all_cons_columns kc ON kc.owner = k.owner AND kc.constraint_name = k.constraint_name AND kc.table_name = k.table_name
+                       WHERE k.constraint_type = 'P' AND k.owner = NVL(:owner, SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA'))) pk
+              ON pk.table_name = c.table_name AND pk.column_name = c.column_name
+            WHERE c.owner = NVL(:owner, SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA')) AND c.table_name NOT LIKE 'BIN$%'
+            ORDER BY c.table_name, c.column_id
+            """;
+
+        var tables = new List<TableColumns>();
+        string? current = null;
+        string? owner = null;
+        var columns = new List<ColumnInfo>();
+        await foreach (var (table, tableOwner, column) in QueryAsync(
+                           Sql,
+                           [("owner", schema?.Name.Name)],
+                           static r => (r.GetString(0), r.GetString(11), new ColumnInfo(
+                               r.GetString(1),
+                               OracleTypeFormatter.Format(
+                                   r.GetString(2),
+                                   ToInt(r, 3) ?? 0,
+                                   ToInt(r, 4),
+                                   ToInt(r, 5),
+                                   ToInt(r, 8) ?? 0,
+                                   r.IsDBNull(9) ? null : r.GetString(9)),
+                               r.GetString(6) == "Y",
+                               ToInt(r, 7) ?? 0,
+                               (ToInt(r, 10) ?? 0) > 0)),
+                           cancellationToken).ConfigureAwait(false))
+        {
+            if (!string.Equals(table, current, StringComparison.Ordinal))
+            {
+                Flush();
+                current = table;
+                owner = tableOwner;
+            }
+
+            columns.Add(column);
+        }
+
+        Flush();
+        return tables;
+
+        void Flush()
+        {
+            if (current is not null && columns.Count > 0)
+            {
+                tables.Add(new TableColumns(new DatabaseObjectName(null, owner, current), [.. columns]));
+            }
+
+            columns.Clear();
+        }
     }
 
     public async Task<string?> GetDefinitionAsync(DatabaseObject target, CancellationToken cancellationToken)

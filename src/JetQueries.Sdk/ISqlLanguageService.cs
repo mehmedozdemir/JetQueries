@@ -282,3 +282,18 @@ public enum CompletionItemKind
 /// <param name="DocumentSpan">The declaration's range, when the target is declared in the same document (alias, CTE, variable).</param>
 /// <param name="MemberName">A member inside <see cref="Target"/> (column, package procedure) to reveal, if any.</param>
 public sealed record SqlDefinition(DatabaseObject? Target, TextSpan? DocumentSpan = null, string? MemberName = null);
+
+/// <summary>
+/// Optional for an <see cref="ISqlLanguageService"/>: reads, ahead of the first completion, what completion will
+/// need for a document's connection (the objects of its default schema and their columns), so that the host can
+/// run it in the background right after connecting or choosing a database.
+/// </summary>
+/// <remarks>Preview contract: may change until SDK 1.0.</remarks>
+public interface ISqlMetadataWarmUp
+{
+    /// <summary>Reads through <see cref="SqlDocument.Metadata"/> what completion asks first; the host's cache keeps it.</summary>
+    /// <param name="document">An (empty) document bound to the connection and database.</param>
+    /// <param name="cancellationToken">Cancels the reading.</param>
+    /// <returns>How many tables and views the default schema has.</returns>
+    Task<int> WarmUpAsync(SqlDocument document, CancellationToken cancellationToken);
+}

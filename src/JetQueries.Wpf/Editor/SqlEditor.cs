@@ -773,9 +773,17 @@ public partial class SqlEditor : UserControl
         var version = ++_completionVersion;
         var offset = _editor.CaretOffset;
         IReadOnlyList<CompletionItem> items;
+        var asking = source(_editor.Document.Text, offset, CancellationToken.None);
+
+        // Answered from the cache this is instant; when the database has to be read first, say so at the caret.
+        if (!asking.IsCompleted)
+        {
+            _ = ShowReadingHintAsync(asking, version);
+        }
+
         try
         {
-            items = await source(_editor.Document.Text, offset, CancellationToken.None);
+            items = await asking;
         }
         catch (OperationCanceledException)
         {
@@ -787,14 +795,22 @@ public partial class SqlEditor : UserControl
         {
             return;
         }
+        finally
+        {
+            if (version == _completionVersion)
+            {
+                CloseReadingHint();
+            }
+        }
 
         if (valuesOnly)
         {
             items = [.. items.Where(static i => i.Kind == CompletionItemKind.Value)];
         }
 
-        // The caret moved on while the answer was on its way: a newer request covers the new position.
-        if (version != _completionVersion || items.Count == 0 || _editor.CaretOffset != offset || _completionWindow is not null)
+        // A newer request covers the new position. The caret may have moved on within the word while the answer
+        // was on its way (the database was read first): the list still opens, filtered by what was typed since.
+        if (version != _completionVersion || items.Count == 0 || _completionWindow is not null || TypedSince(offset) is not { } typed)
         {
             return;
         }
@@ -832,7 +848,40 @@ public partial class SqlEditor : UserControl
             }
         };
         _completionWindow = window;
+        window.EndOffset = _editor.CaretOffset;
         window.Show();
+        if (typed.Length > 0)
+        {
+            window.CompletionList.SelectItem(_editor.Document.GetText(window.StartOffset, _editor.CaretOffset - window.StartOffset));
+            if (window.CompletionList.ListBox.Items.Count == 0)
+            {
+                window.Close();
+            }
+        }
+    }
+
+    /// <summary>
+    /// What was typed between <paramref name="offset"/> and the caret, when that is only more of the same word
+    /// (letters, digits, _, $, #); <see langword="null"/> when the caret went elsewhere.
+    /// </summary>
+    private string? TypedSince(int offset)
+    {
+        var caret = _editor.CaretOffset;
+        if (caret < offset || caret > _editor.Document.TextLength)
+        {
+            return null;
+        }
+
+        var typed = _editor.Document.GetText(offset, caret - offset);
+        foreach (var c in typed)
+        {
+            if (!(char.IsLetterOrDigit(c) || c is '_' or '$' or '#'))
+            {
+                return null;
+            }
+        }
+
+        return typed;
     }
 
     private void OnDocumentChanged(object? sender, DocumentChangeEventArgs e)

@@ -6,6 +6,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 ## [Unreleased]
 
 ### Added
+- IntelliSense reads ahead: right after a query tab gets its connection and database, the tables and views of the default schema and every one of their columns are read in the background, in one query (SQL Server, Oracle, PostgreSQL; SQLite lists its tables). The first table and column lists then come from the cache. The status bar shows "… yapısı IntelliSense için okunuyor…" while this runs; a list still waiting for the database shows "Veritabanı yapısı okunuyor…" at the caret.
+- SDK (preview): `IBulkColumnMetadataProvider` (a schema's columns in one read), `IMetadataPreloader` and `ISqlMetadataWarmUp`.
+
+### Changed
+- The metadata connection is opened in the background right after connecting, not on the first completion.
+- The same metadata asked for at once (completion while the explorer loads, a request per keystroke) is read once and shared, instead of the same query queueing on the metadata connection several times.
+- A completion list that arrives after more of the word was typed opens anyway, filtered by what was typed, instead of being dropped.
 - The table card shown when the mouse rests on a table, view, alias or column stays open while the mouse moves onto it: a table's columns scroll (all of them, not only the first 20), and "Ayrıntıları aç (Ctrl+Tık)" opens the object's details. It closes a moment after the mouse leaves both the name and the card, and at once on typing, a click, scrolling or Esc.
 - Interface density on five levels (Settings > Appearance > Yoğunluk: Çok sıkı, Sıkı, Normal, Rahat, Geniş, with − and + buttons); toolbars, tabs, rows, inputs and the result grid's rows follow at once. Settings saved with the old compact switch keep their look.
 - Explorer grouping ("…" > Gruplama): by folders (as before, the default), by environment (production first, then test, development, none) or by database type; folders stay inside each group. Groups start open; the ones closed and the chosen grouping are remembered.

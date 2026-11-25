@@ -333,6 +333,37 @@ public sealed class ConnectionSession : IAsyncDisposable
         }
     }
 
+    /// <summary>
+    /// Opens the metadata connection ahead of the first metadata read (called right after connecting), so that
+    /// the first completion or tree does not also wait for a login. A failure is left for that first read to report.
+    /// </summary>
+    /// <param name="cancellationToken">Cancels opening.</param>
+    public async Task PrepareMetadataAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _metadataGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (ObjectDisposedException)
+        {
+            return;
+        }
+
+        try
+        {
+            await MetadataConnectionAsync(cancellationToken).ConfigureAwait(false);
+        }
+#pragma warning disable CA1031 // Only a head start: the first real metadata read opens it again and reports why it fails.
+        catch (Exception)
+#pragma warning restore CA1031
+        {
+        }
+        finally
+        {
+            _metadataGate.Release();
+        }
+    }
+
     // Under the metadata gate.
     private async Task<IDatabaseConnection> MetadataConnectionAsync(CancellationToken cancellationToken)
     {
@@ -822,6 +853,9 @@ public sealed class ConnectionManager : IConnectionManager, IAsyncDisposable
         }
 
         SessionsChanged?.Invoke(this, EventArgs.Empty);
+
+        // The metadata connection is opened now, in the background, instead of on the first completion.
+        _ = session.PrepareMetadataAsync(CancellationToken.None);
         return attempt with { Session = session };
     }
 

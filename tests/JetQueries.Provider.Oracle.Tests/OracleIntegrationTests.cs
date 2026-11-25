@@ -681,6 +681,14 @@ public sealed class OracleIntegrationTests(OracleFixture fixture) : IClassFixtur
         Assert.Equal("\"Açıklama\"", columns[1].InsertText);
         Assert.Equal("NUMBER(18) · PK", columns[0].Detail);
 
+        // Every column of the schema in one read, for completion's read ahead.
+        var all = await ((IBulkColumnMetadataProvider)metadata).GetAllColumnsAsync(null, Token);
+        var cards = Assert.Single(all, static t => t.Table.Name == "JQ2_CARDS");
+        Assert.Equal(["ID", "Açıklama", "BALANCE"], cards.Columns.Select(static c => c.Name));
+        Assert.Equal("NUMBER(18)", cards.Columns[0].DataType);
+        Assert.True(cards.Columns[0].IsPrimaryKey);
+        Assert.False(cards.Columns[2].IsPrimaryKey);
+
         // The overloaded function appears once; the procedure and the function are told apart.
         var members = await service.GetCompletionsAsync(new SqlDocument("BEGIN jq2_ops.", metadata), 14, Token);
         Assert.Equal(["BALANCE_OF", "OPEN_CARD"], members.Select(static m => m.Label));

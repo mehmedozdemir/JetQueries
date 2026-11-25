@@ -16,7 +16,7 @@ namespace JetQueries.Core.Metadata;
 /// (PostgreSQL), another database's objects are read on a connection to it, and carry its name, so that
 /// what is opened from them (details, definitions) goes to the same database.
 /// </param>
-public sealed class SessionMetadataProvider(ConnectionSession session, IMetadataService metadata, string? database = null) : IMetadataProvider, IRoutineMetadataProvider
+public sealed class SessionMetadataProvider(ConnectionSession session, IMetadataService metadata, string? database = null) : IMetadataProvider, IRoutineMetadataProvider, IMetadataPreloader
 {
     /// <inheritdoc />
     public async IAsyncEnumerable<DatabaseObject> GetObjectsAsync(
@@ -36,6 +36,15 @@ public sealed class SessionMetadataProvider(ConnectionSession session, IMetadata
         ArgumentNullException.ThrowIfNull(tableOrView);
         var other = await session.OtherMetadataDatabaseAsync(database, cancellationToken).ConfigureAwait(false);
         return await metadata.GetColumnsAsync(session, other is null ? tableOrView : tableOrView with { Database = null }, refresh: false, cancellationToken, database)
+            .ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public async Task<int> PreloadColumnsAsync(DatabaseObject? schema, Func<DatabaseObjectName, DatabaseObjectName> lookupName, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(lookupName);
+        var other = await session.OtherMetadataDatabaseAsync(database, cancellationToken).ConfigureAwait(false);
+        return await metadata.PreloadColumnsAsync(session, other is null || schema is null ? schema : Local(schema), lookupName, cancellationToken, database)
             .ConfigureAwait(false);
     }
 

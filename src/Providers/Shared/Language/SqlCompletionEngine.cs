@@ -258,6 +258,40 @@ internal static class SqlCompletionEngine
     }
 
     /// <summary>
+    /// Reads what completion asks first, through the document's metadata (the host's cache keeps it): the tables
+    /// and views of the default schema, the objects names resolve against, and, when the metadata can read them
+    /// at once, the columns of all of them under the names an unqualified table in a query is asked by.
+    /// </summary>
+    public static async Task<int> WarmUpAsync(SqlDialect dialect, SqlDocument document, CancellationToken cancellationToken)
+    {
+        if (document.Metadata is not { } metadata)
+        {
+            return 0;
+        }
+
+        var parent = dialect.SchemaParent(document, null, null);
+        var count = 0;
+        await foreach (var unused in metadata.GetObjectsAsync(parent, TableKinds, cancellationToken).ConfigureAwait(false))
+        {
+            count++;
+        }
+
+        if (dialect.ResolvableKinds != TableKinds)
+        {
+            await foreach (var unused in metadata.GetObjectsAsync(parent, dialect.ResolvableKinds, cancellationToken).ConfigureAwait(false))
+            {
+            }
+        }
+
+        if (count > 0 && metadata is IMetadataPreloader preloader)
+        {
+            await preloader.PreloadColumnsAsync(parent, name => dialect.ToName(document, [name.Name]), cancellationToken).ConfigureAwait(false);
+        }
+
+        return count;
+    }
+
+    /// <summary>
     /// What the name at <paramref name="offset"/> refers to: a table or view (by its name or through an alias,
     /// optionally with the column that was pointed at), a routine, or a member of a package.
     /// </summary>

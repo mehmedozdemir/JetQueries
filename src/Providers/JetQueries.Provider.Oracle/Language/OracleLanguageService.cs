@@ -136,7 +136,7 @@ internal sealed class OracleDialect : SqlDialect
 /// structural parser chosen in ADR 0003. Expression and SQL syntax is not checked here: Oracle reports that
 /// when the code is compiled or run.
 /// </summary>
-internal sealed class OracleLanguageService : ISqlLanguageService, ISqlFormatter, ISignatureHelpProvider
+internal sealed class OracleLanguageService : ISqlLanguageService, ISqlMetadataWarmUp, ISqlFormatter, ISignatureHelpProvider
 {
     /// <inheritdoc />
     public string Format(string sql, SqlFormatOptions options) => SqlLayout.Format(sql, PlSqlTokenizer.Tokenize, options);
@@ -182,6 +182,13 @@ internal sealed class OracleLanguageService : ISqlLanguageService, ISqlFormatter
                 return diagnostics;
             },
             cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task<int> WarmUpAsync(SqlDocument document, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        return SqlCompletionEngine.WarmUpAsync(OracleDialect.Instance, document, cancellationToken);
     }
 
     public Task<IReadOnlyList<CompletionItem>> GetCompletionsAsync(SqlDocument document, int offset, CancellationToken cancellationToken)
