@@ -321,7 +321,7 @@ public sealed class ShellRenderTests
             return results;
         });
 
-        Assert.Equal(36, colours.Count); // 28 renderings and the 8 colour schemes
+        Assert.Equal(43, colours.Count); // 28 renderings and the 15 colour schemes
         Assert.All(colours, static pair => Assert.True(pair.Value > 12, $"{pair.Key} rendered only {pair.Value} distinct colours."));
     }
 

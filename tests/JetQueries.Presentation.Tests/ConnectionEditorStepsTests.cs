@@ -41,7 +41,7 @@ public sealed class ConnectionEditorStepsTests
 
         var sqlServer = editor.Providers.Single(static p => p.Provider is SqlServerProvider);
         Assert.Equal("SQL Server and Azure SQL", sqlServer.Description);
-        Assert.Equal("#B4262D", sqlServer.Mark.Color);
+        Assert.Equal("#CC2927", sqlServer.Mark.Color);
         Assert.True(sqlServer.ReadsConnectionStrings);
 
         // A provider that does not describe itself gets the default mark and no connection string box.

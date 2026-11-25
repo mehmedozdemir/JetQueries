@@ -1078,6 +1078,13 @@ What it is running stops and its open transaction is rolled back; the client get
   <data name="ConnectionDatabasesHint" xml:space="preserve"><value>The explorer and the database lists of query tabs show only the checked databases; the default one is always among them.</value></data>
   <data name="ConnectionDatabasesRequired" xml:space="preserve"><value>Check at least one database, or show all.</value></data>
   <data name="ExplorerHiddenDatabases" xml:space="preserve"><value>{0} hidden — edit the connection to show more</value></data>
+  <data name="Scheme_Dark_Slate" xml:space="preserve"><value>Slate (dim)</value></data>
+  <data name="Scheme_Dark_Frost" xml:space="preserve"><value>Frost (dim)</value></data>
+  <data name="Scheme_Dark_Mocha" xml:space="preserve"><value>Mocha (dim, warm)</value></data>
+  <data name="Scheme_Dark_Forest" xml:space="preserve"><value>Forest (dim)</value></data>
+  <data name="Scheme_Light_Sepia" xml:space="preserve"><value>Sepia (soft)</value></data>
+  <data name="Scheme_Light_Sage" xml:space="preserve"><value>Sage (soft)</value></data>
+  <data name="Scheme_Light_Mist" xml:space="preserve"><value>Mist (soft)</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Clear all</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Remove filter</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} of {1:N0} rows</value></data>

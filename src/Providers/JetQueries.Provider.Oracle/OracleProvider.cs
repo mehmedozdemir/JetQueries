@@ -37,11 +37,11 @@ public sealed class OracleProvider : IDatabaseProvider, IBulkInsertScripting, IR
         ProviderCapabilities.Routines | ProviderCapabilities.Packages | ProviderCapabilities.Sequences |
         ProviderCapabilities.Synonyms | ProviderCapabilities.UserTypes;
 
-    /// <inheritdoc />
-    public string IconPathData => "M8 6h8a6 6 0 0 1 0 12H8A6 6 0 0 1 8 6z M8.5 8.5h7a3.5 3.5 0 0 1 0 7h-7a3.5 3.5 0 0 1 0-7z";
+    /// <summary>The product's logo: Simple Icons 9.0.0 (CC0-1.0), for recognition only; the trademark is its owner's.</summary>
+    public string IconPathData => "M16.412 4.412h-8.82a7.588 7.588 0 0 0-.008 15.176h8.828a7.588 7.588 0 0 0 0-15.176zm-.193 12.502H7.786a4.915 4.915 0 0 1 0-9.828h8.433a4.914 4.914 0 1 1 0 9.828z";
 
     /// <inheritdoc />
-    public string AccentColor => "#D9622B";
+    public string AccentColor => "#F80000";
 
     /// <inheritdoc />
     public string Description => "Oracle Database, no client installation needed";
