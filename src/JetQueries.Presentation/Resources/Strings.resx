@@ -602,6 +602,136 @@ What it is running stops and its open transaction is rolled back; the client get
   <data name="DashOldFullBackup" xml:space="preserve"><value>full backup {0} days old</value></data>
   <data name="DashNoLogBackup" xml:space="preserve"><value>FULL recovery without a log backup in 24 h</value></data>
   <data name="DashWaiting" xml:space="preserve"><value>Waiting for the second reading…</value></data>
+  <data name="MenuDba" xml:space="preserve"><value>DBA</value></data>
+  <data name="MenuDbaHelp" xml:space="preserve"><value>Explanations (i)</value></data>
+  <data name="FieldDbaHelp" xml:space="preserve"><value>Explanations on DBA screens</value></data>
+  <data name="SettingDbaHelpInfo" xml:space="preserve"><value>A small "i" beside each tile, chart and list of the DBA screens explains what it shows, which values are normal and what to do.</value></data>
+  <data name="HelpTip" xml:space="preserve"><value>What is this? Normal values and what to do</value></data>
+  <data name="HelpWhat" xml:space="preserve"><value>What it shows</value></data>
+  <data name="HelpLevels" xml:space="preserve"><value>How to read it</value></data>
+  <data name="HelpGood" xml:space="preserve"><value>Normal</value></data>
+  <data name="HelpWatch" xml:space="preserve"><value>Keep an eye on it</value></data>
+  <data name="HelpBad" xml:space="preserve"><value>Problem</value></data>
+  <data name="HelpAction" xml:space="preserve"><value>What to do</value></data>
+  <data name="Help_DashCpu_Title" xml:space="preserve"><value>CPU</value></data>
+  <data name="Help_DashCpu_What" xml:space="preserve"><value>How busy the machine's processors are: the part used by the database server and the part used by everything else on the machine (antivirus, other services, other programs).</value></data>
+  <data name="Help_DashCpu_Good" xml:space="preserve"><value>Below 60 % most of the time; short peaks are normal.</value></data>
+  <data name="Help_DashCpu_Watch" xml:space="preserve"><value>60–80 % for long stretches: there is little room left for busy hours.</value></data>
+  <data name="Help_DashCpu_Bad" xml:space="preserve"><value>Above 80 % for minutes, or "other" high: queries slow down and wait for a processor (SOS_SCHEDULER_YIELD waits).</value></data>
+  <data name="Help_DashCpu_Action" xml:space="preserve"><value>Open Performans analizi &gt; Ağır sorgular ordered by total CPU: a few statements usually cause most of it; an index from Eksik index'ler often removes a scan. If "other" is high, look at the other programs on that machine.</value></data>
+  <data name="Help_DashMemory_Title" xml:space="preserve"><value>Memory in use</value></data>
+  <data name="Help_DashMemory_What" xml:space="preserve"><value>Memory the database server holds, mostly as a cache of table and index pages; "target" is how much it would like to use, "machine free" is what the operating system has left.</value></data>
+  <data name="Help_DashMemory_Good" xml:space="preserve"><value>In use close to target and staying there: SQL Server keeps what it reads in memory on purpose; a full cache is healthy.</value></data>
+  <data name="Help_DashMemory_Watch" xml:space="preserve"><value>Free memory on the machine under 5–10 % of its total.</value></data>
+  <data name="Help_DashMemory_Bad" xml:space="preserve"><value>Free memory under ~500 MB, or the target falling: the operating system is short of memory and takes it back; pages are read from disk again (low PLE).</value></data>
+  <data name="Help_DashMemory_Action" xml:space="preserve"><value>Set SQL Server's "max server memory" so that the operating system keeps 10–20 % (at least 2–4 GB). Look at PLE and at queries with many reads.</value></data>
+  <data name="Help_DashBatches_Title" xml:space="preserve"><value>Batches a second</value></data>
+  <data name="Help_DashBatches_What" xml:space="preserve"><value>How many requests (statements or batches sent by applications) the server receives each second: the volume of work. Compilations a second is how many of them needed a new plan.</value></data>
+  <data name="Help_DashBatches_Good" xml:space="preserve"><value>There is no universal number: what is normal for this server is what it usually does at this hour. Compilations under ~10 % of batches.</value></data>
+  <data name="Help_DashBatches_Watch" xml:space="preserve"><value>A sudden jump (a job, a loop in an application) or a sudden drop (an application stopped or is blocked).</value></data>
+  <data name="Help_DashBatches_Bad" xml:space="preserve"><value>Compilations above 20 % of batches: plans are not reused (literal values in SQL text), which costs CPU.</value></data>
+  <data name="Help_DashBatches_Action" xml:space="preserve"><value>Use parameters instead of values written into SQL. Ağır sorgular ordered by executions shows what runs most often.</value></data>
+  <data name="Help_DashRequests_Title" xml:space="preserve"><value>Running requests</value></data>
+  <data name="Help_DashRequests_What" xml:space="preserve"><value>Statements running right now (or waiting for something while running), and how many connections are open. An open connection doing nothing is not a running request.</value></data>
+  <data name="Help_DashRequests_Good" xml:space="preserve"><value>Fewer than the number of CPUs most of the time.</value></data>
+  <data name="Help_DashRequests_Watch" xml:space="preserve"><value>Often more than the number of CPUs: requests queue for processors or wait for something.</value></data>
+  <data name="Help_DashRequests_Bad" xml:space="preserve"><value>Many and growing while they wait long (blocking, disk): the server is not keeping up.</value></data>
+  <data name="Help_DashRequests_Action" xml:space="preserve"><value>Open the activity monitor: it shows what each request runs and waits for.</value></data>
+  <data name="Help_DashBlocked_Title" xml:space="preserve"><value>Blocked requests</value></data>
+  <data name="Help_DashBlocked_What" xml:space="preserve"><value>Requests waiting because another session holds a lock on the rows or tables they need. Locks are how the database keeps data consistent; waiting a moment is normal, waiting long is not.</value></data>
+  <data name="Help_DashBlocked_Good" xml:space="preserve"><value>0, or a few that clear within a second or two.</value></data>
+  <data name="Help_DashBlocked_Watch" xml:space="preserve"><value>Blocked requests that stay for several seconds.</value></data>
+  <data name="Help_DashBlocked_Bad" xml:space="preserve"><value>Blocking that lasts more than 30 seconds, or many requests behind one: users see timeouts.</value></data>
+  <data name="Help_DashBlocked_Action" xml:space="preserve"><value>Open the activity monitor: the blocking chain shows the session at the head. Often it is idle with a transaction left open (a missing COMMIT); ask its owner to commit or roll back, or end it as a last resort.</value></data>
+  <data name="Help_DashPle_Title" xml:space="preserve"><value>Page life expectancy (PLE)</value></data>
+  <data name="Help_DashPle_What" xml:space="preserve"><value>How many seconds a page read from disk stays in memory before it is pushed out. Long means the cache holds the working data; short means data is read from disk again and again.</value></data>
+  <data name="Help_DashPle_Good" xml:space="preserve"><value>Thousands of seconds and steady. A common rule: at least 300 seconds for every 4 GB of cache (on a 64 GB server, 4 800+).</value></data>
+  <data name="Help_DashPle_Watch" xml:space="preserve"><value>Sudden drops: a large scan or a report read a lot of data at once.</value></data>
+  <data name="Help_DashPle_Bad" xml:space="preserve"><value>Staying under that rule: memory pressure; disk reads (PAGEIOLATCH waits) slow queries down.</value></data>
+  <data name="Help_DashPle_Action" xml:space="preserve"><value>Find the queries with the most reads (Ağır sorgular &gt; Toplam okuma) and missing indexes; if the data simply does not fit, the server needs more memory.</value></data>
+  <data name="Help_DashLatency_Title" xml:space="preserve"><value>I/O latency</value></data>
+  <data name="Help_DashLatency_What" xml:space="preserve"><value>How long, on average, one read or write of a data or log file took in the last interval, and how many MB a second were read and written.</value></data>
+  <data name="Help_DashLatency_Good" xml:space="preserve"><value>Under 5 ms on SSD storage, under 10 ms otherwise.</value></data>
+  <data name="Help_DashLatency_Watch" xml:space="preserve"><value>10–20 ms: the storage is busy.</value></data>
+  <data name="Help_DashLatency_Bad" xml:space="preserve"><value>Above 20 ms for long (above 50 ms is serious): queries wait for the disk (PAGEIOLATCH, WRITELOG waits).</value></data>
+  <data name="Help_DashLatency_Action" xml:space="preserve"><value>Reduce reads first (indexes, heavy queries); check whether a backup or a large job runs at the same time; then the storage itself (shared disks, virtual machine limits).</value></data>
+  <data name="Help_DashCpuChart_Title" xml:space="preserve"><value>CPU over the last hour</value></data>
+  <data name="Help_DashCpuChart_What" xml:space="preserve"><value>CPU of the server (blue) and of the rest of the machine (orange), one point a minute; SQL Server keeps this history itself, so it is there as soon as the dashboard opens. Hover the chart to read a minute.</value></data>
+  <data name="Help_DashCpuChart_Good" xml:space="preserve"><value>A line that moves with the working day and returns to a low level.</value></data>
+  <data name="Help_DashCpuChart_Watch" xml:space="preserve"><value>A plateau that does not come down: something keeps running.</value></data>
+  <data name="Help_DashCpuChart_Bad" xml:space="preserve"><value>Long stretches near 100 %, or the orange line high: another program competes with the server.</value></data>
+  <data name="Help_DashCpuChart_Action" xml:space="preserve"><value>Note the time of the peak and look at Ağır sorgular and at jobs scheduled then.</value></data>
+  <data name="Help_DashBatchChart_Title" xml:space="preserve"><value>Batches a second, last 10 minutes</value></data>
+  <data name="Help_DashBatchChart_What" xml:space="preserve"><value>The volume of requests over the last minutes, one point per reading. It shows the shape of the load: steady, rising, or bursts.</value></data>
+  <data name="Help_DashBatchChart_Good" xml:space="preserve"><value>Close to what this server does at this hour on other days.</value></data>
+  <data name="Help_DashBatchChart_Watch" xml:space="preserve"><value>A step up that stays: a new job or application, or an application calling in a loop.</value></data>
+  <data name="Help_DashBatchChart_Bad" xml:space="preserve"><value>A sudden fall to almost nothing while users are working: requests may be blocked or an application cannot connect.</value></data>
+  <data name="Help_DashBatchChart_Action" xml:space="preserve"><value>Compare with Engellenen and the activity monitor at the same moment.</value></data>
+  <data name="Help_DashIoChart_Title" xml:space="preserve"><value>File I/O, last 10 minutes</value></data>
+  <data name="Help_DashIoChart_What" xml:space="preserve"><value>MB a second read from (blue) and written to (orange) the data and log files.</value></data>
+  <data name="Help_DashIoChart_Good" xml:space="preserve"><value>Low and steady reads (the cache serves most), writes that follow the work.</value></data>
+  <data name="Help_DashIoChart_Watch" xml:space="preserve"><value>Bursts of reads: scans of large tables, reports or a backup.</value></data>
+  <data name="Help_DashIoChart_Bad" xml:space="preserve"><value>Reads high all the time together with low PLE and high latency: the working data does not fit in memory or indexes are missing.</value></data>
+  <data name="Help_DashIoChart_Action" xml:space="preserve"><value>Look at Ağır sorgular ordered by total reads and at Eksik index'ler.</value></data>
+  <data name="Help_DashWaits_Title" xml:space="preserve"><value>What the server waits for</value></data>
+  <data name="Help_DashWaits_What" xml:space="preserve"><value>Every request spends its time either working or waiting for something; this list adds up the waiting by reason, since the dashboard opened (before the second reading: since the server started). The longest bar is where time goes. Harmless background waits are left out.</value></data>
+  <data name="Help_DashWaits_Good" xml:space="preserve"><value>No single kind far ahead of the others, small totals compared with the time that passed.</value></data>
+  <data name="Help_DashWaits_Watch" xml:space="preserve"><value>PAGEIOLATCH_*: reading pages from disk (memory, indexes). WRITELOG: writing the log (log disk, many tiny transactions). CXPACKET / CXCONSUMER: parallel queries waiting for each other (usually fine). ASYNC_NETWORK_IO: the client reads results slowly.</value></data>
+  <data name="Help_DashWaits_Bad" xml:space="preserve"><value>LCK_M_*: waiting for locks (blocking). SOS_SCHEDULER_YIELD: not enough CPU. RESOURCE_SEMAPHORE: queries wait for memory to run.</value></data>
+  <data name="Help_DashWaits_Action" xml:space="preserve"><value>Follow the top wait: locks → activity monitor; disk reads → indexes and heavy reads; CPU → heavy queries by CPU; WRITELOG → log disk and batching commits.</value></data>
+  <data name="Help_DashDatabases_Title" xml:space="preserve"><value>Databases and backups</value></data>
+  <data name="Help_DashDatabases_What" xml:space="preserve"><value>Each database with its state, recovery model, the size of its data and log files and its last full and log backup. The warning column says when a backup is missing or old.</value></data>
+  <data name="Help_DashDatabases_Good" xml:space="preserve"><value>A full backup at least weekly (usually daily); with FULL recovery, log backups every 15–60 minutes.</value></data>
+  <data name="Help_DashDatabases_Watch" xml:space="preserve"><value>A log much larger than usual: in FULL recovery the log only shrinks after a log backup.</value></data>
+  <data name="Help_DashDatabases_Bad" xml:space="preserve"><value>No full backup, one older than a week, or FULL recovery without log backups: data since then cannot be restored, and the log grows until the disk is full.</value></data>
+  <data name="Help_DashDatabases_Action" xml:space="preserve"><value>Ask whoever runs backups (a maintenance plan, an agent job, a backup product). If point-in-time restore is not needed, SIMPLE recovery avoids log backups. "?" means backups could not be read (no access to msdb).</value></data>
+  <data name="Help_ActSessions_Title" xml:space="preserve"><value>Sessions</value></data>
+  <data name="Help_ActSessions_What" xml:space="preserve"><value>Each connection to the server is a session. The list shows who it is (login, host, program), what it is doing now (command, state, the SQL), what it waits for and how much it has used (CPU, reads, writes). Idle and system sessions are hidden unless you ask. States: running = working; runnable = waiting for a CPU; suspended = waiting for something (see Bekleme); sleeping = connected, doing nothing.</value></data>
+  <data name="Help_ActSessions_Good" xml:space="preserve"><value>A few running requests that finish quickly; no one blocked.</value></data>
+  <data name="Help_ActSessions_Watch" xml:space="preserve"><value>A request running for minutes, or a sleeping session with an open transaction (Açık tran. &gt; 0): it may hold locks.</value></data>
+  <data name="Help_ActSessions_Bad" xml:space="preserve"><value>Blocked sessions piling up behind one session.</value></data>
+  <data name="Help_ActSessions_Action" xml:space="preserve"><value>Choose a session to see its SQL; "Sorgu sekmesinde aç" lets you study it. For blocking, read the chains on the right.</value></data>
+  <data name="Help_ActBlocking_Title" xml:space="preserve"><value>Blocking chains</value></data>
+  <data name="Help_ActBlocking_What" xml:space="preserve"><value>Who waits for whom. The session at the top (the head blocker) holds a lock; the sessions under it wait for that lock, and those under them wait for them. Fixing the head clears the whole chain.</value></data>
+  <data name="Help_ActBlocking_Good" xml:space="preserve"><value>No chains, or chains that disappear by the next reading.</value></data>
+  <data name="Help_ActBlocking_Watch" xml:space="preserve"><value>The same head blocker for more than a few readings.</value></data>
+  <data name="Help_ActBlocking_Bad" xml:space="preserve"><value>A head blocker that is "idle, transaction open": a program or a person began a transaction and did not commit; it will block until it does.</value></data>
+  <data name="Help_ActBlocking_Action" xml:space="preserve"><value>Find who owns the head session (login, host, program) and ask them to commit or roll back. If that is not possible, ending it (KILL) rolls its work back and frees the others.</value></data>
+  <data name="Help_ActKill_Title" xml:space="preserve"><value>Ending a session</value></data>
+  <data name="Help_ActKill_What" xml:space="preserve"><value>Ends the chosen session on the server (KILL). Its running statement stops, its open transaction is rolled back and its program gets an error.</value></data>
+  <data name="Help_ActKill_Watch" xml:space="preserve"><value>Rolling back takes about as long as the work it undoes: ending a session that has updated millions of rows can take a long time, and the locks stay until the rollback ends.</value></data>
+  <data name="Help_ActKill_Bad" xml:space="preserve"><value>Ending sessions of a running job or an application can leave work half done for them: they must retry.</value></data>
+  <data name="Help_ActKill_Action" xml:space="preserve"><value>Use it last: first ask the owner. JetQueries asks before ending, asks twice on a production server, never ends its own session and never on a read-only connection.</value></data>
+  <data name="Help_ActWaits_Title" xml:space="preserve"><value>Wait types</value></data>
+  <data name="Help_ActWaits_What" xml:space="preserve"><value>What a suspended request is waiting for, and for how long. The most common ones: LCK_M_S / LCK_M_X / LCK_M_U: a lock held by another session (see Engelleyen). PAGEIOLATCH_SH: a page being read from disk. WRITELOG: the log being written at commit. CXPACKET / CXCONSUMER: parts of a parallel query waiting for each other. ASYNC_NETWORK_IO: the client not reading the results. SOS_SCHEDULER_YIELD: waiting for a CPU. RESOURCE_SEMAPHORE: waiting for memory to start.</value></data>
+  <data name="Help_ActWaits_Good" xml:space="preserve"><value>Waits of a few milliseconds.</value></data>
+  <data name="Help_ActWaits_Watch" xml:space="preserve"><value>Lock waits of several seconds; disk waits longer than ~20 ms each.</value></data>
+  <data name="Help_ActWaits_Bad" xml:space="preserve"><value>Lock waits of tens of seconds or more; ASYNC_NETWORK_IO that never ends (an application holding results open while holding locks).</value></data>
+  <data name="Help_ActWaits_Action" xml:space="preserve"><value>Locks → blocking chain; disk → indexes and heavy reads; CPU → heavy queries by CPU; network → the application reading results row by row.</value></data>
+  <data name="Help_PerfHeavy_Title" xml:space="preserve"><value>Heavy queries</value></data>
+  <data name="Help_PerfHeavy_What" xml:space="preserve"><value>The statements that cost the server most, from its plan cache. Statements that differ only in their values are counted together. Total = the cost of all runs (what loads the server); average = one run (what a user waits for); executions = how often it runs.</value></data>
+  <data name="Help_PerfHeavy_Good" xml:space="preserve"><value>The costliest statements are the ones the application really needs, and their average time is acceptable for their users.</value></data>
+  <data name="Help_PerfHeavy_Watch" xml:space="preserve"><value>A statement with a high average (seconds) for something users wait on; a cheap statement run millions of times (often an application loop).</value></data>
+  <data name="Help_PerfHeavy_Bad" xml:space="preserve"><value>One or two statements taking most of the total CPU or reads: they decide the server's load.</value></data>
+  <data name="Help_PerfHeavy_Action" xml:space="preserve"><value>Open the statement in a query tab and look at what it reads: a missing index, a function on a column in WHERE, or SELECT * of wide rows are usual causes. Figures start again when the server restarts or a plan leaves the cache.</value></data>
+  <data name="Help_PerfMissing_Title" xml:space="preserve"><value>Missing indexes</value></data>
+  <data name="Help_PerfMissing_What" xml:space="preserve"><value>Indexes the optimizer wished it had while compiling queries. Eşitlik = columns compared with =, Eşitsizlik = with &gt;, &lt;, BETWEEN, Include = columns only read. Etki = how much cheaper those queries would get; Puan combines cost, impact and how often they ran.</value></data>
+  <data name="Help_PerfMissing_Good" xml:space="preserve"><value>Few proposals, with low scores.</value></data>
+  <data name="Help_PerfMissing_Watch" xml:space="preserve"><value>Several proposals on the same table: they can often be merged into one index.</value></data>
+  <data name="Help_PerfMissing_Bad" xml:space="preserve"><value>High score and high impact (over ~80 %) on a table queried all the time.</value></data>
+  <data name="Help_PerfMissing_Action" xml:space="preserve"><value>Do not create every proposal: each index slows down writes and takes space. Compare with the table's existing indexes (Index kullanımı), merge similar ones, create it in a quiet hour and watch the heavy queries afterwards.</value></data>
+  <data name="Help_PerfUsage_Title" xml:space="preserve"><value>Index use</value></data>
+  <data name="Help_PerfUsage_What" xml:space="preserve"><value>Every index of the database with how queries used it since the server started: Seek = found rows directly (the best), Scan = read the whole index, Lookup = fetched the rest of a row, Güncelleme = writes that had to update it. Bulgu points out indexes that cost more than they give.</value></data>
+  <data name="Help_PerfUsage_Good" xml:space="preserve"><value>Indexes with seeks, few or no findings.</value></data>
+  <data name="Help_PerfUsage_Watch" xml:space="preserve"><value>"kullanılmıyor": no reads but updates — only write cost. Check that the server has been up long enough to cover month-end or yearly jobs before trusting it.</value></data>
+  <data name="Help_PerfUsage_Bad" xml:space="preserve"><value>"… ile aynı" or "… tarafından kapsanıyor": another index already does its job; it only costs writes and space.</value></data>
+  <data name="Help_PerfUsage_Action" xml:space="preserve"><value>The script is a DROP INDEX proposal: keep it until you are sure (the index may serve a constraint, a hint in code or a rare report). Primary keys, unique constraints and clustered indexes are never proposed.</value></data>
+  <data name="Help_PerfFragmentation_Title" xml:space="preserve"><value>Fragmentation</value></data>
+  <data name="Help_PerfFragmentation_What" xml:space="preserve"><value>How far an index's pages are out of order on disk, in percent. Out-of-order pages make range scans read in smaller pieces. Measuring reads the index pages, so it runs only when you press Ölç.</value></data>
+  <data name="Help_PerfFragmentation_Good" xml:space="preserve"><value>Under 5 %, or any value on small indexes (under ~1 000 pages): ignore.</value></data>
+  <data name="Help_PerfFragmentation_Watch" xml:space="preserve"><value>5–30 %: REORGANIZE (online, can be stopped).</value></data>
+  <data name="Help_PerfFragmentation_Bad" xml:space="preserve"><value>Above 30 % on large indexes that are scanned: REBUILD.</value></data>
+  <data name="Help_PerfFragmentation_Action" xml:space="preserve"><value>On SSD storage fragmentation matters much less than up-to-date statistics; rebuild in a maintenance window (REBUILD locks the table unless ONLINE = ON on Enterprise edition).</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Clear all</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Remove filter</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} of {1:N0} rows</value></data>

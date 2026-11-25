@@ -69,7 +69,11 @@
         </DockPanel>
 
         <!-- What the part is about and since when the server counts; why it could not be read -->
-        <TextBlock DockPanel.Dock="Top" Text="{Binding Note}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="2,0,0,8" />
+        <DockPanel DockPanel.Dock="Top" Margin="2,0,0,8">
+            <v:InfoButton x:Name="SectionInfo" DockPanel.Dock="Left" Margin="0,0,6,0" VerticalAlignment="Top"
+                          Topic="{Binding Section, Converter={x:Static v:PerformanceHelpTopicConverter.Instance}}" />
+            <TextBlock Text="{Binding Note}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" VerticalAlignment="Center" />
+        </DockPanel>
         <Border x:Name="ErrorBanner" DockPanel.Dock="Top" Margin="0,0,0,8" Padding="10,6" CornerRadius="{StaticResource Radius.Control}"
                 Background="{DynamicResource Brush.SurfaceAlt}" BorderBrush="{DynamicResource Brush.Danger}" BorderThickness="3,0,0,0"
                 Visibility="{Binding Error, Converter={x:Static v:NotNullToVisibilityConverter.Instance}}">

@@ -80,6 +80,18 @@
                             <MenuItem Header="{x:Static res:Strings.MenuSaveToLibraryAsNew}" Command="{Binding SavedQueries.SaveCurrentAsNewCommand}" />
                             <MenuItem Header="{x:Static res:Strings.MenuSavedQueries}" c:Ui.Icon="&#xE8F1;" InputGestureText="Ctrl+Shift+Q" Command="{Binding ShowSavedQueriesCommand}" />
                         </MenuItem>
+                        <!-- DBA: the server at a glance, its sessions, its queries and indexes (of the explorer's connection, else the query tab's) -->
+                        <MenuItem x:Name="DbaMenu" Header="{x:Static res:Strings.MenuDba}">
+                            <MenuItem x:Name="DashboardMenuItem" Header="{x:Static res:Strings.DashOpen}" c:Ui.Icon="&#xE9D2;"
+                                      Command="{Binding ShowDashboardCommand}" ToolTip="{x:Static res:Strings.DashOpenTip}" />
+                            <MenuItem x:Name="ActivityMenuItem" Header="{x:Static res:Strings.ActivityOpen}" c:Ui.Icon="&#xE9D9;" InputGestureText="Ctrl+Shift+A"
+                                      Command="{Binding ShowActivityCommand}" ToolTip="{x:Static res:Strings.ActivityOpenTip}" />
+                            <MenuItem x:Name="PerformanceMenuItem" Header="{x:Static res:Strings.PerfOpen}" c:Ui.Icon="&#xE9F9;"
+                                      Command="{Binding ShowPerformanceCommand}" ToolTip="{x:Static res:Strings.PerfOpenTip}" />
+                            <Separator />
+                            <MenuItem x:Name="DbaHelpMenuItem" Header="{x:Static res:Strings.MenuDbaHelp}" c:Ui.Icon="&#xE946;" IsCheckable="True"
+                                      IsChecked="{Binding ShowDbaHelp, Mode=OneWay}" Command="{Binding ToggleDbaHelpCommand}" ToolTip="{x:Static res:Strings.SettingDbaHelpInfo}" />
+                        </MenuItem>
                         <MenuItem Header="{x:Static res:Strings.MenuView}">
                             <MenuItem x:Name="ExplorerMenuItem" Header="{x:Static res:Strings.MenuExplorer}" IsCheckable="True" IsChecked="True" Click="OnToggleExplorer" />
                             <MenuItem Header="{x:Static res:Strings.MenuTheme}" IsCheckable="True" IsChecked="{Binding IsDark, Mode=OneWay}" Command="{Binding ToggleThemeCommand}" />
@@ -87,12 +99,6 @@
                         </MenuItem>
                         <MenuItem Header="{x:Static res:Strings.MenuTools}">
                             <MenuItem Header="{x:Static res:Strings.MenuHistory}" c:Ui.Icon="{x:Static c:Icons.History}" InputGestureText="Ctrl+Shift+H" Command="{Binding ShowHistoryCommand}" />
-                            <MenuItem x:Name="DashboardMenuItem" Header="{x:Static res:Strings.DashOpen}" c:Ui.Icon="&#xE9D2;"
-                                      Command="{Binding ShowDashboardCommand}" ToolTip="{x:Static res:Strings.DashOpenTip}" />
-                            <MenuItem x:Name="ActivityMenuItem" Header="{x:Static res:Strings.ActivityOpen}" c:Ui.Icon="&#xE9D9;" InputGestureText="Ctrl+Shift+A"
-                                      Command="{Binding ShowActivityCommand}" ToolTip="{x:Static res:Strings.ActivityOpenTip}" />
-                            <MenuItem x:Name="PerformanceMenuItem" Header="{x:Static res:Strings.PerfOpen}" c:Ui.Icon="&#xE9F9;"
-                                      Command="{Binding ShowPerformanceCommand}" ToolTip="{x:Static res:Strings.PerfOpenTip}" />
                             <MenuItem Header="{x:Static res:Strings.MenuSavedQueries}" c:Ui.Icon="&#xE734;" InputGestureText="Ctrl+Shift+Q" Command="{Binding ShowSavedQueriesCommand}" />
                             <MenuItem Header="{x:Static res:Strings.MenuCommandPalette}" c:Ui.Icon="&#xE721;" InputGestureText="Ctrl+Shift+P" Click="OnCommandPaletteClick" />
                             <MenuItem Header="{x:Static res:Strings.MenuShortcuts}" c:Ui.Icon="&#xE765;" InputGestureText="F1" Command="{Binding ShowShortcutsCommand}" />

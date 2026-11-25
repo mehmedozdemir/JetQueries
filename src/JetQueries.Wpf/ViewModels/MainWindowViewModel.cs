@@ -32,7 +32,11 @@ public partial class MainWindowViewModel : ObservableObject
         SavedQueries = savedQueries;
         _store = store;
         _appearance = appearance;
-        Services.AppearanceService.Changed += (_, _) => OnPropertyChanged(nameof(IsCompact));
+        Services.AppearanceService.Changed += (_, _) =>
+        {
+            OnPropertyChanged(nameof(IsCompact));
+            OnPropertyChanged(nameof(ShowDbaHelp));
+        };
         _manager = manager;
         _metadata = metadata;
         _jobs = jobs;
@@ -266,6 +270,27 @@ public partial class MainWindowViewModel : ObservableObject
 
     /// <summary>The application's updates (status bar chip, Tools > Check for updates); null in tests without one.</summary>
     public UpdatesViewModel? Updates { get; }
+
+    /// <summary>Whether DBA screens show their "i" buttons (DBA > Explanations).</summary>
+    public bool ShowDbaHelp => _appearance?.Current.DbaHelp != false;
+
+    /// <summary>DBA > Explanations: shows or hides the "i" buttons at once and remembers it.</summary>
+    [RelayCommand]
+    private void ToggleDbaHelp()
+    {
+        if (_appearance is null)
+        {
+            return;
+        }
+
+        var settings = _appearance.Current with { DbaHelp = !_appearance.Current.DbaHelp };
+        _appearance.Apply(settings);
+        OnPropertyChanged(nameof(ShowDbaHelp));
+        if (_store is { } store && _jobs is { } jobs)
+        {
+            jobs.Enqueue("Save appearance", context => store.SaveAsync(AppearanceSettings.Section, settings, context.CancellationToken), JobPriority.Low);
+        }
+    }
 
     /// <summary>Whether the compact density is in effect (View > Compact mode).</summary>
     public bool IsCompact => _appearance?.Current.CompactMode == true;

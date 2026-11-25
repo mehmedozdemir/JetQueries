@@ -1748,7 +1748,15 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
 
         IsExporting = true;
         Status = Format(Strings.ExportRunning, 0L);
-        var progress = new Progress<long>(count => Status = Format(Strings.ExportRunning, count));
+        // Progress reports are posted: one may arrive after the export ended, and must not hide its outcome.
+        var finished = false;
+        var progress = new Progress<long>(count =>
+        {
+            if (!finished)
+            {
+                Status = Format(Strings.ExportRunning, count);
+            }
+        });
         try
         {
             var written = await _jobs.Enqueue(
@@ -1762,6 +1770,7 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
                     }
                 },
                 JobPriority.Normal).Completion;
+            finished = true;
             Status = string.Format(CultureInfo.CurrentCulture, CompositeFormat.Parse(Strings.ExportDone), written, path);
             if (options.Format == ResultExportFormat.Excel && written > ResultExporter.ExcelMaxRows)
             {
@@ -1775,12 +1784,14 @@ public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
         }
         catch (OperationCanceledException)
         {
+            finished = true;
             Status = Strings.ExportCanceled;
         }
 #pragma warning disable CA1031 // The file system's or the server's reason is shown; nothing else is disturbed.
         catch (Exception ex)
 #pragma warning restore CA1031
         {
+            finished = true;
             Status = Format(Strings.ExportFailed, ex.Message);
             AddMessage(Status, isError: true);
         }

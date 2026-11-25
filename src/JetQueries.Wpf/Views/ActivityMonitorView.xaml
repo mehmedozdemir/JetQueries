@@ -115,6 +115,7 @@
                         <TextBlock Text="{x:Static res:Strings.ActivityHeadBlockers}" Style="{StaticResource Text.Caption}" />
                     </StackPanel>
                 </Border>
+                <v:InfoButton x:Name="SessionsInfo" Topic="ActSessions" VerticalAlignment="Center" />
             </StackPanel>
         </DockPanel>
 
@@ -162,6 +163,7 @@
                         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,2">
                             <TextBlock Text="{x:Static c:Icons.Warning}" Style="{StaticResource Text.Icon}" FontSize="12" Foreground="{DynamicResource Brush.Danger}" Margin="0,0,6,0" />
                             <TextBlock Text="{x:Static res:Strings.ActivityChains}" FontWeight="SemiBold" />
+                            <v:InfoButton x:Name="BlockingInfo" Topic="ActBlocking" />
                         </StackPanel>
                         <TextBlock DockPanel.Dock="Top" Text="{x:Static res:Strings.ActivityChainsHint}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="0,0,0,6" />
                         <TreeView x:Name="ChainsTree" ItemsSource="{Binding BlockingChains}" MaxHeight="220" BorderThickness="0" Background="Transparent"
@@ -192,7 +194,10 @@
                                         Visibility="{Binding Selected.IsOwn, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}">
                                     <TextBlock Text="{x:Static res:Strings.ActivityOwn}" FontSize="{DynamicResource FontSize.Small}" />
                                 </Border>
-                                <TextBlock Text="{Binding Selected.Title}" Style="{StaticResource Text.Subtitle}" />
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Selected.Title}" Style="{StaticResource Text.Subtitle}" />
+                                    <v:InfoButton x:Name="WaitsInfo" Topic="ActWaits" />
+                                </StackPanel>
                             </DockPanel>
                             <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
                                 <Button x:Name="OpenSqlButton" Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="&#xE8A7;" Content="{x:Static res:Strings.ActivityOpenSql}"
@@ -200,6 +205,7 @@
                                 <Button x:Name="KillButton" Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="&#xE711;" Content="{x:Static res:Strings.ActivityKill}"
                                         Command="{Binding KillCommand}" CommandParameter="{Binding Selected}" Foreground="{DynamicResource Brush.Danger}"
                                         Visibility="{Binding CanKillSessions, Converter={StaticResource BoolToVisibility}}" />
+                                <v:InfoButton x:Name="KillInfo" Topic="ActKill" />
                             </StackPanel>
                             <ItemsControl x:Name="SessionFacts" DockPanel.Dock="Top" Margin="0,0,0,8" ItemsSource="{Binding Selected.Details}"
                                           Grid.IsSharedSizeScope="True" Focusable="False">

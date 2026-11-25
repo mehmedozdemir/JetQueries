@@ -162,6 +162,17 @@ public static class Strings
     public static string FilterClear => Get(nameof(FilterClear));
     public static string FilterValueRequired => Get(nameof(FilterValueRequired));
     public static string FilterClearAll => Get(nameof(FilterClearAll));
+    public static string MenuDba => Get(nameof(MenuDba));
+    public static string MenuDbaHelp => Get(nameof(MenuDbaHelp));
+    public static string FieldDbaHelp => Get(nameof(FieldDbaHelp));
+    public static string SettingDbaHelpInfo => Get(nameof(SettingDbaHelpInfo));
+    public static string HelpTip => Get(nameof(HelpTip));
+    public static string HelpWhat => Get(nameof(HelpWhat));
+    public static string HelpLevels => Get(nameof(HelpLevels));
+    public static string HelpGood => Get(nameof(HelpGood));
+    public static string HelpWatch => Get(nameof(HelpWatch));
+    public static string HelpBad => Get(nameof(HelpBad));
+    public static string HelpAction => Get(nameof(HelpAction));
     public static string DashTitle => Get(nameof(DashTitle));
     public static string DashOpen => Get(nameof(DashOpen));
     public static string DashOpenTip => Get(nameof(DashOpenTip));

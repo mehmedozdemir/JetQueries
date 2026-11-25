@@ -204,6 +204,16 @@
                                 </Border>
                                 <Border Style="{StaticResource Settings.Row}">
                                     <DockPanel>
+                                        <CheckBox x:Name="DbaHelpSwitch" DockPanel.Dock="Right" Style="{StaticResource Switch}" Margin="24,0,0,0"
+                                                  VerticalAlignment="Center" IsChecked="{Binding DbaHelp}" />
+                                        <StackPanel>
+                                            <TextBlock Text="{x:Static res:Strings.FieldDbaHelp}" Style="{StaticResource Settings.RowTitle}" />
+                                            <TextBlock Text="{x:Static res:Strings.SettingDbaHelpInfo}" Style="{StaticResource Settings.RowInfo}" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
+                                <Border Style="{StaticResource Settings.Row}">
+                                    <DockPanel>
                                         <CheckBox x:Name="HardwareRenderingSwitch" DockPanel.Dock="Right" Style="{StaticResource Switch}" Margin="24,0,0,0"
                                                   VerticalAlignment="Center" IsChecked="{Binding HardwareRendering}" />
                                         <StackPanel>

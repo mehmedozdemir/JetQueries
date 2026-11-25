@@ -49,6 +49,9 @@ public abstract partial class ExplorerNodeViewModel(string name) : ObservableObj
     [ObservableProperty]
     public partial bool IsDropTarget { get; set; }
 
+    /// <summary>Whether the explorer's "DBA" menu has something for the node (dashboard, monitor, analysis).</summary>
+    public virtual bool HasDbaTools => false;
+
     /// <summary>Called when the node is expanded or collapsed, by the user or by code.</summary>
     protected virtual void OnExpanded(bool expanded)
     {
@@ -126,8 +129,10 @@ public sealed partial class ConnectionNodeViewModel(ConnectionDefinition definit
     public bool IsProduction => Definition.Environment == ConnectionEnvironment.Production;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanMonitor), nameof(CanAnalyze), nameof(CanDashboard))]
+    [NotifyPropertyChangedFor(nameof(CanMonitor), nameof(CanAnalyze), nameof(CanDashboard), nameof(HasDbaTools))]
     public partial bool IsConnected { get; set; }
+
+    public override bool HasDbaTools => CanDashboard || CanMonitor || CanAnalyze;
 
     /// <summary>Open, on a provider that reports the server's load: the dashboard can be opened.</summary>
     public bool CanDashboard => IsConnected && _context?.Session.SupportsDashboard == true;

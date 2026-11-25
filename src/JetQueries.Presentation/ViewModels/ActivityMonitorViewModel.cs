@@ -573,28 +573,27 @@ public sealed class BlockingNode(ActivityRow row)
     public ObservableCollection<BlockingNode> Children { get; } = [];
 
     /// <summary>"53 · ali@PC-12 · LCK_M_X 12,4 sn".</summary>
-    public string Text
+    public string Text { get; } = TextOf(row);
+
+    private static string TextOf(ActivityRow row)
     {
-        get
+        var session = row.Session;
+        var parts = new List<string> { row.Id };
+        var who = string.Join("@", new[] { session.Login, session.Host }.Where(static p => !string.IsNullOrEmpty(p)));
+        if (who.Length > 0)
         {
-            var s = Row.Session;
-            var parts = new List<string> { Row.Id };
-            var who = string.Join("@", new[] { s.Login, s.Host }.Where(static p => !string.IsNullOrEmpty(p)));
-            if (who.Length > 0)
-            {
-                parts.Add(who);
-            }
-
-            if (s.WaitType is { } wait)
-            {
-                parts.Add(wait + " " + ActivityRow.Duration(s.WaitTime));
-            }
-            else if (s.OpenTransactions > 0 && !Row.IsActive)
-            {
-                parts.Add(Strings.ActivityIdleInTransaction);
-            }
-
-            return string.Join(" · ", parts);
+            parts.Add(who);
         }
+
+        if (session.WaitType is { } wait)
+        {
+            parts.Add(wait + " " + ActivityRow.Duration(session.WaitTime));
+        }
+        else if (session.OpenTransactions > 0 && !row.IsActive)
+        {
+            parts.Add(Strings.ActivityIdleInTransaction);
+        }
+
+        return string.Join(" · ", parts);
     }
 }

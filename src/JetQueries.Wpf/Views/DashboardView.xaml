@@ -84,28 +84,28 @@
             <UniformGrid x:Name="Tiles" DockPanel.Dock="Top" Rows="1" Margin="0,0,-8,4">
                 <Border Style="{StaticResource Tile}">
                     <StackPanel>
-                        <TextBlock Text="{x:Static res:Strings.DashCpu}" Style="{StaticResource TileTitle}" />
+                        <DockPanel><v:InfoButton x:Name="DashCpuInfo" DockPanel.Dock="Right" Topic="DashCpu" Margin="4,0,0,0" /><TextBlock Text="{x:Static res:Strings.DashCpu}" Style="{StaticResource TileTitle}" /></DockPanel>
                         <TextBlock x:Name="CpuValue" Text="{Binding CpuText}" Style="{StaticResource TileValue}" />
                         <TextBlock Text="{Binding CpuDetail}" Style="{StaticResource TileDetail}" />
                     </StackPanel>
                 </Border>
                 <Border Style="{StaticResource Tile}">
                     <StackPanel>
-                        <TextBlock Text="{x:Static res:Strings.DashMemory}" Style="{StaticResource TileTitle}" />
+                        <DockPanel><v:InfoButton x:Name="DashMemoryInfo" DockPanel.Dock="Right" Topic="DashMemory" Margin="4,0,0,0" /><TextBlock Text="{x:Static res:Strings.DashMemory}" Style="{StaticResource TileTitle}" /></DockPanel>
                         <TextBlock Text="{Binding MemoryText}" Style="{StaticResource TileValue}" />
                         <TextBlock Text="{Binding MemoryDetail}" Style="{StaticResource TileDetail}" />
                     </StackPanel>
                 </Border>
                 <Border Style="{StaticResource Tile}">
                     <StackPanel>
-                        <TextBlock Text="{x:Static res:Strings.DashBatchesTile}" Style="{StaticResource TileTitle}" />
+                        <DockPanel><v:InfoButton x:Name="DashBatchesInfo" DockPanel.Dock="Right" Topic="DashBatches" Margin="4,0,0,0" /><TextBlock Text="{x:Static res:Strings.DashBatchesTile}" Style="{StaticResource TileTitle}" /></DockPanel>
                         <TextBlock Text="{Binding BatchText}" Style="{StaticResource TileValue}" />
                         <TextBlock Text="{Binding BatchDetail}" Style="{StaticResource TileDetail}" />
                     </StackPanel>
                 </Border>
                 <Border Style="{StaticResource Tile}">
                     <StackPanel>
-                        <TextBlock Text="{x:Static res:Strings.DashRequests}" Style="{StaticResource TileTitle}" />
+                        <DockPanel><v:InfoButton x:Name="DashRequestsInfo" DockPanel.Dock="Right" Topic="DashRequests" Margin="4,0,0,0" /><TextBlock Text="{x:Static res:Strings.DashRequests}" Style="{StaticResource TileTitle}" /></DockPanel>
                         <TextBlock Text="{Binding RequestsText}" Style="{StaticResource TileValue}" />
                         <TextBlock Text="{Binding RequestsDetail}" Style="{StaticResource TileDetail}" />
                     </StackPanel>
@@ -123,7 +123,7 @@
                         </Style>
                     </Border.Style>
                     <StackPanel>
-                        <TextBlock Text="{x:Static res:Strings.DashBlocked}" Style="{StaticResource TileTitle}" />
+                        <DockPanel><v:InfoButton x:Name="DashBlockedInfo" DockPanel.Dock="Right" Topic="DashBlocked" Margin="4,0,0,0" /><TextBlock Text="{x:Static res:Strings.DashBlocked}" Style="{StaticResource TileTitle}" /></DockPanel>
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="{x:Static c:Icons.Warning}" Style="{StaticResource Text.Icon}" FontSize="15" Foreground="{DynamicResource Brush.Danger}"
                                        Margin="0,4,6,0" Visibility="{Binding HasBlocking, Converter={StaticResource BoolToVisibility}}" />
@@ -134,14 +134,14 @@
                 </Border>
                 <Border Style="{StaticResource Tile}">
                     <StackPanel>
-                        <TextBlock Text="{x:Static res:Strings.DashPle}" Style="{StaticResource TileTitle}" />
+                        <DockPanel><v:InfoButton x:Name="DashPleInfo" DockPanel.Dock="Right" Topic="DashPle" Margin="4,0,0,0" /><TextBlock Text="{x:Static res:Strings.DashPle}" Style="{StaticResource TileTitle}" /></DockPanel>
                         <TextBlock Text="{Binding PleText}" Style="{StaticResource TileValue}" />
                         <TextBlock Text="{x:Static res:Strings.DashPleDetail}" Style="{StaticResource TileDetail}" />
                     </StackPanel>
                 </Border>
                 <Border Style="{StaticResource Tile}">
                     <StackPanel>
-                        <TextBlock Text="{x:Static res:Strings.DashLatency}" Style="{StaticResource TileTitle}" />
+                        <DockPanel><v:InfoButton x:Name="DashLatencyInfo" DockPanel.Dock="Right" Topic="DashLatency" Margin="4,0,0,0" /><TextBlock Text="{x:Static res:Strings.DashLatency}" Style="{StaticResource TileTitle}" /></DockPanel>
                         <TextBlock Text="{Binding LatencyText}" Style="{StaticResource TileValue}" />
                         <TextBlock Text="{Binding LatencyDetail}" Style="{StaticResource TileDetail}" />
                     </StackPanel>
@@ -154,7 +154,7 @@
                     <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
                         <Button DockPanel.Dock="Right" Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="{x:Static c:Icons.Refresh}"
                                 Command="{Binding ReloadOverviewCommand}" ToolTip="{x:Static res:Strings.DashReloadDatabases}" />
-                        <TextBlock Text="{x:Static res:Strings.DashDatabases}" Style="{StaticResource ChartTitle}" Margin="0" VerticalAlignment="Center" />
+                        <StackPanel Orientation="Horizontal"><TextBlock Text="{x:Static res:Strings.DashDatabases}" Style="{StaticResource ChartTitle}" Margin="0" VerticalAlignment="Center" /><v:InfoButton x:Name="DashDatabasesInfo" Topic="DashDatabases" /></StackPanel>
                     </DockPanel>
                     <c:VirtualGrid x:Name="DatabasesGrid" Height="240" NullText="" ShowTypeTags="False" ShowFilterButtons="False" />
                 </DockPanel>
@@ -164,25 +164,25 @@
             <UniformGrid Columns="2">
                 <Border Style="{StaticResource Card.Surface}" Padding="12,10" Margin="0,0,4,8">
                     <DockPanel>
-                        <TextBlock DockPanel.Dock="Top" Text="{x:Static res:Strings.DashCpuChart}" Style="{StaticResource ChartTitle}" />
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8"><TextBlock Text="{x:Static res:Strings.DashCpuChart}" Style="{StaticResource ChartTitle}" Margin="0" /><v:InfoButton x:Name="DashCpuChartInfo" Topic="DashCpuChart" /></StackPanel>
                         <v:LineChart x:Name="CpuChart" Height="170" Series="{Binding CpuSeries}" Maximum="100" Unit=" %" EmptyText="{x:Static res:Strings.DashNoCpu}" />
                     </DockPanel>
                 </Border>
                 <Border Style="{StaticResource Card.Surface}" Padding="12,10" Margin="4,0,0,8">
                     <DockPanel>
-                        <TextBlock DockPanel.Dock="Top" Text="{x:Static res:Strings.DashBatchChart}" Style="{StaticResource ChartTitle}" />
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8"><TextBlock Text="{x:Static res:Strings.DashBatchChart}" Style="{StaticResource ChartTitle}" Margin="0" /><v:InfoButton x:Name="DashBatchChartInfo" Topic="DashBatchChart" /></StackPanel>
                         <v:LineChart x:Name="BatchChart" Height="170" Series="{Binding BatchSeries}" EmptyText="{x:Static res:Strings.DashWaiting}" />
                     </DockPanel>
                 </Border>
                 <Border Style="{StaticResource Card.Surface}" Padding="12,10" Margin="0,0,4,0">
                     <DockPanel>
-                        <TextBlock DockPanel.Dock="Top" Text="{x:Static res:Strings.DashIoChart}" Style="{StaticResource ChartTitle}" />
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8"><TextBlock Text="{x:Static res:Strings.DashIoChart}" Style="{StaticResource ChartTitle}" Margin="0" /><v:InfoButton x:Name="DashIoChartInfo" Topic="DashIoChart" /></StackPanel>
                         <v:LineChart x:Name="IoChart" Height="170" Series="{Binding IoSeries}" Format="0.0" EmptyText="{x:Static res:Strings.DashWaiting}" />
                     </DockPanel>
                 </Border>
                 <Border Style="{StaticResource Card.Surface}" Padding="12,10" Margin="4,0,0,0">
                     <DockPanel>
-                        <TextBlock DockPanel.Dock="Top" Text="{Binding WaitsTitle}" Style="{StaticResource ChartTitle}" />
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8"><TextBlock Text="{Binding WaitsTitle}" Style="{StaticResource ChartTitle}" Margin="0" /><v:InfoButton x:Name="DashWaitsInfo" Topic="DashWaits" /></StackPanel>
                         <v:BarList x:Name="WaitsChart" MinHeight="170" Items="{Binding Waits}" EmptyText="{x:Static res:Strings.DashNoWaits}" />
                     </DockPanel>
                 </Border>
