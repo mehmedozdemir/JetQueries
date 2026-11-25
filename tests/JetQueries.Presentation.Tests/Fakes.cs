@@ -437,8 +437,10 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
         return Task.FromResult<IDatabaseConnection>(SupportsDatabaseContext ? new FakeContextConnection(this) : new FakeConnection(this));
     }
 
-    private sealed class FakeConnection(FakeProvider owner) : IDatabaseConnection, ITransactionControl, IActivityMonitor, IPerformanceAdvisor, IServerDashboard
+    private sealed class FakeConnection(FakeProvider owner) : IDatabaseConnection, ITransactionControl, IActivityMonitor, IPerformanceAdvisor, IServerDashboard, IHealthCheck
     {
+        public Task<IReadOnlyList<HealthFinding>> CheckAsync(CancellationToken cancellationToken) => Task.FromResult(FakeHealth.Findings());
+
         public Task<ServerOverview> GetOverviewAsync(CancellationToken cancellationToken) => Task.FromResult(OwnerOf().Overview);
 
         public Task<ServerSample> GetSampleAsync(CancellationToken cancellationToken) => Task.FromResult(OwnerOf().NextSample());
@@ -489,8 +491,10 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
     }
 
     /// <summary>A connection with a current database that starts at "Cards" and follows USE.</summary>
-    internal sealed class FakeContextConnection : IDatabaseConnection, IDatabaseContext, ITransactionControl, IActivityMonitor, IPerformanceAdvisor, IServerDashboard
+    internal sealed class FakeContextConnection : IDatabaseConnection, IDatabaseContext, ITransactionControl, IActivityMonitor, IPerformanceAdvisor, IServerDashboard, IHealthCheck
     {
+        public Task<IReadOnlyList<HealthFinding>> CheckAsync(CancellationToken cancellationToken) => Task.FromResult(FakeHealth.Findings());
+
         public Task<ServerOverview> GetOverviewAsync(CancellationToken cancellationToken) => Task.FromResult(OwnerOf().Overview);
 
         public Task<ServerSample> GetSampleAsync(CancellationToken cancellationToken) => Task.FromResult(OwnerOf().NextSample());
@@ -767,4 +771,25 @@ public static class FakeDashboard
             new("WRITELOG", 1_000_000 + n * 500),
         ],
     };
+}
+
+/// <summary>Findings of every severity and category for the health check's tests.</summary>
+public static class FakeHealth
+{
+    public static IReadOnlyList<HealthFinding> Findings() =>
+    [
+        new("CostThreshold", HealthCategory.Performance, HealthSeverity.Warning, "Cost threshold for parallelism is the default 5")
+        {
+            Current = "5", Recommended = "50", FixScript = "EXEC sys.sp_configure N'cost threshold for parallelism', 50;\nRECONFIGURE;",
+        },
+        new("FullBackup", HealthCategory.Backups, HealthSeverity.Critical, "A database has no recent full backup") { Objects = ["Cards (—)", "Sales (2026-11-10 22:00)"] },
+        new("AutoShrink", HealthCategory.Databases, HealthSeverity.Warning, "Auto shrink is on")
+        {
+            Objects = ["Archive"], FixScript = "ALTER DATABASE [Archive] SET AUTO_SHRINK OFF;",
+        },
+        new("Uptime", HealthCategory.Performance, HealthSeverity.Info, "The server started less than a day ago") { Current = "2026-11-25 08:00" },
+        new("SaEnabled", HealthCategory.Security, HealthSeverity.Ok, "The sa login is enabled"),
+        new("PageVerify", HealthCategory.Databases, HealthSeverity.Ok, "Page verification is not CHECKSUM"),
+        new("NewRule", HealthCategory.Configuration, HealthSeverity.Warning, "A rule the host has no text for"),
+    ];
 }

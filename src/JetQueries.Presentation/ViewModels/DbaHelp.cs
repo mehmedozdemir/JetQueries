@@ -85,11 +85,14 @@ public static class DbaHelp
     /// <summary>Performance analysis: fragmentation.</summary>
     public const string PerfFragmentation = "PerfFragmentation";
 
+    /// <summary>Health check: the screen and its severities.</summary>
+    public const string Health = "Health";
+
     /// <summary>Every topic, for tests: each must have its texts in both languages.</summary>
     public static IReadOnlyList<string> All { get; } =
     [
         DashCpu, DashMemory, DashBatches, DashRequests, DashBlocked, DashPle, DashLatency, DashCpuChart, DashBatchChart, DashIoChart,
-        DashWaits, DashDatabases, ActSessions, ActBlocking, ActKill, ActWaits, PerfHeavy, PerfMissing, PerfUsage, PerfFragmentation,
+        DashWaits, DashDatabases, ActSessions, ActBlocking, ActKill, ActWaits, PerfHeavy, PerfMissing, PerfUsage, PerfFragmentation, Health,
     ];
 
     /// <summary>A topic's explanation in the user's language; null for an unknown topic.</summary>

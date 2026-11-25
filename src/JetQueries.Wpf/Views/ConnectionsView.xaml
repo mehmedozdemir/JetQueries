@@ -148,6 +148,9 @@
                                         <MenuItem x:Name="PerformanceMenuItem" Header="{x:Static res:Strings.PerfOpen}" c:Ui.Icon="&#xE9F9;"
                                                   Command="{Binding OpenPerformanceCommand}" CommandParameter="{Binding Selected}"
                                                   Visibility="{Binding Selected.CanAnalyze, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
+                                        <MenuItem x:Name="HealthMenuItem" Header="{x:Static res:Strings.HealthOpen}" c:Ui.Icon="&#xE95E;"
+                                                  Command="{Binding OpenHealthCommand}" CommandParameter="{Binding Selected}"
+                                                  Visibility="{Binding Selected.CanHealthCheck, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
                                     </MenuItem>
                                     <MenuItem Header="{Binding ToggleConnectionText}" c:Ui.Icon="{x:Static c:Icons.Plug}" Command="{Binding ToggleConnectionCommand}" />
                                     <MenuItem Header="{x:Static res:Strings.ExplorerRefresh}" c:Ui.Icon="{x:Static c:Icons.Refresh}" Command="{Binding ReloadSelectedCommand}" />

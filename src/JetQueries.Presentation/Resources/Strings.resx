@@ -732,6 +732,106 @@ What it is running stops and its open transaction is rolled back; the client get
   <data name="Help_PerfFragmentation_Watch" xml:space="preserve"><value>5–30 %: REORGANIZE (online, can be stopped).</value></data>
   <data name="Help_PerfFragmentation_Bad" xml:space="preserve"><value>Above 30 % on large indexes that are scanned: REBUILD.</value></data>
   <data name="Help_PerfFragmentation_Action" xml:space="preserve"><value>On SSD storage fragmentation matters much less than up-to-date statistics; rebuild in a maintenance window (REBUILD locks the table unless ONLINE = ON on Enterprise edition).</value></data>
+  <data name="Rule_MaxServerMemory_Title" xml:space="preserve"><value>Max server memory is not set</value></data>
+  <data name="Rule_MaxServerMemory_Why" xml:space="preserve"><value>Left at its default, SQL Server may take almost all of the machine's memory; the operating system and other services are squeezed, and under pressure Windows pages SQL Server out, which is far slower.</value></data>
+  <data name="Rule_MaxServerMemory_Fix" xml:space="preserve"><value>Leave the operating system about 10 % (at least 4 GB) and give SQL Server the rest; the recommendation is computed from this machine's memory. Takes effect at once, no restart.</value></data>
+  <data name="Rule_MaxDop_Title" xml:space="preserve"><value>Parallelism is unlimited on many CPUs</value></data>
+  <data name="Rule_MaxDop_Why" xml:space="preserve"><value>With max degree of parallelism 0, one query may use every CPU; on servers with more than 8 CPUs that wastes processors on coordination and lets one report slow everyone (CXPACKET waits).</value></data>
+  <data name="Rule_MaxDop_Fix" xml:space="preserve"><value>Set it to the number of cores per NUMA node, at most 8 (Microsoft's guidance); the recommendation is computed for this server.</value></data>
+  <data name="Rule_CostThreshold_Title" xml:space="preserve"><value>Cost threshold for parallelism is the default 5</value></data>
+  <data name="Rule_CostThreshold_Why" xml:space="preserve"><value>The default of 5 dates from the 1990s: today almost every query crosses it and goes parallel, which costs more than it saves for small queries.</value></data>
+  <data name="Rule_CostThreshold_Fix" xml:space="preserve"><value>50 is the usual starting point; raise it if small queries still go parallel.</value></data>
+  <data name="Rule_OptimizeAdhoc_Title" xml:space="preserve"><value>Single-use plans fill the plan cache</value></data>
+  <data name="Rule_OptimizeAdhoc_Why" xml:space="preserve"><value>Most of the plan cache holds plans used only once (queries with values written into the SQL). They take memory that could cache data.</value></data>
+  <data name="Rule_OptimizeAdhoc_Fix" xml:space="preserve"><value>Turn on "optimize for ad hoc workloads": a plan is only stored fully when it is used a second time. Better still, have applications send parameters.</value></data>
+  <data name="Rule_PriorityBoost_Title" xml:space="preserve"><value>Priority boost is on</value></data>
+  <data name="Rule_PriorityBoost_Why" xml:space="preserve"><value>It raises SQL Server above the operating system's own threads; Microsoft deprecated it because it can starve Windows and cause instability.</value></data>
+  <data name="Rule_PriorityBoost_Fix" xml:space="preserve"><value>Turn it off; it takes effect after a restart of the service.</value></data>
+  <data name="Rule_AutoShrink_Title" xml:space="preserve"><value>Auto shrink is on</value></data>
+  <data name="Rule_AutoShrink_Why" xml:space="preserve"><value>The database shrinks its files whenever there is free space and grows them again as soon as it needs it: constant work, heavily fragmented indexes and stalls while files grow.</value></data>
+  <data name="Rule_AutoShrink_Fix" xml:space="preserve"><value>Turn it off. If space must be given back once, shrink by hand and rebuild the indexes afterwards.</value></data>
+  <data name="Rule_AutoClose_Title" xml:space="preserve"><value>Auto close is on</value></data>
+  <data name="Rule_AutoClose_Why" xml:space="preserve"><value>The database closes when the last user leaves and opens again on the next connection: slow first connections and an empty cache each time.</value></data>
+  <data name="Rule_AutoClose_Fix" xml:space="preserve"><value>Turn it off; it is meant for desktop editions, not servers.</value></data>
+  <data name="Rule_PageVerify_Title" xml:space="preserve"><value>Page verification is not CHECKSUM</value></data>
+  <data name="Rule_PageVerify_Why" xml:space="preserve"><value>With CHECKSUM every page carries a checksum, so damage by the disk or controller is caught when the page is read. TORN_PAGE_DETECTION or NONE lets corruption go unnoticed, into backups too.</value></data>
+  <data name="Rule_PageVerify_Fix" xml:space="preserve"><value>Switch to CHECKSUM (no downtime); pages get their checksum as they are written next.</value></data>
+  <data name="Rule_AutoStats_Title" xml:space="preserve"><value>Automatic statistics are off</value></data>
+  <data name="Rule_AutoStats_Why" xml:space="preserve"><value>Statistics tell the optimizer how many rows to expect. Without automatic creation and update they go stale, and plans become bad: scans instead of seeks, too little memory, slow queries.</value></data>
+  <data name="Rule_AutoStats_Fix" xml:space="preserve"><value>Turn both on, unless a maintenance job deliberately updates statistics instead.</value></data>
+  <data name="Rule_Trustworthy_Title" xml:space="preserve"><value>TRUSTWORTHY is on</value></data>
+  <data name="Rule_Trustworthy_Why" xml:space="preserve"><value>Code in a TRUSTWORTHY database can act with its owner's server permissions; if the owner is a sysadmin, anyone who can create a procedure there can become sysadmin.</value></data>
+  <data name="Rule_Trustworthy_Fix" xml:space="preserve"><value>Turn it off; code that needs extra rights should be signed with a certificate instead.</value></data>
+  <data name="Rule_CompatibilityLevel_Title" xml:space="preserve"><value>Compatibility level is older than the server's</value></data>
+  <data name="Rule_CompatibilityLevel_Why" xml:space="preserve"><value>The database runs with an older optimizer and misses newer features (better estimates, adaptive joins). Often it was simply never changed after an upgrade.</value></data>
+  <data name="Rule_CompatibilityLevel_Fix" xml:space="preserve"><value>Raise it after testing the application on a copy: some queries can get different plans. Query Store helps to catch regressions.</value></data>
+  <data name="Rule_FileGrowth_Title" xml:space="preserve"><value>Files grow by a percentage or in tiny steps</value></data>
+  <data name="Rule_FileGrowth_Why" xml:space="preserve"><value>Percentage growth makes each step bigger and slower as the file grows; tiny steps make many small stalls and fragment the files. Log files are zeroed when they grow, so writes stop meanwhile.</value></data>
+  <data name="Rule_FileGrowth_Fix" xml:space="preserve"><value>Use a fixed size: 512 MB for data and 256 MB for log is a sensible start; better still, size files ahead so they rarely grow.</value></data>
+  <data name="Rule_LogReuse_Title" xml:space="preserve"><value>A log is larger than its data and cannot be reused</value></data>
+  <data name="Rule_LogReuse_Why" xml:space="preserve"><value>The log keeps growing because something holds it (shown after the size): LOG_BACKUP means log backups are missing; ACTIVE_TRANSACTION a long open transaction; REPLICATION or AVAILABILITY_REPLICA a reader that lags.</value></data>
+  <data name="Rule_LogReuse_Fix" xml:space="preserve"><value>Fix the cause first (take log backups, end the transaction); only then shrink the log once to a sensible size.</value></data>
+  <data name="Rule_TempdbFiles_Title" xml:space="preserve"><value>tempdb has too few or unequal data files</value></data>
+  <data name="Rule_TempdbFiles_Why" xml:space="preserve"><value>Busy servers contend on tempdb's allocation pages; one data file per CPU up to 8, all the same size, spreads that load. Unequal sizes make SQL Server favour the largest file.</value></data>
+  <data name="Rule_TempdbFiles_Fix" xml:space="preserve"><value>Add data files up to the recommended number and give them all the same size and growth.</value></data>
+  <data name="Rule_Backups_Title" xml:space="preserve"><value>Backups could not be read</value></data>
+  <data name="Rule_Backups_Why" xml:space="preserve"><value>The backup history is in msdb, which this login may not read, so it is unknown whether databases are backed up.</value></data>
+  <data name="Rule_Backups_Fix" xml:space="preserve"><value>Run the check with a login that can read msdb, or ask the DBA how backups are taken.</value></data>
+  <data name="Rule_FullBackup_Title" xml:space="preserve"><value>A database has no recent full backup</value></data>
+  <data name="Rule_FullBackup_Why" xml:space="preserve"><value>Without a full backup a damaged disk, a mistaken DELETE or ransomware cannot be undone. The list shows databases without one in the last 7 days.</value></data>
+  <data name="Rule_FullBackup_Fix" xml:space="preserve"><value>Schedule a full backup at least weekly (usually nightly) with a maintenance plan, an agent job or a backup product, and test restoring it now and then.</value></data>
+  <data name="Rule_LogBackup_Title" xml:space="preserve"><value>A FULL recovery database has no recent log backup</value></data>
+  <data name="Rule_LogBackup_Why" xml:space="preserve"><value>In FULL recovery the log is only emptied by a log backup: without them it grows until the disk is full, and the database can only be restored to its last full backup.</value></data>
+  <data name="Rule_LogBackup_Fix" xml:space="preserve"><value>Take log backups every 15–60 minutes; if restoring to a point in time is not needed, switch the database to SIMPLE recovery.</value></data>
+  <data name="Rule_CheckDb_Title" xml:space="preserve"><value>Integrity has not been checked for a week</value></data>
+  <data name="Rule_CheckDb_Why" xml:space="preserve"><value>DBCC CHECKDB finds corruption before it spreads into backups; the last clean check of these databases is older than 7 days, or there was none.</value></data>
+  <data name="Rule_CheckDb_Fix" xml:space="preserve"><value>Run DBCC CHECKDB weekly in a quiet hour (it reads the whole database); a job or a maintenance plan can do it.</value></data>
+  <data name="Rule_SuspectPages_Title" xml:space="preserve"><value>Damaged pages were recorded</value></data>
+  <data name="Rule_SuspectPages_Why" xml:space="preserve"><value>SQL Server met pages it could not read correctly (checksum or I/O errors) and recorded them in msdb.dbo.suspect_pages: the disk or controller is damaging data.</value></data>
+  <data name="Rule_SuspectPages_Fix" xml:space="preserve"><value>Run DBCC CHECKDB now, check the storage hardware and make sure good backups exist before anything else.</value></data>
+  <data name="Rule_SaEnabled_Title" xml:space="preserve"><value>The sa login is enabled</value></data>
+  <data name="Rule_SaEnabled_Why" xml:space="preserve"><value>sa is the best-known sysadmin name: password-guessing attacks try it first.</value></data>
+  <data name="Rule_SaEnabled_Fix" xml:space="preserve"><value>Disable sa (or rename it) and use named logins; make sure another sysadmin login works first.</value></data>
+  <data name="Rule_Sysadmins_Title" xml:space="preserve"><value>Many logins are sysadmin</value></data>
+  <data name="Rule_Sysadmins_Why" xml:space="preserve"><value>A sysadmin can do anything on the server, including reading every database and turning off auditing. Each extra one is a risk.</value></data>
+  <data name="Rule_Sysadmins_Fix" xml:space="preserve"><value>Keep sysadmin to the DBAs; give applications and developers only the database roles they need.</value></data>
+  <data name="Rule_Uptime_Title" xml:space="preserve"><value>The server started less than a day ago</value></data>
+  <data name="Rule_Uptime_Why" xml:space="preserve"><value>Everything SQL Server counts (waits, index use, heavy queries) started again with it; findings built on these counts reflect only a short period.</value></data>
+  <data name="Rule_Uptime_Fix" xml:space="preserve"><value>Before dropping "unused" indexes or judging waits, let the server run through a normal business cycle.</value></data>
+  <data name="HealthTitle" xml:space="preserve"><value>Health check</value></data>
+  <data name="HealthOpen" xml:space="preserve"><value>Health check</value></data>
+  <data name="HealthOpenTip" xml:space="preserve"><value>The server checked against well-known rules: configuration, databases, backups, security</value></data>
+  <data name="HealthUnsupported" xml:space="preserve"><value>This database type has no health check.</value></data>
+  <data name="HealthRun" xml:space="preserve"><value>Check again</value></data>
+  <data name="HealthChecked" xml:space="preserve"><value>Checked {0}</value></data>
+  <data name="HealthCritical" xml:space="preserve"><value>Critical</value></data>
+  <data name="HealthWarning" xml:space="preserve"><value>Warning</value></data>
+  <data name="HealthInfo" xml:space="preserve"><value>Info</value></data>
+  <data name="HealthOk" xml:space="preserve"><value>OK</value></data>
+  <data name="HealthOnlyProblems" xml:space="preserve"><value>Only problems</value></data>
+  <data name="HealthAll" xml:space="preserve"><value>All</value></data>
+  <data name="HealthCatConfiguration" xml:space="preserve"><value>Configuration</value></data>
+  <data name="HealthCatDatabases" xml:space="preserve"><value>Databases</value></data>
+  <data name="HealthCatBackups" xml:space="preserve"><value>Backups</value></data>
+  <data name="HealthCatSecurity" xml:space="preserve"><value>Security</value></data>
+  <data name="HealthCatPerformance" xml:space="preserve"><value>Performance</value></data>
+  <data name="HealthWhy" xml:space="preserve"><value>Why it matters</value></data>
+  <data name="HealthFix" xml:space="preserve"><value>What to do</value></data>
+  <data name="HealthCurrent" xml:space="preserve"><value>Now</value></data>
+  <data name="HealthRecommended" xml:space="preserve"><value>Recommended</value></data>
+  <data name="HealthObjects" xml:space="preserve"><value>Found on</value></data>
+  <data name="HealthScript" xml:space="preserve"><value>Fix script (review before running)</value></data>
+  <data name="HealthOpenScript" xml:space="preserve"><value>Open in a query tab</value></data>
+  <data name="HealthScriptAll" xml:space="preserve"><value>Script all shown</value></data>
+  <data name="HealthNoSelection" xml:space="preserve"><value>Choose a finding to see why it matters and how to fix it.</value></data>
+  <data name="HealthEmpty" xml:space="preserve"><value>Nothing to show with these filters.</value></data>
+  <data name="HealthScriptHeader" xml:space="preserve"><value>Fixes proposed by JetQueries' health check: review every statement and run it in a maintenance window.</value></data>
+  <data name="Help_Health_Title" xml:space="preserve"><value>Health check</value></data>
+  <data name="Help_Health_What" xml:space="preserve"><value>The server checked against rules every DBA knows: memory and parallelism settings, database options (auto shrink, page verification, statistics), file growth, tempdb, backups and integrity checks, and risky security settings. It only reads; each finding explains why it matters and may carry a script that fixes it, which you review and run yourself.</value></data>
+  <data name="Help_Health_Good" xml:space="preserve"><value>Sorunsuz: the rule passes.</value></data>
+  <data name="Help_Health_Watch" xml:space="preserve"><value>Bilgi: worth knowing, usually no action. Uyarı: fix when convenient, ideally in the next maintenance window.</value></data>
+  <data name="Help_Health_Bad" xml:space="preserve"><value>Kritik: data or availability is at risk (no backups, damaged pages): fix today.</value></data>
+  <data name="Help_Health_Action" xml:space="preserve"><value>Start with Kritik, then Uyarı. Choose a finding to read why it matters; "Sorgu sekmesinde aç" puts its fix into a query tab without running it. Check again after fixing.</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Clear all</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Remove filter</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} of {1:N0} rows</value></data>

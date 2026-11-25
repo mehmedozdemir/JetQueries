@@ -129,10 +129,13 @@ public sealed partial class ConnectionNodeViewModel(ConnectionDefinition definit
     public bool IsProduction => Definition.Environment == ConnectionEnvironment.Production;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanMonitor), nameof(CanAnalyze), nameof(CanDashboard), nameof(HasDbaTools))]
+    [NotifyPropertyChangedFor(nameof(CanMonitor), nameof(CanAnalyze), nameof(CanDashboard), nameof(CanHealthCheck), nameof(HasDbaTools))]
     public partial bool IsConnected { get; set; }
 
-    public override bool HasDbaTools => CanDashboard || CanMonitor || CanAnalyze;
+    /// <summary>Open, on a provider with a health check: it can be run.</summary>
+    public bool CanHealthCheck => IsConnected && _context?.Session.SupportsHealthCheck == true;
+
+    public override bool HasDbaTools => CanDashboard || CanMonitor || CanAnalyze || CanHealthCheck;
 
     /// <summary>Open, on a provider that reports the server's load: the dashboard can be opened.</summary>
     public bool CanDashboard => IsConnected && _context?.Session.SupportsDashboard == true;
@@ -681,6 +684,19 @@ public partial class ConnectionsViewModel(
                 break;
             default:
                 break;
+        }
+    }
+
+    /// <summary>The health check of an open connection is to be shown in a tab.</summary>
+    public event EventHandler<HealthCheckViewModel>? HealthRequested;
+
+    /// <summary>Opens the health check of the chosen open connection (its menu item shows only then).</summary>
+    [RelayCommand]
+    private void OpenHealth(ExplorerNodeViewModel? node)
+    {
+        if ((node ?? Selected) is ConnectionNodeViewModel { CanHealthCheck: true, Context.Session: var session })
+        {
+            HealthRequested?.Invoke(this, new HealthCheckViewModel(session, jobs));
         }
     }
 

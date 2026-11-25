@@ -732,6 +732,106 @@
   <data name="Help_PerfFragmentation_Watch" xml:space="preserve"><value>%5–30: REORGANIZE (çevrimiçi, durdurulabilir).</value></data>
   <data name="Help_PerfFragmentation_Bad" xml:space="preserve"><value>Taranan büyük index'lerde %30 üstü: REBUILD.</value></data>
   <data name="Help_PerfFragmentation_Action" xml:space="preserve"><value>SSD depolamada parçalanma, güncel istatistiklerden çok daha az önemlidir; bakım penceresinde rebuild edin (REBUILD, Enterprise sürümde ONLINE = ON olmadıkça tabloyu kilitler).</value></data>
+  <data name="Rule_MaxServerMemory_Title" xml:space="preserve"><value>Azami sunucu belleği ayarlanmamış</value></data>
+  <data name="Rule_MaxServerMemory_Why" xml:space="preserve"><value>Varsayılan değerde bırakılırsa SQL Server makinenin neredeyse tüm belleğini alabilir; işletim sistemi ve diğer servisler sıkışır, baskı altında Windows SQL Server'ı diske atar ve her şey çok yavaşlar.</value></data>
+  <data name="Rule_MaxServerMemory_Fix" xml:space="preserve"><value>İşletim sistemine yaklaşık %10 (en az 4 GB) bırakıp kalanını SQL Server'a verin; öneri bu makinenin belleğinden hesaplandı. Hemen etkili olur, yeniden başlatma gerekmez.</value></data>
+  <data name="Rule_MaxDop_Title" xml:space="preserve"><value>Çok CPU'lu sunucuda paralellik sınırsız</value></data>
+  <data name="Rule_MaxDop_Why" xml:space="preserve"><value>Max degree of parallelism 0 iken tek bir sorgu tüm CPU'ları kullanabilir; 8'den fazla CPU'lu sunucularda bu, işlemcileri koordinasyona harcar ve tek bir raporun herkesi yavaşlatmasına yol açar (CXPACKET beklemeleri).</value></data>
+  <data name="Rule_MaxDop_Fix" xml:space="preserve"><value>NUMA düğümü başına çekirdek sayısına, en fazla 8'e ayarlayın (Microsoft'un önerisi); öneri bu sunucu için hesaplandı.</value></data>
+  <data name="Rule_CostThreshold_Title" xml:space="preserve"><value>Paralellik eşiği varsayılan 5</value></data>
+  <data name="Rule_CostThreshold_Why" xml:space="preserve"><value>Varsayılan 5 değeri 1990'lardan kalma: bugün neredeyse her sorgu bu eşiği geçip paralel çalışır, küçük sorgular için bu kazandırdığından fazlasını harcatır.</value></data>
+  <data name="Rule_CostThreshold_Fix" xml:space="preserve"><value>50 yaygın başlangıç değeridir; küçük sorgular hâlâ paralel çalışıyorsa artırın.</value></data>
+  <data name="Rule_OptimizeAdhoc_Title" xml:space="preserve"><value>Tek kullanımlık planlar plan önbelleğini dolduruyor</value></data>
+  <data name="Rule_OptimizeAdhoc_Why" xml:space="preserve"><value>Plan önbelleğinin çoğunu yalnızca bir kez kullanılmış planlar dolduruyor (SQL'e değer yazılarak gönderilen sorgular). Veriyi önbelleğe almak için kullanılabilecek belleği tüketirler.</value></data>
+  <data name="Rule_OptimizeAdhoc_Fix" xml:space="preserve"><value>"optimize for ad hoc workloads" ayarını açın: plan ancak ikinci kullanımda tam olarak saklanır. Daha iyisi, uygulamaların parametre göndermesidir.</value></data>
+  <data name="Rule_PriorityBoost_Title" xml:space="preserve"><value>Priority boost açık</value></data>
+  <data name="Rule_PriorityBoost_Why" xml:space="preserve"><value>SQL Server'ı işletim sisteminin kendi iş parçacıklarının üstüne çıkarır; Windows'u aç bırakıp kararsızlığa yol açabileceği için Microsoft bu ayarı kullanımdan kaldırmıştır.</value></data>
+  <data name="Rule_PriorityBoost_Fix" xml:space="preserve"><value>Kapatın; servis yeniden başlatıldıktan sonra etkili olur.</value></data>
+  <data name="Rule_AutoShrink_Title" xml:space="preserve"><value>Otomatik küçültme (auto shrink) açık</value></data>
+  <data name="Rule_AutoShrink_Why" xml:space="preserve"><value>Veritabanı boş yer olduğunda dosyalarını küçültür, ihtiyaç olunca hemen yeniden büyütür: sürekli iş, çok parçalanmış index'ler ve dosya büyürken duraklamalar.</value></data>
+  <data name="Rule_AutoShrink_Fix" xml:space="preserve"><value>Kapatın. Bir kerelik yer geri vermek gerekiyorsa elle küçültün ve ardından index'leri yeniden oluşturun.</value></data>
+  <data name="Rule_AutoClose_Title" xml:space="preserve"><value>Otomatik kapanma (auto close) açık</value></data>
+  <data name="Rule_AutoClose_Why" xml:space="preserve"><value>Son kullanıcı çıkınca veritabanı kapanır, sonraki bağlantıda yeniden açılır: ilk bağlantılar yavaş olur ve önbellek her seferinde boşalır.</value></data>
+  <data name="Rule_AutoClose_Fix" xml:space="preserve"><value>Kapatın; bu ayar sunucular için değil, masaüstü sürümleri için düşünülmüştür.</value></data>
+  <data name="Rule_PageVerify_Title" xml:space="preserve"><value>Sayfa doğrulaması CHECKSUM değil</value></data>
+  <data name="Rule_PageVerify_Why" xml:space="preserve"><value>CHECKSUM ile her sayfa bir sağlama toplamı taşır, disk veya denetleyicinin yaptığı bozulma sayfa okunurken yakalanır. TORN_PAGE_DETECTION ya da NONE bozulmanın fark edilmemesine, yedeklere de geçmesine izin verir.</value></data>
+  <data name="Rule_PageVerify_Fix" xml:space="preserve"><value>CHECKSUM'a geçin (kesinti gerekmez); sayfalar bir sonraki yazılışta sağlama toplamını alır.</value></data>
+  <data name="Rule_AutoStats_Title" xml:space="preserve"><value>Otomatik istatistikler kapalı</value></data>
+  <data name="Rule_AutoStats_Why" xml:space="preserve"><value>İstatistikler optimize ediciye kaç satır beklemesi gerektiğini söyler. Otomatik oluşturma ve güncelleme olmadan eskirler ve planlar kötüleşir: seek yerine tarama, yetersiz bellek, yavaş sorgular.</value></data>
+  <data name="Rule_AutoStats_Fix" xml:space="preserve"><value>Bir bakım işi istatistikleri bilerek güncellemiyorsa ikisini de açın.</value></data>
+  <data name="Rule_Trustworthy_Title" xml:space="preserve"><value>TRUSTWORTHY açık</value></data>
+  <data name="Rule_Trustworthy_Why" xml:space="preserve"><value>TRUSTWORTHY veritabanındaki kod, sahibinin sunucu yetkileriyle çalışabilir; sahibi sysadmin ise orada prosedür oluşturabilen herkes sysadmin olabilir.</value></data>
+  <data name="Rule_Trustworthy_Fix" xml:space="preserve"><value>Kapatın; ek yetki gerektiren kod bunun yerine bir sertifikayla imzalanmalıdır.</value></data>
+  <data name="Rule_CompatibilityLevel_Title" xml:space="preserve"><value>Uyumluluk seviyesi sunucununkinden eski</value></data>
+  <data name="Rule_CompatibilityLevel_Why" xml:space="preserve"><value>Veritabanı eski bir optimize ediciyle çalışıyor ve yeni özellikleri kaçırıyor (daha iyi tahminler, uyarlanabilir join'ler). Çoğu zaman yükseltmeden sonra hiç değiştirilmemiştir.</value></data>
+  <data name="Rule_CompatibilityLevel_Fix" xml:space="preserve"><value>Uygulamayı bir kopyada test ettikten sonra yükseltin: bazı sorgular farklı plan alabilir. Gerilemeleri yakalamak için Query Store yardımcı olur.</value></data>
+  <data name="Rule_FileGrowth_Title" xml:space="preserve"><value>Dosyalar yüzdeyle ya da çok küçük adımlarla büyüyor</value></data>
+  <data name="Rule_FileGrowth_Why" xml:space="preserve"><value>Yüzdeyle büyüme, dosya büyüdükçe her adımı daha büyük ve yavaş yapar; çok küçük adımlar çok sayıda küçük duraklamaya ve dosya parçalanmasına yol açar. Log dosyaları büyürken sıfırlanır, bu sırada yazmalar durur.</value></data>
+  <data name="Rule_FileGrowth_Fix" xml:space="preserve"><value>Sabit boyut kullanın: veri için 512 MB, log için 256 MB makul bir başlangıçtır; daha iyisi, dosyaları önceden büyük açıp nadiren büyümelerini sağlamaktır.</value></data>
+  <data name="Rule_LogReuse_Title" xml:space="preserve"><value>Bir log verisinden büyük ve yeniden kullanılamıyor</value></data>
+  <data name="Rule_LogReuse_Why" xml:space="preserve"><value>Log büyümeye devam ediyor çünkü bir şey onu tutuyor (boyuttan sonra yazıyor): LOG_BACKUP log yedeklerinin eksik olduğunu; ACTIVE_TRANSACTION uzun süredir açık bir transaction'ı; REPLICATION ya da AVAILABILITY_REPLICA geride kalan bir okuyucuyu gösterir.</value></data>
+  <data name="Rule_LogReuse_Fix" xml:space="preserve"><value>Önce nedeni giderin (log yedeği alın, transaction'ı bitirin); ancak ondan sonra log'u bir kez makul bir boyuta küçültün.</value></data>
+  <data name="Rule_TempdbFiles_Title" xml:space="preserve"><value>tempdb'nin veri dosyaları az ya da eşit değil</value></data>
+  <data name="Rule_TempdbFiles_Why" xml:space="preserve"><value>Yoğun sunucularda tempdb'nin ayırma sayfalarında çekişme olur; CPU başına bir veri dosyası (en fazla 8), hepsi aynı boyutta, bu yükü dağıtır. Eşit olmayan boyutlar SQL Server'ın en büyük dosyayı tercih etmesine yol açar.</value></data>
+  <data name="Rule_TempdbFiles_Fix" xml:space="preserve"><value>Önerilen sayıya kadar veri dosyası ekleyin, hepsine aynı boyutu ve büyüme ayarını verin.</value></data>
+  <data name="Rule_Backups_Title" xml:space="preserve"><value>Yedekler okunamadı</value></data>
+  <data name="Rule_Backups_Why" xml:space="preserve"><value>Yedek geçmişi msdb'dedir ve bu kullanıcı onu okuyamıyor; bu yüzden veritabanlarının yedeklenip yedeklenmediği bilinmiyor.</value></data>
+  <data name="Rule_Backups_Fix" xml:space="preserve"><value>Kontrolü msdb'yi okuyabilen bir kullanıcıyla çalıştırın ya da yedeklerin nasıl alındığını DBA'e sorun.</value></data>
+  <data name="Rule_FullBackup_Title" xml:space="preserve"><value>Bir veritabanının yakın tarihli tam yedeği yok</value></data>
+  <data name="Rule_FullBackup_Why" xml:space="preserve"><value>Tam yedek olmadan bozulan bir disk, yanlışlıkla yapılan bir DELETE ya da fidye yazılımı geri alınamaz. Liste son 7 günde tam yedeği olmayan veritabanlarını gösterir.</value></data>
+  <data name="Rule_FullBackup_Fix" xml:space="preserve"><value>En az haftada bir (genelde her gece) tam yedeği bakım planı, agent işi ya da yedekleme ürünüyle zamanlayın ve ara ara geri yüklemeyi deneyin.</value></data>
+  <data name="Rule_LogBackup_Title" xml:space="preserve"><value>FULL modundaki bir veritabanının yakın tarihli log yedeği yok</value></data>
+  <data name="Rule_LogBackup_Why" xml:space="preserve"><value>FULL kurtarma modunda log ancak log yedeğiyle boşalır: log yedeği yoksa disk dolana kadar büyür ve veritabanı yalnızca son tam yedeğe geri döndürülebilir.</value></data>
+  <data name="Rule_LogBackup_Fix" xml:space="preserve"><value>15–60 dakikada bir log yedeği alın; belirli bir ana dönmek gerekmiyorsa veritabanını SIMPLE kurtarma moduna alın.</value></data>
+  <data name="Rule_CheckDb_Title" xml:space="preserve"><value>Bütünlük bir haftadır denetlenmedi</value></data>
+  <data name="Rule_CheckDb_Why" xml:space="preserve"><value>DBCC CHECKDB bozulmayı yedeklere yayılmadan önce bulur; bu veritabanlarının son temiz denetimi 7 günden eski ya da hiç yapılmamış.</value></data>
+  <data name="Rule_CheckDb_Fix" xml:space="preserve"><value>DBCC CHECKDB'yi haftalık olarak sakin bir saatte çalıştırın (tüm veritabanını okur); bir iş ya da bakım planı bunu yapabilir.</value></data>
+  <data name="Rule_SuspectPages_Title" xml:space="preserve"><value>Bozuk sayfalar kaydedilmiş</value></data>
+  <data name="Rule_SuspectPages_Why" xml:space="preserve"><value>SQL Server doğru okuyamadığı sayfalarla karşılaşmış (sağlama toplamı ya da G/Ç hataları) ve bunları msdb.dbo.suspect_pages tablosuna kaydetmiş: disk ya da denetleyici veriyi bozuyor.</value></data>
+  <data name="Rule_SuspectPages_Fix" xml:space="preserve"><value>Hemen DBCC CHECKDB çalıştırın, depolama donanımını kontrol edin ve her şeyden önce sağlam yedekler olduğundan emin olun.</value></data>
+  <data name="Rule_SaEnabled_Title" xml:space="preserve"><value>sa kullanıcısı etkin</value></data>
+  <data name="Rule_SaEnabled_Why" xml:space="preserve"><value>sa en bilinen sysadmin adıdır: parola tahmin saldırıları önce onu dener.</value></data>
+  <data name="Rule_SaEnabled_Fix" xml:space="preserve"><value>sa'yı devre dışı bırakın (ya da adını değiştirin) ve kişiye özel kullanıcılar kullanın; önce başka bir sysadmin kullanıcısının çalıştığından emin olun.</value></data>
+  <data name="Rule_Sysadmins_Title" xml:space="preserve"><value>Çok sayıda kullanıcı sysadmin</value></data>
+  <data name="Rule_Sysadmins_Why" xml:space="preserve"><value>Bir sysadmin sunucuda her şeyi yapabilir; tüm veritabanlarını okumak ve denetimi kapatmak dahil. Her fazladan sysadmin bir risktir.</value></data>
+  <data name="Rule_Sysadmins_Fix" xml:space="preserve"><value>sysadmin yetkisini DBA'lerle sınırlayın; uygulamalara ve geliştiricilere yalnızca ihtiyaç duydukları veritabanı rollerini verin.</value></data>
+  <data name="Rule_Uptime_Title" xml:space="preserve"><value>Sunucu bir günden kısa süre önce başladı</value></data>
+  <data name="Rule_Uptime_Why" xml:space="preserve"><value>SQL Server'ın saydığı her şey (beklemeler, index kullanımı, ağır sorgular) onunla birlikte sıfırlandı; bu sayımlara dayanan bulgular yalnızca kısa bir dönemi yansıtır.</value></data>
+  <data name="Rule_Uptime_Fix" xml:space="preserve"><value>"Kullanılmayan" index'leri silmeden ya da beklemeleri yorumlamadan önce sunucunun normal bir iş döngüsü boyunca çalışmasını bekleyin.</value></data>
+  <data name="HealthTitle" xml:space="preserve"><value>Sağlık kontrolü</value></data>
+  <data name="HealthOpen" xml:space="preserve"><value>Sağlık kontrolü</value></data>
+  <data name="HealthOpenTip" xml:space="preserve"><value>Sunucunun bilinen kurallara göre denetimi: yapılandırma, veritabanları, yedekler, güvenlik</value></data>
+  <data name="HealthUnsupported" xml:space="preserve"><value>Bu veritabanı türünün sağlık kontrolü yok.</value></data>
+  <data name="HealthRun" xml:space="preserve"><value>Yeniden kontrol et</value></data>
+  <data name="HealthChecked" xml:space="preserve"><value>Kontrol edildi {0}</value></data>
+  <data name="HealthCritical" xml:space="preserve"><value>Kritik</value></data>
+  <data name="HealthWarning" xml:space="preserve"><value>Uyarı</value></data>
+  <data name="HealthInfo" xml:space="preserve"><value>Bilgi</value></data>
+  <data name="HealthOk" xml:space="preserve"><value>Sorunsuz</value></data>
+  <data name="HealthOnlyProblems" xml:space="preserve"><value>Yalnızca sorunlar</value></data>
+  <data name="HealthAll" xml:space="preserve"><value>Tümü</value></data>
+  <data name="HealthCatConfiguration" xml:space="preserve"><value>Yapılandırma</value></data>
+  <data name="HealthCatDatabases" xml:space="preserve"><value>Veritabanları</value></data>
+  <data name="HealthCatBackups" xml:space="preserve"><value>Yedekler</value></data>
+  <data name="HealthCatSecurity" xml:space="preserve"><value>Güvenlik</value></data>
+  <data name="HealthCatPerformance" xml:space="preserve"><value>Performans</value></data>
+  <data name="HealthWhy" xml:space="preserve"><value>Neden önemli</value></data>
+  <data name="HealthFix" xml:space="preserve"><value>Ne yapmalı</value></data>
+  <data name="HealthCurrent" xml:space="preserve"><value>Şu an</value></data>
+  <data name="HealthRecommended" xml:space="preserve"><value>Önerilen</value></data>
+  <data name="HealthObjects" xml:space="preserve"><value>Bulunduğu yerler</value></data>
+  <data name="HealthScript" xml:space="preserve"><value>Düzeltme betiği (çalıştırmadan önce inceleyin)</value></data>
+  <data name="HealthOpenScript" xml:space="preserve"><value>Sorgu sekmesinde aç</value></data>
+  <data name="HealthScriptAll" xml:space="preserve"><value>Görünenlerin betiği</value></data>
+  <data name="HealthNoSelection" xml:space="preserve"><value>Neden önemli olduğunu ve nasıl düzeltileceğini görmek için bir bulgu seçin.</value></data>
+  <data name="HealthEmpty" xml:space="preserve"><value>Bu filtrelerle gösterilecek bir şey yok.</value></data>
+  <data name="HealthScriptHeader" xml:space="preserve"><value>JetQueries sağlık kontrolünün önerdiği düzeltmeler: her deyimi inceleyin ve bakım penceresinde çalıştırın.</value></data>
+  <data name="Help_Health_Title" xml:space="preserve"><value>Sağlık kontrolü</value></data>
+  <data name="Help_Health_What" xml:space="preserve"><value>Sunucunun her DBA'in bildiği kurallara göre denetimi: bellek ve paralellik ayarları, veritabanı seçenekleri (otomatik küçültme, sayfa doğrulama, istatistikler), dosya büyümesi, tempdb, yedekler ve bütünlük denetimleri, riskli güvenlik ayarları. Yalnızca okur; her bulgu neden önemli olduğunu açıklar ve onu düzelten bir betik taşıyabilir, betiği siz inceleyip çalıştırırsınız.</value></data>
+  <data name="Help_Health_Good" xml:space="preserve"><value>Sorunsuz: kural geçiyor.</value></data>
+  <data name="Help_Health_Watch" xml:space="preserve"><value>Bilgi: bilmekte fayda var, genelde işlem gerekmez. Uyarı: uygun bir zamanda, tercihen bir sonraki bakım penceresinde düzeltin.</value></data>
+  <data name="Help_Health_Bad" xml:space="preserve"><value>Kritik: veri ya da erişilebilirlik risk altında (yedek yok, bozuk sayfalar): bugün düzeltin.</value></data>
+  <data name="Help_Health_Action" xml:space="preserve"><value>Önce Kritik'lerle, sonra Uyarı'larla başlayın. Neden önemli olduğunu okumak için bir bulgu seçin; "Sorgu sekmesinde aç" düzeltmesini çalıştırmadan bir sorgu sekmesine koyar. Düzelttikten sonra yeniden kontrol edin.</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Tümünü temizle</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Filtreyi kaldır</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} / {1:N0} satır</value></data>
