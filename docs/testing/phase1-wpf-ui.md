@@ -722,3 +722,16 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] Start the app: only the top-level folders and connections are shown, every folder closed.
 - [ ] Open a folder, refresh the explorer (or add a connection): it stays open.
 - [ ] Ctrl+T (Go to object) on a table of a connection inside a closed folder: the folders open and the table is selected.
+
+## Activity monitor (SQL Server)
+- [ ] Connect to a SQL Server; right-click the connection: "Etkinlik izleyici" is there (not on a disconnected one, not on PostgreSQL/Oracle/SQLite/Redis yet). Tools > Etkinlik izleyici and Ctrl+Shift+A open the same tab for the selected connection (or the query tab's).
+- [ ] The tab shows counters, the sessions grid, and updates every 5 s ("Güncellendi hh:mm:ss"); change to 2 s / 30 s; untick "Her": it stops; F5 reads once.
+- [ ] Switch to a query tab and back: it pauses while hidden (no reads in a profiler / Extended Events), resumes when shown.
+- [ ] Blocking: in tab A `BEGIN TRAN; UPDATE t SET x = x WHERE id = 1;` (do not commit), in tab B `SELECT * FROM t WHERE id = 1`. The monitor shows A's session first as "engelliyor (1)", B's as "engellendi" with LCK_M_S and the wait time; "Engellenen 1" is outlined red; the chain card shows A (boşta, transaction açık) → B.
+- [ ] Choose B in the chain: the grid and the side panel follow; the side panel shows the SQL; "Sorgu sekmesinde aç" opens it in a new tab on the same connection and database (not run).
+- [ ] Choose A, "Oturumu sonlandır…": the confirmation names the session, login, host and program; Cancel changes nothing; OK ends it, B finishes, A's tab gets an error on its next statement. On a production connection a second confirmation asks.
+- [ ] The monitor's own session ("Bu izleyicinin kendi oturumu") cannot be ended; on a read-only connection there is no end button.
+- [ ] Filter "lck" / a login / a host / part of the SQL; "Boştaki oturumlar" and "Sistem oturumları" add those sessions.
+- [ ] A login without VIEW SERVER STATE: a yellow note says only its own sessions are visible.
+- [ ] Disconnect the connection while the monitor is open: it says the connection was closed and stops refreshing.
+- [ ] Close the monitor tab: no more reads (its connection is closed; check sys.dm_exec_sessions from another tab).

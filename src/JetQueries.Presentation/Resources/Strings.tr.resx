@@ -434,6 +434,57 @@
   <data name="HistoryRowsAffected" xml:space="preserve"><value>{0:N0} satır etkilendi</value></data>
   <data name="DatabaseFilterPlaceholder" xml:space="preserve"><value>Veritabanlarını filtrele…</value></data>
   <data name="DatabaseFilterNone" xml:space="preserve"><value>Eşleşen veritabanı yok.</value></data>
+  <data name="ActivityTitle" xml:space="preserve"><value>Etkinlik</value></data>
+  <data name="ActivityOpen" xml:space="preserve"><value>Etkinlik izleyici</value></data>
+  <data name="ActivityOpenTip" xml:space="preserve"><value>Sunucudaki oturumlar, ne çalıştırıp ne beklediği, kimin kimi engellediği</value></data>
+  <data name="ActivityLimited" xml:space="preserve"><value>Yalnızca kendi oturumlarınız görünüyor: tüm sunucuyu görmek için kullanıcının VIEW SERVER STATE yetkisi gerekir.</value></data>
+  <data name="ActivityUpdated" xml:space="preserve"><value>Güncellendi {0}</value></data>
+  <data name="ActivityKillTitle" xml:space="preserve"><value>Oturumu sonlandır</value></data>
+  <data name="ActivityKillMessage" xml:space="preserve"><value>{2} üzerindeki {0} numaralı oturum ({1}) sonlandırılsın mı?
+
+Çalıştırdığı iş durur, açık transaction'ı geri alınır; istemci bir hata alır.</value></data>
+  <data name="ActivityKillProduction" xml:space="preserve"><value>{0} bir ÜRETİM sunucusu. Oturum yine de sonlandırılsın mı?</value></data>
+  <data name="ActivityUnsupported" xml:space="preserve"><value>Bu veritabanı türü oturumlarını bildirmiyor.</value></data>
+  <data name="ActivityStateBlocking" xml:space="preserve"><value>engelliyor ({0})</value></data>
+  <data name="ActivityStateBlocked" xml:space="preserve"><value>engellendi</value></data>
+  <data name="ActivityIdleInTransaction" xml:space="preserve"><value>boşta, transaction açık</value></data>
+  <data name="UnitSeconds" xml:space="preserve"><value>sn</value></data>
+  <data name="ActivitySessions" xml:space="preserve"><value>Oturum</value></data>
+  <data name="ActivityActive" xml:space="preserve"><value>Çalışan</value></data>
+  <data name="ActivityBlocked" xml:space="preserve"><value>Engellenen</value></data>
+  <data name="ActivityHeadBlockers" xml:space="preserve"><value>Zincir başı</value></data>
+  <data name="ActivityFilter" xml:space="preserve"><value>Herhangi bir metne göre filtrele…</value></data>
+  <data name="ActivityShowIdle" xml:space="preserve"><value>Boştaki oturumlar</value></data>
+  <data name="ActivityShowSystem" xml:space="preserve"><value>Sistem oturumları</value></data>
+  <data name="ActivityAutoRefresh" xml:space="preserve"><value>Her</value></data>
+  <data name="ActivityAutoRefreshTip" xml:space="preserve"><value>Sekme açıkken kendiliğinden yeniden oku</value></data>
+  <data name="ActivityRefreshTip" xml:space="preserve"><value>Şimdi oku (F5)</value></data>
+  <data name="ActivityChains" xml:space="preserve"><value>Kilitlenme zincirleri</value></data>
+  <data name="ActivityChainsHint" xml:space="preserve"><value>En üstteki oturum, altındakilerin beklediği kaynağı tutuyor.</value></data>
+  <data name="ActivitySession" xml:space="preserve"><value>Oturum</value></data>
+  <data name="ActivityNoSelection" xml:space="preserve"><value>Ne çalıştırdığını görmek için bir oturum seçin.</value></data>
+  <data name="ActivityOpenSql" xml:space="preserve"><value>Sorgu sekmesinde aç</value></data>
+  <data name="ActivityKill" xml:space="preserve"><value>Oturumu sonlandır…</value></data>
+  <data name="ActivityOwn" xml:space="preserve"><value>Bu izleyicinin kendi oturumu</value></data>
+  <data name="ActivityEmpty" xml:space="preserve"><value>Eşleşen oturum yok.</value></data>
+  <data name="ActivityColId" xml:space="preserve"><value>Oturum</value></data>
+  <data name="ActivityColState" xml:space="preserve"><value>Durum</value></data>
+  <data name="ActivityColLogin" xml:space="preserve"><value>Kullanıcı</value></data>
+  <data name="ActivityColHost" xml:space="preserve"><value>Makine</value></data>
+  <data name="ActivityColProgram" xml:space="preserve"><value>Program</value></data>
+  <data name="ActivityColDatabase" xml:space="preserve"><value>Veritabanı</value></data>
+  <data name="ActivityColCommand" xml:space="preserve"><value>Komut</value></data>
+  <data name="ActivityColWait" xml:space="preserve"><value>Bekleme</value></data>
+  <data name="ActivityColWaitTime" xml:space="preserve"><value>Bekleme süresi</value></data>
+  <data name="ActivityColBlockedBy" xml:space="preserve"><value>Engelleyen</value></data>
+  <data name="ActivityColElapsed" xml:space="preserve"><value>Süre</value></data>
+  <data name="ActivityColCpu" xml:space="preserve"><value>CPU</value></data>
+  <data name="ActivityColReads" xml:space="preserve"><value>Okuma</value></data>
+  <data name="ActivityColWrites" xml:space="preserve"><value>Yazma</value></data>
+  <data name="ActivityColTransactions" xml:space="preserve"><value>Açık tran.</value></data>
+  <data name="ActivityColLogin2" xml:space="preserve"><value>Giriş</value></data>
+  <data name="ActivityColSql" xml:space="preserve"><value>SQL</value></data>
+  <data name="ActivityDisconnected" xml:space="preserve"><value>Bağlantı kapatıldı. Yeniden bağlanıp izleyiciyi tekrar açın.</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Tümünü temizle</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Filtreyi kaldır</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} / {1:N0} satır</value></data>

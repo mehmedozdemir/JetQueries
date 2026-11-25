@@ -53,6 +53,7 @@ public partial class MainWindowViewModel : ObservableObject
         // Details of an object: from the explorer (Details, F4) and from the editor (Ctrl+Click, F12).
         connections.DetailsRequested += (_, request) => ShowDetails(request);
         connections.KeyRequested += (_, key) => documents.OpenKey(key);
+        connections.ActivityRequested += (_, monitor) => documents.OpenActivity(monitor);
         documents.DetailsRequested += (_, request) => ShowDetails(request);
 
         // A new query starts on the connection that is selected in the explorer.
@@ -175,6 +176,43 @@ public partial class MainWindowViewModel : ObservableObject
 
         var store = _store;
         _jobs.Enqueue("Save layout", context => store.SaveAsync(ShellLayout.Section, layout, context.CancellationToken), JobPriority.Low);
+    }
+
+    /// <summary>
+    /// Main menu: Tools, Activity monitor — of the connection chosen in the explorer, else of the query tab's.
+    /// </summary>
+    [RelayCommand]
+    private void ShowActivity()
+    {
+        if (Connections.Selected is ConnectionNodeViewModel { CanMonitor: true } node)
+        {
+            Connections.OpenActivityCommand.Execute(node);
+            return;
+        }
+
+        if (Documents.Selected?.SelectedSession?.Session is { SupportsActivity: true } session &&
+            FindConnection(Connections.Roots, session.Definition.Id) is { CanMonitor: true } open)
+        {
+            Connections.OpenActivityCommand.Execute(open);
+        }
+    }
+
+    private static ConnectionNodeViewModel? FindConnection(IEnumerable<ExplorerNodeViewModel> nodes, Guid id)
+    {
+        foreach (var node in nodes)
+        {
+            if (node is ConnectionNodeViewModel connection && connection.Definition.Id == id)
+            {
+                return connection;
+            }
+
+            if (node is FolderNodeViewModel && FindConnection(node.Children, id) is { } found)
+            {
+                return found;
+            }
+        }
+
+        return null;
     }
 
     /// <summary>Main menu: Tools, Query history.</summary>

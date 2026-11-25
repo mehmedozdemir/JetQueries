@@ -639,6 +639,51 @@ public sealed class SqlServerIntegrationTests(SqlServerFixture fixture) : IClass
         Assert.Equal("Müşteri İşlemleri", Assert.Single(rows)[0]);
     }
 
+    [Fact]
+    public async Task The_monitor_sees_who_blocks_whom_and_ends_the_blocker()
+    {
+        await using var holder = await OpenAsync();
+        await using var waiter = await OpenAsync();
+        await using var monitor = await OpenAsync();
+        var activity = Assert.IsAssignableFrom<IActivityMonitor>(monitor);
+
+        // The holder keeps a row locked in an open transaction; the waiter's SELECT waits for it.
+        await RunAsync(holder, "CREATE TABLE ##jq_activity (id int PRIMARY KEY, n int); INSERT INTO ##jq_activity VALUES (1, 0);");
+        await RunAsync(holder, "BEGIN TRANSACTION; UPDATE ##jq_activity SET n = 1 WHERE id = 1;");
+        var holderId = await SpidAsync(holder);
+        var waiterId = await SpidAsync(waiter);
+        var waiting = RunAsync(waiter, "SELECT n FROM ##jq_activity WHERE id = 1");
+
+        ActivitySession? blocked = null;
+        ActivitySnapshot? snapshot = null;
+        for (var i = 0; i < 50 && blocked is null; i++)
+        {
+            await Task.Delay(100, Token);
+            snapshot = await activity.GetActivityAsync(Token);
+            blocked = snapshot.Sessions.FirstOrDefault(s => s.Id == waiterId && s.BlockedBy is not null);
+        }
+
+        Assert.NotNull(blocked);
+        Assert.Equal(holderId, blocked.BlockedBy);
+        Assert.StartsWith("LCK_M_", blocked.WaitType, StringComparison.Ordinal);
+        Assert.Contains("##jq_activity", blocked.Sql, StringComparison.Ordinal);
+        Assert.Null(snapshot!.Limitation);
+        Assert.Equal(await SpidAsync(monitor), snapshot.OwnSessionId);
+        var blocker = snapshot.Sessions.Single(s => s.Id == holderId);
+        Assert.Equal(1, blocker.OpenTransactions);
+        Assert.True(blocker.IsUserSession);
+
+        // Ending the holder rolls its transaction back and lets the waiter through.
+        await activity.KillSessionAsync(holderId, Token);
+        await waiting.WaitAsync(TimeSpan.FromSeconds(10), Token);
+        Assert.DoesNotContain((await activity.GetActivityAsync(Token)).Sessions, s => s.Id == holderId && s.OpenTransactions > 0);
+        await Assert.ThrowsAsync<ArgumentException>(() => activity.KillSessionAsync("1; DROP TABLE x", Token));
+    }
+
+    private static async Task<string> SpidAsync(IDatabaseConnection connection) =>
+        Convert.ToString((await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest("SELECT @@SPID"), Token))).OfType<RowBatch>().Single().Rows[0][0],
+            System.Globalization.CultureInfo.InvariantCulture)!;
+
     private async Task<IDatabaseConnection> OpenAsync()
     {
         Assert.SkipWhen(fixture.SkipReason is not null, fixture.SkipReason ?? string.Empty);

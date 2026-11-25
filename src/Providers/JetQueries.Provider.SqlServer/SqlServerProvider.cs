@@ -250,8 +250,12 @@ public sealed class SqlServerProvider : IDatabaseProvider, IBulkInsertScripting,
     }
 }
 
-internal sealed class SqlServerConnection(SqlConnection connection) : IDatabaseConnection, IDatabaseContext, ITransactionControl
+internal sealed class SqlServerConnection(SqlConnection connection) : IDatabaseConnection, IDatabaseContext, ITransactionControl, IActivityMonitor
 {
+    public Task<ActivitySnapshot> GetActivityAsync(CancellationToken cancellationToken) => SqlServerActivity.ReadAsync(connection, cancellationToken);
+
+    public Task KillSessionAsync(string sessionId, CancellationToken cancellationToken) => SqlServerActivity.KillAsync(connection, sessionId, cancellationToken);
+
     /// <summary>Started in T-SQL, so the user's own BEGIN TRAN / COMMIT in the editor work alongside.</summary>
     public async Task BeginAsync(CancellationToken cancellationToken) =>
         await ScalarAsync("IF @@TRANCOUNT = 0 BEGIN TRANSACTION", 30, cancellationToken).ConfigureAwait(false);

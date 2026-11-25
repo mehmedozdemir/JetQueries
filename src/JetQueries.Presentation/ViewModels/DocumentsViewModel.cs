@@ -170,6 +170,28 @@ public partial class DocumentsViewModel : ObservableObject
         return key;
     }
 
+    /// <summary>
+    /// Shows a connection's activity monitor in a tab (the open one of the same connection is selected instead); its
+    /// "open in a query tab" opens one here.
+    /// </summary>
+    public ActivityMonitorViewModel OpenActivity(ActivityMonitorViewModel monitor)
+    {
+        ArgumentNullException.ThrowIfNull(monitor);
+        var open = Tabs.OfType<ActivityMonitorViewModel>().FirstOrDefault(m => m.ConnectionId == monitor.ConnectionId);
+        if (open is not null)
+        {
+            _ = monitor.DisposeAsync().AsTask();
+            SelectedTab = open;
+            return open;
+        }
+
+        monitor.QueryRequested += (_, request) => _ = OpenAsync(request);
+        var index = SelectedTab is null ? Tabs.Count : Tabs.IndexOf(SelectedTab) + 1;
+        Tabs.Insert(Math.Clamp(index, 0, Tabs.Count), monitor);
+        SelectedTab = monitor;
+        return monitor;
+    }
+
     /// <summary>Closes any tab: a query as <see cref="CloseCommand"/> does (asking about changes), a details tab at once.</summary>
     [RelayCommand]
     private async Task CloseTabAsync(object? tab)
@@ -185,6 +207,9 @@ public partial class DocumentsViewModel : ObservableObject
             case KeyValueViewModel key:
                 CloseDetails(key);
                 break;
+            case ActivityMonitorViewModel monitor:
+                CloseDetails(monitor);
+                break;
             default:
                 break;
         }
@@ -194,7 +219,7 @@ public partial class DocumentsViewModel : ObservableObject
     [RelayCommand]
     private async Task CloseOtherTabsAsync(object? keep)
     {
-        foreach (var details in Tabs.Where(t => t is ObjectDetailsViewModel or KeyValueViewModel && !ReferenceEquals(t, keep)).ToList())
+        foreach (var details in Tabs.Where(t => t is ObjectDetailsViewModel or KeyValueViewModel or ActivityMonitorViewModel && !ReferenceEquals(t, keep)).ToList())
         {
             CloseDetails(details);
         }
@@ -216,6 +241,12 @@ public partial class DocumentsViewModel : ObservableObject
         if (index < 0)
         {
             return;
+        }
+
+        // A monitor stops reading and gives its connection back.
+        if (details is ActivityMonitorViewModel monitor)
+        {
+            _ = monitor.DisposeAsync().AsTask();
         }
 
         Tabs.RemoveAt(index);
