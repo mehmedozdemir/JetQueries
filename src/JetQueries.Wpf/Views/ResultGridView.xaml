@@ -42,7 +42,8 @@
                             ToolTip="{x:Static res:Strings.RefreshResultTip}" />
                     <Border Style="{StaticResource Separator.Vertical}" Height="16" Margin="4,0" />
                     <TextBlock Text="{x:Static res:Strings.ResultPageSize}" Style="{StaticResource Text.Status}" Margin="2,0,6,0" />
-                    <TextBox x:Name="FetchSizeBox" Width="64" Padding="6,2" VerticalAlignment="Center" HorizontalContentAlignment="Right"
+                    <TextBox x:Name="FetchSizeBox" Width="56" Height="24" Padding="6,0" VerticalAlignment="Center" VerticalContentAlignment="Center"
+                             HorizontalContentAlignment="Right" FontSize="{DynamicResource FontSize.Small}"
                              Text="{Binding DataContext.FetchSize, RelativeSource={RelativeSource AncestorType=v:QueryDocumentView}, UpdateSourceTrigger=LostFocus}"
                              ToolTip="{x:Static res:Strings.FetchSizeTip}" KeyDown="OnFetchSizeKeyDown" />
                     <Button Style="{StaticResource Btn.Footer}" c:Ui.Icon="&#xE74B;" Content="{x:Static res:Strings.FetchNextShort}" Margin="4,0,0,0"
@@ -55,9 +56,10 @@
                     <Button Style="{StaticResource Btn.Footer}" c:Ui.Icon="&#xE8EF;" Content="{x:Static res:Strings.CountShort}"
                             Command="{Binding DataContext.CountRowsCommand, RelativeSource={RelativeSource AncestorType=v:QueryDocumentView}}"
                             CommandParameter="{Binding}" ToolTip="{x:Static res:Strings.CountRowsTip}" />
-                    <Border Style="{StaticResource Badge}" Margin="4,0,8,0" ToolTip="{x:Static res:Strings.CountRowsTip}">
+                    <Border Style="{StaticResource Badge}" Margin="4,0,4,0" ToolTip="{x:Static res:Strings.CountRowsTip}">
                         <TextBlock Text="{Binding RowsText}" FontSize="{DynamicResource FontSize.Small}" Foreground="{DynamicResource Brush.TextSecondary}" />
                     </Border>
+                    <Border Style="{StaticResource Separator.Vertical}" Height="16" Margin="4,0" />
                     <Button x:Name="ExportButton" Style="{StaticResource Btn.Footer}" c:Ui.Icon="&#xEDE1;" Content="{x:Static res:Strings.ExportMenu}"
                             Command="{Binding DataContext.ExportCommand, RelativeSource={RelativeSource AncestorType=v:QueryDocumentView}}"
                             CommandParameter="{Binding}" Margin="0,0,6,0" />
@@ -99,7 +101,7 @@
                 <TextBlock x:Name="SelectionStatsText" DockPanel.Dock="Right" Style="{StaticResource Text.Status}" Margin="12,0,4,0"
                            Foreground="{DynamicResource Brush.TextSecondary}" />
                 <TextBlock Text="{Binding FetchStatus}" Style="{StaticResource Text.Status}" Foreground="{DynamicResource Brush.TextMuted}"
-                           TextTrimming="CharacterEllipsis" />
+                           TextTrimming="CharacterEllipsis" ToolTip="{Binding FetchStatus}" />
             </DockPanel>
         </Border>
 

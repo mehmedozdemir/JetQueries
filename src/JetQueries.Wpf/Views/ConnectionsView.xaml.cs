@@ -6,6 +6,14 @@ namespace JetQueries.Wpf.Views;
 
 public partial class ConnectionsView : UserControl
 {
+    // "More": the menu of the less frequent actions, under the button.
+    private void OnMoreActionsClick(object sender, RoutedEventArgs e)
+    {
+        MoreActionsMenu.PlacementTarget = MoreActionsButton;
+        MoreActionsMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
+        MoreActionsMenu.IsOpen = true;
+    }
+
     public ConnectionsView()
     {
         InitializeComponent();

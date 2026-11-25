@@ -54,7 +54,7 @@
                     <TextBlock Text="{x:Static res:Strings.HistoryNoMatch}" Foreground="{DynamicResource Brush.TextSecondary}" Margin="20"
                                HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap"
                                Visibility="{Binding IsFilteredEmpty, Converter={StaticResource BoolToVisibility}}" />
-                    <ListBox x:Name="List" ItemsSource="{Binding Entries}" SelectedItem="{Binding Selected}" BorderThickness="0" Background="Transparent"
+                    <ListBox x:Name="List" ItemsSource="{Binding Entries}" SelectedItem="{Binding Selected}" HorizontalContentAlignment="Stretch" BorderThickness="0" Background="Transparent"
                              Padding="4" ScrollViewer.HorizontalScrollBarVisibility="Disabled" MouseDoubleClick="OnListDoubleClick" KeyDown="OnListKeyDown"
                              Visibility="{Binding IsEmpty, Converter={x:Static v:InverseBoolToVisibilityConverter.Instance}}">
                         <ListBox.ItemTemplate>

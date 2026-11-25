@@ -174,7 +174,7 @@
   <data name="ExecuteDialogTitle" xml:space="preserve"><value>Rutini çalıştır</value></data>
   <data name="ExecuteOverload" xml:space="preserve"><value>Biçim</value></data>
   <data name="ExecuteParamName" xml:space="preserve"><value>Parametre</value></data>
-  <data name="ExecuteParamType" xml:space="preserve"><value>Tip</value></data>
+  <data name="ExecuteParamType" xml:space="preserve"><value>Tür</value></data>
   <data name="ExecuteParamDirection" xml:space="preserve"><value>Yön</value></data>
   <data name="ExecuteParamMode" xml:space="preserve"><value>Geçilen</value></data>
   <data name="ExecuteParamValue" xml:space="preserve"><value>Değer</value></data>
@@ -237,14 +237,14 @@
   <data name="ExportDialogTitle" xml:space="preserve"><value>Sonucu dışa aktar</value></data>
   <data name="ExportFormat" xml:space="preserve"><value>Biçim</value></data>
   <data name="ExportRows" xml:space="preserve"><value>Satırlar</value></data>
-  <data name="ExportShownRows" xml:space="preserve"><value>Gösterilen satırlar ({0:N0}), tablonun sırası ve kolonlarıyla</value></data>
+  <data name="ExportShownRows" xml:space="preserve"><value>Gösterilen satırlar ({0:N0}), tablonun sırası ve sütunlarıyla</value></data>
   <data name="ExportAllRows" xml:space="preserve"><value>Tüm sonuç: sorgu yeniden çalışır ve bütün satırlar yazılır</value></data>
   <data name="ExportFile" xml:space="preserve"><value>Dosya</value></data>
   <data name="ExportDelimiter" xml:space="preserve"><value>Ayırıcı</value></data>
   <data name="ExportDelimiterComma" xml:space="preserve"><value>Virgül (,)</value></data>
   <data name="ExportDelimiterSemicolon" xml:space="preserve"><value>Noktalı virgül (;) — Türkçe ayarlı Excel</value></data>
   <data name="ExportDelimiterTab" xml:space="preserve"><value>Sekme</value></data>
-  <data name="ExportHeader" xml:space="preserve"><value>İlk satırda kolon adları</value></data>
+  <data name="ExportHeader" xml:space="preserve"><value>İlk satırda sütun adları</value></data>
   <data name="ExportNullAsText" xml:space="preserve"><value>NULL değerleri NULL olarak yaz (yoksa boş)</value></data>
   <data name="ExportTableName" xml:space="preserve"><value>INSERT içindeki tablo adı</value></data>
   <data name="ExportOpenWhenDone" xml:space="preserve"><value>Bitince dosyayı aç</value></data>
@@ -262,13 +262,13 @@
   <data name="ImportEncodingTurkish" xml:space="preserve"><value>Windows-1254 (Türkçe)</value></data>
   <data name="ImportDelimiter" xml:space="preserve"><value>Ayırıcı</value></data>
   <data name="ImportDelimiterAuto" xml:space="preserve"><value>Otomatik</value></data>
-  <data name="ImportHeader" xml:space="preserve"><value>İlk satır kolon adları</value></data>
+  <data name="ImportHeader" xml:space="preserve"><value>İlk satır sütun adları</value></data>
   <data name="ImportEmptyIsNull" xml:space="preserve"><value>Boş alanlar NULL</value></data>
   <data name="ImportTransaction" xml:space="preserve"><value>Ya hepsi ya hiçbiri (tek transaction)</value></data>
   <data name="ImportPreview" xml:space="preserve"><value>Dosyanın ilk satırları</value></data>
-  <data name="ImportMapping" xml:space="preserve"><value>Tablo kolonu ← dosya kolonu</value></data>
+  <data name="ImportMapping" xml:space="preserve"><value>Tablo sütunu ← dosya sütunu</value></data>
   <data name="ImportSkip" xml:space="preserve"><value>(atla)</value></data>
-  <data name="ImportColumnN" xml:space="preserve"><value>Kolon {0}</value></data>
+  <data name="ImportColumnN" xml:space="preserve"><value>Sütun {0}</value></data>
   <data name="ImportClose" xml:space="preserve"><value>Kapat</value></data>
   <data name="ImportRunning" xml:space="preserve"><value>İçe aktarılıyor…</value></data>
   <data name="ImportRows" xml:space="preserve"><value>{0:N0} satır yazıldı</value></data>
@@ -276,7 +276,7 @@
   <data name="ImportCanceled" xml:space="preserve"><value>İçe aktarma iptal edildi; o ana kadar yazılan satırlar duruyor.</value></data>
   <data name="ImportCanceledRolledBack" xml:space="preserve"><value>İçe aktarma iptal edildi; hiçbir satır kalmadı.</value></data>
   <data name="ImportRolledBack" xml:space="preserve"><value>Hiçbir satır kalmadı (transaction geri alındı).</value></data>
-  <data name="ImportBadValue" xml:space="preserve"><value>Satır {0}, kolon {1}: "{2}" {3} tipinde bir değer değil.</value></data>
+  <data name="ImportBadValue" xml:space="preserve"><value>Satır {0}, sütun {1}: "{2}" {3} türünde bir değer değil.</value></data>
   <data name="ImportServerError" xml:space="preserve"><value>Satır {0}–{1}: {2}</value></data>
   <data name="ImportConfirmTitle" xml:space="preserve"><value>Üretim ortamına içe aktarma</value></data>
   <data name="ImportConfirmProduction" xml:space="preserve"><value>{1} bir üretim bağlantısı; {0} tablosuna satır eklenecek. Devam edilsin mi?</value></data>
@@ -422,6 +422,16 @@
   <data name="ExplorerPinTip" xml:space="preserve"><value>Gezgini sekmelerin yanına sabitle</value></data>
   <data name="ExplorerUnpinTip" xml:space="preserve"><value>Sabitlemeyi kaldır: gezgini sol kenardaki şeride gizle</value></data>
   <data name="ExplorerShowTip" xml:space="preserve"><value>Gezgini göster</value></data>
+  <data name="QueryRunLabel" xml:space="preserve"><value>Çalıştır</value></data>
+  <data name="CaretPosition" xml:space="preserve"><value>Sat {0}, Süt {1}</value></data>
+  <data name="CaretSelection" xml:space="preserve"><value>{0} seçili</value></data>
+  <data name="ExplorerSystemDatabases" xml:space="preserve"><value>Sistem veritabanları</value></data>
+  <data name="ExplorerMoreActions" xml:space="preserve"><value>Diğer: yeni klasör, düzenle, sil, içe aktar</value></data>
+  <data name="LanguageSystem" xml:space="preserve"><value>Windows dili</value></data>
+  <data name="FieldLanguage" xml:space="preserve"><value>Dil</value></data>
+  <data name="SettingLanguageInfo" xml:space="preserve"><value>Menülerin ve mesajların dili. Sayılar ve tarihler Windows'un bölge biçimine uyar. Bir sonraki açılışta geçerli olur.</value></data>
+  <data name="HistoryRowsFetched" xml:space="preserve"><value>{0:N0} satır alındı</value></data>
+  <data name="HistoryRowsAffected" xml:space="preserve"><value>{0:N0} satır etkilendi</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Tümünü temizle</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Filtreyi kaldır</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} / {1:N0} satır</value></data>
@@ -486,7 +496,7 @@
   <data name="RecordLast" xml:space="preserve"><value>Son kayıt</value></data>
   <data name="RecordColumn" xml:space="preserve"><value>Sütun</value></data>
   <data name="RecordValue" xml:space="preserve"><value>Değer</value></data>
-  <data name="RecordType" xml:space="preserve"><value>Tip</value></data>
+  <data name="RecordType" xml:space="preserve"><value>Tür</value></data>
   <data name="FilterPlaceholder" xml:space="preserve"><value>WHERE koşulu, ör. balance &gt; 100 AND city LIKE 'A%'</value></data>
   <data name="SqlFilterApply" xml:space="preserve"><value>Filtreyi uygula (Enter)</value></data>
   <data name="SqlFilterClear" xml:space="preserve"><value>Filtreyi kaldır</value></data>
@@ -640,7 +650,7 @@
   <data name="DetailsRowHint" xml:space="preserve"><value>Satırdaki nesneyi açmak için çift tıklayın.</value></data>
   <data name="DetailsSource" xml:space="preserve"><value>Kaynak</value></data>
   <data name="DetailsLoading" xml:space="preserve"><value>Katalog okunuyor…</value></data>
-  <data name="Detail_columns" xml:space="preserve"><value>Kolonlar</value></data>
+  <data name="Detail_columns" xml:space="preserve"><value>Sütunlar</value></data>
   <data name="Detail_constraints" xml:space="preserve"><value>Kısıtlar</value></data>
   <data name="Detail_foreignKeys" xml:space="preserve"><value>Yabancı anahtarlar</value></data>
   <data name="Detail_references" xml:space="preserve"><value>Referanslar</value></data>
@@ -650,7 +660,7 @@
   <data name="Detail_parameters" xml:space="preserve"><value>Parametreler</value></data>
   <data name="Detail_name" xml:space="preserve"><value>Ad</value></data>
   <data name="Detail_position" xml:space="preserve"><value>#</value></data>
-  <data name="Detail_dataType" xml:space="preserve"><value>Veri tipi</value></data>
+  <data name="Detail_dataType" xml:space="preserve"><value>Veri türü</value></data>
   <data name="Detail_nullable" xml:space="preserve"><value>Null olabilir</value></data>
   <data name="Detail_default" xml:space="preserve"><value>Varsayılan</value></data>
   <data name="Detail_identity" xml:space="preserve"><value>Identity / hesaplanan</value></data>
@@ -658,10 +668,10 @@
   <data name="Detail_collation" xml:space="preserve"><value>Collation</value></data>
   <data name="Detail_comment" xml:space="preserve"><value>Açıklama</value></data>
   <data name="Detail_kind" xml:space="preserve"><value>Tür</value></data>
-  <data name="Detail_columnList" xml:space="preserve"><value>Kolonlar</value></data>
+  <data name="Detail_columnList" xml:space="preserve"><value>Sütunlar</value></data>
   <data name="Detail_definition" xml:space="preserve"><value>Tanım</value></data>
   <data name="Detail_table" xml:space="preserve"><value>Tablo</value></data>
-  <data name="Detail_referencedColumns" xml:space="preserve"><value>Başvurulan kolonlar</value></data>
+  <data name="Detail_referencedColumns" xml:space="preserve"><value>Başvurulan sütunlar</value></data>
   <data name="Detail_onDelete" xml:space="preserve"><value>Silmede</value></data>
   <data name="Detail_onUpdate" xml:space="preserve"><value>Güncellemede</value></data>
   <data name="Detail_unique" xml:space="preserve"><value>Tekil</value></data>
@@ -687,7 +697,7 @@
   <data name="Kind_Sequence" xml:space="preserve"><value>Sekans</value></data>
   <data name="Kind_Synonym" xml:space="preserve"><value>Eş anlamlı</value></data>
   <data name="Kind_Trigger" xml:space="preserve"><value>Tetikleyici</value></data>
-  <data name="Kind_Type" xml:space="preserve"><value>Tip</value></data>
+  <data name="Kind_Type" xml:space="preserve"><value>Tür</value></data>
   <data name="EditorShowDetails" xml:space="preserve"><value>Nesne ayrıntıları</value></data>
   <data name="MenuFile" xml:space="preserve"><value>_Dosya</value></data>
   <data name="MenuConnection" xml:space="preserve"><value>_Bağlantı</value></data>
@@ -751,14 +761,14 @@
   <data name="ShortcutBoxSelection" xml:space="preserve"><value>Kutu seçimi (birden çok satırı düzenle)</value></data>
   <data name="ShortcutZoom" xml:space="preserve"><value>Yakınlaştır / uzaklaştır, %100'e dön</value></data>
   <data name="ShortcutCopyCells" xml:space="preserve"><value>Seçili hücreleri kopyala</value></data>
-  <data name="ShortcutCopyWithHeaders" xml:space="preserve"><value>Kolon adlarıyla kopyala</value></data>
+  <data name="ShortcutCopyWithHeaders" xml:space="preserve"><value>Sütun adlarıyla kopyala</value></data>
   <data name="ShortcutDoubleClick" xml:space="preserve"><value>Çift tıklama</value></data>
   <data name="ShortcutConnect" xml:space="preserve"><value>Bağlantıyı aç</value></data>
   <data name="ShortcutsKeys" xml:space="preserve"><value>Tuşlar</value></data>
   <data name="ShortcutsAction" xml:space="preserve"><value>İşlem</value></data>
-  <data name="ShortcutClearFilters" xml:space="preserve"><value>Kolon filtrelerini temizle</value></data>
+  <data name="ShortcutClearFilters" xml:space="preserve"><value>Sütun filtrelerini temizle</value></data>
   <data name="Dismiss" xml:space="preserve"><value>Kapat</value></data>
-  <data name="ResultPageSize" xml:space="preserve"><value>Sayfa</value></data>
+  <data name="ResultPageSize" xml:space="preserve"><value>Satır/sayfa</value></data>
   <data name="FetchNextShort" xml:space="preserve"><value>Sonraki</value></data>
   <data name="FetchAllShort" xml:space="preserve"><value>Tümü</value></data>
   <data name="CountShort" xml:space="preserve"><value>Say</value></data>
@@ -771,8 +781,8 @@
   <data name="HistoryAllConnections" xml:space="preserve"><value>Tüm bağlantılar</value></data>
   <data name="HistoryFailedOnly" xml:space="preserve"><value>Yalnızca hatalılar</value></data>
   <data name="HistoryNoMatch" xml:space="preserve"><value>Filtrelere uyan çalıştırma yok.</value></data>
-  <data name="FieldShowColumnTypes" xml:space="preserve"><value>Başlıklarda veri tipi</value></data>
-  <data name="SettingShowColumnTypesInfo" xml:space="preserve"><value>Her kolon adının altında küçük ikinci bir satır (int, nvarchar(50)…). Kapalı: daha alçak başlıklar.</value></data>
+  <data name="FieldShowColumnTypes" xml:space="preserve"><value>Başlıklarda veri türü</value></data>
+  <data name="SettingShowColumnTypesInfo" xml:space="preserve"><value>Her sütun adının altında küçük ikinci bir satır (int, nvarchar(50)…). Kapalı: daha alçak başlıklar.</value></data>
   <data name="MenuCommandPalette" xml:space="preserve"><value>Komut paleti</value></data>
   <data name="CommandPaletteSearch" xml:space="preserve"><value>Bir komut yazın…</value></data>
   <data name="ExplorerFavorites" xml:space="preserve"><value>Favoriler</value></data>
@@ -822,7 +832,7 @@
   <data name="CompletionHint" xml:space="preserve"><value>↑↓ seç · Enter ya da Tab ekle · Esc kapat</value></data>
   <data name="CompletionKind_Table" xml:space="preserve"><value>tablo</value></data>
   <data name="CompletionKind_View" xml:space="preserve"><value>görünüm</value></data>
-  <data name="CompletionKind_Column" xml:space="preserve"><value>kolon</value></data>
+  <data name="CompletionKind_Column" xml:space="preserve"><value>sütun</value></data>
   <data name="CompletionKind_Function" xml:space="preserve"><value>fonksiyon</value></data>
   <data name="CompletionKind_Procedure" xml:space="preserve"><value>prosedür</value></data>
   <data name="CompletionKind_Package" xml:space="preserve"><value>paket</value></data>

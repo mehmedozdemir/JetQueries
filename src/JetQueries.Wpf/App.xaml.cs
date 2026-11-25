@@ -63,6 +63,17 @@ public partial class App : Application
         {
             var store = services.GetRequiredService<Core.Settings.ISettingsStore>();
             var settings = await Task.Run(() => store.LoadAsync(AppearanceSettings.Section, new AppearanceSettings(), CancellationToken.None));
+
+            // The interface language (Settings > Appearance), before any window or string is made; numbers and
+            // dates keep following Windows' regional format.
+            if (settings.Language is { Length: > 0 } language)
+            {
+                var culture = System.Globalization.CultureInfo.GetCultureInfo(language);
+                System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = culture;
+                System.Globalization.CultureInfo.CurrentUICulture = culture;
+                LocalizeGrid();
+            }
+
             services.GetRequiredService<IAppearanceService>().Apply(settings);
 
             // Software drawing (setting, or JETQUERIES_RENDER=software): set before the first window exists.

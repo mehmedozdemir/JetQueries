@@ -22,10 +22,15 @@
         <!-- Connection of this query and what the last run did -->
         <DockPanel Margin="0,0,0,6">
 
-            <!-- Run, Cancel, Save as icons (Settings can move them to the main toolbar) -->
+            <!-- Run (named: the main action), then in a new tab, Cancel, Save as icons (Settings can move them to the main toolbar) -->
             <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Margin="0,0,8,0" Visibility="{DynamicResource QueryButtons.Tab}">
-                <Button Style="{StaticResource Btn.Icon.Compact}" c:Ui.Icon="{x:Static c:Icons.Play}" Foreground="{DynamicResource Brush.Success}"
-                        Command="{Binding RunCommand}" ToolTip="{x:Static res:Strings.QueryRunShortTip}" />
+                <Button x:Name="RunButton" Style="{StaticResource Btn.Toolbar.Compact}" Command="{Binding RunCommand}" ToolTip="{x:Static res:Strings.QueryRunShortTip}"
+                        AutomationProperties.Name="{x:Static res:Strings.QueryRunLabel}" Margin="0,0,2,0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{x:Static c:Icons.Play}" Style="{StaticResource Text.Icon}" Foreground="{DynamicResource Brush.Success}" Margin="0,0,6,0" />
+                        <TextBlock Text="{x:Static res:Strings.QueryRunLabel}" VerticalAlignment="Center" FontWeight="SemiBold" />
+                    </StackPanel>
+                </Button>
                 <Button Style="{StaticResource Btn.Icon.Compact}" c:Ui.Icon="&#xE8A7;" Foreground="{DynamicResource Brush.Success}"
                         Command="{Binding RunInNewTabCommand}" ToolTip="{x:Static res:Strings.QueryRunInNewTabTip}" />
                 <Button Style="{StaticResource Btn.Icon.Compact}" c:Ui.Icon="{x:Static c:Icons.Stop}"
@@ -35,6 +40,23 @@
                         ToolTip="{x:Static res:Strings.FileSaveShortTip}" />
                 <Border Style="{StaticResource Separator.Vertical}" Margin="6,0" />
             </StackPanel>
+
+            <!-- The tab's connection, in its environment's colour: always in sight, so that SQL never runs on the wrong server.
+                 Another open connection can be chosen (not while running or with a transaction open). -->
+            <ComboBox x:Name="ConnectionBox" DockPanel.Dock="Left" ItemsSource="{Binding Sessions}" SelectedItem="{Binding SelectedSession}"
+                      IsEnabled="{Binding CanChangeSession}" MinWidth="120" MaxWidth="260" Height="28" Margin="0,0,8,0"
+                      ToolTip="{x:Static res:Strings.QueryConnectionTip}" AutomationProperties.Name="{x:Static res:Strings.QueryConnectionTip}"
+                      Visibility="{Binding SelectedSession, Converter={x:Static v:NotNullToVisibilityConverter.Instance}}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Width="8" Height="8" Margin="0,0,7,0" VerticalAlignment="Center"
+                                     Fill="{Binding Session.Definition.Environment, Converter={x:Static v:EnvironmentBrushConverter.Instance}}" />
+                            <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
 
             <!-- The window's current database (schema for Oracle), as SSMS shows it -->
             <StackPanel DockPanel.Dock="Left" Orientation="Horizontal"

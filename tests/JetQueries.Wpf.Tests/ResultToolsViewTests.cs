@@ -72,8 +72,8 @@ public sealed class ResultToolsViewTests
             Assert.Equal("9 hücre · Toplam 36,5 · Ort. 7,3 · Min 1 · Maks 20", view.SelectionStatsShown);
 
             // Copy as: the selection in a format.
-            Assert.StartsWith("| Id | Tutar | Detay |\n| ---: | ---: | --- |\n| 1 | 10.5 |", view.CopyAs(ResultCopyFormat.Markdown), StringComparison.Ordinal);
-            Assert.StartsWith("(1, 10.5, '{", view.CopyAs(ResultCopyFormat.SqlInList), StringComparison.Ordinal);
+            Assert.StartsWith("| Id | Tutar | Detay |\n| ---: | ---: | --- |\n| 1 | 10.50 |", view.CopyAs(ResultCopyFormat.Markdown), StringComparison.Ordinal);
+            Assert.StartsWith("(1, 10.50, '{", view.CopyAs(ResultCopyFormat.SqlInList), StringComparison.Ordinal);
 
             // The value panel follows the current cell (the last column after Select all); JSON is laid out.
             view.SetValuePanel(true);

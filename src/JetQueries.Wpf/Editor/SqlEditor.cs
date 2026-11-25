@@ -121,7 +121,12 @@ public partial class SqlEditor : UserControl
         _editor.TextArea.TextView.LineTransformers.Add(_colorizer);
         _editor.Document.Changed += OnDocumentChanged;
         _editor.TextChanged += OnEditorTextChanged;
-        _editor.TextArea.SelectionChanged += (_, _) => SelectionChanged?.Invoke(this, EventArgs.Empty);
+        _editor.TextArea.SelectionChanged += (_, _) =>
+        {
+            SelectionChanged?.Invoke(this, EventArgs.Empty);
+            CaretMoved?.Invoke(this, EventArgs.Empty);
+        };
+        _editor.TextArea.Caret.PositionChanged += (_, _) => CaretMoved?.Invoke(this, EventArgs.Empty);
         _editor.TextArea.TextEntered += OnTextEntered;
         PreviewKeyDown += OnPreviewKeyDown;
 
@@ -178,6 +183,18 @@ public partial class SqlEditor : UserControl
 
     /// <summary>Raised when the selection changes.</summary>
     public event EventHandler? SelectionChanged;
+
+    /// <summary>Raised when the caret moves or the selection changes (for a line / column indicator).</summary>
+    public event EventHandler? CaretMoved;
+
+    /// <summary>The caret's line, from 1.</summary>
+    public int CaretLine => _editor.TextArea.Caret.Line;
+
+    /// <summary>The caret's column, from 1 (a tab counts as one character).</summary>
+    public int CaretColumn => _editor.TextArea.Caret.Column;
+
+    /// <summary>How many characters are selected.</summary>
+    public int SelectionLength => _editor.SelectionLength;
 
     /// <summary>The errors currently underlined.</summary>
     public IReadOnlyList<SqlDiagnostic> Diagnostics => _diagnostics;

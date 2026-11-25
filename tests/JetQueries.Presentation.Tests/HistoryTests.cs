@@ -104,7 +104,7 @@ public sealed class HistoryTests
         var succeeded = panel.Entries[1];
         Assert.Equal("SELECT * FROM cards", succeeded.Summary);
         Assert.False(succeeded.IsFailed);
-        Assert.StartsWith("Cards · 3 rows · ", succeeded.Detail, StringComparison.Ordinal);
+        Assert.StartsWith("Cards · 3 rows fetched · ", succeeded.Detail, StringComparison.Ordinal);
         Assert.Matches("^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}$", succeeded.When);
     }
 

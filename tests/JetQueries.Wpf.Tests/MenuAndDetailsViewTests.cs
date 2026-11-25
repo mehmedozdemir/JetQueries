@@ -157,7 +157,7 @@ public sealed class MenuAndDetailsViewTests
             await details.LoadAsync();
             await EditorActionsTests.Idle();
             var view = ShellRenderTests.Find<ObjectDetailsView>(window);
-            Assert.Equal(["Kolonlar (3)", "Referanslar (1)", "Tetikleyiciler (1)"], view.SectionTitles);
+            Assert.Equal(["Sütunlar (3)", "Referanslar (1)", "Tetikleyiciler (1)"], view.SectionTitles);
 
             foreach (var theme in new[] { AppTheme.Dark, AppTheme.Light })
             {

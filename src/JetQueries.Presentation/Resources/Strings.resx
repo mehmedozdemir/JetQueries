@@ -422,6 +422,16 @@
   <data name="ExplorerPinTip" xml:space="preserve"><value>Pin the explorer beside the tabs</value></data>
   <data name="ExplorerUnpinTip" xml:space="preserve"><value>Unpin: hide the explorer behind a rail at the left edge</value></data>
   <data name="ExplorerShowTip" xml:space="preserve"><value>Show the explorer</value></data>
+  <data name="QueryRunLabel" xml:space="preserve"><value>Run</value></data>
+  <data name="CaretPosition" xml:space="preserve"><value>Ln {0}, Col {1}</value></data>
+  <data name="CaretSelection" xml:space="preserve"><value>{0} selected</value></data>
+  <data name="ExplorerSystemDatabases" xml:space="preserve"><value>System databases</value></data>
+  <data name="ExplorerMoreActions" xml:space="preserve"><value>More: new folder, edit, delete, import</value></data>
+  <data name="LanguageSystem" xml:space="preserve"><value>Windows language</value></data>
+  <data name="FieldLanguage" xml:space="preserve"><value>Language</value></data>
+  <data name="SettingLanguageInfo" xml:space="preserve"><value>The language of menus and messages. Numbers and dates follow Windows' regional format. Takes effect at the next start.</value></data>
+  <data name="HistoryRowsFetched" xml:space="preserve"><value>{0:N0} rows fetched</value></data>
+  <data name="HistoryRowsAffected" xml:space="preserve"><value>{0:N0} rows affected</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Clear all</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Remove filter</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} of {1:N0} rows</value></data>
@@ -758,7 +768,7 @@
   <data name="ShortcutsAction" xml:space="preserve"><value>Action</value></data>
   <data name="ShortcutClearFilters" xml:space="preserve"><value>Clear the column filters</value></data>
   <data name="Dismiss" xml:space="preserve"><value>Dismiss</value></data>
-  <data name="ResultPageSize" xml:space="preserve"><value>Page</value></data>
+  <data name="ResultPageSize" xml:space="preserve"><value>Rows/page</value></data>
   <data name="FetchNextShort" xml:space="preserve"><value>Next</value></data>
   <data name="FetchAllShort" xml:space="preserve"><value>All</value></data>
   <data name="CountShort" xml:space="preserve"><value>Count</value></data>

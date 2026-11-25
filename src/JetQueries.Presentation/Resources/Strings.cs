@@ -162,6 +162,16 @@ public static class Strings
     public static string FilterClear => Get(nameof(FilterClear));
     public static string FilterValueRequired => Get(nameof(FilterValueRequired));
     public static string FilterClearAll => Get(nameof(FilterClearAll));
+    public static string HistoryRowsFetched => Get(nameof(HistoryRowsFetched));
+    public static string HistoryRowsAffected => Get(nameof(HistoryRowsAffected));
+    public static string LanguageSystem => Get(nameof(LanguageSystem));
+    public static string FieldLanguage => Get(nameof(FieldLanguage));
+    public static string SettingLanguageInfo => Get(nameof(SettingLanguageInfo));
+    public static string ExplorerSystemDatabases => Get(nameof(ExplorerSystemDatabases));
+    public static string ExplorerMoreActions => Get(nameof(ExplorerMoreActions));
+    public static string QueryRunLabel => Get(nameof(QueryRunLabel));
+    public static string CaretPosition => Get(nameof(CaretPosition));
+    public static string CaretSelection => Get(nameof(CaretSelection));
     public static string ExplorerExpandAll => Get(nameof(ExplorerExpandAll));
     public static string ExplorerCollapseAll => Get(nameof(ExplorerCollapseAll));
     public static string ExplorerPinTip => Get(nameof(ExplorerPinTip));

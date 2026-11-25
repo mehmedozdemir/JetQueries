@@ -9,27 +9,33 @@
         <!-- Actions on the selected node -->
         <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,0,1" Padding="6,4">
           <StackPanel>
-            <!-- Icons only, wrapping when the panel is narrow: every action fits at any width -->
+            <!-- The everyday actions as icons; the rest (folder, edit, delete, import) under "More" -->
             <WrapPanel x:Name="Actions" Orientation="Horizontal">
                 <Button Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="{x:Static c:Icons.Add}"
                         Command="{Binding NewCommand}" ToolTip="{x:Static res:Strings.ConnectionNew}" />
-                <Button x:Name="NewFolderButton" Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="&#xE8F4;"
-                        Command="{Binding NewFolderCommand}" CommandParameter="{Binding Selected}" ToolTip="{x:Static res:Strings.FolderNew}" />
-                <Button Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="{x:Static c:Icons.Edit}"
-                        Command="{Binding EditCommand}" ToolTip="{x:Static res:Strings.ConnectionEdit}" />
-                <Button Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="{x:Static c:Icons.Delete}"
-                        Command="{Binding DeleteCommand}" ToolTip="{x:Static res:Strings.ConnectionDelete}" />
-                <Border Style="{StaticResource Separator.Vertical}" Height="16" Margin="4,0" />
                 <Button x:Name="ToggleConnectionButton" Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="{x:Static c:Icons.Plug}"
                         Command="{Binding ToggleConnectionCommand}" ToolTip="{Binding ToggleConnectionText}"
                         AutomationProperties.Name="{Binding ToggleConnectionText}" />
                 <Button Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="{x:Static c:Icons.Refresh}"
                         Command="{Binding ReloadSelectedCommand}" ToolTip="{x:Static res:Strings.ExplorerRefresh}" />
-                <Button Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="&#xE8B5;"
-                        Command="{Binding ImportCommand}" ToolTip="{x:Static res:Strings.ImportTip}" />
                 <Button Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="{x:Static c:Icons.Search}"
                         Command="{Binding DataContext.GoToObjectCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                         ToolTip="{x:Static res:Strings.GoToObjectTip}" />
+                <Button x:Name="MoreActionsButton" Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="&#xE712;"
+                        ToolTip="{x:Static res:Strings.ExplorerMoreActions}" Click="OnMoreActionsClick">
+                    <Button.ContextMenu>
+                        <ContextMenu x:Name="MoreActionsMenu" DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                            <MenuItem x:Name="NewFolderButton" Header="{x:Static res:Strings.FolderNew}" c:Ui.Icon="&#xE8F4;"
+                                      Command="{Binding NewFolderCommand}" CommandParameter="{Binding Selected}" />
+                            <MenuItem Header="{x:Static res:Strings.ConnectionEditLong}" c:Ui.Icon="{x:Static c:Icons.Edit}" InputGestureText="F2"
+                                      Command="{Binding EditCommand}" />
+                            <MenuItem Header="{x:Static res:Strings.ConnectionDeleteLong}" c:Ui.Icon="{x:Static c:Icons.Delete}" InputGestureText="Del"
+                                      Command="{Binding DeleteCommand}" />
+                            <Separator />
+                            <MenuItem Header="{x:Static res:Strings.ImportTip}" c:Ui.Icon="&#xE8B5;" Command="{Binding ImportCommand}" />
+                        </ContextMenu>
+                    </Button.ContextMenu>
+                </Button>
             </WrapPanel>
             <!-- Filter by name over what is loaded (Esc clears); expand, collapse, pin the panel -->
             <DockPanel Margin="0,4,0,2">

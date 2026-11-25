@@ -22,6 +22,15 @@ public sealed class SqlServerProviderTests
     public void Identifiers_are_bracket_quoted(string identifier, string expected) =>
         Assert.Equal(expected, new SqlServerProvider().QuoteIdentifier(identifier));
 
+    [Theory]
+    [InlineData("master", true)]
+    [InlineData("TempDB", true)]
+    [InlineData("msdb", true)]
+    [InlineData("model", true)]
+    [InlineData("Cards", false)]
+    public void The_servers_own_databases_are_system_ones(string name, bool system) =>
+        Assert.Equal(system, new SqlServerProvider().IsSystemObject(new DatabaseObject(new DatabaseObjectName(null, null, name), DatabaseObjectKinds.Database)));
+
     [Fact]
     public void Multi_part_names_skip_missing_parts() =>
         Assert.Equal("[db].[dbo].[T]", SqlServerNames.Quote(new DatabaseObjectName("db", "dbo", "T")));
