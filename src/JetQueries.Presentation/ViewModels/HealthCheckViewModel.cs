@@ -85,8 +85,12 @@ public sealed class HealthRow(HealthFinding finding)
 /// The health check of a connection: the provider's rules, run on a connection of its own when the tab opens and on
 /// request; findings by severity, filtered by category; fix scripts go to a query tab, never run (ADR 0013).
 /// </summary>
-public sealed partial class HealthCheckViewModel : ObservableObject, IAsyncDisposable
+public sealed partial class HealthCheckViewModel : ObservableObject, IAsyncDisposable, IDocumentTab
 {
+    /// <inheritdoc />
+    [ObservableProperty]
+    public partial bool IsPinned { get; set; }
+
     private readonly ConnectionSession _session;
     private readonly IJobQueue _jobs;
     private IReadOnlyList<HealthRow> _all = [];
@@ -101,6 +105,8 @@ public sealed partial class HealthCheckViewModel : ObservableObject, IAsyncDispo
     }
 
     public Guid ConnectionId => _session.Definition.Id;
+
+    Guid? IDocumentTab.ConnectionId => ConnectionId;
 
     public string ConnectionName => _session.Definition.Name;
 

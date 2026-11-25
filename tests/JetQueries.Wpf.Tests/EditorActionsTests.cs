@@ -33,7 +33,7 @@ public sealed class EditorActionsTests
             window.Show();
             await Idle();
 
-            var buttons = All<Button>(window).Where(static b => b.Style == (Style)Application.Current.FindResource("Btn.TabClose") && b.DataContext is QueryDocumentViewModel).ToList();
+            var buttons = All<Button>(window).Where(static b => b.Style == (Style)Application.Current.FindResource("Btn.TabClose") && b.Name != "PinButton" && b.DataContext is QueryDocumentViewModel).ToList();
             Assert.Equal(3, buttons.Count);
             Assert.True(buttons[2].Command is not null, "no command bound");
             Assert.True(buttons[2].IsEnabled, "disabled");
@@ -200,7 +200,7 @@ public sealed class EditorActionsTests
         }
     }
 
-    private sealed class NoTheme : IThemeService
+    internal sealed class NoTheme : IThemeService
     {
 #pragma warning disable CS0067 // Never raised: the theme does not change in these tests.
         public event EventHandler? Changed;

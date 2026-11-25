@@ -36,8 +36,12 @@ public sealed record DatabaseRow(IReadOnlyList<string?> Cells, bool HasWarning);
 /// The overview is read once; a sample every few seconds while shown, on a connection of its own; two samples make
 /// the rates. Charts keep the last minutes (ADR 0011).
 /// </summary>
-public sealed partial class DashboardViewModel : ObservableObject, IAsyncDisposable
+public sealed partial class DashboardViewModel : ObservableObject, IAsyncDisposable, IDocumentTab
 {
+    /// <inheritdoc />
+    [ObservableProperty]
+    public partial bool IsPinned { get; set; }
+
     /// <summary>How often it can read again, in seconds.</summary>
     public static IReadOnlyList<int> Intervals { get; } = [2, 5, 10, 30];
 
@@ -70,6 +74,8 @@ public sealed partial class DashboardViewModel : ObservableObject, IAsyncDisposa
     }
 
     public Guid ConnectionId => _session.Definition.Id;
+
+    Guid? IDocumentTab.ConnectionId => ConnectionId;
 
     public string ConnectionName => _session.Definition.Name;
 

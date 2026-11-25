@@ -52,8 +52,12 @@ public sealed record PerformanceTable(IReadOnlyList<string> Headers, IReadOnlyLi
 /// queue; fragmentation reads index pages, so only on the user's request. Scripts go to a new query tab, never run
 /// (ADR 0010).
 /// </summary>
-public sealed partial class PerformanceViewModel : ObservableObject, IAsyncDisposable
+public sealed partial class PerformanceViewModel : ObservableObject, IAsyncDisposable, IDocumentTab
 {
+    /// <inheritdoc />
+    [ObservableProperty]
+    public partial bool IsPinned { get; set; }
+
     /// <summary>The choice that means every database.</summary>
     public static string AllDatabases => Strings.PerfAllDatabases;
 
@@ -76,6 +80,8 @@ public sealed partial class PerformanceViewModel : ObservableObject, IAsyncDispo
     }
 
     public Guid ConnectionId => _session.Definition.Id;
+
+    Guid? IDocumentTab.ConnectionId => ConnectionId;
 
     public string ConnectionName => _session.Definition.Name;
 

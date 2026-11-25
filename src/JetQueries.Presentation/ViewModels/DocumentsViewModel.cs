@@ -32,6 +32,9 @@ public sealed record WorkspaceDocument
 
     /// <summary>The saved query of the library the tab is linked to.</summary>
     public Guid? SavedQueryId { get; init; }
+
+    /// <summary>The tab was pinned.</summary>
+    public bool IsPinned { get; init; }
 }
 
 /// <summary>The open query tabs, saved while the application runs and restored at the next start.</summary>
@@ -145,7 +148,7 @@ public partial class DocumentsViewModel : ObservableObject
             return open;
         }
 
-        var index = SelectedTab is null ? Tabs.Count : Tabs.IndexOf(SelectedTab) + 1;
+        var index = NewTabIndex();
         Tabs.Insert(Math.Clamp(index, 0, Tabs.Count), details);
         SelectedTab = details;
         return details;
@@ -163,7 +166,7 @@ public partial class DocumentsViewModel : ObservableObject
             return open;
         }
 
-        var index = SelectedTab is null ? Tabs.Count : Tabs.IndexOf(SelectedTab) + 1;
+        var index = NewTabIndex();
         Tabs.Insert(Math.Clamp(index, 0, Tabs.Count), key);
         SelectedTab = key;
         _ = key.RefreshAsync();
@@ -186,7 +189,7 @@ public partial class DocumentsViewModel : ObservableObject
         }
 
         monitor.QueryRequested += (_, request) => _ = OpenAsync(request);
-        var index = SelectedTab is null ? Tabs.Count : Tabs.IndexOf(SelectedTab) + 1;
+        var index = NewTabIndex();
         Tabs.Insert(Math.Clamp(index, 0, Tabs.Count), monitor);
         SelectedTab = monitor;
         return monitor;
@@ -218,7 +221,7 @@ public partial class DocumentsViewModel : ObservableObject
         }
 
         analysis.QueryRequested += (_, request) => _ = OpenAsync(request);
-        var index = SelectedTab is null ? Tabs.Count : Tabs.IndexOf(SelectedTab) + 1;
+        var index = NewTabIndex();
         Tabs.Insert(Math.Clamp(index, 0, Tabs.Count), analysis);
         SelectedTab = analysis;
         _ = analysis.StartAsync();
@@ -237,7 +240,7 @@ public partial class DocumentsViewModel : ObservableObject
             return open;
         }
 
-        var index = SelectedTab is null ? Tabs.Count : Tabs.IndexOf(SelectedTab) + 1;
+        var index = NewTabIndex();
         Tabs.Insert(Math.Clamp(index, 0, Tabs.Count), detail);
         SelectedTab = detail;
         _ = detail.RefreshAsync();
@@ -257,7 +260,7 @@ public partial class DocumentsViewModel : ObservableObject
         }
 
         health.QueryRequested += (_, request) => _ = OpenAsync(request);
-        var index = SelectedTab is null ? Tabs.Count : Tabs.IndexOf(SelectedTab) + 1;
+        var index = NewTabIndex();
         Tabs.Insert(Math.Clamp(index, 0, Tabs.Count), health);
         SelectedTab = health;
         _ = health.RunAsync();
@@ -276,7 +279,7 @@ public partial class DocumentsViewModel : ObservableObject
             return open;
         }
 
-        var index = SelectedTab is null ? Tabs.Count : Tabs.IndexOf(SelectedTab) + 1;
+        var index = NewTabIndex();
         Tabs.Insert(Math.Clamp(index, 0, Tabs.Count), dashboard);
         SelectedTab = dashboard;
         return dashboard;
@@ -319,23 +322,114 @@ public partial class DocumentsViewModel : ObservableObject
 
     /// <summary>Closes every tab but <paramref name="keep"/> (queries ask about their changes; a Cancel stops).</summary>
     [RelayCommand]
-    private async Task CloseOtherTabsAsync(object? keep)
+    private Task CloseOtherTabsAsync(object? keep) => CloseTabsAsync(Tabs.Where(t => !ReferenceEquals(t, keep)).ToList(), keep);
+
+    /// <summary>Closes every tab but the pinned ones.</summary>
+    [RelayCommand]
+    private Task CloseAllTabsAsync() => CloseTabsAsync([.. Tabs], null);
+
+    /// <summary>Closes the tabs to the left of <paramref name="tab"/> (pinned ones stay).</summary>
+    [RelayCommand]
+    private Task CloseTabsToLeftAsync(object? tab) =>
+        Tabs.IndexOf(tab!) is > 0 and var at ? CloseTabsAsync([.. Tabs.Take(at)], tab) : Task.CompletedTask;
+
+    /// <summary>Closes the tabs to the right of <paramref name="tab"/> (pinned ones stay).</summary>
+    [RelayCommand]
+    private Task CloseTabsToRightAsync(object? tab) =>
+        Tabs.IndexOf(tab!) is >= 0 and var at ? CloseTabsAsync([.. Tabs.Skip(at + 1)], tab) : Task.CompletedTask;
+
+    /// <summary>Closes the tabs on the same connection as <paramref name="tab"/> (pinned ones stay).</summary>
+    [RelayCommand]
+    private Task CloseConnectionTabsAsync(object? tab) =>
+        ConnectionOf(tab) is { } id ? CloseTabsAsync([.. Tabs.Where(t => ConnectionOf(t) == id)], null) : Task.CompletedTask;
+
+    /// <summary>Whether the tab has others on the same connection (for the "close this connection's tabs" item).</summary>
+    public bool HasConnectionSiblings(object? tab) => ConnectionOf(tab) is { } id && Tabs.Count(t => ConnectionOf(t) == id) > 1;
+
+    /// <summary>Pins a tab, or unpins it.</summary>
+    [RelayCommand]
+    private void TogglePin(object? tab)
     {
-        foreach (var details in Tabs.Where(t => t is ObjectDetailsViewModel or KeyValueViewModel or ActivityMonitorViewModel or PerformanceViewModel or DashboardViewModel or HealthCheckViewModel or DatabaseDetailViewModel && !ReferenceEquals(t, keep)).ToList())
+        if (tab is IDocumentTab pinnable)
         {
-            CloseDetails(details);
+            Pin(tab, !pinnable.IsPinned);
+        }
+    }
+
+    /// <summary>
+    /// Pins (to the end of the pinned tabs at the front) or unpins (to just after them) a tab.
+    /// </summary>
+    public void Pin(object tab, bool pinned)
+    {
+        if (tab is not IDocumentTab pinnable || !Tabs.Contains(tab))
+        {
+            return;
         }
 
-        await CloseOthersAsync(keep as QueryDocumentViewModel);
+        var selected = SelectedTab;
+        pinnable.IsPinned = pinned;
+        var from = Tabs.IndexOf(tab);
+        var to = Tabs.Count(static t => t is IDocumentTab { IsPinned: true }) - (pinned ? 1 : 0);
+        to = Math.Clamp(to, 0, Tabs.Count - 1);
+        if (from != to)
+        {
+            Tabs.Move(from, to);
+        }
+
+        // A move must not change the tab shown.
+        if (!ReferenceEquals(SelectedTab, selected))
+        {
+            SelectedTab = selected;
+        }
+
+        ScheduleWorkspaceSave();
+    }
+
+    /// <summary>The number of pinned tabs (they are the first ones).</summary>
+    public int PinnedCount => Tabs.Count(static t => t is IDocumentTab { IsPinned: true });
+
+    // A new tab goes after the one shown, but never among the pinned ones.
+    private int NewTabIndex()
+    {
+        var after = SelectedTab is not null && Tabs.IndexOf(SelectedTab) is >= 0 and var at ? at + 1 : Tabs.Count;
+        return Math.Clamp(Math.Max(after, PinnedCount), 0, Tabs.Count);
+    }
+
+    private static Guid? ConnectionOf(object? tab) => (tab as IDocumentTab)?.ConnectionId;
+
+    /// <summary>
+    /// Closes <paramref name="tabs"/> but the pinned ones: details tabs at once, queries asking about their
+    /// changes, stopping at a Cancel. <paramref name="keep"/> is shown afterwards.
+    /// </summary>
+    private async Task CloseTabsAsync(IReadOnlyList<object> tabs, object? keep)
+    {
+        foreach (var tab in tabs)
+        {
+            if (tab is IDocumentTab { IsPinned: true } || ReferenceEquals(tab, keep))
+            {
+                continue;
+            }
+
+            if (tab is QueryDocumentViewModel query)
+            {
+                await CloseAsync(query);
+                if (Documents.Contains(query))
+                {
+                    // Canceled: the rest stay open.
+                    break;
+                }
+            }
+            else
+            {
+                CloseDetails(tab);
+            }
+        }
+
         if (keep is not null && Tabs.Contains(keep))
         {
             SelectedTab = keep;
         }
     }
-
-    /// <summary>Closes every tab.</summary>
-    [RelayCommand]
-    private Task CloseAllTabsAsync() => CloseOtherTabsAsync(null);
 
     private void CloseDetails(object details)
     {
@@ -383,7 +477,7 @@ public partial class DocumentsViewModel : ObservableObject
 
         if (e.NewItems is not null)
         {
-            var index = SelectedTab is not null && Tabs.IndexOf(SelectedTab) is >= 0 and var at ? at + 1 : Tabs.Count;
+            var index = NewTabIndex();
             foreach (var added in e.NewItems)
             {
                 Tabs.Insert(Math.Min(index++, Tabs.Count), added);
@@ -586,7 +680,7 @@ public partial class DocumentsViewModel : ObservableObject
     [RelayCommand]
     private async Task CloseOthersAsync(QueryDocumentViewModel? keep)
     {
-        foreach (var document in Documents.Where(d => !ReferenceEquals(d, keep)).ToList())
+        foreach (var document in Documents.Where(d => !ReferenceEquals(d, keep) && !d.IsPinned).ToList())
         {
             await CloseAsync(document);
             if (Documents.Contains(document))
@@ -713,6 +807,11 @@ public partial class DocumentsViewModel : ObservableObject
                 var document = Open(saved.Title, text, saved.ConnectionId, saved.Database);
                 document.FilePath = saved.FilePath;
                 document.SavedQueryId = saved.SavedQueryId;
+                if (saved.IsPinned)
+                {
+                    Pin(document, true);
+                }
+
                 document.FileEncoding = encoding ?? document.FileEncoding;
                 if (dirty)
                 {
@@ -754,10 +853,15 @@ public partial class DocumentsViewModel : ObservableObject
             .Completion.ConfigureAwait(false);
     }
 
-    private WorkspaceState Capture() => new()
+    private WorkspaceState Capture()
     {
-        Documents = [.. Documents.Select(static d => new WorkspaceDocument
+        // In the order of the tab row (pinned first), not the order they were opened in.
+        var ordered = Tabs.OfType<QueryDocumentViewModel>().Concat(Documents).Distinct().ToList();
+        return new()
         {
+            Documents = [.. ordered.Select(static d => new WorkspaceDocument
+        {
+            IsPinned = d.IsPinned,
             Title = d.Title,
             FilePath = d.FilePath,
             Text = d.Text,
@@ -766,13 +870,14 @@ public partial class DocumentsViewModel : ObservableObject
             Database = d.SelectedDatabase ?? d.PendingDatabase,
             SavedQueryId = d.SavedQueryId,
         })],
-        SelectedIndex = Selected is null ? 0 : Math.Max(0, Documents.IndexOf(Selected)),
-    };
+            SelectedIndex = Selected is null ? 0 : Math.Max(0, ordered.IndexOf(Selected)),
+        };
+    }
 
     private void OnDocumentChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName is nameof(QueryDocumentViewModel.Text) or nameof(QueryDocumentViewModel.FilePath) or nameof(QueryDocumentViewModel.SelectedSession)
-            or nameof(QueryDocumentViewModel.SelectedDatabase) or nameof(QueryDocumentViewModel.IsDirty))
+            or nameof(QueryDocumentViewModel.SelectedDatabase) or nameof(QueryDocumentViewModel.IsDirty) or nameof(QueryDocumentViewModel.IsPinned))
         {
             ScheduleWorkspaceSave();
         }

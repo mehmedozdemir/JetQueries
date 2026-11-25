@@ -1209,6 +1209,12 @@ Kayıtlı parolaları da kaldırılır.</value></data>
   <data name="TabCloseOthers" xml:space="preserve"><value>Diğerlerini kapat</value></data>
   <data name="TabCloseAll" xml:space="preserve"><value>Tümünü kapat</value></data>
   <data name="TabCopyPath" xml:space="preserve"><value>Dosya yolunu kopyala</value></data>
+  <data name="TabPin" xml:space="preserve"><value>Sekmeyi sabitle</value></data>
+  <data name="TabUnpin" xml:space="preserve"><value>Sabitlemeyi kaldır</value></data>
+  <data name="TabCloseLeft" xml:space="preserve"><value>Soldakileri kapat</value></data>
+  <data name="TabCloseRight" xml:space="preserve"><value>Sağdakileri kapat</value></data>
+  <data name="TabCloseConnection" xml:space="preserve"><value>Bu bağlantının sekmelerini kapat</value></data>
+  <data name="TabPinnedTip" xml:space="preserve"><value>Sabitlendi: başta durur; Diğerlerini kapat / Tümünü kapat onu kapatmaz. Kaldırmak için tıklayın.</value></data>
   <data name="SettingsPageAppearance" xml:space="preserve"><value>Görünüm</value></data>
   <data name="SettingsPageAppearanceInfo" xml:space="preserve"><value>Tema ve uygulamanın yazı tipi.</value></data>
   <data name="SettingsPageEditor" xml:space="preserve"><value>SQL editörü</value></data>

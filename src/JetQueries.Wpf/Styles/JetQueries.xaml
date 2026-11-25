@@ -186,6 +186,63 @@
         <Setter Property="Focusable" Value="False" />
     </Style>
 
+    <!-- A document tab: UiKit's tab, drawn in its connection's environment colour when it has one (tinted
+         background, a coloured top edge, and when selected a coloured outline that runs into the query's frame). -->
+    <Style x:Key="Tab.Document" TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TabItem">
+                    <Grid x:Name="Root" Background="Transparent" Margin="0,4,2,0">
+                        <Border x:Name="Shape" CornerRadius="7,7,0,0" Margin="0,0,0,-1" BorderThickness="0"
+                                Background="{Binding Environment, Converter={x:Static v:EnvironmentTintConverter.Instance}, ConverterParameter=0.16}"
+                                BorderBrush="{Binding Environment, Converter={x:Static v:EnvironmentFrameConverter.Instance}}" />
+                        <Border x:Name="SelectedTint" CornerRadius="7,7,0,0" Margin="0,0,0,-1" Visibility="Hidden"
+                                Background="{Binding Environment, Converter={x:Static v:EnvironmentTintConverter.Instance}, ConverterParameter=0.14}" />
+                        <Border x:Name="Hover" Background="Transparent" CornerRadius="7,7,0,0" />
+                        <Border x:Name="EnvironmentEdge" Height="2" CornerRadius="7,7,0,0" VerticalAlignment="Top"
+                                Background="{Binding Environment, Converter={x:Static v:EnvironmentFrameConverter.Instance}}" />
+                        <StackPanel Orientation="Horizontal" Margin="{TemplateBinding Padding}">
+                            <TextBlock x:Name="Icon" Text="{TemplateBinding c:Ui.Icon}" Style="{StaticResource Text.Icon}" FontSize="13" Margin="0,0,7,0"
+                                       Foreground="{TemplateBinding Foreground}" />
+                            <ContentPresenter ContentSource="Header" VerticalAlignment="Center" RecognizesAccessKey="True" />
+                        </StackPanel>
+                        <Border x:Name="Underline" Height="2" CornerRadius="1" VerticalAlignment="Bottom" Margin="8,0"
+                                Background="{DynamicResource Brush.Accent}" Visibility="Hidden" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="c:Ui.Icon" Value="{x:Null}">
+                            <Setter TargetName="Icon" Property="Visibility" Value="Collapsed" />
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Hover" Property="Background" Value="{DynamicResource Brush.Hover}" />
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Underline" Property="Visibility" Value="Visible" />
+                            <Setter TargetName="SelectedTint" Property="Visibility" Value="Visible" />
+                            <Setter TargetName="Shape" Property="BorderThickness" Value="2,2,2,0" />
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+                            <Setter Property="FontWeight" Value="SemiBold" />
+                            <Setter Property="Panel.ZIndex" Value="1" />
+                        </Trigger>
+                        <!-- In an environment colour the outline marks the selected tab; the accent line would clash with it. -->
+                        <MultiDataTrigger>
+                            <MultiDataTrigger.Conditions>
+                                <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Self}}" Value="True" />
+                                <Condition Binding="{Binding Environment, Converter={x:Static v:HasEnvironmentConverter.Instance}}" Value="True" />
+                            </MultiDataTrigger.Conditions>
+                            <Setter TargetName="Underline" Property="Visibility" Value="Hidden" />
+                            <Setter TargetName="EnvironmentEdge" Property="Visibility" Value="Hidden" />
+                        </MultiDataTrigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.4" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- A field row of a form: label on the left. -->
     <Style x:Key="Text.FieldLabel" TargetType="TextBlock">
         <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />

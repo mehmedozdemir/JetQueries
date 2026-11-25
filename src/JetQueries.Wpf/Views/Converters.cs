@@ -235,6 +235,42 @@ public sealed class EnvironmentFrameConverter : IValueConverter
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
 }
 
+/// <summary>
+/// A tab's background in its connection's environment colour, see-through by the parameter (0.14 = 14 %), so that
+/// the text stays readable in every scheme; transparent for a connection without an environment.
+/// </summary>
+public sealed class EnvironmentTintConverter : IValueConverter
+{
+    public static EnvironmentTintConverter Instance { get; } = new();
+
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (EnvironmentFrameConverter.Instance.Convert(value, targetType, null, culture) is not System.Windows.Media.SolidColorBrush { Color.A: > 0 } brush)
+        {
+            return System.Windows.Media.Brushes.Transparent;
+        }
+
+        var opacity = double.TryParse(parameter as string, NumberStyles.Float, CultureInfo.InvariantCulture, out var given) ? given : 0.14;
+        var color = brush.Color;
+        var tint = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb((byte)Math.Round(255 * opacity), color.R, color.G, color.B));
+        tint.Freeze();
+        return tint;
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
+}
+
+/// <summary>True for a development, test or production connection (one that is drawn in its colour).</summary>
+public sealed class HasEnvironmentConverter : IValueConverter
+{
+    public static HasEnvironmentConverter Instance { get; } = new();
+
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value is ConnectionEnvironment.Development or ConnectionEnvironment.Test or ConnectionEnvironment.Production;
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
+}
+
 /// <summary>A run shortcut shown in the empty results area.</summary>
 public sealed record RunHint(string Keys, string Text)
 {
