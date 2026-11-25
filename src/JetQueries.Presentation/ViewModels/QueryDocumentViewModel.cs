@@ -373,8 +373,14 @@ public sealed partial class QueryResultSet : ObservableObject, IResultTab
 }
 
 /// <summary>View model of one query tab: the text, the connection it runs on, and what the last run returned.</summary>
-public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable
+public partial class QueryDocumentViewModel : ObservableObject, IAsyncDisposable, IDocumentTab
 {
+    /// <inheritdoc />
+    [ObservableProperty]
+    public partial bool IsPinned { get; set; }
+
+    Guid? IDocumentTab.ConnectionId => SelectedSession?.Session.Definition.Id ?? PendingConnectionId;
+
     /// <summary>Most rows a result set holds, even after "fetch all"; a larger result is cut off with a message.</summary>
     public const int MaxRows = 1_000_000;
 

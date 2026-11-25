@@ -36,8 +36,12 @@ public sealed class KeyItemViewModel(KeyValueItem item)
 /// text, or a collection's items with an editor for the selected one. Every change is one command, sent at once;
 /// a read-only connection only reads, a production connection asks before deleting.
 /// </summary>
-public sealed partial class KeyValueViewModel : ObservableObject
+public sealed partial class KeyValueViewModel : ObservableObject, IDocumentTab
 {
+    /// <inheritdoc />
+    [ObservableProperty]
+    public partial bool IsPinned { get; set; }
+
     /// <summary>The most items of a collection read.</summary>
     public const int MaxItems = 1000;
 
@@ -61,6 +65,8 @@ public sealed partial class KeyValueViewModel : ObservableObject
     }
 
     public Guid ConnectionId => _session.Definition.Id;
+
+    Guid? IDocumentTab.ConnectionId => ConnectionId;
 
     public int Database { get; }
 

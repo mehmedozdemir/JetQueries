@@ -28,7 +28,7 @@
                 <v:DocumentTemplateSelector>
                     <v:DocumentTemplateSelector.Query>
                         <DataTemplate>
-                            <v:QueryDocumentView Margin="0,6,0,0" />
+                            <v:QueryDocumentView Margin="0,-1,0,0" />
                         </DataTemplate>
                     </v:DocumentTemplateSelector.Query>
                     <v:DocumentTemplateSelector.Details>
@@ -69,18 +69,28 @@
                 </v:DocumentTemplateSelector>
             </TabControl.ContentTemplateSelector>
             <TabControl.ItemContainerStyle>
-                <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
+                <Style TargetType="TabItem" BasedOn="{StaticResource Tab.Document}">
                     <Setter Property="c:Ui.Icon" Value="{Binding Converter={x:Static v:DocumentIconConverter.Instance}}" />
                     <!-- Middle click closes a tab, as in browsers and Visual Studio. -->
                     <EventSetter Event="PreviewMouseUp" Handler="OnTabMouseUp" />
+                    <EventSetter Event="ContextMenuOpening" Handler="OnTabMenuOpening" />
                     <Setter Property="Tag" Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=TabControl}}" />
                     <Setter Property="ContextMenu">
                         <Setter.Value>
                             <ContextMenu>
+                                <MenuItem Tag="Pin" Header="{x:Static res:Strings.TabPin}" c:Ui.Icon="&#xE718;"
+                                          Command="{Binding PlacementTarget.Tag.TogglePinCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                <Separator />
                                 <MenuItem Header="{x:Static res:Strings.TabClose}" c:Ui.Icon="&#xE711;"
                                           Command="{Binding PlacementTarget.Tag.CloseTabCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
                                 <MenuItem Header="{x:Static res:Strings.TabCloseOthers}"
                                           Command="{Binding PlacementTarget.Tag.CloseOtherTabsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                <MenuItem Header="{x:Static res:Strings.TabCloseLeft}"
+                                          Command="{Binding PlacementTarget.Tag.CloseTabsToLeftCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                <MenuItem Header="{x:Static res:Strings.TabCloseRight}"
+                                          Command="{Binding PlacementTarget.Tag.CloseTabsToRightCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                <MenuItem Tag="Connection" Header="{x:Static res:Strings.TabCloseConnection}"
+                                          Command="{Binding PlacementTarget.Tag.CloseConnectionTabsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
                                 <MenuItem Header="{x:Static res:Strings.TabCloseAll}"
                                           Command="{Binding PlacementTarget.Tag.CloseAllTabsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
                                 <Separator />
@@ -99,7 +109,12 @@
                                  Visibility="{Binding Environment, Converter={x:Static v:NotNullToVisibilityConverter.Instance}}" />
                         <TextBlock Text="{Binding HeaderText}" VerticalAlignment="Center" />
                         <Button Style="{StaticResource Btn.TabClose}" ToolTip="{x:Static res:Strings.QueryClose}"
-                                Command="{Binding DataContext.CloseTabCommand, RelativeSource={RelativeSource AncestorType=TabControl}}" CommandParameter="{Binding}" />
+                                Command="{Binding DataContext.CloseTabCommand, RelativeSource={RelativeSource AncestorType=TabControl}}" CommandParameter="{Binding}"
+                                Visibility="{Binding IsPinned, Converter={x:Static v:FalseToVisibleConverter.Instance}}" />
+                        <!-- A pinned tab shows its pin instead of the close button; clicking it unpins. -->
+                        <Button x:Name="PinButton" Style="{StaticResource Btn.TabClose}" c:Ui.Icon="&#xE718;" FontSize="10" ToolTip="{x:Static res:Strings.TabPinnedTip}"
+                                Command="{Binding DataContext.TogglePinCommand, RelativeSource={RelativeSource AncestorType=TabControl}}" CommandParameter="{Binding}"
+                                Visibility="{Binding IsPinned, Converter={StaticResource BoolToVisibility}}" />
                     </StackPanel>
                 </DataTemplate>
             </TabControl.ItemTemplate>

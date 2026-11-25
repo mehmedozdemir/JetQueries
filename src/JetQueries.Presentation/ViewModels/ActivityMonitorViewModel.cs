@@ -16,8 +16,12 @@ namespace JetQueries.Presentation.ViewModels;
 /// ending a session. It reads on a connection of its own, through the job queue, every few seconds while it is
 /// shown; it stops when hidden or closed (ADR 0009).
 /// </summary>
-public sealed partial class ActivityMonitorViewModel : ObservableObject, IAsyncDisposable
+public sealed partial class ActivityMonitorViewModel : ObservableObject, IAsyncDisposable, IDocumentTab
 {
+    /// <inheritdoc />
+    [ObservableProperty]
+    public partial bool IsPinned { get; set; }
+
     /// <summary>The grid's column headers (each <see cref="ActivityRow.Cell"/> in this order).</summary>
     public static IReadOnlyList<string> Columns { get; } =
     [
@@ -48,6 +52,8 @@ public sealed partial class ActivityMonitorViewModel : ObservableObject, IAsyncD
     }
 
     public Guid ConnectionId => _session.Definition.Id;
+
+    Guid? IDocumentTab.ConnectionId => ConnectionId;
 
     /// <summary>The connection's name.</summary>
     public string ConnectionName => _session.Definition.Name;

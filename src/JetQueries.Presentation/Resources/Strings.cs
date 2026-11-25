@@ -852,6 +852,12 @@ public static class Strings
     public static string TabCloseOthers => Get(nameof(TabCloseOthers));
     public static string TabCloseAll => Get(nameof(TabCloseAll));
     public static string TabCopyPath => Get(nameof(TabCopyPath));
+    public static string TabPin => Get(nameof(TabPin));
+    public static string TabUnpin => Get(nameof(TabUnpin));
+    public static string TabCloseLeft => Get(nameof(TabCloseLeft));
+    public static string TabCloseRight => Get(nameof(TabCloseRight));
+    public static string TabCloseConnection => Get(nameof(TabCloseConnection));
+    public static string TabPinnedTip => Get(nameof(TabPinnedTip));
     public static string SettingsPageAppearance => Get(nameof(SettingsPageAppearance));
     public static string SettingsPageAppearanceInfo => Get(nameof(SettingsPageAppearanceInfo));
     public static string SettingsPageEditor => Get(nameof(SettingsPageEditor));

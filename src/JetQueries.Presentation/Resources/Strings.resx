@@ -1209,6 +1209,12 @@ Their stored passwords are removed too.</value></data>
   <data name="TabCloseOthers" xml:space="preserve"><value>Close others</value></data>
   <data name="TabCloseAll" xml:space="preserve"><value>Close all</value></data>
   <data name="TabCopyPath" xml:space="preserve"><value>Copy file path</value></data>
+  <data name="TabPin" xml:space="preserve"><value>Pin tab</value></data>
+  <data name="TabUnpin" xml:space="preserve"><value>Unpin tab</value></data>
+  <data name="TabCloseLeft" xml:space="preserve"><value>Close tabs to the left</value></data>
+  <data name="TabCloseRight" xml:space="preserve"><value>Close tabs to the right</value></data>
+  <data name="TabCloseConnection" xml:space="preserve"><value>Close this connection's tabs</value></data>
+  <data name="TabPinnedTip" xml:space="preserve"><value>Pinned: stays at the front and is left open by Close others / Close all. Click to unpin.</value></data>
   <data name="SettingsPageAppearance" xml:space="preserve"><value>Appearance</value></data>
   <data name="SettingsPageAppearanceInfo" xml:space="preserve"><value>Theme and the font of the application.</value></data>
   <data name="SettingsPageEditor" xml:space="preserve"><value>SQL editor</value></data>

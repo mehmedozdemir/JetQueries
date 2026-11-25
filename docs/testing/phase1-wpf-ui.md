@@ -829,3 +829,10 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] Type straight away while it is still reading: a small "Veritabanı yapısı okunuyor…" note appears under the caret, and the list opens when the structure arrives, filtered by what you typed meanwhile.
 - [ ] Switch the tab to another database: it is read once (status bar again); switching back does not read again. Restart within 12 hours: nothing is read again.
 
+## Tab colours and tab menu
+- [ ] Open queries on a production, a test and an unmarked connection: production tabs are tinted red with a red top edge, test ones yellow; the selected one is outlined and joins the query's frame without a gap. Check in a light and a dark scheme: titles readable.
+- [ ] Right-click a tab > Sekmeyi sabitle: it moves to the front with a pin; the menu now says Sabitlemeyi kaldır. Clicking the pin unpins it. A new query (Ctrl+N) opens after the pinned tabs.
+- [ ] Diğerlerini kapat / Tümünü kapat / Soldakileri kapat / Sağdakileri kapat leave pinned tabs open; a changed query still asks, and Cancel stops the rest.
+- [ ] "Bu bağlantının sekmelerini kapat" appears only when the connection has more than one tab, and closes only that connection's (unpinned) tabs.
+- [ ] Middle click closes a tab (a pinned one too). Restart: pinned tabs come back pinned and first.
+

@@ -6,6 +6,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 ## [Unreleased]
 
 ### Added
+- Tabs in their connection's environment colour: a tinted tab with a coloured top edge; the selected tab is outlined in the colour and runs into the query's frame, so tab and query read as one coloured piece. Tabs of connections without an environment look as before.
+- Pinned tabs (tab menu > Sekmeyi sabitle): kept at the front with a pin instead of the close button (click it to unpin), left open by "close others", "close all" and "close to the left/right", and remembered with the workspace. New tabs never open among them.
+- Tab menu: close tabs to the left, to the right, and "close this connection's tabs" (shown when the connection has several). Middle click still closes a tab.
 - IntelliSense reads ahead: right after a query tab gets its connection and database, the tables and views of the default schema and every one of their columns are read in the background, in one query (SQL Server, Oracle, PostgreSQL; SQLite lists its tables). The first table and column lists then come from the cache. The status bar shows "… yapısı IntelliSense için okunuyor…" while this runs; a list still waiting for the database shows "Veritabanı yapısı okunuyor…" at the caret.
 - SDK (preview): `IBulkColumnMetadataProvider` (a schema's columns in one read), `IMetadataPreloader` and `ISqlMetadataWarmUp`.
 

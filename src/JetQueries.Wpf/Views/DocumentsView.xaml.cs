@@ -2,6 +2,8 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using JetQueries.Presentation.Resources;
+using JetQueries.Presentation.ViewModels;
 
 namespace JetQueries.Wpf.Views;
 
@@ -22,6 +24,27 @@ public partial class DocumentsView : UserControl
 
     private void OnCanCopyPath(object sender, System.Windows.Input.CanExecuteRoutedEventArgs e) =>
         e.CanExecute = e.Parameter is QueryDocumentViewModel { FilePath: not null };
+
+    // The menu names what it does for this tab: pin or unpin; the connection's tabs only when there are several.
+    private void OnTabMenuOpening(object sender, ContextMenuEventArgs e)
+    {
+        if (sender is not TabItem { DataContext: { } tab, ContextMenu: { } menu } || DataContext is not DocumentsViewModel documents)
+        {
+            return;
+        }
+
+        foreach (var item in menu.Items.OfType<MenuItem>())
+        {
+            if (item.Tag is "Pin")
+            {
+                item.Header = tab is IDocumentTab { IsPinned: true } ? Strings.TabUnpin : Strings.TabPin;
+            }
+            else if (item.Tag is "Connection")
+            {
+                item.Visibility = documents.HasConnectionSiblings(tab) ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }
+    }
 
     private void OnTabMouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {

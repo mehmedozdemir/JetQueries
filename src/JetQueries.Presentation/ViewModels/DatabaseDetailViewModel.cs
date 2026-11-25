@@ -30,8 +30,12 @@ public sealed record DetailTile(string Value, string Detail, HealthSeverity Stat
 /// One database in depth: its settings, space of data and log, virtual log files, backups, integrity check, largest
 /// tables and files; read on a connection of its own when the tab opens and on refresh (ADR 0014).
 /// </summary>
-public sealed partial class DatabaseDetailViewModel : ObservableObject, IAsyncDisposable
+public sealed partial class DatabaseDetailViewModel : ObservableObject, IAsyncDisposable, IDocumentTab
 {
+    /// <inheritdoc />
+    [ObservableProperty]
+    public partial bool IsPinned { get; set; }
+
     private readonly ConnectionSession _session;
     private readonly IJobQueue _jobs;
     private QueryChannel? _channel;
@@ -47,6 +51,8 @@ public sealed partial class DatabaseDetailViewModel : ObservableObject, IAsyncDi
     }
 
     public Guid ConnectionId => _session.Definition.Id;
+
+    Guid? IDocumentTab.ConnectionId => ConnectionId;
 
     public string ConnectionName => _session.Definition.Name;
 

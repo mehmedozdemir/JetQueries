@@ -56,8 +56,12 @@ public sealed class DetailSectionView
 /// foreign keys, references, indexes, triggers, parameters and dependencies (as far as the provider gives them),
 /// and the DDL. Everything is read as background jobs.
 /// </summary>
-public partial class ObjectDetailsViewModel : ObservableObject
+public partial class ObjectDetailsViewModel : ObservableObject, IDocumentTab
 {
+    /// <inheritdoc />
+    [ObservableProperty]
+    public partial bool IsPinned { get; set; }
+
     private readonly ConnectionSession _session;
     private readonly IMetadataService _metadata;
     private readonly IJobQueue _jobs;
@@ -80,6 +84,8 @@ public partial class ObjectDetailsViewModel : ObservableObject
 
     /// <summary>The connection's id, to find the window of the same object again.</summary>
     public Guid ConnectionId => _session.Definition.Id;
+
+    Guid? IDocumentTab.ConnectionId => ConnectionId;
 
     public ProviderMark Mark { get; }
 
