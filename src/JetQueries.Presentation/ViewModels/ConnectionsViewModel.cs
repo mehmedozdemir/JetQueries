@@ -687,6 +687,29 @@ public partial class ConnectionsViewModel(
         }
     }
 
+    /// <summary>A database's detail screen is to be shown in a tab.</summary>
+    public event EventHandler<DatabaseDetailViewModel>? DatabaseDetailRequested;
+
+    /// <summary>Opens the detail screen of the chosen database (its menu item shows only on a database node that can).</summary>
+    [RelayCommand]
+    private void OpenDatabaseDetail(ExplorerNodeViewModel? node)
+    {
+        if ((node ?? Selected) is DatabaseObjectNodeViewModel { CanDetail: true, Session: var session, Target: var database })
+        {
+            RequestDatabaseDetail(session, database.Name.Name);
+        }
+    }
+
+    /// <summary>Asks for the detail screen of <paramref name="database"/> on <paramref name="session"/> (DBA menu, query tab).</summary>
+    public void RequestDatabaseDetail(ConnectionSession session, string database)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        if (session.SupportsDatabaseDetails && !string.IsNullOrEmpty(database))
+        {
+            DatabaseDetailRequested?.Invoke(this, new DatabaseDetailViewModel(session, jobs, database));
+        }
+    }
+
     /// <summary>The health check of an open connection is to be shown in a tab.</summary>
     public event EventHandler<HealthCheckViewModel>? HealthRequested;
 

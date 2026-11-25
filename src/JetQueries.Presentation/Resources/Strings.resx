@@ -832,6 +832,118 @@ What it is running stops and its open transaction is rolled back; the client get
   <data name="Help_Health_Watch" xml:space="preserve"><value>Bilgi: worth knowing, usually no action. Uyarı: fix when convenient, ideally in the next maintenance window.</value></data>
   <data name="Help_Health_Bad" xml:space="preserve"><value>Kritik: data or availability is at risk (no backups, damaged pages): fix today.</value></data>
   <data name="Help_Health_Action" xml:space="preserve"><value>Start with Kritik, then Uyarı. Choose a finding to read why it matters; "Sorgu sekmesinde aç" puts its fix into a query tab without running it. Check again after fixing.</value></data>
+  <data name="DbDetailTitle" xml:space="preserve"><value>Database detail</value></data>
+  <data name="DbDetailOpen" xml:space="preserve"><value>Database detail</value></data>
+  <data name="DbDetailOpenTip" xml:space="preserve"><value>One database in depth: space, log, backups, integrity, largest tables, files, settings</value></data>
+  <data name="DbDetailUnsupported" xml:space="preserve"><value>This database type does not report database details.</value></data>
+  <data name="DbCompatibility" xml:space="preserve"><value>compatibility</value></data>
+  <data name="DbOwner" xml:space="preserve"><value>owner {0}</value></data>
+  <data name="DbCreated" xml:space="preserve"><value>created {0}</value></data>
+  <data name="DbTileData" xml:space="preserve"><value>Data</value></data>
+  <data name="DbTileLog" xml:space="preserve"><value>Log</value></data>
+  <data name="DbTileVlf" xml:space="preserve"><value>Virtual log files</value></data>
+  <data name="DbTileFullBackup" xml:space="preserve"><value>Last full backup</value></data>
+  <data name="DbTileLogBackup" xml:space="preserve"><value>Last log backup</value></data>
+  <data name="DbTileCheckDb" xml:space="preserve"><value>Last clean CHECKDB</value></data>
+  <data name="DbTileTables" xml:space="preserve"><value>Tables</value></data>
+  <data name="DbDataUsed" xml:space="preserve"><value>{0} used · {1} %</value></data>
+  <data name="DbLogUsed" xml:space="preserve"><value>{0} % full</value></data>
+  <data name="DbLogHeldBy" xml:space="preserve"><value>held by {0}</value></data>
+  <data name="DbVlfDetail" xml:space="preserve"><value>pieces the log is made of</value></data>
+  <data name="DbBackupsUnknown" xml:space="preserve"><value>backups cannot be read</value></data>
+  <data name="DbLogBackupNotNeeded" xml:space="preserve"><value>{0}: not needed</value></data>
+  <data name="DbNever" xml:space="preserve"><value>never</value></data>
+  <data name="DbDaysAgo" xml:space="preserve"><value>{0} days ago</value></data>
+  <data name="DbHoursAgo" xml:space="preserve"><value>{0} hours ago</value></data>
+  <data name="DbMinutesAgo" xml:space="preserve"><value>{0} minutes ago</value></data>
+  <data name="DbRows" xml:space="preserve"><value>{0} rows</value></data>
+  <data name="DbLargestTables" xml:space="preserve"><value>Largest tables (reserved space)</value></data>
+  <data name="DbOptions" xml:space="preserve"><value>Settings</value></data>
+  <data name="DbAllTables" xml:space="preserve"><value>Tables (50 largest)</value></data>
+  <data name="DbFiles" xml:space="preserve"><value>Files</value></data>
+  <data name="DbBackups" xml:space="preserve"><value>Backup history (last 30)</value></data>
+  <data name="DbNoBackups" xml:space="preserve"><value>No backups recorded.</value></data>
+  <data name="DbColRows" xml:space="preserve"><value>Rows</value></data>
+  <data name="DbColReserved" xml:space="preserve"><value>Reserved</value></data>
+  <data name="DbColIndexes" xml:space="preserve"><value>Indexes</value></data>
+  <data name="DbColFile" xml:space="preserve"><value>File</value></data>
+  <data name="DbColFilegroup" xml:space="preserve"><value>Filegroup</value></data>
+  <data name="DbColUsed" xml:space="preserve"><value>Used</value></data>
+  <data name="DbColFree" xml:space="preserve"><value>Free</value></data>
+  <data name="DbColGrowth" xml:space="preserve"><value>Growth</value></data>
+  <data name="DbColMax" xml:space="preserve"><value>Max</value></data>
+  <data name="DbColPath" xml:space="preserve"><value>Path</value></data>
+  <data name="DbColFinished" xml:space="preserve"><value>Finished</value></data>
+  <data name="DbColTook" xml:space="preserve"><value>Took</value></data>
+  <data name="DbColCompressed" xml:space="preserve"><value>Compressed</value></data>
+  <data name="DbColCopyOnly" xml:space="preserve"><value>Copy only</value></data>
+  <data name="DbColDevice" xml:space="preserve"><value>Written to</value></data>
+  <data name="DbBackupFull" xml:space="preserve"><value>Full</value></data>
+  <data name="DbBackupDifferential" xml:space="preserve"><value>Differential</value></data>
+  <data name="DbBackupLog" xml:space="preserve"><value>Log</value></data>
+  <data name="DbBackupOther" xml:space="preserve"><value>Other</value></data>
+  <data name="DbProp_userAccess" xml:space="preserve"><value>User access</value></data>
+  <data name="DbProp_readOnly" xml:space="preserve"><value>Read only</value></data>
+  <data name="DbProp_readCommittedSnapshot" xml:space="preserve"><value>Read committed snapshot (RCSI)</value></data>
+  <data name="DbProp_snapshotIsolation" xml:space="preserve"><value>Snapshot isolation</value></data>
+  <data name="DbProp_encrypted" xml:space="preserve"><value>Encrypted (TDE)</value></data>
+  <data name="DbProp_pageVerify" xml:space="preserve"><value>Page verification</value></data>
+  <data name="DbProp_autoClose" xml:space="preserve"><value>Auto close</value></data>
+  <data name="DbProp_autoShrink" xml:space="preserve"><value>Auto shrink</value></data>
+  <data name="DbProp_autoCreateStats" xml:space="preserve"><value>Auto create statistics</value></data>
+  <data name="DbProp_autoUpdateStats" xml:space="preserve"><value>Auto update statistics</value></data>
+  <data name="DbProp_autoUpdateStatsAsync" xml:space="preserve"><value>Update statistics asynchronously</value></data>
+  <data name="DbProp_trustworthy" xml:space="preserve"><value>Trustworthy</value></data>
+  <data name="DbProp_delayedDurability" xml:space="preserve"><value>Delayed durability</value></data>
+  <data name="DbProp_queryStore" xml:space="preserve"><value>Query Store</value></data>
+  <data name="Help_DbSpace_Title" xml:space="preserve"><value>Data space</value></data>
+  <data name="Help_DbSpace_What" xml:space="preserve"><value>The size of the database's data files and how much of it holds data. Free space inside the files is normal: it is where new rows go without the file having to grow.</value></data>
+  <data name="Help_DbSpace_Good" xml:space="preserve"><value>Some free space (10–30 %) so the files rarely grow.</value></data>
+  <data name="Help_DbSpace_Watch" xml:space="preserve"><value>Almost full (above ~90 % used): the next inserts make the file grow, which pauses writes; or a disk getting full.</value></data>
+  <data name="Help_DbSpace_Bad" xml:space="preserve"><value>A lot of free space after a big delete is not a problem in itself; shrinking it back fragments indexes.</value></data>
+  <data name="Help_DbSpace_Action" xml:space="preserve"><value>Grow files ahead of time in a quiet hour; look at the largest tables to see what takes the space.</value></data>
+  <data name="Help_DbLog_Title" xml:space="preserve"><value>Transaction log</value></data>
+  <data name="Help_DbLog_What" xml:space="preserve"><value>The log records every change so it can be undone or redone. Its size, how full it is, and — when it cannot be reused — what holds it (LOG_BACKUP: log backups are missing; ACTIVE_TRANSACTION: a long open transaction; REPLICATION / AVAILABILITY_REPLICA: a reader lags).</value></data>
+  <data name="Help_DbLog_Good" xml:space="preserve"><value>Mostly empty and reused (nothing holds it).</value></data>
+  <data name="Help_DbLog_Watch" xml:space="preserve"><value>More than 75 % full, or held by something while filling.</value></data>
+  <data name="Help_DbLog_Bad" xml:space="preserve"><value>More than 90 % full: when it is full and cannot grow, every change in the database stops with an error.</value></data>
+  <data name="Help_DbLog_Action" xml:space="preserve"><value>Remove what holds it: take a log backup (FULL recovery), commit or end the open transaction, fix the lagging reader. Shrink the log only after that, once.</value></data>
+  <data name="Help_DbVlf_Title" xml:space="preserve"><value>Virtual log files (VLF)</value></data>
+  <data name="Help_DbVlf_What" xml:space="preserve"><value>Inside, the log is cut into pieces called virtual log files; every time it grows a few more are added. A log that grew in many small steps has thousands of them.</value></data>
+  <data name="Help_DbVlf_Good" xml:space="preserve"><value>Under a few hundred.</value></data>
+  <data name="Help_DbVlf_Watch" xml:space="preserve"><value>300–1 000.</value></data>
+  <data name="Help_DbVlf_Bad" xml:space="preserve"><value>Over 1 000: the database starts and restores slowly, log backups and replication slow down.</value></data>
+  <data name="Help_DbVlf_Action" xml:space="preserve"><value>In a quiet hour, after a log backup: shrink the log to small, then grow it back in one or a few large steps (for example 8 GB), and set its growth to a fixed size such as 512 MB.</value></data>
+  <data name="Help_DbBackups_Title" xml:space="preserve"><value>Backups</value></data>
+  <data name="Help_DbBackups_What" xml:space="preserve"><value>When the database was last backed up in full and, in FULL recovery, when its log was. The history lists the last backups with their size, how long they took and where they were written.</value></data>
+  <data name="Help_DbBackups_Good" xml:space="preserve"><value>A full backup within a day (or a week with daily differentials); log backups every 15–60 minutes in FULL recovery.</value></data>
+  <data name="Help_DbBackups_Watch" xml:space="preserve"><value>A full backup older than a day, a log backup older than an hour.</value></data>
+  <data name="Help_DbBackups_Bad" xml:space="preserve"><value>No full backup, or one older than a week; FULL recovery without a log backup for a day: data since then is not recoverable and the log keeps growing.</value></data>
+  <data name="Help_DbBackups_Action" xml:space="preserve"><value>Ask who runs backups (a maintenance plan, an agent job, a backup product) and test a restore now and then. Copy-only backups (✓) do not count for the backup chain.</value></data>
+  <data name="Help_DbCheckDb_Title" xml:space="preserve"><value>Last clean CHECKDB</value></data>
+  <data name="Help_DbCheckDb_What" xml:space="preserve"><value>When DBCC CHECKDB last checked the whole database and found no corruption. Corruption that is not found spreads into every later backup.</value></data>
+  <data name="Help_DbCheckDb_Good" xml:space="preserve"><value>Within a week.</value></data>
+  <data name="Help_DbCheckDb_Watch" xml:space="preserve"><value>Older than a week.</value></data>
+  <data name="Help_DbCheckDb_Bad" xml:space="preserve"><value>Never, or older than a month.</value></data>
+  <data name="Help_DbCheckDb_Action" xml:space="preserve"><value>Schedule DBCC CHECKDB weekly in a quiet hour (it reads everything); on very large databases split it by filegroup or run it on a restored copy.</value></data>
+  <data name="Help_DbTables_Title" xml:space="preserve"><value>Largest tables</value></data>
+  <data name="Help_DbTables_What" xml:space="preserve"><value>The tables that take most space: reserved space is data, indexes and the free pages kept for them. The list beside shows rows, data and index space of the 50 largest.</value></data>
+  <data name="Help_DbTables_Good" xml:space="preserve"><value>Growth that matches the business: the tables you expect at the top.</value></data>
+  <data name="Help_DbTables_Watch" xml:space="preserve"><value>Index space larger than data space: many or wide indexes (see Performans analizi &gt; Index kullanımı).</value></data>
+  <data name="Help_DbTables_Bad" xml:space="preserve"><value>A log, audit or staging table that only grows: nobody cleans it.</value></data>
+  <data name="Help_DbTables_Action" xml:space="preserve"><value>Archive or purge old rows of ever-growing tables in small batches; drop unused indexes; consider page compression for large, rarely changed tables.</value></data>
+  <data name="Help_DbFiles_Title" xml:space="preserve"><value>Files</value></data>
+  <data name="Help_DbFiles_What" xml:space="preserve"><value>The database's data and log files: where they are on the server, their size, the space used inside, how they grow and their limit (∞ = none).</value></data>
+  <data name="Help_DbFiles_Good" xml:space="preserve"><value>Growth by a fixed size (256–1 024 MB), data and log on separate disks on busy servers.</value></data>
+  <data name="Help_DbFiles_Watch" xml:space="preserve"><value>Growth by a percentage or by 1 MB; a maximum size close to the current size.</value></data>
+  <data name="Help_DbFiles_Bad" xml:space="preserve"><value>A file at its maximum or a full disk: writes stop with an error.</value></data>
+  <data name="Help_DbFiles_Action" xml:space="preserve"><value>Set a fixed growth (Sağlık kontrolü gives the script) and watch the free space of the disks the files are on.</value></data>
+  <data name="Help_DbOptions_Title" xml:space="preserve"><value>Settings</value></data>
+  <data name="Help_DbOptions_What" xml:space="preserve"><value>The database's main options: who may connect, read-only, row versioning (RCSI / snapshot isolation: readers do not block writers), encryption, page verification, automatic close / shrink / statistics, TRUSTWORTHY, delayed durability and Query Store.</value></data>
+  <data name="Help_DbOptions_Good" xml:space="preserve"><value>Page verification CHECKSUM; auto close and auto shrink OFF; statistics ON; TRUSTWORTHY OFF; Query Store READ_WRITE.</value></data>
+  <data name="Help_DbOptions_Watch" xml:space="preserve"><value>RCSI OFF on a busy OLTP database where readers and writers block each other; Query Store OFF (no history of plans).</value></data>
+  <data name="Help_DbOptions_Bad" xml:space="preserve"><value>Auto shrink or auto close ON, page verification other than CHECKSUM, TRUSTWORTHY ON: see Sağlık kontrolü for why and the fix.</value></data>
+  <data name="Help_DbOptions_Action" xml:space="preserve"><value>Run the health check: it lists the risky settings of every database with a script that fixes them.</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Clear all</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Remove filter</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} of {1:N0} rows</value></data>

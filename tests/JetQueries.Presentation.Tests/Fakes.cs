@@ -437,8 +437,10 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
         return Task.FromResult<IDatabaseConnection>(SupportsDatabaseContext ? new FakeContextConnection(this) : new FakeConnection(this));
     }
 
-    private sealed class FakeConnection(FakeProvider owner) : IDatabaseConnection, ITransactionControl, IActivityMonitor, IPerformanceAdvisor, IServerDashboard, IHealthCheck
+    private sealed class FakeConnection(FakeProvider owner) : IDatabaseConnection, ITransactionControl, IActivityMonitor, IPerformanceAdvisor, IServerDashboard, IHealthCheck, IDatabaseDetails
     {
+        public Task<DatabaseDetail> GetDatabaseDetailAsync(string database, CancellationToken cancellationToken) => Task.FromResult(FakeDatabaseDetail.Of(database));
+
         public Task<IReadOnlyList<HealthFinding>> CheckAsync(CancellationToken cancellationToken) => Task.FromResult(FakeHealth.Findings());
 
         public Task<ServerOverview> GetOverviewAsync(CancellationToken cancellationToken) => Task.FromResult(OwnerOf().Overview);
@@ -491,8 +493,10 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
     }
 
     /// <summary>A connection with a current database that starts at "Cards" and follows USE.</summary>
-    internal sealed class FakeContextConnection : IDatabaseConnection, IDatabaseContext, ITransactionControl, IActivityMonitor, IPerformanceAdvisor, IServerDashboard, IHealthCheck
+    internal sealed class FakeContextConnection : IDatabaseConnection, IDatabaseContext, ITransactionControl, IActivityMonitor, IPerformanceAdvisor, IServerDashboard, IHealthCheck, IDatabaseDetails
     {
+        public Task<DatabaseDetail> GetDatabaseDetailAsync(string database, CancellationToken cancellationToken) => Task.FromResult(FakeDatabaseDetail.Of(database));
+
         public Task<IReadOnlyList<HealthFinding>> CheckAsync(CancellationToken cancellationToken) => Task.FromResult(FakeHealth.Findings());
 
         public Task<ServerOverview> GetOverviewAsync(CancellationToken cancellationToken) => Task.FromResult(OwnerOf().Overview);
@@ -792,4 +796,51 @@ public static class FakeHealth
         new("PageVerify", HealthCategory.Databases, HealthSeverity.Ok, "Page verification is not CHECKSUM"),
         new("NewRule", HealthCategory.Configuration, HealthSeverity.Warning, "A rule the host has no text for"),
     ];
+}
+
+/// <summary>A database in depth for the detail screen's tests: a full log, many VLFs, an old full backup, no log backup.</summary>
+public static class FakeDatabaseDetail
+{
+    public static readonly DateTimeOffset Now = new(2026, 11, 25, 12, 0, 0, TimeSpan.FromHours(3));
+
+    public static DatabaseDetail Of(string name) => new(name)
+    {
+        State = "ONLINE",
+        RecoveryModel = "FULL",
+        CompatibilityLevel = 160,
+        Collation = "Turkish_CI_AS",
+        Owner = "sa",
+        Created = new DateTimeOffset(2024, 3, 12, 10, 0, 0, TimeSpan.FromHours(3)),
+        Options =
+        [
+            new("pageVerify", "Page verify", "CHECKSUM"), new("autoShrink", "Auto shrink", "OFF"), new("queryStore", "Query Store", "READ_WRITE"),
+            new("somethingNew", "Something new", "ON"), new("empty", "Empty", null),
+        ],
+        DataMb = 2048,
+        DataUsedMb = 1536,
+        LogMb = 4096,
+        LogUsedPercent = 92.4,
+        LogReuseWait = "LOG_BACKUP",
+        VirtualLogFiles = 450,
+        TableCount = 37,
+        TotalRows = 1_234_567,
+        LastGoodCheckDb = new DateTimeOffset(1900, 1, 1, 0, 0, 0, TimeSpan.Zero),
+        Files =
+        [
+            new("Cards") { Type = "ROWS", Filegroup = "PRIMARY", Path = @"D:\Data\Cards.mdf", SizeMb = 2048, UsedMb = 1536, Growth = "512 MB", MaxSize = "∞" },
+            new("Cards_log") { Type = "LOG", Path = @"L:\Log\Cards_log.ldf", SizeMb = 4096, UsedMb = 3785, Growth = "10 %", MaxSize = "2048 MB" },
+        ],
+        Tables =
+        [
+            new("dbo.Transactions") { Rows = 1_000_000, ReservedMb = 900, DataMb = 600, IndexMb = 280 },
+            new("dbo.Cards") { Rows = 200_000, ReservedMb = 240, DataMb = 160, IndexMb = 70 },
+            new("audit.Log") { Rows = 34_567, ReservedMb = 12.5, DataMb = 12, IndexMb = 0.4 },
+        ],
+        Backups =
+        [
+            new(BackupKind.Differential, Now - TimeSpan.FromDays(2)) { Started = Now - TimeSpan.FromDays(2) - TimeSpan.FromMinutes(3), SizeMb = 300, CompressedMb = 80, Device = @"\\backup\Cards_diff.bak" },
+            new(BackupKind.Full, Now - TimeSpan.FromDays(10)) { Started = Now - TimeSpan.FromDays(10) - TimeSpan.FromMinutes(20), SizeMb = 1500, CompressedMb = 400, Device = @"\\backup\Cards_full.bak", CopyOnly = false },
+        ],
+        BackupsKnown = true,
+    };
 }

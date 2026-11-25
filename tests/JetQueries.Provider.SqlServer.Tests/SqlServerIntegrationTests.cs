@@ -824,6 +824,58 @@ public sealed class SqlServerIntegrationTests(SqlServerFixture fixture) : IClass
         Assert.Equal(HealthSeverity.Ok, Rule("AutoClose").Severity);
     }
 
+    [Fact]
+    public async Task A_database_is_read_in_depth_without_changing_the_connections_database()
+    {
+        await using var connection = await OpenAsync();
+        var details = Assert.IsAssignableFrom<IDatabaseDetails>(connection);
+        await RunAsync(connection, "IF DB_ID('JqDetail') IS NOT NULL BEGIN ALTER DATABASE JqDetail SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE JqDetail; END;");
+        await RunAsync(connection, "CREATE DATABASE JqDetail;");
+        await RunAsync(connection, """
+            ALTER DATABASE JqDetail SET RECOVERY FULL;
+            ALTER DATABASE JqDetail SET AUTO_SHRINK ON;
+            """);
+        await RunAsync(connection, """
+            USE JqDetail;
+            CREATE TABLE dbo.Big (Id int IDENTITY PRIMARY KEY, Payload char(500) NOT NULL DEFAULT 'x', Code int NOT NULL DEFAULT 1);
+            CREATE INDEX IX_Big_Code ON dbo.Big (Code);
+            INSERT INTO dbo.Big (Payload) SELECT TOP (5000) 'x' FROM sys.all_objects a CROSS JOIN sys.all_objects b;
+            CREATE TABLE dbo.Small (Id int PRIMARY KEY);
+            INSERT INTO dbo.Small VALUES (1), (2);
+            USE master;
+            """);
+        await RunAsync(connection, "BACKUP DATABASE JqDetail TO DISK = N'/var/opt/mssql/data/JqDetail.bak' WITH INIT, COPY_ONLY;");
+
+        var detail = await details.GetDatabaseDetailAsync("JqDetail", Token);
+        Assert.Equal("ONLINE", detail.State);
+        Assert.Equal("FULL", detail.RecoveryModel);
+        Assert.True(detail.CompatibilityLevel >= 160);
+        Assert.NotNull(detail.Collation);
+        Assert.Equal("sa", detail.Owner);
+        Assert.Equal("ON", detail.Options.Single(static o => o.Key == "autoShrink").Value);
+        Assert.Equal("CHECKSUM", detail.Options.Single(static o => o.Key == "pageVerify").Value);
+        Assert.True(detail.DataMb > 0 && detail.DataUsedMb > 0 && detail.LogMb > 0);
+        Assert.InRange(detail.LogUsedPercent ?? -1, 0, 100);
+        Assert.True(detail.VirtualLogFiles > 0);
+        Assert.Equal(2, detail.TableCount);
+        Assert.Equal(5002, detail.TotalRows);
+        var big = detail.Tables[0];
+        Assert.Equal("dbo.Big", big.Name);
+        Assert.Equal(5000, big.Rows);
+        Assert.True(big.DataMb > 2 && big.IndexMb > 0 && big.ReservedMb >= big.DataMb + big.IndexMb);
+        Assert.Contains(detail.Files, static f => f.Type == "ROWS" && f.Filegroup == "PRIMARY" && f.UsedMb > 0);
+        Assert.Contains(detail.Files, static f => f.Type == "LOG" && f.Filegroup is null);
+        Assert.True(detail.BackupsKnown);
+        var backup = Assert.Single(detail.Backups);
+        Assert.Equal(BackupKind.Full, backup.Kind);
+        Assert.True(backup.CopyOnly);
+        Assert.EndsWith("JqDetail.bak", backup.Device, StringComparison.Ordinal);
+
+        // The connection stays in its own database.
+        Assert.Equal("master", await ((IDatabaseContext)connection).GetCurrentAsync(Token));
+        await Assert.ThrowsAsync<ArgumentException>(() => details.GetDatabaseDetailAsync("NoSuchDatabase", Token));
+    }
+
     private static async Task<string> SpidAsync(IDatabaseConnection connection) =>
         Convert.ToString((await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest("SELECT @@SPID"), Token))).OfType<RowBatch>().Single().Rows[0][0],
             System.Globalization.CultureInfo.InvariantCulture)!;

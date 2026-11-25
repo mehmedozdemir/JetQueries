@@ -98,6 +98,9 @@ public sealed class ConnectionSession : IAsyncDisposable
     /// <summary>Whether the provider can run the health check on this connection.</summary>
     public bool SupportsHealthCheck => Connection is IHealthCheck;
 
+    /// <summary>Whether the provider can show a database's detail screen on this connection.</summary>
+    public bool SupportsDatabaseDetails => Connection is IDatabaseDetails;
+
     /// <summary>
     /// Runs SQL on the session's main query connection; see <see cref="QueryChannel.ExecuteAsync"/>. Query
     /// windows use a channel of their own (<see cref="OpenChannelAsync"/>) instead.
@@ -398,6 +401,9 @@ public sealed class QueryChannel : IAsyncDisposable
 
     /// <summary>The server checked against well-known rules (the health check), when the provider can; else null.</summary>
     public IHealthCheck? Health => _connection as IHealthCheck;
+
+    /// <summary>One database in depth (the database detail screen), when the provider can tell; else null.</summary>
+    public IDatabaseDetails? DatabaseDetails => _connection as IDatabaseDetails;
 
     /// <summary>What the current database is called for this provider; null when it cannot be switched.</summary>
     public DatabaseContextKind? ContextKind => (_connection as IDatabaseContext)?.Kind;

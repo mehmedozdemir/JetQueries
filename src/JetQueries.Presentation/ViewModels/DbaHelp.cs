@@ -88,11 +88,36 @@ public static class DbaHelp
     /// <summary>Health check: the screen and its severities.</summary>
     public const string Health = "Health";
 
+    /// <summary>Database detail: data space.</summary>
+    public const string DbSpace = "DbSpace";
+
+    /// <summary>Database detail: the log.</summary>
+    public const string DbLog = "DbLog";
+
+    /// <summary>Database detail: virtual log files.</summary>
+    public const string DbVlf = "DbVlf";
+
+    /// <summary>Database detail: backups.</summary>
+    public const string DbBackups = "DbBackups";
+
+    /// <summary>Database detail: the last clean CHECKDB.</summary>
+    public const string DbCheckDb = "DbCheckDb";
+
+    /// <summary>Database detail: the largest tables.</summary>
+    public const string DbTables = "DbTables";
+
+    /// <summary>Database detail: files.</summary>
+    public const string DbFiles = "DbFiles";
+
+    /// <summary>Database detail: settings.</summary>
+    public const string DbOptions = "DbOptions";
+
     /// <summary>Every topic, for tests: each must have its texts in both languages.</summary>
     public static IReadOnlyList<string> All { get; } =
     [
         DashCpu, DashMemory, DashBatches, DashRequests, DashBlocked, DashPle, DashLatency, DashCpuChart, DashBatchChart, DashIoChart,
         DashWaits, DashDatabases, ActSessions, ActBlocking, ActKill, ActWaits, PerfHeavy, PerfMissing, PerfUsage, PerfFragmentation, Health,
+        DbSpace, DbLog, DbVlf, DbBackups, DbCheckDb, DbTables, DbFiles, DbOptions,
     ];
 
     /// <summary>A topic's explanation in the user's language; null for an unknown topic.</summary>

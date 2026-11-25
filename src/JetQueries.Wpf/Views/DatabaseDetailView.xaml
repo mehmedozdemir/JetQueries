@@ -1,0 +1,205 @@
+<UserControl x:Class="JetQueries.Wpf.Views.DatabaseDetailView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:UiKit.Controls;assembly=UiKit.Wpf"
+             xmlns:res="clr-namespace:JetQueries.Presentation.Resources;assembly=JetQueries.Presentation"
+             xmlns:v="clr-namespace:JetQueries.Wpf.Views">
+    <UserControl.InputBindings>
+        <KeyBinding Key="F5" Command="{Binding RefreshCommand}" />
+    </UserControl.InputBindings>
+    <UserControl.Resources>
+        <Style x:Key="Tile" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource Brush.Chip}" />
+            <Setter Property="CornerRadius" Value="{StaticResource Radius.Control}" />
+            <Setter Property="Padding" Value="14,10" />
+            <Setter Property="Margin" Value="0,0,8,8" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsAttention}" Value="True">
+                    <Setter Property="BorderBrush" Value="{Binding Status, Converter={x:Static v:HealthBrushConverter.Instance}}" />
+                    <Setter Property="BorderThickness" Value="1" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="TileTitle" TargetType="TextBlock" BasedOn="{StaticResource Text.Caption}">
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+        <Style x:Key="TileValue" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="0,2,0,0" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+        <Style x:Key="TileDetail" TargetType="TextBlock" BasedOn="{StaticResource Text.Caption}">
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+        </Style>
+        <Style x:Key="CardTitle" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <!-- The tile's value and, when it needs attention, the status as an icon and a word -->
+        <DataTemplate x:Key="TileBody">
+            <StackPanel>
+                <TextBlock Text="{Binding Value}" Style="{StaticResource TileValue}" />
+                <StackPanel Orientation="Horizontal" Visibility="{Binding IsAttention, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock Text="{Binding Status, Converter={x:Static v:HealthIconConverter.Instance}}" Style="{StaticResource Text.Icon}" FontSize="11"
+                               Foreground="{Binding Status, Converter={x:Static v:HealthBrushConverter.Instance}}" Margin="0,1,5,0" />
+                    <TextBlock Text="{Binding StatusText}" FontWeight="SemiBold" FontSize="{DynamicResource FontSize.Small}"
+                               Foreground="{Binding Status, Converter={x:Static v:HealthBrushConverter.Instance}}" Margin="0,0,6,0" />
+                </StackPanel>
+                <TextBlock Text="{Binding Detail}" Style="{StaticResource TileDetail}" ToolTip="{Binding Detail}" />
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <DockPanel Margin="12,4,12,10">
+            <!-- Header: the database and its essentials; read again -->
+            <DockPanel DockPanel.Dock="Top" Margin="0,4,0,12">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding LoadedText}" Style="{StaticResource Text.Caption}" VerticalAlignment="Center" Margin="0,0,12,0" />
+                    <ProgressBar IsIndeterminate="{Binding IsLoading}" Width="40" VerticalAlignment="Center" Margin="0,0,10,0"
+                                 Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}" />
+                    <Button x:Name="RefreshButton" Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.Refresh}"
+                            Command="{Binding RefreshCommand}" ToolTip="{x:Static res:Strings.ActivityRefreshTip}" />
+                </StackPanel>
+                <Border Width="34" Height="34" CornerRadius="10" Background="{DynamicResource Brush.AccentSoft}" Margin="0,0,10,0">
+                    <TextBlock Text="{x:Static c:Icons.Database}" Style="{StaticResource Text.Icon}" FontSize="16" Foreground="{DynamicResource Brush.Accent}" />
+                </Border>
+                <StackPanel VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding Database}" Style="{StaticResource Text.Subtitle}" />
+                        <Ellipse Width="7" Height="7" Margin="10,0,6,0" VerticalAlignment="Center"
+                                 Fill="{Binding Environment, Converter={x:Static v:EnvironmentBrushConverter.Instance}}" />
+                        <TextBlock Text="{Binding ConnectionName}" Style="{StaticResource Text.Caption}" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock x:Name="SummaryText" Style="{StaticResource Text.Caption}">
+                        <Run Text="{Binding Summary, Mode=OneWay}" Foreground="{DynamicResource Brush.TextSecondary}" /><Run Text="   " /><Run Text="{Binding SummaryDetail, Mode=OneWay}" />
+                    </TextBlock>
+                </StackPanel>
+            </DockPanel>
+
+            <Border x:Name="ErrorBanner" DockPanel.Dock="Top" Margin="0,0,0,8" Padding="10,6" CornerRadius="{StaticResource Radius.Control}"
+                    Background="{DynamicResource Brush.SurfaceAlt}" BorderBrush="{DynamicResource Brush.Danger}" BorderThickness="3,0,0,0"
+                    Visibility="{Binding Error, Converter={x:Static v:NotNullToVisibilityConverter.Instance}}">
+                <DockPanel>
+                    <TextBlock Text="{x:Static c:Icons.Error}" Style="{StaticResource Text.Icon}" FontSize="13" Foreground="{DynamicResource Brush.Danger}" Margin="0,0,8,0" />
+                    <TextBlock Text="{Binding Error}" TextWrapping="Wrap" />
+                </DockPanel>
+            </Border>
+
+            <!-- The headline figures -->
+            <UniformGrid x:Name="Tiles" DockPanel.Dock="Top" Rows="1" Margin="0,0,-8,4">
+                <Border Style="{StaticResource Tile}" DataContext="{Binding Data}">
+                    <StackPanel>
+                        <DockPanel><v:InfoButton DockPanel.Dock="Right" Topic="DbSpace" Margin="4,0,0,0" /><TextBlock Text="{x:Static res:Strings.DbTileData}" Style="{StaticResource TileTitle}" /></DockPanel>
+                        <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource TileBody}" />
+                    </StackPanel>
+                </Border>
+                <Border x:Name="LogTile" Style="{StaticResource Tile}" DataContext="{Binding Log}">
+                    <StackPanel>
+                        <DockPanel><v:InfoButton DockPanel.Dock="Right" Topic="DbLog" Margin="4,0,0,0" /><TextBlock Text="{x:Static res:Strings.DbTileLog}" Style="{StaticResource TileTitle}" /></DockPanel>
+                        <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource TileBody}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Tile}" DataContext="{Binding Vlf}">
+                    <StackPanel>
+                        <DockPanel><v:InfoButton DockPanel.Dock="Right" Topic="DbVlf" Margin="4,0,0,0" /><TextBlock Text="{x:Static res:Strings.DbTileVlf}" Style="{StaticResource TileTitle}" /></DockPanel>
+                        <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource TileBody}" />
+                    </StackPanel>
+                </Border>
+                <Border x:Name="FullBackupTile" Style="{StaticResource Tile}" DataContext="{Binding FullBackup}">
+                    <StackPanel>
+                        <DockPanel><v:InfoButton DockPanel.Dock="Right" Topic="DbBackups" Margin="4,0,0,0" /><TextBlock Text="{x:Static res:Strings.DbTileFullBackup}" Style="{StaticResource TileTitle}" /></DockPanel>
+                        <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource TileBody}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Tile}" DataContext="{Binding LogBackup}">
+                    <StackPanel>
+                        <DockPanel><v:InfoButton DockPanel.Dock="Right" Topic="DbBackups" Margin="4,0,0,0" /><TextBlock Text="{x:Static res:Strings.DbTileLogBackup}" Style="{StaticResource TileTitle}" /></DockPanel>
+                        <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource TileBody}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Tile}" DataContext="{Binding CheckDb}">
+                    <StackPanel>
+                        <DockPanel><v:InfoButton DockPanel.Dock="Right" Topic="DbCheckDb" Margin="4,0,0,0" /><TextBlock Text="{x:Static res:Strings.DbTileCheckDb}" Style="{StaticResource TileTitle}" /></DockPanel>
+                        <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource TileBody}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Tile}" DataContext="{Binding Tables}">
+                    <StackPanel>
+                        <DockPanel><v:InfoButton DockPanel.Dock="Right" Topic="DbTables" Margin="4,0,0,0" /><TextBlock Text="{x:Static res:Strings.DbTileTables}" Style="{StaticResource TileTitle}" /></DockPanel>
+                        <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource TileBody}" />
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <!-- Largest tables and the settings -->
+            <Grid DockPanel.Dock="Top" Margin="0,0,0,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="3*" />
+                    <ColumnDefinition Width="2*" />
+                </Grid.ColumnDefinitions>
+                <Border Style="{StaticResource Card.Surface}" Padding="12,10" Margin="0,0,4,0">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="{x:Static res:Strings.DbLargestTables}" Style="{StaticResource CardTitle}" />
+                            <v:InfoButton Topic="DbTables" />
+                        </StackPanel>
+                        <v:BarList x:Name="LargestChart" MinHeight="120" Items="{Binding LargestTables}" EmptyText="{x:Static res:Strings.PerfEmpty}" />
+                    </DockPanel>
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource Card.Surface}" Padding="12,10" Margin="4,0,0,0">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="{x:Static res:Strings.DbOptions}" Style="{StaticResource CardTitle}" />
+                            <v:InfoButton Topic="DbOptions" />
+                        </StackPanel>
+                        <ItemsControl x:Name="OptionsList" ItemsSource="{Binding Options}" Grid.IsSharedSizeScope="True" Focusable="False">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" SharedSizeGroup="Option" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Key}" Foreground="{DynamicResource Brush.TextSecondary}" FontSize="{DynamicResource FontSize.Small}" Margin="0,2,14,2" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Value}" FontFamily="{DynamicResource Font.Code}" FontSize="{DynamicResource FontSize.Small}" Margin="0,2" TextTrimming="CharacterEllipsis" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </DockPanel>
+                </Border>
+            </Grid>
+
+            <!-- Tables, files, backups -->
+            <Border DockPanel.Dock="Top" Style="{StaticResource Card.Surface}" Padding="12,10" Margin="0,0,0,8">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
+                        <TextBlock Text="{x:Static res:Strings.DbAllTables}" Style="{StaticResource CardTitle}" />
+                    </StackPanel>
+                    <c:VirtualGrid x:Name="TablesGrid" Height="240" NullText="" ShowTypeTags="False" ShowFilterButtons="False" />
+                </DockPanel>
+            </Border>
+            <Border DockPanel.Dock="Top" Style="{StaticResource Card.Surface}" Padding="12,10" Margin="0,0,0,8">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
+                        <TextBlock Text="{x:Static res:Strings.DbFiles}" Style="{StaticResource CardTitle}" />
+                        <v:InfoButton Topic="DbFiles" />
+                    </StackPanel>
+                    <c:VirtualGrid x:Name="FilesGrid" Height="140" NullText="" ShowTypeTags="False" ShowFilterButtons="False" />
+                </DockPanel>
+            </Border>
+            <Border Style="{StaticResource Card.Surface}" Padding="12,10">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
+                        <TextBlock Text="{x:Static res:Strings.DbBackups}" Style="{StaticResource CardTitle}" />
+                        <v:InfoButton Topic="DbBackups" />
+                    </StackPanel>
+                    <c:VirtualGrid x:Name="BackupsGrid" Height="200" NullText="" ShowTypeTags="False" ShowFilterButtons="False" />
+                </DockPanel>
+            </Border>
+        </DockPanel>
+    </ScrollViewer>
+</UserControl>
