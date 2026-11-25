@@ -173,7 +173,11 @@ public sealed class SqlFilterTests
 
         // The rows shown: 50, after the grid's own filter only those passing it.
         await result.View.SetFilterAsync(0, new ResultFilter(0, ResultFilterOperator.LessOrEqual, "10"));
-        env.Dialogs.Export = static options => true;
+        env.Dialogs.Export = static options =>
+        {
+            options.SelectedFormat = options.Formats.Single(static f => f.Value == ResultExportFormat.Csv);
+            return true;
+        };
         await query.ExportCommand.ExecuteAsync(result);
         var shown = Path.Combine(env.Dialogs.DocumentsFolder, "Query 1.csv");
         Assert.Equal(11, File.ReadAllLines(shown).Length);

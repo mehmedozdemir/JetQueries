@@ -46,6 +46,9 @@ public sealed record ResultExportOptions
     /// <summary>The table in INSERT statements (as written: quote it if it needs quotes).</summary>
     public string TableName { get; init; } = "table_name";
 
+    /// <summary>How an Excel workbook looks (header, filter, table, widths, number and date formats).</summary>
+    public ExcelExportOptions Excel { get; init; } = new();
+
     /// <summary>A byte order mark before UTF-8 text, so that Excel opens Turkish characters in a CSV right.</summary>
     public bool ByteOrderMark { get; init; } = true;
 
@@ -65,7 +68,7 @@ public sealed record ResultExportOptions
 /// Writes rows to a file as they come (a whole result read again from the server does not have to fit in
 /// memory). Numbers and dates are written invariantly; Excel gets real numbers and dates.
 /// </summary>
-public static class ResultExporter
+public static partial class ResultExporter
 {
     /// <summary>Rows an Excel sheet holds besides its header; more are left out and counted.</summary>
     public const int ExcelMaxRows = 1_048_575;
@@ -86,7 +89,7 @@ public static class ResultExporter
         ArgumentNullException.ThrowIfNull(rows);
         if (options.Format == ResultExportFormat.Excel)
         {
-            return await WriteExcelAsync(stream, headers, rows, progress, cancellationToken).ConfigureAwait(false);
+            return await WriteExcelAsync(stream, options.Excel, headers, rows, progress, cancellationToken).ConfigureAwait(false);
         }
 
         var writer = new StreamWriter(stream, new UTF8Encoding(options.ByteOrderMark && options.Format == ResultExportFormat.Csv), 1 << 16, leaveOpen: true) { NewLine = "\r\n" };
@@ -197,102 +200,4 @@ public static class ResultExporter
         byte[] bytes => Convert.ToBase64String(bytes),
         _ => Text(value),
     };
-
-    // ---- Excel: a minimal SpreadsheetML package, the sheet written row by row (inline strings, no shared table) ----
-
-    private static async Task<long> WriteExcelAsync(
-        Stream stream, IReadOnlyList<string> headers, IAsyncEnumerable<object?[]> rows, IProgress<long>? progress, CancellationToken cancellationToken)
-    {
-        using var zip = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true);
-        await Entry(zip, "[Content_Types].xml", """
-            <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-            <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>
-            """).ConfigureAwait(false);
-        await Entry(zip, "_rels/.rels", """
-            <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-            <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>
-            """).ConfigureAwait(false);
-        await Entry(zip, "xl/workbook.xml", """
-            <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-            <workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Result" sheetId="1" r:id="rId1"/></sheets></workbook>
-            """).ConfigureAwait(false);
-        await Entry(zip, "xl/_rels/workbook.xml.rels", """
-            <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-            <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>
-            """).ConfigureAwait(false);
-
-        // Styles: 0 plain, 1 bold header, 2 date and time, 3 date.
-        await Entry(zip, "xl/styles.xml", """
-            <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-            <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="2"><numFmt numFmtId="164" formatCode="yyyy-mm-dd hh:mm:ss"/><numFmt numFmtId="165" formatCode="yyyy-mm-dd"/></numFmts><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf/></cellStyleXfs><cellXfs count="4"><xf/><xf fontId="1" applyFont="1"/><xf numFmtId="164" applyNumberFormat="1"/><xf numFmtId="165" applyNumberFormat="1"/></cellXfs></styleSheet>
-            """).ConfigureAwait(false);
-
-        var sheet = zip.CreateEntry("xl/worksheets/sheet1.xml", CompressionLevel.Fastest);
-        var output = await sheet.OpenAsync(cancellationToken).ConfigureAwait(false);
-        await using (output.ConfigureAwait(false))
-        {
-            var writer = new StreamWriter(output, new UTF8Encoding(false), 1 << 16);
-            await using (writer.ConfigureAwait(false))
-            {
-                await writer.WriteAsync("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><sheetViews><sheetView workbookViewId=\"0\"><pane ySplit=\"1\" topLeftCell=\"A2\" state=\"frozen\"/></sheetView></sheetViews><sheetData>").ConfigureAwait(false);
-                await writer.WriteAsync("<row r=\"1\">" + string.Concat(headers.Select(static h => "<c t=\"inlineStr\" s=\"1\"><is><t>" + SecurityElement.Escape(h) + "</t></is></c>")) + "</row>").ConfigureAwait(false);
-                long count = 0;
-                await foreach (var row in rows.WithCancellation(cancellationToken).ConfigureAwait(false))
-                {
-                    if (count >= ExcelMaxRows)
-                    {
-                        continue;
-                    }
-
-                    var line = new StringBuilder("<row r=\"").Append((count + 2).ToString(CultureInfo.InvariantCulture)).Append("\">");
-                    foreach (var value in row)
-                    {
-                        line.Append(Cell(value));
-                    }
-
-                    await writer.WriteAsync(line.Append("</row>"), cancellationToken).ConfigureAwait(false);
-                    if (++count % 5000 == 0)
-                    {
-                        progress?.Report(count);
-                    }
-                }
-
-                await writer.WriteAsync("</sheetData></worksheet>").ConfigureAwait(false);
-                progress?.Report(count);
-                return count;
-            }
-        }
-    }
-
-    private static string Cell(object? value) => value switch
-    {
-        null => "<c/>",
-        bool flag => "<c t=\"b\"><v>" + (flag ? "1" : "0") + "</v></c>",
-        DateTime date => "<c s=\"" + (date.TimeOfDay == TimeSpan.Zero ? "3" : "2") + "\"><v>" + date.ToOADate().ToString("R", CultureInfo.InvariantCulture) + "</v></c>",
-        DateTimeOffset offset => "<c s=\"2\"><v>" + offset.DateTime.ToOADate().ToString("R", CultureInfo.InvariantCulture) + "</v></c>",
-        DateOnly day => "<c s=\"3\"><v>" + day.ToDateTime(TimeOnly.MinValue).ToOADate().ToString("R", CultureInfo.InvariantCulture) + "</v></c>",
-
-        // Numbers beyond 15 digits lose precision in Excel: kept as text.
-        decimal number when Math.Abs(number) < 1e15m => "<c><v>" + number.ToString(CultureInfo.InvariantCulture) + "</v></c>",
-        double number when double.IsFinite(number) => "<c><v>" + number.ToString("R", CultureInfo.InvariantCulture) + "</v></c>",
-        float number when float.IsFinite(number) => "<c><v>" + number.ToString("R", CultureInfo.InvariantCulture) + "</v></c>",
-        int or short or byte or sbyte or ushort => "<c><v>" + Convert.ToString(value, CultureInfo.InvariantCulture) + "</v></c>",
-        long number when Math.Abs(number) < 1_000_000_000_000_000 => "<c><v>" + number.ToString(CultureInfo.InvariantCulture) + "</v></c>",
-        _ => "<c t=\"inlineStr\"><is><t xml:space=\"preserve\">" + SecurityElement.Escape(XmlSafe(Text(value))) + "</t></is></c>",
-    };
-
-    // Characters XML 1.0 cannot carry (control characters) are dropped from text cells.
-    private static string XmlSafe(string text) =>
-        text.Any(static c => c < 0x20 && c is not ('\t' or '\n' or '\r')) ? new string([.. text.Where(static c => c >= 0x20 || c is '\t' or '\n' or '\r')]) : text;
-
-    private static async Task Entry(ZipArchive zip, string name, string content)
-    {
-        var entry = zip.CreateEntry(name, CompressionLevel.Fastest);
-        var output = await entry.OpenAsync().ConfigureAwait(false);
-        await using (output.ConfigureAwait(false))
-        {
-            var bytes = new UTF8Encoding(false).GetBytes(content.Trim());
-            await output.WriteAsync(bytes).ConfigureAwait(false);
-        }
-    }
 }

@@ -1025,6 +1025,34 @@ What it is running stops and its open transaction is rolled back; the client get
   <data name="DbProp_passwordExpires" xml:space="preserve"><value>Password expires</value></data>
   <data name="DbProp_authentication" xml:space="preserve"><value>Authentication</value></data>
   <data name="DbaCancelTip" xml:space="preserve"><value>Stop reading (cancels the query on the server)</value></data>
+  <data name="ExportExcelOptions" xml:space="preserve"><value>Excel formatting</value></data>
+  <data name="ExportExcelSheet" xml:space="preserve"><value>Sheet name</value></data>
+  <data name="ExportExcelTitle" xml:space="preserve"><value>Title above the table (optional)</value></data>
+  <data name="ExportExcelFreeze" xml:space="preserve"><value>Freeze the header row</value></data>
+  <data name="ExportExcelBold" xml:space="preserve"><value>Bold header</value></data>
+  <data name="ExportExcelHeaderColor" xml:space="preserve"><value>Header colour</value></data>
+  <data name="ExportExcelFilter" xml:space="preserve"><value>Filter buttons on the header</value></data>
+  <data name="ExportExcelTable" xml:space="preserve"><value>Format as an Excel table</value></data>
+  <data name="ExportExcelTableTip" xml:space="preserve"><value>An Excel table: banded rows, a style, sorting and filtering, and it grows with new rows.</value></data>
+  <data name="ExportExcelTableStyle" xml:space="preserve"><value>Table style</value></data>
+  <data name="ExportExcelBorders" xml:space="preserve"><value>Cell borders</value></data>
+  <data name="ExportExcelAutoFit" xml:space="preserve"><value>Fit column widths to the contents</value></data>
+  <data name="ExportExcelThousands" xml:space="preserve"><value>Thousands separators in numbers</value></data>
+  <data name="ExportExcelDates" xml:space="preserve"><value>Dates</value></data>
+  <data name="ExportExcelDateRegional" xml:space="preserve"><value>Regional ({0})</value></data>
+  <data name="ExportExcelTotals" xml:space="preserve"><value>Totals row</value></data>
+  <data name="ExportExcelTotal" xml:space="preserve"><value>Total</value></data>
+  <data name="ExportColorBlue" xml:space="preserve"><value>Blue</value></data>
+  <data name="ExportColorGreen" xml:space="preserve"><value>Green</value></data>
+  <data name="ExportColorOrange" xml:space="preserve"><value>Orange</value></data>
+  <data name="ExportColorGray" xml:space="preserve"><value>Gray</value></data>
+  <data name="ExportColorDark" xml:space="preserve"><value>Dark</value></data>
+  <data name="ExportColorNone" xml:space="preserve"><value>None</value></data>
+  <data name="ExportStyleBlueDark" xml:space="preserve"><value>Blue, dark header</value></data>
+  <data name="ExportStyleBlack" xml:space="preserve"><value>Black</value></data>
+  <data name="ExportStyleLightBlue" xml:space="preserve"><value>Light blue</value></data>
+  <data name="ExportStylePlain" xml:space="preserve"><value>Plain</value></data>
+  <data name="ExportExcelTotalsTip" xml:space="preserve"><value>A row under the data with the sum of every numeric column; it follows Excel's filter (SUBTOTAL).</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Clear all</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Remove filter</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} of {1:N0} rows</value></data>

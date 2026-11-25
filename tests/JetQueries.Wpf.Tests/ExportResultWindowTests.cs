@@ -24,8 +24,15 @@ public sealed class ExportResultWindowTests
             await EditorActionsTests.Idle();
             var results = new Dictionary<string, int>
             {
-                ["csv"] = ResultGridViewTests.Capture(window, Path.Combine(directory, "wpf-export-csv.png")),
+                ["excel"] = ResultGridViewTests.Capture(window, Path.Combine(directory, "wpf-export-excel.png")),
             };
+            export.AsTable = true;
+            export.Totals = true;
+            await EditorActionsTests.Idle();
+            results["excel-table"] = ResultGridViewTests.Capture(window, Path.Combine(directory, "wpf-export-excel-table.png"));
+            export.SelectedFormat = export.Formats.Single(static f => f.Value == ResultExportFormat.Csv);
+            await EditorActionsTests.Idle();
+            results["csv"] = ResultGridViewTests.Capture(window, Path.Combine(directory, "wpf-export-csv.png"));
             export.SelectedFormat = export.Formats[3];
             await EditorActionsTests.Idle();
             results["sql"] = ResultGridViewTests.Capture(window, Path.Combine(directory, "wpf-export-sql.png"));
