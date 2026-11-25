@@ -717,3 +717,8 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] Enter takes the first match (or the one chosen with Down / Up); a click takes one; the editor gets the focus back and the next run goes to that database.
 - [ ] Esc or a click outside closes without changing; clicking the box again while open closes it.
 - [ ] Oracle: the same picker lists schemas.
+
+## Explorer starts collapsed
+- [ ] Start the app: only the top-level folders and connections are shown, every folder closed.
+- [ ] Open a folder, refresh the explorer (or add a connection): it stays open.
+- [ ] Ctrl+T (Go to object) on a table of a connection inside a closed folder: the folders open and the table is selected.
