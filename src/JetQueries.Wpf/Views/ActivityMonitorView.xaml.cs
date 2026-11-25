@@ -94,7 +94,7 @@ public partial class ActivityMonitorView : UserControl
         _moving = true;
         try
         {
-            SessionsGrid.Source = new ArrayGridDataSource([.. ActivityMonitorViewModel.Columns], kinds, rows.Count, (r, c) => rows[r].Cell(c), Schema);
+            SessionsGrid.Source = new ArrayGridDataSource([.. ActivityMonitorViewModel.Columns], kinds, rows.Count, (r, c) => rows[r].Cell(c), rows.Count == 0 ? new object() : Schema);
             EmptyText.Visibility = rows.Count == 0 && viewModel.UpdatedText.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
             var index = viewModel.Selected is { } chosen ? rows.IndexOf(chosen) : -1;
             if (index >= 0)

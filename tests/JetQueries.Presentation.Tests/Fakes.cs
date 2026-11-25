@@ -370,6 +370,17 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
     /// <summary>Begin / commit / rollback calls, in order.</summary>
     public List<string> TransactionLog { get; } = [];
 
+    /// <summary>What the performance analysis reads; the requests it was asked.</summary>
+    public HeavyQueryReport Heavy { get; set; } = FakePerformance.Heavy();
+
+    public IReadOnlyList<MissingIndex> Missing { get; set; } = FakePerformance.Missing();
+
+    public IndexUsageReport Usage { get; set; } = FakePerformance.Usage();
+
+    public IReadOnlyList<IndexFragmentation> Fragmentation { get; set; } = FakePerformance.Fragmentation();
+
+    public List<string> PerformanceLog { get; } = [];
+
     /// <summary>What the activity monitor reads; the sessions it was asked to end.</summary>
     public ActivitySnapshot? Activity { get; set; }
 
@@ -419,8 +430,32 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
         return Task.FromResult<IDatabaseConnection>(SupportsDatabaseContext ? new FakeContextConnection(this) : new FakeConnection(this));
     }
 
-    private sealed class FakeConnection(FakeProvider owner) : IDatabaseConnection, ITransactionControl, IActivityMonitor
+    private sealed class FakeConnection(FakeProvider owner) : IDatabaseConnection, ITransactionControl, IActivityMonitor, IPerformanceAdvisor
     {
+        public Task<HeavyQueryReport> GetHeavyQueriesAsync(HeavyQueryRequest request, CancellationToken cancellationToken)
+        {
+            OwnerOf().PerformanceLog.Add($"heavy:{request.Order}:{request.Top}:{request.Database}");
+            return Task.FromResult(OwnerOf().Heavy);
+        }
+
+        public Task<IReadOnlyList<MissingIndex>> GetMissingIndexesAsync(string? database, CancellationToken cancellationToken)
+        {
+            OwnerOf().PerformanceLog.Add("missing:" + database);
+            return Task.FromResult(OwnerOf().Missing);
+        }
+
+        public Task<IndexUsageReport> GetIndexUsageAsync(string database, CancellationToken cancellationToken)
+        {
+            OwnerOf().PerformanceLog.Add("usage:" + database);
+            return Task.FromResult(OwnerOf().Usage);
+        }
+
+        public Task<IReadOnlyList<IndexFragmentation>> GetFragmentationAsync(string database, long minimumPages, CancellationToken cancellationToken)
+        {
+            OwnerOf().PerformanceLog.Add($"fragmentation:{database}:{minimumPages}");
+            return Task.FromResult(OwnerOf().Fragmentation);
+        }
+
         public Task<ActivitySnapshot> GetActivityAsync(CancellationToken cancellationToken) => OwnerOf().ReadActivity();
 
         public Task KillSessionAsync(string sessionId, CancellationToken cancellationToken) => OwnerOf().Kill(sessionId);
@@ -443,8 +478,32 @@ internal sealed class FakeProvider : IDatabaseProvider, IConnectionSettingsProvi
     }
 
     /// <summary>A connection with a current database that starts at "Cards" and follows USE.</summary>
-    internal sealed class FakeContextConnection : IDatabaseConnection, IDatabaseContext, ITransactionControl, IActivityMonitor
+    internal sealed class FakeContextConnection : IDatabaseConnection, IDatabaseContext, ITransactionControl, IActivityMonitor, IPerformanceAdvisor
     {
+        public Task<HeavyQueryReport> GetHeavyQueriesAsync(HeavyQueryRequest request, CancellationToken cancellationToken)
+        {
+            OwnerOf().PerformanceLog.Add($"heavy:{request.Order}:{request.Top}:{request.Database}");
+            return Task.FromResult(OwnerOf().Heavy);
+        }
+
+        public Task<IReadOnlyList<MissingIndex>> GetMissingIndexesAsync(string? database, CancellationToken cancellationToken)
+        {
+            OwnerOf().PerformanceLog.Add("missing:" + database);
+            return Task.FromResult(OwnerOf().Missing);
+        }
+
+        public Task<IndexUsageReport> GetIndexUsageAsync(string database, CancellationToken cancellationToken)
+        {
+            OwnerOf().PerformanceLog.Add("usage:" + database);
+            return Task.FromResult(OwnerOf().Usage);
+        }
+
+        public Task<IReadOnlyList<IndexFragmentation>> GetFragmentationAsync(string database, long minimumPages, CancellationToken cancellationToken)
+        {
+            OwnerOf().PerformanceLog.Add($"fragmentation:{database}:{minimumPages}");
+            return Task.FromResult(OwnerOf().Fragmentation);
+        }
+
         public Task<ActivitySnapshot> GetActivityAsync(CancellationToken cancellationToken) => OwnerOf().ReadActivity();
 
         public Task KillSessionAsync(string sessionId, CancellationToken cancellationToken) => OwnerOf().Kill(sessionId);
@@ -609,4 +668,38 @@ public static class FakeActivity
         new("55") { Login = "report", Host = "PC-4", Database = "Sales", Status = "running", Command = "SELECT", Elapsed = TimeSpan.FromSeconds(75), CpuTime = TimeSpan.FromMilliseconds(850), Reads = 12345, Sql = "SELECT SUM(Total) FROM dbo.Orders" },
         new("56") { Login = "idle", Host = "PC-5", Status = "sleeping" },
     ], OwnSessionId: "51");
+}
+
+/// <summary>A server's query and index statistics for the performance analysis' tests.</summary>
+public static class FakePerformance
+{
+    public static HeavyQueryReport Heavy() => new(
+    [
+        new("SELECT * FROM dbo.Orders WHERE CustomerId = @1") { Database = "Cards", Executions = 1200, TotalCpu = TimeSpan.FromSeconds(42), TotalDuration = TimeSpan.FromSeconds(60), TotalReads = 2_400_000, TotalWrites = 0 },
+        new("EXEC dbo.Nightly") { Database = "Cards", ObjectName = "dbo.Nightly", Executions = 1, TotalCpu = TimeSpan.FromSeconds(30), TotalDuration = TimeSpan.FromMinutes(3), TotalReads = 9_000_000, TotalWrites = 50_000 },
+    ], new DateTimeOffset(2026, 11, 20, 8, 0, 0, TimeSpan.Zero));
+
+    public static IReadOnlyList<MissingIndex> Missing() =>
+    [
+        new("Cards", "dbo.Orders", "CREATE NONCLUSTERED INDEX [IX_Orders_Status] ON [Cards].[dbo].[Orders] ([Status]) INCLUDE ([Total]);")
+        {
+            EqualityColumns = ["Status"], IncludedColumns = ["Total"], Uses = 340, ImpactPercent = 87.5, Score = 1234.5,
+        },
+    ];
+
+    public static IndexUsageReport Usage() => new(
+    [
+        new("dbo.Orders", "PK_Orders") { IsClustered = true, IsUnique = true, IsConstraint = true, KeyColumns = ["Id"], Seeks = 5000 },
+        new("dbo.Orders", "IX_Orders_Customer") { KeyColumns = ["CustomerId"], Seeks = 10, Updates = 900, DropScript = "DROP INDEX [IX_Orders_Customer] ON [Cards].[dbo].[Orders];" },
+        new("dbo.Orders", "IX_Orders_Customer_Date") { KeyColumns = ["CustomerId", "OrderDate"], IncludedColumns = ["Total"], Seeks = 800, Updates = 900, DropScript = "DROP INDEX [IX_Orders_Customer_Date] ON [Cards].[dbo].[Orders];" },
+        new("dbo.Orders", "IX_Orders_Status") { KeyColumns = ["Status"], Updates = 900, SizeKb = 2048, DropScript = "DROP INDEX [IX_Orders_Status] ON [Cards].[dbo].[Orders];" },
+        new("dbo.Orders", "IX_Orders_Date") { KeyColumns = ["OrderDate"], Scans = 3, DropScript = "DROP INDEX [IX_Orders_Date] ON [Cards].[dbo].[Orders];" },
+        new("dbo.Orders", "IX_Orders_Date2") { KeyColumns = ["OrderDate"], Seeks = 1, DropScript = "DROP INDEX [IX_Orders_Date2] ON [Cards].[dbo].[Orders];" },
+    ], new DateTimeOffset(2026, 11, 20, 8, 0, 0, TimeSpan.Zero));
+
+    public static IReadOnlyList<IndexFragmentation> Fragmentation() =>
+    [
+        new("dbo.Orders", "IX_Orders_Customer_Date") { FragmentationPercent = 62.5, Pages = 12000, Rebuild = true, MaintenanceScript = "ALTER INDEX [IX_Orders_Customer_Date] ON [Cards].[dbo].[Orders] REBUILD;" },
+        new("dbo.Orders", "PK_Orders") { FragmentationPercent = 12.0, Pages = 40000, MaintenanceScript = "ALTER INDEX [PK_Orders] ON [Cards].[dbo].[Orders] REORGANIZE;" },
+    ];
 }

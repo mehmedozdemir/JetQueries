@@ -680,6 +680,73 @@ public sealed class SqlServerIntegrationTests(SqlServerFixture fixture) : IClass
         await Assert.ThrowsAsync<ArgumentException>(() => activity.KillSessionAsync("1; DROP TABLE x", Token));
     }
 
+    [Fact]
+    public async Task The_advisor_finds_heavy_queries_missing_unused_and_duplicate_indexes_and_fragmentation()
+    {
+        await using var connection = await OpenAsync();
+        var advisor = Assert.IsAssignableFrom<IPerformanceAdvisor>(connection);
+        await RunAsync(connection, "IF DB_ID('JqPerf') IS NULL CREATE DATABASE JqPerf;");
+        await RunAsync(connection, """
+            USE JqPerf;
+            IF OBJECT_ID('dbo.Orders') IS NOT NULL DROP TABLE dbo.Orders;
+            CREATE TABLE dbo.Orders (Id int IDENTITY PRIMARY KEY, CustomerId int NOT NULL, Status int NOT NULL, Total decimal(12, 2) NOT NULL, Note nvarchar(100) NULL);
+            INSERT INTO dbo.Orders (CustomerId, Status, Total, Note)
+            SELECT TOP (20000) ABS(CHECKSUM(NEWID())) % 500, ABS(CHECKSUM(NEWID())) % 5, ABS(CHECKSUM(NEWID())) % 10000, N'not'
+            FROM sys.all_objects a CROSS JOIN sys.all_objects b;
+            CREATE INDEX IX_Orders_Customer ON dbo.Orders (CustomerId);
+            CREATE INDEX IX_Orders_Customer_Total ON dbo.Orders (CustomerId) INCLUDE (Total);
+            CREATE INDEX IX_Orders_Status ON dbo.Orders (Status);
+            IF OBJECT_ID('dbo.Scattered') IS NOT NULL DROP TABLE dbo.Scattered;
+            CREATE TABLE dbo.Scattered (Id uniqueidentifier NOT NULL DEFAULT NEWID() PRIMARY KEY, Payload char(400) NOT NULL DEFAULT 'x');
+            """);
+        // Random keys in many small inserts: pages split all over the index.
+        await RunAsync(connection, "USE JqPerf; DECLARE @i int = 0; WHILE @i < 400 BEGIN INSERT INTO dbo.Scattered (Payload) SELECT TOP (50) 'x' FROM sys.all_objects; SET @i += 1; END;");
+
+        // A query the optimizer wants an index for, run a few times in the database; one that reads the duplicate index.
+        await ((IDatabaseContext)connection).ChangeAsync("JqPerf", Token);
+        for (var i = 0; i < 4; i++)
+        {
+            await RunAsync(connection, "SELECT Id, Note FROM dbo.Orders WHERE Total = 1234.00 AND Note = N'not';");
+            await RunAsync(connection, "SELECT CustomerId, Total FROM dbo.Orders WHERE CustomerId = 42;");
+        }
+
+        var heavy = await advisor.GetHeavyQueriesAsync(new HeavyQueryRequest(HeavyQueryOrder.Executions, 50, "JqPerf"), Token);
+        var wanted = Assert.Single(heavy.Queries, q => q.Sql.Contains("WHERE Total = 1234.00", StringComparison.Ordinal) || q.Sql.Contains("[Total]=@", StringComparison.Ordinal));
+        Assert.Equal("JqPerf", wanted.Database);
+        Assert.True(wanted.Executions >= 4);
+        Assert.True(wanted.TotalReads > 0);
+        Assert.NotNull(heavy.CountingSince);
+        Assert.All(heavy.Queries, static q => Assert.Equal("JqPerf", q.Database));
+        Assert.DoesNotContain(heavy.Queries, static q => q.Sql.Contains("dm_exec_query_stats", StringComparison.Ordinal));
+
+        var missing = await advisor.GetMissingIndexesAsync("JqPerf", Token);
+        var proposal = Assert.Single(missing, m => m.Table == "dbo.Orders" && m.EqualityColumns.Contains("Total"));
+        Assert.Contains("CREATE NONCLUSTERED INDEX [IX_Orders_Total", proposal.CreateScript, StringComparison.Ordinal);
+        Assert.Contains("ON [JqPerf].[dbo].[Orders] ([Total]", proposal.CreateScript, StringComparison.Ordinal);
+        Assert.True(proposal.ImpactPercent > 0);
+
+        var usage = await advisor.GetIndexUsageAsync("JqPerf", Token);
+        var primary = Assert.Single(usage.Indexes, static i => i.Table == "dbo.Orders" && i.IsClustered);
+        Assert.True(primary.IsConstraint);
+        Assert.Null(primary.DropScript);
+        var customer = Assert.Single(usage.Indexes, static i => i.Name == "IX_Orders_Customer");
+        Assert.Equal(["CustomerId"], customer.KeyColumns);
+        Assert.Equal("DROP INDEX [IX_Orders_Customer] ON [JqPerf].[dbo].[Orders];", customer.DropScript);
+        var covering = Assert.Single(usage.Indexes, static i => i.Name == "IX_Orders_Customer_Total");
+        Assert.Equal(["Total"], covering.IncludedColumns);
+        Assert.True(usage.Indexes.Single(static i => i.Name == "IX_Orders_Customer_Total").Reads + customer.Reads > 0);
+        Assert.Equal(0, usage.Indexes.Single(static i => i.Name == "IX_Orders_Status").Reads);
+        Assert.True(covering.SizeKb > 0);
+        Assert.Equal(20000, covering.Rows);
+
+        var fragmentation = await advisor.GetFragmentationAsync("JqPerf", 10, Token);
+        var scattered = Assert.Single(fragmentation, static f => f.Table == "dbo.Scattered");
+        Assert.True(scattered.FragmentationPercent >= 30, scattered.FragmentationPercent.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        Assert.True(scattered.Rebuild);
+        Assert.StartsWith("ALTER INDEX [PK__Scattere", scattered.MaintenanceScript, StringComparison.Ordinal);
+        Assert.EndsWith("ON [JqPerf].[dbo].[Scattered] REBUILD;", scattered.MaintenanceScript, StringComparison.Ordinal);
+    }
+
     private static async Task<string> SpidAsync(IDatabaseConnection connection) =>
         Convert.ToString((await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest("SELECT @@SPID"), Token))).OfType<RowBatch>().Single().Rows[0][0],
             System.Globalization.CultureInfo.InvariantCulture)!;

@@ -250,8 +250,20 @@ public sealed class SqlServerProvider : IDatabaseProvider, IBulkInsertScripting,
     }
 }
 
-internal sealed class SqlServerConnection(SqlConnection connection) : IDatabaseConnection, IDatabaseContext, ITransactionControl, IActivityMonitor
+internal sealed class SqlServerConnection(SqlConnection connection) : IDatabaseConnection, IDatabaseContext, ITransactionControl, IActivityMonitor, IPerformanceAdvisor
 {
+    public Task<HeavyQueryReport> GetHeavyQueriesAsync(HeavyQueryRequest request, CancellationToken cancellationToken) =>
+        SqlServerPerformance.HeavyAsync(connection, request, cancellationToken);
+
+    public Task<IReadOnlyList<MissingIndex>> GetMissingIndexesAsync(string? database, CancellationToken cancellationToken) =>
+        SqlServerPerformance.MissingAsync(connection, database, cancellationToken);
+
+    public Task<IndexUsageReport> GetIndexUsageAsync(string database, CancellationToken cancellationToken) =>
+        SqlServerPerformance.UsageAsync(connection, database, cancellationToken);
+
+    public Task<IReadOnlyList<IndexFragmentation>> GetFragmentationAsync(string database, long minimumPages, CancellationToken cancellationToken) =>
+        SqlServerPerformance.FragmentationAsync(connection, database, minimumPages, cancellationToken);
+
     public Task<ActivitySnapshot> GetActivityAsync(CancellationToken cancellationToken) => SqlServerActivity.ReadAsync(connection, cancellationToken);
 
     public Task KillSessionAsync(string sessionId, CancellationToken cancellationToken) => SqlServerActivity.KillAsync(connection, sessionId, cancellationToken);

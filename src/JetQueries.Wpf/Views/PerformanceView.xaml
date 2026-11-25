@@ -1,0 +1,116 @@
+<UserControl x:Class="JetQueries.Wpf.Views.PerformanceView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:UiKit.Controls;assembly=UiKit.Wpf"
+             xmlns:res="clr-namespace:JetQueries.Presentation.Resources;assembly=JetQueries.Presentation"
+             xmlns:vm="clr-namespace:JetQueries.Presentation.ViewModels;assembly=JetQueries.Presentation"
+             xmlns:e="clr-namespace:JetQueries.Wpf.Editor"
+             xmlns:v="clr-namespace:JetQueries.Wpf.Views">
+    <UserControl.InputBindings>
+        <KeyBinding Key="F5" Command="{Binding LoadCommand}" />
+    </UserControl.InputBindings>
+
+    <DockPanel Margin="12,4,12,10">
+        <!-- Header: what and where; the database; read again -->
+        <DockPanel DockPanel.Dock="Top" Margin="0,4,0,10">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                <ProgressBar IsIndeterminate="{Binding IsLoading}" Width="40" VerticalAlignment="Center" Margin="0,0,10,0"
+                             Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}" />
+                <TextBlock Text="{x:Static c:Icons.Database}" Style="{StaticResource Text.Icon}" FontSize="13" Margin="0,0,6,0" Foreground="{DynamicResource Brush.Accent}" />
+                <ComboBox x:Name="DatabaseBox" ItemsSource="{Binding Databases}" SelectedItem="{Binding Database}" Width="220" Height="28"
+                          IsTextSearchEnabled="True" ToolTip="{x:Static res:Strings.QueryDatabase}" Margin="0,0,8,0" />
+                <Button x:Name="RefreshButton" Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.Refresh}"
+                        Command="{Binding LoadCommand}" ToolTip="{x:Static res:Strings.PerfRefresh}" />
+            </StackPanel>
+            <Border Width="34" Height="34" CornerRadius="10" Background="{DynamicResource Brush.AccentSoft}" Margin="0,0,10,0">
+                <TextBlock Text="&#xE9F9;" Style="{StaticResource Text.Icon}" FontSize="16" Foreground="{DynamicResource Brush.Accent}" />
+            </Border>
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Text="{x:Static res:Strings.PerfOpen}" Style="{StaticResource Text.Subtitle}" />
+                <StackPanel Orientation="Horizontal">
+                    <Ellipse Width="7" Height="7" Margin="0,0,6,0" VerticalAlignment="Center"
+                             Fill="{Binding Environment, Converter={x:Static v:EnvironmentBrushConverter.Instance}}" />
+                    <TextBlock Text="{Binding ConnectionName}" Style="{StaticResource Text.Caption}" />
+                </StackPanel>
+            </StackPanel>
+        </DockPanel>
+
+        <!-- The parts, and what each one is read with -->
+        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Visibility="{Binding Section, Converter={x:Static v:EqualsToVisibilityConverter.Instance}, ConverterParameter=HeavyQueries}">
+                    <ComboBox x:Name="OrderBox" ItemsSource="{x:Static vm:PerformanceViewModel.Orders}" SelectedItem="{Binding Order}" DisplayMemberPath="Text"
+                              Width="170" Height="28" Margin="0,0,8,0" />
+                    <TextBlock Text="{x:Static res:Strings.PerfTop}" Style="{StaticResource Text.Caption}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                    <ComboBox x:Name="TopBox" ItemsSource="{x:Static vm:PerformanceViewModel.Tops}" SelectedItem="{Binding Top}" Width="72" Height="28" />
+                </StackPanel>
+                <CheckBox x:Name="OnlyFindingsBox" Content="{x:Static res:Strings.PerfOnlyFindings}" IsChecked="{Binding OnlyFindings}" VerticalAlignment="Center"
+                          Visibility="{Binding Section, Converter={x:Static v:EqualsToVisibilityConverter.Instance}, ConverterParameter=IndexUsage}" />
+                <StackPanel Orientation="Horizontal" Visibility="{Binding Section, Converter={x:Static v:EqualsToVisibilityConverter.Instance}, ConverterParameter=Fragmentation}">
+                    <TextBlock Text="{x:Static res:Strings.PerfMinimumPages}" Style="{StaticResource Text.Caption}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                    <TextBox x:Name="MinimumPagesBox" Width="72" Height="28" VerticalContentAlignment="Center" HorizontalContentAlignment="Right"
+                             Text="{Binding MinimumPages, UpdateSourceTrigger=LostFocus}" Margin="0,0,8,0" />
+                    <Button x:Name="MeasureButton" Style="{StaticResource Btn.Primary}" Height="28" Padding="14,0" Content="{x:Static res:Strings.PerfMeasure}"
+                            Command="{Binding LoadCommand}" ToolTip="{x:Static res:Strings.PerfMeasureTip}" />
+                </StackPanel>
+            </StackPanel>
+            <Border Style="{StaticResource Segmented.Frame}" HorizontalAlignment="Left">
+                <StackPanel Orientation="Horizontal">
+                    <RadioButton x:Name="HeavySection" Style="{StaticResource SegmentRadio}" Content="{x:Static res:Strings.PerfSectionHeavy}"
+                                 IsChecked="{Binding Section, Converter={x:Static v:EnumEqualsConverter.Instance}, ConverterParameter={x:Static vm:PerformanceSection.HeavyQueries}}" />
+                    <RadioButton x:Name="MissingSection" Style="{StaticResource SegmentRadio}" Content="{x:Static res:Strings.PerfSectionMissing}"
+                                 IsChecked="{Binding Section, Converter={x:Static v:EnumEqualsConverter.Instance}, ConverterParameter={x:Static vm:PerformanceSection.MissingIndexes}}" />
+                    <RadioButton x:Name="UsageSection" Style="{StaticResource SegmentRadio}" Content="{x:Static res:Strings.PerfSectionUsage}"
+                                 IsChecked="{Binding Section, Converter={x:Static v:EnumEqualsConverter.Instance}, ConverterParameter={x:Static vm:PerformanceSection.IndexUsage}}" />
+                    <RadioButton x:Name="FragmentationSection" Style="{StaticResource SegmentRadio}" Content="{x:Static res:Strings.PerfSectionFragmentation}"
+                                 IsChecked="{Binding Section, Converter={x:Static v:EnumEqualsConverter.Instance}, ConverterParameter={x:Static vm:PerformanceSection.Fragmentation}}" />
+                </StackPanel>
+            </Border>
+        </DockPanel>
+
+        <!-- What the part is about and since when the server counts; why it could not be read -->
+        <TextBlock DockPanel.Dock="Top" Text="{Binding Note}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="2,0,0,8" />
+        <Border x:Name="ErrorBanner" DockPanel.Dock="Top" Margin="0,0,0,8" Padding="10,6" CornerRadius="{StaticResource Radius.Control}"
+                Background="{DynamicResource Brush.SurfaceAlt}" BorderBrush="{DynamicResource Brush.Danger}" BorderThickness="3,0,0,0"
+                Visibility="{Binding Error, Converter={x:Static v:NotNullToVisibilityConverter.Instance}}">
+            <DockPanel>
+                <TextBlock Text="{x:Static c:Icons.Error}" Style="{StaticResource Text.Icon}" FontSize="13" Foreground="{DynamicResource Brush.Danger}" Margin="0,0,8,0" />
+                <TextBlock Text="{Binding Error}" TextWrapping="Wrap" />
+            </DockPanel>
+        </Border>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" MinWidth="360" />
+                <ColumnDefinition Width="8" />
+                <ColumnDefinition Width="420" MinWidth="260" />
+            </Grid.ColumnDefinitions>
+
+            <Border Style="{StaticResource Card.Surface}">
+                <Grid>
+                    <c:VirtualGrid x:Name="RowsGrid" NullText="" ShowTypeTags="False" ShowFilterButtons="False" />
+                    <TextBlock x:Name="EmptyText" Text="{x:Static res:Strings.PerfEmpty}" Style="{StaticResource Text.Caption}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed" />
+                </Grid>
+            </Border>
+
+            <GridSplitter Grid.Column="1" Width="8" HorizontalAlignment="Stretch" ResizeBehavior="PreviousAndNext" />
+
+            <!-- The chosen row's SQL or script; to a query tab, never run from here -->
+            <Border Grid.Column="2" Style="{StaticResource Card.Surface}" Padding="10">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+                        <Button x:Name="ScriptAllButton" Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="&#xE8A5;" Content="{x:Static res:Strings.PerfScriptAll}"
+                                Command="{Binding ScriptAllCommand}" Margin="0,0,6,0"
+                                Visibility="{Binding HasScripts, Converter={StaticResource BoolToVisibility}}" />
+                        <Button x:Name="OpenButton" Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="&#xE8A7;" Content="{x:Static res:Strings.PerfOpenRow}"
+                                Command="{Binding OpenCommand}" />
+                    </StackPanel>
+                    <Border BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" CornerRadius="{StaticResource Radius.Control}" Padding="2">
+                        <e:SqlEditor x:Name="DetailView" IsReadOnly="True" />
+                    </Border>
+                </DockPanel>
+            </Border>
+        </Grid>
+    </DockPanel>
+</UserControl>

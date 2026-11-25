@@ -140,6 +140,9 @@
                                     <MenuItem x:Name="ActivityMenuItem" Header="{x:Static res:Strings.ActivityOpen}" c:Ui.Icon="&#xE9D9;"
                                               Command="{Binding OpenActivityCommand}" CommandParameter="{Binding Selected}"
                                               Visibility="{Binding Selected.CanMonitor, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
+                                    <MenuItem x:Name="PerformanceMenuItem" Header="{x:Static res:Strings.PerfOpen}" c:Ui.Icon="&#xE9F9;"
+                                              Command="{Binding OpenPerformanceCommand}" CommandParameter="{Binding Selected}"
+                                              Visibility="{Binding Selected.CanAnalyze, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
                                     <MenuItem Header="{Binding ToggleConnectionText}" c:Ui.Icon="{x:Static c:Icons.Plug}" Command="{Binding ToggleConnectionCommand}" />
                                     <MenuItem Header="{x:Static res:Strings.ExplorerRefresh}" c:Ui.Icon="{x:Static c:Icons.Refresh}" Command="{Binding ReloadSelectedCommand}" />
                                     <!-- Tables and views: their data; anything with a definition: details and scripts -->

@@ -54,6 +54,7 @@ public partial class MainWindowViewModel : ObservableObject
         connections.DetailsRequested += (_, request) => ShowDetails(request);
         connections.KeyRequested += (_, key) => documents.OpenKey(key);
         connections.ActivityRequested += (_, monitor) => documents.OpenActivity(monitor);
+        connections.PerformanceRequested += (_, analysis) => documents.OpenPerformance(analysis);
         documents.DetailsRequested += (_, request) => ShowDetails(request);
 
         // A new query starts on the connection that is selected in the explorer.
@@ -194,6 +195,27 @@ public partial class MainWindowViewModel : ObservableObject
             FindConnection(Connections.Roots, session.Definition.Id) is { CanMonitor: true } open)
         {
             Connections.OpenActivityCommand.Execute(open);
+        }
+    }
+
+    /// <summary>Main menu: Tools, Performance analysis — of the explorer's connection (or database), else of the query tab's.</summary>
+    [RelayCommand]
+    private void ShowPerformance()
+    {
+        switch (Connections.Selected)
+        {
+            case ConnectionNodeViewModel { CanAnalyze: true } node:
+                Connections.OpenPerformanceCommand.Execute(node);
+                return;
+            case DatabaseObjectNodeViewModel { Target.Kind: Sdk.DatabaseObjectKinds.Database, Session.SupportsPerformance: true } database:
+                Connections.OpenPerformanceCommand.Execute(database);
+                return;
+        }
+
+        if (Documents.Selected?.SelectedSession?.Session is { SupportsPerformance: true } session &&
+            FindConnection(Connections.Roots, session.Definition.Id) is { CanAnalyze: true } open)
+        {
+            Connections.OpenPerformanceCommand.Execute(open);
         }
     }
 

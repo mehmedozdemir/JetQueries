@@ -12,6 +12,7 @@ internal static class SqlServerActivity
 {
     // One row per session; the request's figures when it runs something, else the session's.
     private const string SessionsSql = """
+        /* JetQueries:advisor */
         SELECT
             s.session_id,
             s.login_name,
