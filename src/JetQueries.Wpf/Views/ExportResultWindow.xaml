@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:c="clr-namespace:UiKit.Controls;assembly=UiKit.Wpf"
         xmlns:res="clr-namespace:JetQueries.Presentation.Resources;assembly=JetQueries.Presentation"
-        Title="{x:Static res:Strings.ExportDialogTitle}" Width="580" SizeToContent="Height" ResizeMode="NoResize"
+        Title="{x:Static res:Strings.ExportDialogTitle}" Width="640" SizeToContent="Height" ResizeMode="NoResize"
         ShowInTaskbar="False" WindowStartupLocation="CenterOwner"
         Style="{StaticResource Window.App}">
     <Window.Resources>
@@ -32,6 +32,63 @@
             <!-- Format -->
             <TextBlock Text="{x:Static res:Strings.ExportFormat}" Style="{StaticResource Label}" />
             <ComboBox x:Name="FormatBox" ItemsSource="{Binding Formats}" SelectedItem="{Binding SelectedFormat}" DisplayMemberPath="Text" Margin="0,0,0,12" />
+
+            <!-- Excel: sheet, title, formatting -->
+            <StackPanel Visibility="{Binding IsExcel, Converter={StaticResource BoolToVisibility}}" Margin="0,0,0,10">
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="2*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="{x:Static res:Strings.ExportExcelSheet}" Style="{StaticResource Label}" />
+                        <TextBox Text="{Binding SheetName, UpdateSourceTrigger=PropertyChanged}" MaxLength="31" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="{x:Static res:Strings.ExportExcelTitle}" Style="{StaticResource Label}" />
+                        <TextBox Text="{Binding ExcelTitle, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+                </Grid>
+                <TextBlock Text="{x:Static res:Strings.ExportExcelOptions}" Style="{StaticResource Label}" />
+                <Border BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" CornerRadius="6" Padding="12,10,12,4">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="16" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <StackPanel>
+                            <CheckBox Content="{x:Static res:Strings.ExportExcelFreeze}" IsChecked="{Binding FreezeHeader}" Margin="0,0,0,6" />
+                            <CheckBox Content="{x:Static res:Strings.ExportExcelBold}" IsChecked="{Binding BoldHeader}" Margin="0,0,0,6" />
+                            <CheckBox Content="{x:Static res:Strings.ExportExcelFilter}" IsChecked="{Binding AutoFilter}" Margin="0,0,0,6" />
+                            <CheckBox Content="{x:Static res:Strings.ExportExcelAutoFit}" IsChecked="{Binding AutoFitColumns}" Margin="0,0,0,6" />
+                            <CheckBox Content="{x:Static res:Strings.ExportExcelThousands}" IsChecked="{Binding ThousandsSeparator}" Margin="0,0,0,6" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <CheckBox Content="{x:Static res:Strings.ExportExcelTable}" IsChecked="{Binding AsTable}" ToolTip="{x:Static res:Strings.ExportExcelTableTip}" Margin="0,0,0,6" />
+                            <DockPanel Margin="22,0,0,8" IsEnabled="{Binding AsTable}">
+                                <TextBlock Text="{x:Static res:Strings.ExportExcelTableStyle}" Style="{StaticResource Label}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                <ComboBox ItemsSource="{Binding TableStyles}" SelectedItem="{Binding TableStyle}" DisplayMemberPath="Text" />
+                            </DockPanel>
+                            <CheckBox Content="{x:Static res:Strings.ExportExcelBorders}" IsChecked="{Binding Borders}" Margin="0,0,0,6" />
+                            <CheckBox Content="{x:Static res:Strings.ExportExcelTotals}" IsChecked="{Binding Totals}" ToolTip="{x:Static res:Strings.ExportExcelTotalsTip}" Margin="0,0,0,6" />
+                        </StackPanel>
+                        <StackPanel Grid.Row="1" Margin="0,2,0,6" IsEnabled="{Binding CanColorHeader}">
+                            <TextBlock Text="{x:Static res:Strings.ExportExcelHeaderColor}" Style="{StaticResource Label}" />
+                            <ComboBox ItemsSource="{Binding HeaderColors}" SelectedItem="{Binding HeaderColor}" DisplayMemberPath="Text" />
+                        </StackPanel>
+                        <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,2,0,6">
+                            <TextBlock Text="{x:Static res:Strings.ExportExcelDates}" Style="{StaticResource Label}" />
+                            <ComboBox ItemsSource="{Binding DateFormats}" SelectedItem="{Binding DateFormat}" DisplayMemberPath="Text" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </StackPanel>
 
             <!-- CSV: separator, header -->
             <StackPanel Visibility="{Binding IsCsv, Converter={StaticResource BoolToVisibility}}">

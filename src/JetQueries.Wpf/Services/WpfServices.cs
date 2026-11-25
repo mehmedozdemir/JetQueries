@@ -191,8 +191,21 @@ internal sealed class WpfDialogService(IServiceProvider services) : IDialogServi
         return Task.CompletedTask;
     }
 
-    public Task<bool> ExportResultAsync(ExportResultViewModel options) =>
-        Task.FromResult(new ExportResultWindow(options) { Owner = Owner }.ShowDialog() == true);
+    // The choices of the last export come back (a small file, read and written off the UI thread).
+    public async Task<bool> ExportResultAsync(ExportResultViewModel options)
+    {
+        var store = services.GetRequiredService<Core.Settings.ISettingsStore>();
+        var preferences = await Task.Run(() => store.LoadAsync(ExportPreferences.Section, new ExportPreferences(), CancellationToken.None));
+        options.Apply(preferences);
+        if (new ExportResultWindow(options) { Owner = Owner }.ShowDialog() != true)
+        {
+            return false;
+        }
+
+        var chosen = options.Preferences;
+        _ = Task.Run(() => store.SaveAsync(ExportPreferences.Section, chosen, CancellationToken.None));
+        return true;
+    }
 
     public void OpenWithShell(string path) =>
         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(path) { UseShellExecute = true })?.Dispose();
