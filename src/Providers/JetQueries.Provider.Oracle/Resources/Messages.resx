@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="NeedsCatalogRole" xml:space="preserve"><value>This screen reads Oracle's dynamic performance (V$) and DBA_ views: the login needs SELECT_CATALOG_ROLE (or SELECT ANY DICTIONARY). {0}</value></data>
+  <data name="NoFragmentation" xml:space="preserve"><value>Oracle does not report index fragmentation without ANALYZE INDEX … VALIDATE STRUCTURE, which locks the table; B-tree indexes rarely need rebuilding. Use the Segment Advisor (DBMS_SPACE) to find space worth reclaiming.</value></data>
+  <data name="NoSuchSchema" xml:space="preserve"><value>No schema named {0} in this database.</value></data>
+</root>

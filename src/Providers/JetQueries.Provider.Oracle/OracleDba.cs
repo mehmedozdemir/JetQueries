@@ -1,4 +1,5 @@
 using System.Globalization;
+using JetQueries.Provider.Oracle.Resources;
 using JetQueries.Sdk;
 using Oracle.ManagedDataAccess.Client;
 
@@ -213,8 +214,7 @@ internal static class OracleDba
     }
 
     public static Task<IReadOnlyList<IndexFragmentation>> FragmentationAsync() =>
-        throw new InvalidOperationException(
-            "Oracle does not report index fragmentation without ANALYZE INDEX … VALIDATE STRUCTURE, which locks the table; B-tree indexes rarely need rebuilding. Use the Segment Advisor (DBMS_SPACE) to find space worth reclaiming.");
+        throw new InvalidOperationException(Messages.NoFragmentation);
 
     // Dashboard ---------------------------------------------------------------------------------------------------
 
@@ -540,7 +540,7 @@ internal static class OracleDba
         }, cancellationToken).ConfigureAwait(false);
         if (detail is null)
         {
-            throw new ArgumentException("No schema named " + schema + " in this database.", nameof(schema));
+            throw new ArgumentException(Messages.NoSuchSchema(schema), nameof(schema));
         }
 
         var mode = Convert.ToString(await ScalarAsync(connection, Marker + "SELECT log_mode FROM v$database", cancellationToken).ConfigureAwait(false), CultureInfo.InvariantCulture);
@@ -694,7 +694,7 @@ internal static class OracleDba
 
     // ORA-00942 on a V$ or DBA_ view means the login lacks the dictionary role, not that the view is missing.
     private static InvalidOperationException Permission(OracleException ex) =>
-        new("This screen reads Oracle's dynamic performance (V$) and DBA_ views: the login needs SELECT_CATALOG_ROLE (or SELECT ANY DICTIONARY). " + ex.Message, ex);
+        new(Messages.NeedsCatalogRole(ex.Message), ex);
 
     private static HealthFinding Ok(string id, HealthCategory category, string title) => new(id, category, HealthSeverity.Ok, title);
 

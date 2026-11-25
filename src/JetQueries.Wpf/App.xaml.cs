@@ -71,6 +71,14 @@ public partial class App : Application
                 var culture = System.Globalization.CultureInfo.GetCultureInfo(language);
                 System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = culture;
                 System.Globalization.CultureInfo.CurrentUICulture = culture;
+
+                // Set here, inside this async method, the culture lasts only for it: the dispatcher runs later
+                // clicks in its own context, in the Windows language. Set once more in an operation of its own,
+                // with no context flowing in, it becomes the UI thread's culture for good.
+                using (System.Threading.ExecutionContext.SuppressFlow())
+                {
+                    _ = Dispatcher.BeginInvoke(() => System.Globalization.CultureInfo.CurrentUICulture = culture, System.Windows.Threading.DispatcherPriority.Send);
+                }
                 LocalizeGrid();
             }
 

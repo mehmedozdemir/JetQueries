@@ -1,4 +1,5 @@
 using System.Globalization;
+using JetQueries.Provider.SqlServer.Resources;
 using JetQueries.Sdk;
 using Microsoft.Data.SqlClient;
 
@@ -95,7 +96,7 @@ internal static class SqlServerActivity
 
         return new ActivitySnapshot(DateTimeOffset.Now, sessions, own)
         {
-            Limitation = canSeeAll ? null : "The login lacks VIEW SERVER STATE: only its own sessions are shown.",
+            Limitation = canSeeAll ? null : Messages.ActivityLimited,
         };
     }
 
