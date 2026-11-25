@@ -45,6 +45,9 @@ public sealed record AppearanceSettings
     /// <summary>DBA screens show "i" buttons that explain each tile, chart and list.</summary>
     public bool DbaHelp { get; init; } = true;
 
+    /// <summary>Format, comment and case buttons in the query tab's toolbar.</summary>
+    public bool EditorTools { get; init; } = true;
+
     /// <summary>Resting the mouse on a table or column in the editor shows its details.</summary>
     public bool HoverInfo { get; init; } = true;
 
@@ -485,6 +488,11 @@ public partial class SettingsViewModel : ObservableObject
     partial void OnDbaHelpChanged(bool value) => Preview();
 
     [ObservableProperty]
+    public partial bool EditorTools { get; set; } = true;
+
+    partial void OnEditorToolsChanged(bool value) => Preview();
+
+    [ObservableProperty]
     public partial bool HoverInfo { get; set; }
 
     partial void OnHoverInfoChanged(bool value) => Preview();
@@ -509,6 +517,7 @@ public partial class SettingsViewModel : ObservableObject
         ShowColumnTypes = ShowColumnTypes,
         ValueSnippets = ValueSnippets,
         DbaHelp = DbaHelp,
+        EditorTools = EditorTools,
         HoverInfo = HoverInfo,
         FormatKeywordCase = FormatKeywordCase?.Value ?? SqlKeywordCase.Upper,
         FormatIndent = FormatIndent?.Value ?? 4,
@@ -631,6 +640,7 @@ public partial class SettingsViewModel : ObservableObject
             ShowColumnTypes = settings.ShowColumnTypes;
             ValueSnippets = settings.ValueSnippets;
             DbaHelp = settings.DbaHelp;
+            EditorTools = settings.EditorTools;
             HoverInfo = settings.HoverInfo;
             FormatKeywordCase = KeywordCases.FirstOrDefault(c => c.Value == settings.FormatKeywordCase) ?? KeywordCases[0];
             FormatIndent = Indents.FirstOrDefault(c => c.Value == settings.FormatIndent) ?? Indents[1];

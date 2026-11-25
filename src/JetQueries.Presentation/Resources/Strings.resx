@@ -1060,6 +1060,14 @@ What it is running stops and its open transaction is rolled back; the client get
   <data name="GridExportTip" xml:space="preserve"><value>Export the rows as shown (sorted and filtered) to Excel, CSV, JSON…</value></data>
   <data name="GridNumberHint" xml:space="preserve"><value>Units are understood: 500 ms, 2 s, 10 MB, 80 %</value></data>
   <data name="GridShownCount" xml:space="preserve"><value>{0} of {1} rows</value></data>
+  <data name="EditorFormatTip" xml:space="preserve"><value>Format the SQL (the selection, or all) — Ctrl+Shift+F</value></data>
+  <data name="EditorCommentTip" xml:space="preserve"><value>Comment or uncomment the lines — Ctrl+/</value></data>
+  <data name="EditorUpperTip" xml:space="preserve"><value>UPPER CASE (the selection, or the word) — Ctrl+Shift+U</value></data>
+  <data name="EditorLowerTip" xml:space="preserve"><value>lower case (the selection, or the word) — Ctrl+U</value></data>
+  <data name="EditorUndoTip" xml:space="preserve"><value>Undo — Ctrl+Z</value></data>
+  <data name="EditorRedoTip" xml:space="preserve"><value>Redo — Ctrl+Y</value></data>
+  <data name="FieldEditorTools" xml:space="preserve"><value>Editing buttons in the query toolbar</value></data>
+  <data name="SettingEditorToolsInfo" xml:space="preserve"><value>Format, comment lines, upper and lower case, undo and redo beside the run buttons. Their shortcuts work either way.</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Clear all</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Remove filter</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} of {1:N0} rows</value></data>

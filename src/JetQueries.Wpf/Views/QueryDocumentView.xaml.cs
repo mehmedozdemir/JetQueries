@@ -122,6 +122,14 @@ public partial class QueryDocumentView : UserControl
         }
     }
 
+    private void OnToolbarEdit(object sender, System.Windows.RoutedEventArgs e)
+    {
+        if (sender is System.Windows.FrameworkElement { Tag: string tag })
+        {
+            Perform(tag);
+        }
+    }
+
     private void OnMenuEdit(object sender, System.Windows.RoutedEventArgs e)
     {
         if (sender is MenuItem { Tag: string tag })

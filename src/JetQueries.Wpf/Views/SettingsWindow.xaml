@@ -337,6 +337,7 @@
                     <!-- Query tabs -->
                     <StackPanel x:Name="QueryPage" Style="{StaticResource Page}">
                         <Border Style="{StaticResource Card}">
+                          <StackPanel>
                             <Border Style="{StaticResource Settings.Row}" BorderThickness="0">
                                 <StackPanel>
                                     <TextBlock Text="{x:Static res:Strings.FieldQueryButtons}" Style="{StaticResource Settings.RowTitle}" />
@@ -345,6 +346,17 @@
                                              ItemsSource="{Binding QueryButtonPlaces}" SelectedItem="{Binding QueryButtonPlace}" />
                                 </StackPanel>
                             </Border>
+                            <Border Style="{StaticResource Settings.Row}">
+                                <DockPanel>
+                                    <CheckBox x:Name="EditorToolsSwitch" DockPanel.Dock="Right" Style="{StaticResource Switch}" Margin="24,0,0,0"
+                                              VerticalAlignment="Center" IsChecked="{Binding EditorTools}" />
+                                    <StackPanel>
+                                        <TextBlock Text="{x:Static res:Strings.FieldEditorTools}" Style="{StaticResource Settings.RowTitle}" />
+                                        <TextBlock Text="{x:Static res:Strings.SettingEditorToolsInfo}" Style="{StaticResource Settings.RowInfo}" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
+                          </StackPanel>
                         </Border>
                     </StackPanel>
 

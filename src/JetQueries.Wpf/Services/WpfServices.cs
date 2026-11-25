@@ -104,6 +104,7 @@ public sealed class AppearanceService : IAppearanceService
 
         // DBA screens: the "i" buttons that explain what a tile, chart or list shows.
         resources["DbaHelp.Visibility"] = settings.DbaHelp ? Visibility.Visible : Visibility.Collapsed;
+        resources["EditorTools.Visibility"] = settings.EditorTools ? Visibility.Visible : Visibility.Collapsed;
         Changed?.Invoke(this, EventArgs.Empty);
     }
 }

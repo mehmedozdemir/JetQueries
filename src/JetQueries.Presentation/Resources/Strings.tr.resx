@@ -1060,6 +1060,14 @@
   <data name="GridExportTip" xml:space="preserve"><value>Görünen satırları (sıralı ve filtreli) Excel, CSV, JSON… olarak dışa aktar</value></data>
   <data name="GridNumberHint" xml:space="preserve"><value>Birimler anlaşılır: 500 ms, 2 sn, 10 MB, 80 %</value></data>
   <data name="GridShownCount" xml:space="preserve"><value>{1} satırdan {0}</value></data>
+  <data name="EditorFormatTip" xml:space="preserve"><value>SQL'i biçimlendir (seçimi ya da tümünü) — Ctrl+Shift+F</value></data>
+  <data name="EditorCommentTip" xml:space="preserve"><value>Satırları yorum yap / yorumu kaldır — Ctrl+/</value></data>
+  <data name="EditorUpperTip" xml:space="preserve"><value>BÜYÜK HARF (seçim ya da sözcük) — Ctrl+Shift+U</value></data>
+  <data name="EditorLowerTip" xml:space="preserve"><value>küçük harf (seçim ya da sözcük) — Ctrl+U</value></data>
+  <data name="EditorUndoTip" xml:space="preserve"><value>Geri al — Ctrl+Z</value></data>
+  <data name="EditorRedoTip" xml:space="preserve"><value>Yinele — Ctrl+Y</value></data>
+  <data name="FieldEditorTools" xml:space="preserve"><value>Sorgu araç çubuğunda düzenleme düğmeleri</value></data>
+  <data name="SettingEditorToolsInfo" xml:space="preserve"><value>Çalıştır düğmelerinin yanında biçimlendir, satır yorumla, büyük/küçük harf, geri al ve yinele. Kısayolları her durumda çalışır.</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Tümünü temizle</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Filtreyi kaldır</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} / {1:N0} satır</value></data>
