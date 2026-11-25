@@ -162,6 +162,17 @@ public static class Strings
     public static string FilterClear => Get(nameof(FilterClear));
     public static string FilterValueRequired => Get(nameof(FilterValueRequired));
     public static string FilterClearAll => Get(nameof(FilterClearAll));
+    public static string EnvironmentUnspecifiedGroup => Get(nameof(EnvironmentUnspecifiedGroup));
+    public static string ExplorerGroupBy => Get(nameof(ExplorerGroupBy));
+    public static string ExplorerGroupFolders => Get(nameof(ExplorerGroupFolders));
+    public static string ExplorerGroupEnvironment => Get(nameof(ExplorerGroupEnvironment));
+    public static string ExplorerGroupType => Get(nameof(ExplorerGroupType));
+    public static string FolderColor => Get(nameof(FolderColor));
+    public static string FolderColorNone => Get(nameof(FolderColorNone));
+    public static string PickedConnect => Get(nameof(PickedConnect));
+    public static string PickedDisconnect => Get(nameof(PickedDisconnect));
+    public static string PickedDelete => Get(nameof(PickedDelete));
+    public static string DeleteManyConfirmMessage => Get(nameof(DeleteManyConfirmMessage));
     public static string DensityVeryCompact => Get(nameof(DensityVeryCompact));
     public static string DensityComfortable => Get(nameof(DensityComfortable));
     public static string DensitySpacious => Get(nameof(DensitySpacious));

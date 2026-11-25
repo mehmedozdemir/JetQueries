@@ -543,7 +543,7 @@ public partial class SettingsViewModel : ObservableObject
         GridFontSize = GridFontSize,
         QueryButtonsInTab = QueryButtonPlace?.Value ?? true,
         CompactMode = (Density?.Value ?? 0) < 0,
-        DensityLevel = Density?.Value ?? 0,
+        DensityLevel = Density?.Value is { } level and not 0 ? level : null, // normal is stored as before: no level
         HardwareRendering = HardwareRendering,
         Language = Language?.Value ?? string.Empty,
         FetchSize = FetchSize,

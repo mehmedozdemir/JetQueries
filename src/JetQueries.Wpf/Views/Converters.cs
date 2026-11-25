@@ -80,9 +80,13 @@ public sealed class ExplorerIconConverter : IValueConverter
 
     public static ExplorerIconConverter Instance { get; } = new();
 
+    /// <summary>The folder icon, which a folder's template draws itself (in the folder's colour).</summary>
+    public const string FolderGlyph = Folder;
+
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value switch
     {
-        FolderNodeViewModel => Folder,
+        FolderNodeViewModel => null,
+        GroupNodeViewModel => null,
         // A connection shows the mark of its database type instead (in its template).
         ConnectionNodeViewModel => null,
         CategoryNodeViewModel => Group,
@@ -251,4 +255,25 @@ public sealed class EqualsToVisibilityConverter : IValueConverter
         string.Equals(value?.ToString(), parameter?.ToString(), StringComparison.Ordinal) ? Visibility.Visible : Visibility.Collapsed;
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => Binding.DoNothing;
+}
+
+/// <summary>A #RRGGBB text as a brush (folder colours); transparent when it is not one.</summary>
+public sealed class HexBrushConverter : IValueConverter
+{
+    public static HexBrushConverter Instance { get; } = new();
+
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is string text && FolderColors.IsColor(text))
+        {
+            var rgb = uint.Parse(text.AsSpan(1), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+            var brush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb((byte)(rgb >> 16), (byte)(rgb >> 8), (byte)rgb));
+            brush.Freeze();
+            return brush;
+        }
+
+        return System.Windows.Media.Brushes.Transparent;
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
 }

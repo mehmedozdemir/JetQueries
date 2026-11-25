@@ -108,6 +108,7 @@ public partial class ConnectionsView : UserControl
         {
             item.IsSelected = true;
             item.Focus();
+            (DataContext as ConnectionsViewModel)?.RefreshPicks();
         }
     }
 
@@ -127,16 +128,27 @@ public partial class ConnectionsView : UserControl
             return;
         }
 
-        // Ctrl+click picks several connections (to drag them into a folder together); a plain click forgets them,
-        // except on one of the picked ones, which starts dragging them all.
-        if (Keyboard.Modifiers == ModifierKeys.Control && node is ConnectionNodeViewModel connection)
+        // Ctrl+click picks several connections and folders (to drag, connect, delete or colour them together),
+        // Shift+click everything between the selected one and the clicked one; a plain click forgets them, except
+        // on one of the picked ones, which starts dragging them all.
+        if (Keyboard.Modifiers == ModifierKeys.Control && node is ConnectionNodeViewModel or FolderNodeViewModel)
         {
-            if (viewModel.MarkedConnections().Count == 0 && viewModel.Selected is ConnectionNodeViewModel { } current && !ReferenceEquals(current, connection))
+            if (viewModel.MarkedConnections().Count == 0 && viewModel.MarkedFolders().Count == 0 &&
+                viewModel.Selected is ConnectionNodeViewModel or FolderNodeViewModel && !ReferenceEquals(viewModel.Selected, node))
             {
-                current.IsMarked = true;
+                viewModel.Selected!.IsMarked = true;
             }
 
-            connection.IsMarked = !connection.IsMarked;
+            node!.IsMarked = !node.IsMarked;
+            viewModel.RefreshPicks();
+            e.Handled = true;
+        }
+        else if (Keyboard.Modifiers == ModifierKeys.Shift && node is ConnectionNodeViewModel or FolderNodeViewModel &&
+                 viewModel.Selected is ConnectionNodeViewModel or FolderNodeViewModel)
+        {
+            viewModel.ClearMarks();
+            viewModel.MarkRange(viewModel.Selected, node!);
+            viewModel.RefreshPicks();
             e.Handled = true;
         }
         else if (node is not { IsMarked: true })
@@ -243,14 +255,14 @@ public partial class ConnectionsView : UserControl
 
     private static FolderNodeViewModel? FindParent(IEnumerable<ExplorerNodeViewModel> nodes, ExplorerNodeViewModel target)
     {
-        foreach (var folder in nodes.OfType<FolderNodeViewModel>())
+        foreach (var container in nodes.Where(static n => n is FolderNodeViewModel or GroupNodeViewModel))
         {
-            if (folder.Children.Contains(target))
+            if (container is FolderNodeViewModel folder && folder.Children.Contains(target))
             {
                 return folder;
             }
 
-            if (FindParent(folder.Children, target) is { } inside)
+            if (FindParent(container.Children, target) is { } inside)
             {
                 return inside;
             }

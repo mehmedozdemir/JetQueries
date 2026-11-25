@@ -76,10 +76,53 @@ public sealed record NewQueryRequest(Guid ConnectionId, string? Database)
 }
 
 /// <summary>A folder grouping connections.</summary>
-public sealed class FolderNodeViewModel(string name, string path) : ExplorerNodeViewModel(name)
+public sealed partial class FolderNodeViewModel(string name, string path) : ExplorerNodeViewModel(name)
 {
     /// <summary>The folder's full path ("Customer A/Test").</summary>
     public string Path { get; } = path;
+
+    /// <summary>The folder's colour (#RRGGBB); null for the usual one.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasColor))]
+    public partial string? Color { get; set; }
+
+    public bool HasColor => Color is not null;
+}
+
+/// <summary>
+/// A group of the explorer's top level when connections are grouped by environment or database type: open unless
+/// the user closed it, which is remembered.
+/// </summary>
+public sealed class GroupNodeViewModel : ExplorerNodeViewModel
+{
+    private readonly Action<string, bool>? _expanded;
+
+    /// <param name="key">What identifies the group across sessions ("env:Production", "type:oracle").</param>
+    /// <param name="name">What it shows.</param>
+    /// <param name="expanded">Told when the user opens or closes the group.</param>
+    public GroupNodeViewModel(string key, string name, bool isExpanded, Action<string, bool>? expanded) : base(name)
+    {
+        Key = key;
+        IsExpanded = isExpanded;
+        _expanded = expanded;
+    }
+
+    public string Key { get; }
+
+    /// <summary>The environment of an environment group.</summary>
+    public ConnectionEnvironment? Environment { get; init; }
+
+    /// <summary>The mark of a database-type group.</summary>
+    public ProviderMark? Mark { get; init; }
+
+    /// <summary>Connections in the group.</summary>
+    public int Count { get; init; }
+
+    public bool IsEnvironment => Environment is not null;
+
+    public bool IsDatabaseType => Mark is not null;
+
+    protected override void OnExpanded(bool expanded) => _expanded?.Invoke(Key, expanded);
 }
 
 /// <summary>A saved connection and its live state.</summary>
@@ -233,6 +276,11 @@ public partial class ConnectionsViewModel(
     /// <summary>Whether <paramref name="dragged"/> may be dropped on <paramref name="target"/> (null: the top level).</summary>
     public static bool CanMove(ExplorerNodeViewModel? dragged, ExplorerNodeViewModel? target)
     {
+        if (target is GroupNodeViewModel)
+        {
+            return false;
+        }
+
         var into = FolderOf(target);
         return dragged switch
         {
@@ -286,7 +334,7 @@ public partial class ConnectionsViewModel(
     }
 
     private static IEnumerable<ExplorerNodeViewModel> AllNodes(IEnumerable<ExplorerNodeViewModel> nodes) =>
-        nodes.SelectMany(static n => n is FolderNodeViewModel folder ? (IEnumerable<ExplorerNodeViewModel>)[folder, .. AllNodes(folder.Children)] : [n]);
+        nodes.SelectMany(static n => n is FolderNodeViewModel or GroupNodeViewModel ? (IEnumerable<ExplorerNodeViewModel>)[n, .. AllNodes(n.Children)] : [n]);
 
     private static string Format2(string format, object? first, object? second) =>
         string.Format(CultureInfo.CurrentCulture, CompositeFormat.Parse(format), first, second);
@@ -403,7 +451,7 @@ public partial class ConnectionsViewModel(
                 return connection;
             }
 
-            if (node is FolderNodeViewModel folder && FindConnection(folder.Children, id) is { } inside)
+            if (node is FolderNodeViewModel or GroupNodeViewModel && FindConnection(node.Children, id) is { } inside)
             {
                 return inside;
             }
@@ -416,18 +464,27 @@ public partial class ConnectionsViewModel(
 
     public ObservableCollection<ExplorerNodeViewModel> Roots { get; } = [];
 
+    private Dictionary<string, string> _providerNames = new(StringComparer.Ordinal);
+
     /// <summary>The loaded providers: connections show the mark of their database type. Call on the UI thread.</summary>
     public void SetProviders(IEnumerable<IDatabaseProvider> providers)
     {
         ArgumentNullException.ThrowIfNull(providers);
-        _marks = providers.ToDictionary(static p => p.Id, ProviderMark.For, StringComparer.Ordinal);
+        var list = providers.ToList();
+        _marks = list.ToDictionary(static p => p.Id, ProviderMark.For, StringComparer.Ordinal);
+        _providerNames = list.ToDictionary(static p => p.Id, static p => p.DisplayName, StringComparer.Ordinal);
+        if (Grouping == ExplorerGrouping.DatabaseType && _loaded)
+        {
+            _ = LoadAsync();
+        }
+
         foreach (var node in Flatten(Roots).OfType<ConnectionNodeViewModel>())
         {
             node.Mark = MarkOf(node.Definition);
         }
 
         static IEnumerable<ExplorerNodeViewModel> Flatten(IEnumerable<ExplorerNodeViewModel> nodes) =>
-            nodes.SelectMany(static n => n is FolderNodeViewModel folder ? Flatten(folder.Children) : [n]);
+            nodes.SelectMany(static n => n is FolderNodeViewModel or GroupNodeViewModel ? Flatten(n.Children) : [n]);
     }
 
     private ProviderMark MarkOf(ConnectionDefinition definition) => _marks.GetValueOrDefault(definition.ProviderId) ?? ProviderMark.Default;
@@ -862,9 +919,10 @@ public partial class ConnectionsViewModel(
         var collapsed = AllFolders(Roots).Where(static f => !f.IsExpanded).Select(static f => f.Path).ToHashSet(StringComparer.OrdinalIgnoreCase);
         Roots.Clear();
         ExplorerNodeViewModel? reselect = null;
-        ObservableCollection<ExplorerNodeViewModel> FolderChildren(string path)
+        var grouping = Grouping;
+        ObservableCollection<ExplorerNodeViewModel> FolderChildren(string path, ObservableCollection<ExplorerNodeViewModel>? top = null)
         {
-            var siblings = Roots;
+            var siblings = top ?? Roots;
             var current = string.Empty;
             foreach (var part in path.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
             {
@@ -872,7 +930,7 @@ public partial class ConnectionsViewModel(
                 var folder = siblings.OfType<FolderNodeViewModel>().FirstOrDefault(f => string.Equals(f.Name, part, StringComparison.OrdinalIgnoreCase));
                 if (folder is null)
                 {
-                    folder = new FolderNodeViewModel(part, current) { IsExpanded = !firstLoad && !collapsed.Contains(current) };
+                    folder = new FolderNodeViewModel(part, current) { IsExpanded = !firstLoad && !collapsed.Contains(current), Color = folders?.ColorOf(current) };
 
                     // Folders stay above connections at every level, in name order.
                     var folderCount = siblings.Count(static n => n is FolderNodeViewModel);
@@ -891,14 +949,19 @@ public partial class ConnectionsViewModel(
             return siblings;
         }
 
-        foreach (var path in folders?.Paths ?? [])
+        // Empty folders exist only in the folder view; grouped, a group shows the folders of its connections.
+        if (grouping == ExplorerGrouping.Folders)
         {
-            FolderChildren(path);
+            foreach (var path in folders?.Paths ?? [])
+            {
+                FolderChildren(path);
+            }
         }
 
+        var groups = new Dictionary<string, GroupNodeViewModel>(StringComparer.Ordinal);
         foreach (var definition in definitions)
         {
-            var siblings = FolderChildren(definition.Folder);
+            var siblings = grouping == ExplorerGrouping.Folders ? FolderChildren(definition.Folder) : FolderChildren(definition.Folder, GroupOf(definition, definitions, groups).Children);
 
             var node = new ConnectionNodeViewModel(definition) { Mark = MarkOf(definition) };
             siblings.Add(node);
@@ -914,6 +977,11 @@ public partial class ConnectionsViewModel(
             }
         }
 
+        foreach (var group in OrderGroups(groups.Values))
+        {
+            Roots.Add(group);
+        }
+
         Selected = reselect;
         IsEmpty = definitions.Count == 0 && Roots.Count == 0;
         ApplyFilter();
@@ -923,8 +991,210 @@ public partial class ConnectionsViewModel(
         }
     }
 
+    // ---- Grouping ----
+
+    /// <summary>How the top level is grouped; kept between sessions.</summary>
+    public ExplorerGrouping Grouping => folders?.Grouping ?? _grouping;
+
+    private ExplorerGrouping _grouping;
+
+    public bool IsGroupedByFolders => Grouping == ExplorerGrouping.Folders;
+
+    public bool IsGroupedByEnvironment => Grouping == ExplorerGrouping.Environment;
+
+    public bool IsGroupedByType => Grouping == ExplorerGrouping.DatabaseType;
+
+    /// <summary>Groups the explorer by folders, environment or database type (the menu's choice) and rebuilds it.</summary>
+    [RelayCommand]
+    private async Task GroupByAsync(string? grouping)
+    {
+        if (!Enum.TryParse<ExplorerGrouping>(grouping, out var chosen) || chosen == Grouping)
+        {
+            return;
+        }
+
+        if (folders is not null)
+        {
+            folders.Grouping = chosen;
+        }
+        else
+        {
+            _grouping = chosen;
+        }
+
+        OnPropertyChanged(nameof(Grouping));
+        OnPropertyChanged(nameof(IsGroupedByFolders));
+        OnPropertyChanged(nameof(IsGroupedByEnvironment));
+        OnPropertyChanged(nameof(IsGroupedByType));
+        await LoadAsync();
+    }
+
+    private GroupNodeViewModel GroupOf(ConnectionDefinition definition, IReadOnlyList<ConnectionDefinition> all, Dictionary<string, GroupNodeViewModel> groups)
+    {
+        var key = Grouping == ExplorerGrouping.Environment ? "env:" + definition.Environment : "type:" + definition.ProviderId;
+        if (groups.TryGetValue(key, out var group))
+        {
+            return group;
+        }
+
+        var open = folders?.IsCollapsed(key) != true;
+        void Remember(string groupKey, bool expanded) => folders?.SetCollapsed(groupKey, !expanded);
+        group = Grouping == ExplorerGrouping.Environment
+            ? new GroupNodeViewModel(key, EnvironmentName(definition.Environment), open, Remember)
+            {
+                Environment = definition.Environment, Count = all.Count(d => d.Environment == definition.Environment),
+            }
+            : new GroupNodeViewModel(key, _providerNames.GetValueOrDefault(definition.ProviderId) ?? definition.ProviderId, open, Remember)
+            {
+                Mark = MarkOf(definition), Count = all.Count(d => d.ProviderId == definition.ProviderId),
+            };
+        groups[key] = group;
+        return group;
+    }
+
+    // Production first (what needs most care), unmarked last; types by name.
+    private static IEnumerable<GroupNodeViewModel> OrderGroups(IEnumerable<GroupNodeViewModel> groups) =>
+        groups.OrderBy(static g => g.Environment switch
+        {
+            ConnectionEnvironment.Production => 0,
+            ConnectionEnvironment.Test => 1,
+            ConnectionEnvironment.Development => 2,
+            null => 0,
+            _ => 3,
+        }).ThenBy(static g => g.Name, StringComparer.CurrentCultureIgnoreCase);
+
+    private static string EnvironmentName(ConnectionEnvironment environment) => environment switch
+    {
+        ConnectionEnvironment.Production => Strings.EnvironmentProduction,
+        ConnectionEnvironment.Test => Strings.EnvironmentTest,
+        ConnectionEnvironment.Development => Strings.EnvironmentDevelopment,
+        _ => Strings.EnvironmentUnspecifiedGroup,
+    };
+
+    // ---- Folder colours ----
+
+    /// <summary>The colours a folder can be given, for the menu.</summary>
+    public static IReadOnlyList<FolderColorOption> FolderColorOptions { get; } =
+        [.. FolderColors.Palette.Select(static c => new FolderColorOption(c.Color, Strings.Find("FolderColor_" + c.Name) ?? c.Name))];
+
+    /// <summary>Colours the selected folder and the other folders picked with Ctrl+click; null takes the colour away.</summary>
+    [RelayCommand]
+    private void SetFolderColor(string? color)
+    {
+        if (color is not null && !FolderColors.IsColor(color))
+        {
+            return;
+        }
+
+        var targets = AllFolders(Roots).Where(f => f.IsMarked || ReferenceEquals(f, Selected)).Select(static f => f.Path).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var path in targets)
+        {
+            folders?.SetColor(path, color);
+        }
+
+        // The same folder may stand in several groups.
+        foreach (var folder in AllFolders(Roots).Where(f => targets.Contains(f.Path)))
+        {
+            folder.Color = color;
+        }
+    }
+
+    // ---- Picking several (Ctrl+click, Shift+click) ----
+
+    /// <summary>The folders picked with Ctrl+click.</summary>
+    public IReadOnlyList<FolderNodeViewModel> MarkedFolders() => [.. AllFolders(Roots).Where(static f => f.IsMarked)];
+
+    /// <summary>Picks the connections and folders shown between two nodes (Shift+click), in the tree's order.</summary>
+    public void MarkRange(ExplorerNodeViewModel from, ExplorerNodeViewModel to)
+    {
+        ArgumentNullException.ThrowIfNull(from);
+        ArgumentNullException.ThrowIfNull(to);
+        var shown = Shown(Roots).Where(static n => n is ConnectionNodeViewModel or FolderNodeViewModel).ToList();
+        var (a, b) = (shown.IndexOf(from), shown.IndexOf(to));
+        if (a < 0 || b < 0)
+        {
+            return;
+        }
+
+        foreach (var node in shown.Skip(Math.Min(a, b)).Take(Math.Abs(a - b) + 1))
+        {
+            node.IsMarked = true;
+        }
+
+        static IEnumerable<ExplorerNodeViewModel> Shown(IEnumerable<ExplorerNodeViewModel> nodes) =>
+            nodes.Where(static n => n.IsVisible).SelectMany(static n =>
+                n is FolderNodeViewModel or GroupNodeViewModel && n.IsExpanded ? (IEnumerable<ExplorerNodeViewModel>)[n, .. Shown(n.Children)] : [n]);
+    }
+
+    /// <summary>Several connections are picked: the menu offers to connect, disconnect or delete them together.</summary>
+    public bool HasSeveralPicked => MarkedConnections().Count > 1;
+
+    /// <summary>Tells the menu that the picks changed.</summary>
+    public void RefreshPicks() => OnPropertyChanged(nameof(HasSeveralPicked));
+
+    /// <summary>Connects every picked connection that is not connected.</summary>
+    [RelayCommand]
+    private async Task ConnectPickedAsync()
+    {
+        foreach (var node in MarkedConnections().Where(static c => !c.IsConnected && !c.IsBusy).ToList())
+        {
+            Selected = node;
+            await ToggleConnectionAsync();
+        }
+    }
+
+    /// <summary>Disconnects every picked connection that is connected.</summary>
+    [RelayCommand]
+    private async Task DisconnectPickedAsync()
+    {
+        foreach (var node in MarkedConnections().Where(static c => c.IsConnected && !c.IsBusy).ToList())
+        {
+            Selected = node;
+            await ToggleConnectionAsync();
+        }
+    }
+
+    /// <summary>Deletes every picked connection, after one question.</summary>
+    [RelayCommand]
+    private async Task DeletePickedAsync()
+    {
+        var picked = MarkedConnections();
+        if (picked.Count == 0)
+        {
+            return;
+        }
+
+        var message = string.Format(CultureInfo.CurrentCulture, CompositeFormat.Parse(Strings.DeleteManyConfirmMessage), picked.Count,
+            string.Join(", ", picked.Take(8).Select(static c => c.Name)) + (picked.Count > 8 ? ", …" : string.Empty));
+        if (!await dialogs.ConfirmAsync(Strings.DeleteConfirmTitle, message))
+        {
+            return;
+        }
+
+        var ids = picked.Select(static c => c.Definition.Id).ToList();
+        await jobs.Enqueue(
+            "Delete connections",
+            async context =>
+            {
+                foreach (var id in ids)
+                {
+                    await manager.CloseAsync(id).ConfigureAwait(false);
+                    await store.DeleteAsync(id, context.CancellationToken).ConfigureAwait(false);
+                    await credentials.DeletePasswordAsync(id, context.CancellationToken).ConfigureAwait(false);
+                    await credentials.DeletePasswordAsync(SshTunnel.SecretId(id), context.CancellationToken).ConfigureAwait(false);
+                }
+            },
+            JobPriority.High).Completion;
+        await LoadAsync();
+    }
+
     private static IEnumerable<FolderNodeViewModel> AllFolders(IEnumerable<ExplorerNodeViewModel> nodes) =>
-        nodes.OfType<FolderNodeViewModel>().SelectMany(static f => (IEnumerable<FolderNodeViewModel>)[f, .. AllFolders(f.Children)]);
+        nodes.SelectMany(static n => n switch
+        {
+            FolderNodeViewModel f => (IEnumerable<FolderNodeViewModel>)[f, .. AllFolders(f.Children)],
+            GroupNodeViewModel g => AllFolders(g.Children),
+            _ => [],
+        });
 
     [RelayCommand]
     private Task RefreshAsync() => LoadAsync();
@@ -954,6 +1224,7 @@ public partial class ConnectionsViewModel(
     [RelayCommand]
     private Task DeleteSelectedAsync() => Selected switch
     {
+        _ when HasSeveralPicked => DeletePickedAsync(),
         FolderNodeViewModel folder => DeleteFolderAsync(folder),
         ConnectionNodeViewModel when DeleteCommand.CanExecute(null) => DeleteAsync(),
         _ => Task.CompletedTask,
@@ -1101,3 +1372,6 @@ public partial class ConnectionsViewModel(
         OnPropertyChanged(nameof(ToggleConnectionText));
     }
 }
+
+/// <summary>A colour in the folder menu.</summary>
+public sealed record FolderColorOption(string Color, string Name);

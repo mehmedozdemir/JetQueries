@@ -813,3 +813,9 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] Settings > Appearance: the light theme offers Sepya, Adaçayı, Sis; the dark one Arduvaz, Kırağı, Mokka, Orman. Each applies at once: editor, grid, explorer, dialogs readable; primary buttons' text readable on the accent.
 - [ ] The explorer, the connection type chooser and query tabs show the SQL Server, Oracle, PostgreSQL, SQLite and Redis logos, told apart at a glance in both themes.
 
+## Density levels, explorer grouping, folder colours, picking several
+- [ ] Settings > Appearance > Yoğunluk: − and + step through Çok sıkı … Geniş; the window follows at once (toolbars, tabs, explorer rows, result rows). Cancel brings back the previous level; restart keeps the saved one. View > Kompakt mod switches compact and normal.
+- [ ] Explorer "…" > Gruplama > Ortam: groups Üretim, Test, Geliştirme, Ortamı belirtilmemiş with counts, folders inside; close one, restart: still closed, grouping kept. > Veritabanı türü: groups with the logos. > Klasörler: back to the usual tree (empty folders too).
+- [ ] A folder's menu > Renk > Kırmızı: its icon turns red; Ctrl+click another folder, colour both; Renk yok removes it. Rename or move the folder: the colour stays.
+- [ ] Ctrl+click several connections (and Shift+click a range): right-click offers Seçilen bağlantıları bağla / bağlantısını kes / sil; Del asks once for all; dragging one of them moves them all into a folder.
+
