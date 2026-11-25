@@ -162,6 +162,14 @@ public static class Strings
     public static string FilterClear => Get(nameof(FilterClear));
     public static string FilterValueRequired => Get(nameof(FilterValueRequired));
     public static string FilterClearAll => Get(nameof(FilterClearAll));
+    public static string EditorFormatTip => Get(nameof(EditorFormatTip));
+    public static string EditorCommentTip => Get(nameof(EditorCommentTip));
+    public static string EditorUpperTip => Get(nameof(EditorUpperTip));
+    public static string EditorLowerTip => Get(nameof(EditorLowerTip));
+    public static string EditorUndoTip => Get(nameof(EditorUndoTip));
+    public static string EditorRedoTip => Get(nameof(EditorRedoTip));
+    public static string FieldEditorTools => Get(nameof(FieldEditorTools));
+    public static string SettingEditorToolsInfo => Get(nameof(SettingEditorToolsInfo));
     public static string GridOpIsEmpty => Get(nameof(GridOpIsEmpty));
     public static string GridOpIsNotEmpty => Get(nameof(GridOpIsNotEmpty));
     public static string GridClearFilters => Get(nameof(GridClearFilters));

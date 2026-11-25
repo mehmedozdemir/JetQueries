@@ -41,6 +41,29 @@
                 <Border Style="{StaticResource Separator.Vertical}" Margin="6,0" />
             </StackPanel>
 
+            <!-- Editing the SQL: format, comment lines, change case, undo/redo (Settings can hide them) -->
+            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Margin="0,0,8,0" Visibility="{DynamicResource EditorTools.Visibility}">
+                <Button x:Name="FormatButton" Style="{StaticResource Btn.Icon.Compact}" c:Ui.Icon="&#xE8E4;" Click="OnToolbarEdit" Tag="Format"
+                        ToolTip="{x:Static res:Strings.EditorFormatTip}" AutomationProperties.Name="{x:Static res:Strings.EditorFormat}" />
+                <Button Style="{StaticResource Btn.Toolbar.Compact}" Click="OnToolbarEdit" Tag="Comment" Padding="7,0"
+                        ToolTip="{x:Static res:Strings.EditorCommentTip}" AutomationProperties.Name="{x:Static res:Strings.EditorToggleComment}">
+                    <TextBlock Text="--" FontFamily="{DynamicResource Font.Code}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                </Button>
+                <Button Style="{StaticResource Btn.Toolbar.Compact}" Click="OnToolbarEdit" Tag="Upper" Padding="7,0"
+                        ToolTip="{x:Static res:Strings.EditorUpperTip}" AutomationProperties.Name="{x:Static res:Strings.EditorUpperCase}">
+                    <TextBlock Text="AB" FontWeight="SemiBold" VerticalAlignment="Center" />
+                </Button>
+                <Button Style="{StaticResource Btn.Toolbar.Compact}" Click="OnToolbarEdit" Tag="Lower" Padding="7,0"
+                        ToolTip="{x:Static res:Strings.EditorLowerTip}" AutomationProperties.Name="{x:Static res:Strings.EditorLowerCase}">
+                    <TextBlock Text="ab" FontWeight="SemiBold" VerticalAlignment="Center" />
+                </Button>
+                <Button Style="{StaticResource Btn.Icon.Compact}" c:Ui.Icon="&#xE7A7;" Click="OnToolbarEdit" Tag="Undo"
+                        ToolTip="{x:Static res:Strings.EditorUndoTip}" AutomationProperties.Name="{x:Static res:Strings.EditorUndoTip}" />
+                <Button Style="{StaticResource Btn.Icon.Compact}" c:Ui.Icon="&#xE7A6;" Click="OnToolbarEdit" Tag="Redo"
+                        ToolTip="{x:Static res:Strings.EditorRedoTip}" AutomationProperties.Name="{x:Static res:Strings.EditorRedoTip}" />
+                <Border Style="{StaticResource Separator.Vertical}" Margin="6,0" />
+            </StackPanel>
+
             <!-- The tab's connection, in its environment's colour: always in sight, so that SQL never runs on the wrong server.
                  Another open connection can be chosen (not while running or with a transaction open). -->
             <ComboBox x:Name="ConnectionBox" DockPanel.Dock="Left" ItemsSource="{Binding Sessions}" SelectedItem="{Binding SelectedSession}"
