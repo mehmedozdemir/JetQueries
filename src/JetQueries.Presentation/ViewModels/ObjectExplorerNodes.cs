@@ -134,10 +134,13 @@ public sealed class DatabaseObjectNodeViewModel(ExplorerContext context, Databas
     : LazyNodeViewModel(databaseObject.Name.Name, ExplorerTree.HasChildren(databaseObject.Kind))
 {
     /// <summary>A database whose provider gives performance advice: its performance analysis can be opened.</summary>
-    public bool CanAnalyze => Target.Kind == DatabaseObjectKinds.Database && Session.SupportsPerformance;
+    public bool CanAnalyze => IsDatabase && Session.SupportsPerformance;
 
     /// <summary>A database whose provider shows database details: its detail screen can be opened.</summary>
-    public bool CanDetail => Target.Kind == DatabaseObjectKinds.Database && Session.SupportsDatabaseDetails;
+    public bool CanDetail => IsDatabase && Session.SupportsDatabaseDetails;
+
+    /// <summary>A database, or a schema where the provider's databases are schemas (Oracle).</summary>
+    private bool IsDatabase => Target.Kind == DatabaseObjectKinds.Database || (Target.Kind == DatabaseObjectKinds.Schema && Session.DatabasesAreSchemas);
 
     public override bool HasDbaTools => CanAnalyze || CanDetail;
 

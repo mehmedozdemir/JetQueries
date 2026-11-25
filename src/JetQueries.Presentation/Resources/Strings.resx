@@ -988,6 +988,42 @@ What it is running stops and its open transaction is rolled back; the client get
   <data name="DbProp_connectionLimit" xml:space="preserve"><value>Connection limit</value></data>
   <data name="DbProp_allowConnections" xml:space="preserve"><value>Allow connections</value></data>
   <data name="DbProp_tablespace" xml:space="preserve"><value>Tablespace</value></data>
+  <data name="Rule_ArchiveLog_Title" xml:space="preserve"><value>The database runs in NOARCHIVELOG mode</value></data>
+  <data name="Rule_ArchiveLog_Why" xml:space="preserve"><value>Without archived redo logs the database can only be restored to the last cold backup; every change after it is lost, and online (hot) backups are not possible.</value></data>
+  <data name="Rule_ArchiveLog_Fix" xml:space="preserve"><value>In a maintenance window: SHUTDOWN IMMEDIATE, STARTUP MOUNT, ALTER DATABASE ARCHIVELOG, ALTER DATABASE OPEN; configure a recovery area and back the archived logs up.</value></data>
+  <data name="Rule_RmanBackup_Title" xml:space="preserve"><value>No recent RMAN backup</value></data>
+  <data name="Rule_RmanBackup_Why" xml:space="preserve"><value>RMAN has recorded no completed full or incremental database backup in the last 7 days; a lost disk or a bad change could not be undone.</value></data>
+  <data name="Rule_RmanBackup_Fix" xml:space="preserve"><value>Schedule RMAN backups (for example a weekly level 0 and daily level 1 with archived logs). If backups are taken by another tool (storage snapshots, a backup agent), confirm them there.</value></data>
+  <data name="Rule_RecoveryArea_Title" xml:space="preserve"><value>The recovery area is nearly full</value></data>
+  <data name="Rule_RecoveryArea_Why" xml:space="preserve"><value>Archived logs, backups and flashback logs go to the fast recovery area; when it is full the database cannot archive redo and stops accepting changes.</value></data>
+  <data name="Rule_RecoveryArea_Fix" xml:space="preserve"><value>Back up and delete archived logs with RMAN (DELETE ARCHIVELOG ALL BACKED UP 1 TIMES TO DEVICE TYPE DISK), remove obsolete backups, or raise DB_RECOVERY_FILE_DEST_SIZE.</value></data>
+  <data name="Rule_TablespaceFull_Title" xml:space="preserve"><value>A tablespace is nearly full</value></data>
+  <data name="Rule_TablespaceFull_Why" xml:space="preserve"><value>The percentage counts the space the data files can still grow to. When a tablespace is full, inserts and index builds in it fail with ORA-01653/01654.</value></data>
+  <data name="Rule_TablespaceFull_Fix" xml:space="preserve"><value>Add a data file or let one autoextend further (ALTER TABLESPACE … ADD DATAFILE … AUTOEXTEND ON MAXSIZE …), or purge data and the recycle bin.</value></data>
+  <data name="Rule_InvalidObjects_Title" xml:space="preserve"><value>Objects are invalid</value></data>
+  <data name="Rule_InvalidObjects_Why" xml:space="preserve"><value>Views, packages, procedures or triggers became invalid after a change to something they depend on; Oracle recompiles them on first use, and the call fails if they still do not compile.</value></data>
+  <data name="Rule_InvalidObjects_Fix" xml:space="preserve"><value>Recompile the schemas (the script below) and fix what still does not compile; the errors are in ALL_ERRORS.</value></data>
+  <data name="Rule_UnusableIndexes_Title" xml:space="preserve"><value>Indexes are unusable</value></data>
+  <data name="Rule_UnusableIndexes_Why" xml:space="preserve"><value>An unusable index (after a table move or a partition operation) is skipped by queries and makes DML on its table fail if it is unique.</value></data>
+  <data name="Rule_UnusableIndexes_Fix" xml:space="preserve"><value>Rebuild them (the script below).</value></data>
+  <data name="Rule_OracleStats_Title" xml:space="preserve"><value>Optimizer statistics are stale or missing</value></data>
+  <data name="Rule_OracleStats_Why" xml:space="preserve"><value>The optimizer chooses plans from table statistics; when they are missing or no longer match the data, it can pick full scans or bad join orders.</value></data>
+  <data name="Rule_OracleStats_Fix" xml:space="preserve"><value>Gather them (the script below) and check the automatic statistics job runs in the maintenance window (DBA_AUTOTASK_CLIENT).</value></data>
+  <data name="Rule_DefaultPasswords_Title" xml:space="preserve"><value>Accounts use default passwords</value></data>
+  <data name="Rule_DefaultPasswords_Why" xml:space="preserve"><value>These open accounts still have the well-known password Oracle shipped them with; anyone who knows the list can log in.</value></data>
+  <data name="Rule_DefaultPasswords_Fix" xml:space="preserve"><value>Change their passwords, or lock the accounts that are not used (ALTER USER … ACCOUNT LOCK).</value></data>
+  <data name="Rule_DbaRole_Title" xml:space="preserve"><value>Many accounts have the DBA role</value></data>
+  <data name="Rule_DbaRole_Why" xml:space="preserve"><value>The DBA role can read and change everything in the database; each extra account that holds it is a risk.</value></data>
+  <data name="Rule_DbaRole_Fix" xml:space="preserve"><value>Keep DBA to the administrators; give applications only the privileges they need (or roles such as SELECT_CATALOG_ROLE).</value></data>
+  <data name="Rule_ProcessLimit_Title" xml:space="preserve"><value>Sessions or processes come close to their limit</value></data>
+  <data name="Rule_ProcessLimit_Why" xml:space="preserve"><value>Since the instance started, sessions or processes peaked above 80 % of the configured limit; at the limit new connections fail with ORA-00018/00020.</value></data>
+  <data name="Rule_ProcessLimit_Fix" xml:space="preserve"><value>Find what opens so many connections (a pool sized too large, leaked connections); raise PROCESSES (restart needed) if the load is real.</value></data>
+  <data name="DbProp_accountStatus" xml:space="preserve"><value>Account status</value></data>
+  <data name="DbProp_defaultTablespace" xml:space="preserve"><value>Default tablespace</value></data>
+  <data name="DbProp_temporaryTablespace" xml:space="preserve"><value>Temporary tablespace</value></data>
+  <data name="DbProp_profile" xml:space="preserve"><value>Profile</value></data>
+  <data name="DbProp_passwordExpires" xml:space="preserve"><value>Password expires</value></data>
+  <data name="DbProp_authentication" xml:space="preserve"><value>Authentication</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Clear all</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Remove filter</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} of {1:N0} rows</value></data>
