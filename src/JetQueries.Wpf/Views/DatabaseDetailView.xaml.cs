@@ -52,17 +52,28 @@ public partial class DatabaseDetailView : UserControl
             return;
         }
 
-        Show(TablesGrid, DatabaseDetailViewModel.TableColumns, [GridColumnKind.Text, GridColumnKind.Integer, GridColumnKind.Number, GridColumnKind.Number, GridColumnKind.Number],
+        Show(Tables, DatabaseDetailViewModel.TableColumns, [GridColumnKind.Text, GridColumnKind.Integer, GridColumnKind.Number, GridColumnKind.Number, GridColumnKind.Number],
             viewModel.TableRows, TablesSchema);
-        Show(FilesGrid, DatabaseDetailViewModel.FileColumns,
+        Show(Files, DatabaseDetailViewModel.FileColumns,
             [GridColumnKind.Text, GridColumnKind.Text, GridColumnKind.Text, GridColumnKind.Number, GridColumnKind.Number, GridColumnKind.Number, GridColumnKind.Text, GridColumnKind.Text, GridColumnKind.Text],
             viewModel.FileRows, FilesSchema);
-        Show(BackupsGrid, DatabaseDetailViewModel.BackupColumns,
+        Show(Backups, DatabaseDetailViewModel.BackupColumns,
             [GridColumnKind.Text, GridColumnKind.Text, GridColumnKind.Number, GridColumnKind.Number, GridColumnKind.Number, GridColumnKind.Text, GridColumnKind.Text],
             viewModel.BackupRows, BackupsSchema);
     }
 
-    // An empty table must not fix the widths the first rows are measured by.
-    private static void Show(VirtualGrid grid, IReadOnlyList<string> headers, GridColumnKind[] kinds, IReadOnlyList<IReadOnlyList<string?>> rows, object schema) =>
-        grid.Source = new ArrayGridDataSource([.. headers], kinds, rows.Count, (r, c) => rows[r][c], rows.Count == 0 ? new object() : schema);
+    private static void Show(DbaGrid grid, IReadOnlyList<string> headers, GridColumnKind[] kinds, IReadOnlyList<IReadOnlyList<string?>> rows, object schema) =>
+        grid.Show([.. headers], kinds, rows.Count, (r, c) => rows[r][c], schema);
+
+    private DbaGrid Tables => _tables ??= new DbaGrid(TablesGrid, () => _viewModel?.Exporter, () => ExportName(Strings.DbLargestTables));
+
+    private DbaGrid Files => _files ??= new DbaGrid(FilesGrid, () => _viewModel?.Exporter, () => ExportName(Strings.DbFiles));
+
+    private DbaGrid Backups => _backups ??= new DbaGrid(BackupsGrid, () => _viewModel?.Exporter, () => ExportName(Strings.DbBackups));
+
+    private DbaGrid? _tables;
+    private DbaGrid? _files;
+    private DbaGrid? _backups;
+
+    private string ExportName(string table) => (_viewModel?.HeaderText ?? "database") + " - " + table;
 }

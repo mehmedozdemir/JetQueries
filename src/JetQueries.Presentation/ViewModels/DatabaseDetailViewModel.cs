@@ -116,6 +116,9 @@ public sealed partial class DatabaseDetailViewModel : ObservableObject, IAsyncDi
     public static IReadOnlyList<string> BackupColumns { get; } =
         [Strings.PerfColKind, Strings.DbColFinished, Strings.DbColTook, Strings.PerfColSize, Strings.DbColCompressed, Strings.DbColCopyOnly, Strings.DbColDevice];
 
+    /// <summary>Exports the screen's tables as shown (null in tests and where no dialogs are).</summary>
+    public GridExporter? Exporter { get; init; }
+
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(CancelLoadCommand))]
     public partial bool IsLoading { get; set; }

@@ -22,7 +22,20 @@ public partial class PerformanceView : UserControl
         InitializeComponent();
         DataContextChanged += (_, e) => Attach(e.NewValue as PerformanceViewModel);
         RowsGrid.CurrentCellChanged += OnCurrentCellChanged;
+        _rows = new DbaGrid(RowsGrid, () => _viewModel?.Exporter, () => (_viewModel?.HeaderText ?? "performance") + " - " + SectionName(_viewModel?.Section));
     }
+
+    private readonly DbaGrid _rows;
+
+    private static string SectionName(PerformanceSection? section) => section switch
+    {
+        PerformanceSection.MissingIndexes => Strings.PerfSectionMissing,
+        PerformanceSection.IndexUsage => Strings.PerfSectionUsage,
+        PerformanceSection.Fragmentation => Strings.PerfSectionFragmentation,
+        _ => Strings.PerfSectionHeavy,
+    };
+
+    private async void OnExport(object sender, RoutedEventArgs e) => await _rows.ExportAsync();
 
     /// <summary>The grid, for tests.</summary>
     internal VirtualGrid Grid => RowsGrid;
@@ -73,15 +86,14 @@ public partial class PerformanceView : UserControl
         _moving = true;
         try
         {
-            RowsGrid.Source = new ArrayGridDataSource(
+            _rows.Show(
                 [.. table.Headers],
                 [.. table.Numeric.Select(static n => n ? GridColumnKind.Number : GridColumnKind.Text)],
                 rows.Count,
                 (r, c) => c < rows[r].Cells.Count ? rows[r].Cells[c] : null,
-                // An empty table must not fix the widths the first rows are measured by.
-                rows.Count == 0 ? new object() : Schemas[viewModel.Section]);
+                Schemas[viewModel.Section]);
             EmptyText.Visibility = rows.Count == 0 && !viewModel.IsLoading && !viewModel.NeedsDatabase ? Visibility.Visible : Visibility.Collapsed;
-            var index = viewModel.Selected is { } chosen ? IndexOf(rows, chosen) : -1;
+            var index = viewModel.Selected is { } chosen ? _rows.ToShown(IndexOf(rows, chosen)) : -1;
             if (index >= 0)
             {
                 RowsGrid.MoveTo(index, 0);
@@ -113,7 +125,7 @@ public partial class PerformanceView : UserControl
             return;
         }
 
-        var row = RowsGrid.CurrentRow;
+        var row = _rows.ToSource(RowsGrid.CurrentRow);
         var rows = viewModel.Table.Rows;
         viewModel.Selected = row >= 0 && row < rows.Count ? rows[row] : null;
     }
