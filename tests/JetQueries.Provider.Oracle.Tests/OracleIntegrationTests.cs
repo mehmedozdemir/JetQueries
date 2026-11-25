@@ -26,6 +26,9 @@ public sealed class OracleFixture : IAsyncLifetime
 
     public ConnectionCredential Credential { get; private set; } = null!;
 
+    /// <summary>SYSTEM (the image gives it the app user's password): the DBA screens read V$ and DBA_ views.</summary>
+    public ConnectionCredential SystemCredential { get; private set; } = null!;
+
     public async ValueTask InitializeAsync()
     {
         if (!string.Equals(Environment.GetEnvironmentVariable(OptInVariable), "Y", StringComparison.OrdinalIgnoreCase))
@@ -49,6 +52,7 @@ public sealed class OracleFixture : IAsyncLifetime
 
         var builder = new OracleConnectionStringBuilder(_container.GetConnectionString());
         Credential = new ConnectionCredential(builder.UserID, builder.Password);
+        SystemCredential = new ConnectionCredential("system", builder.Password);
         Profile = new ConnectionProfile(Guid.NewGuid(), "container", OracleProvider.ProviderId, new Dictionary<string, string>
         {
             ["host"] = _container.Hostname,

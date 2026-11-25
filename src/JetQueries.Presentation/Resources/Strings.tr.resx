@@ -988,6 +988,42 @@
   <data name="DbProp_connectionLimit" xml:space="preserve"><value>Bağlantı sınırı</value></data>
   <data name="DbProp_allowConnections" xml:space="preserve"><value>Bağlantıya açık</value></data>
   <data name="DbProp_tablespace" xml:space="preserve"><value>Tablespace</value></data>
+  <data name="Rule_ArchiveLog_Title" xml:space="preserve"><value>Veritabanı NOARCHIVELOG modunda çalışıyor</value></data>
+  <data name="Rule_ArchiveLog_Why" xml:space="preserve"><value>Arşivlenmiş redo log'lar olmadan veritabanı yalnızca son soğuk yedeğe geri döndürülebilir; sonrasındaki tüm değişiklikler kaybolur ve çevrimiçi (hot) yedek alınamaz.</value></data>
+  <data name="Rule_ArchiveLog_Fix" xml:space="preserve"><value>Bakım penceresinde: SHUTDOWN IMMEDIATE, STARTUP MOUNT, ALTER DATABASE ARCHIVELOG, ALTER DATABASE OPEN; bir recovery area ayarlayın ve arşivlenmiş log'ları yedekleyin.</value></data>
+  <data name="Rule_RmanBackup_Title" xml:space="preserve"><value>Yakın tarihli RMAN yedeği yok</value></data>
+  <data name="Rule_RmanBackup_Why" xml:space="preserve"><value>RMAN son 7 günde tamamlanmış bir tam ya da artımlı veritabanı yedeği kaydetmemiş; bir disk kaybı ya da hatalı bir değişiklik geri alınamaz.</value></data>
+  <data name="Rule_RmanBackup_Fix" xml:space="preserve"><value>RMAN yedeklerini zamanlayın (örneğin haftalık level 0 ve günlük level 1, arşivlenmiş log'larla). Yedekler başka bir araçla alınıyorsa (depolama snapshot'ları, bir yedekleme ajanı) orada doğrulayın.</value></data>
+  <data name="Rule_RecoveryArea_Title" xml:space="preserve"><value>Recovery area neredeyse dolu</value></data>
+  <data name="Rule_RecoveryArea_Why" xml:space="preserve"><value>Arşivlenmiş log'lar, yedekler ve flashback log'ları fast recovery area'ya yazılır; alan dolunca veritabanı redo arşivleyemez ve değişiklik kabul etmeyi bırakır.</value></data>
+  <data name="Rule_RecoveryArea_Fix" xml:space="preserve"><value>Arşivlenmiş log'ları RMAN ile yedekleyip silin (DELETE ARCHIVELOG ALL BACKED UP 1 TIMES TO DEVICE TYPE DISK), eskimiş yedekleri kaldırın ya da DB_RECOVERY_FILE_DEST_SIZE değerini artırın.</value></data>
+  <data name="Rule_TablespaceFull_Title" xml:space="preserve"><value>Bir tablespace neredeyse dolu</value></data>
+  <data name="Rule_TablespaceFull_Why" xml:space="preserve"><value>Yüzde, veri dosyalarının hâlâ büyüyebileceği alanı da hesaba katar. Tablespace dolunca içindeki insert'ler ve index oluşturma ORA-01653/01654 ile başarısız olur.</value></data>
+  <data name="Rule_TablespaceFull_Fix" xml:space="preserve"><value>Bir veri dosyası ekleyin ya da birinin daha fazla büyümesine izin verin (ALTER TABLESPACE … ADD DATAFILE … AUTOEXTEND ON MAXSIZE …) veya veriyi ve geri dönüşüm kutusunu temizleyin.</value></data>
+  <data name="Rule_InvalidObjects_Title" xml:space="preserve"><value>Geçersiz nesneler var</value></data>
+  <data name="Rule_InvalidObjects_Why" xml:space="preserve"><value>View, paket, prosedür ya da trigger'lar bağlı oldukları bir şey değiştiği için geçersiz hale gelmiş; Oracle ilk kullanımda yeniden derler, hâlâ derlenmiyorsa çağrı hata verir.</value></data>
+  <data name="Rule_InvalidObjects_Fix" xml:space="preserve"><value>Şemaları yeniden derleyin (aşağıdaki betik) ve hâlâ derlenmeyenleri düzeltin; hatalar ALL_ERRORS'ta.</value></data>
+  <data name="Rule_UnusableIndexes_Title" xml:space="preserve"><value>Kullanılamaz index'ler var</value></data>
+  <data name="Rule_UnusableIndexes_Why" xml:space="preserve"><value>Kullanılamaz bir index (tablo taşıma ya da partition işleminden sonra) sorgularda atlanır; unique ise tablosundaki DML işlemlerini başarısız yapar.</value></data>
+  <data name="Rule_UnusableIndexes_Fix" xml:space="preserve"><value>Bunları yeniden oluşturun (aşağıdaki betik).</value></data>
+  <data name="Rule_OracleStats_Title" xml:space="preserve"><value>Optimizer istatistikleri eski ya da eksik</value></data>
+  <data name="Rule_OracleStats_Why" xml:space="preserve"><value>Optimizer planları tablo istatistiklerine göre seçer; eksik ya da veriyle artık uyuşmuyorsa tam tarama ya da kötü join sıraları seçebilir.</value></data>
+  <data name="Rule_OracleStats_Fix" xml:space="preserve"><value>İstatistikleri toplayın (aşağıdaki betik) ve otomatik istatistik işinin bakım penceresinde çalıştığını kontrol edin (DBA_AUTOTASK_CLIENT).</value></data>
+  <data name="Rule_DefaultPasswords_Title" xml:space="preserve"><value>Hesaplar varsayılan parolaları kullanıyor</value></data>
+  <data name="Rule_DefaultPasswords_Why" xml:space="preserve"><value>Bu açık hesaplar hâlâ Oracle'ın verdiği, herkesçe bilinen parolayı kullanıyor; listeyi bilen herkes oturum açabilir.</value></data>
+  <data name="Rule_DefaultPasswords_Fix" xml:space="preserve"><value>Parolalarını değiştirin ya da kullanılmayan hesapları kilitleyin (ALTER USER … ACCOUNT LOCK).</value></data>
+  <data name="Rule_DbaRole_Title" xml:space="preserve"><value>Çok sayıda hesap DBA rolüne sahip</value></data>
+  <data name="Rule_DbaRole_Why" xml:space="preserve"><value>DBA rolü veritabanındaki her şeyi okuyup değiştirebilir; bu role sahip her fazladan hesap bir risktir.</value></data>
+  <data name="Rule_DbaRole_Fix" xml:space="preserve"><value>DBA rolünü yöneticilerle sınırlayın; uygulamalara yalnızca ihtiyaç duydukları yetkileri verin (ya da SELECT_CATALOG_ROLE gibi roller).</value></data>
+  <data name="Rule_ProcessLimit_Title" xml:space="preserve"><value>Oturumlar ya da süreçler sınıra yaklaşıyor</value></data>
+  <data name="Rule_ProcessLimit_Why" xml:space="preserve"><value>Instance başladığından beri oturum ya da süreç sayısı ayarlı sınırın %80'inin üzerine çıkmış; sınırda yeni bağlantılar ORA-00018/00020 ile başarısız olur.</value></data>
+  <data name="Rule_ProcessLimit_Fix" xml:space="preserve"><value>Bu kadar bağlantıyı neyin açtığını bulun (fazla büyük bir havuz, kapanmayan bağlantılar); yük gerçekse PROCESSES değerini artırın (yeniden başlatma gerekir).</value></data>
+  <data name="DbProp_accountStatus" xml:space="preserve"><value>Hesap durumu</value></data>
+  <data name="DbProp_defaultTablespace" xml:space="preserve"><value>Varsayılan tablespace</value></data>
+  <data name="DbProp_temporaryTablespace" xml:space="preserve"><value>Geçici tablespace</value></data>
+  <data name="DbProp_profile" xml:space="preserve"><value>Profil</value></data>
+  <data name="DbProp_passwordExpires" xml:space="preserve"><value>Parola bitiş tarihi</value></data>
+  <data name="DbProp_authentication" xml:space="preserve"><value>Kimlik doğrulama</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Tümünü temizle</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Filtreyi kaldır</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} / {1:N0} satır</value></data>

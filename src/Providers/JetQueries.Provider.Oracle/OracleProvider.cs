@@ -327,8 +327,31 @@ public sealed class OracleProvider : IDatabaseProvider, IBulkInsertScripting, IR
 }
 
 internal sealed class OracleDatabaseConnection(OracleConnection connection, string? connectionString = null, string? sid = null, long? serial = null)
-    : IDatabaseConnection, IDatabaseContext, ITransactionControl
+    : IDatabaseConnection, IDatabaseContext, ITransactionControl, IActivityMonitor, IPerformanceAdvisor, IServerDashboard, IHealthCheck, IDatabaseDetails
 {
+    public Task<ActivitySnapshot> GetActivityAsync(CancellationToken cancellationToken) => OracleDba.ActivityAsync(connection, cancellationToken);
+
+    public Task KillSessionAsync(string sessionId, CancellationToken cancellationToken) => OracleDba.KillAsync(connection, sessionId, cancellationToken);
+
+    public Task<HeavyQueryReport> GetHeavyQueriesAsync(HeavyQueryRequest request, CancellationToken cancellationToken) =>
+        OracleDba.HeavyAsync(connection, request, cancellationToken);
+
+    public Task<IReadOnlyList<MissingIndex>> GetMissingIndexesAsync(string? database, CancellationToken cancellationToken) =>
+        OracleDba.FullScansAsync(connection, database, cancellationToken);
+
+    public Task<IndexUsageReport> GetIndexUsageAsync(string database, CancellationToken cancellationToken) => OracleDba.UsageAsync(connection, database, cancellationToken);
+
+    public Task<IReadOnlyList<IndexFragmentation>> GetFragmentationAsync(string database, long minimumPages, CancellationToken cancellationToken) =>
+        OracleDba.FragmentationAsync();
+
+    public Task<ServerOverview> GetOverviewAsync(CancellationToken cancellationToken) => OracleDba.OverviewAsync(connection, cancellationToken);
+
+    public Task<ServerSample> GetSampleAsync(CancellationToken cancellationToken) => OracleDba.SampleAsync(connection, cancellationToken);
+
+    public Task<IReadOnlyList<HealthFinding>> CheckAsync(CancellationToken cancellationToken) => OracleDba.HealthAsync(connection, cancellationToken);
+
+    public Task<DatabaseDetail> GetDatabaseDetailAsync(string database, CancellationToken cancellationToken) => OracleDba.DetailAsync(connection, database, cancellationToken);
+
     // ODP.NET commits each command on its own unless a transaction object is open on the connection.
     private OracleTransaction? _transaction;
 

@@ -38,3 +38,16 @@ safe (nothing is created or dropped by the tool) and cheap (fragmentation reads 
   history) can be added behind the same contract.
 - Oracle (`V$SQL`, no Diagnostics Pack; no missing-index statistics) and PostgreSQL (`pg_stat_statements`,
   `pg_stat_user_indexes`) implement the parts they can; the screen shows what a provider returns.
+
+## Addendum: PostgreSQL and Oracle
+
+- **PostgreSQL**: heavy queries from `pg_stat_statements` (a clear message when it is not loaded); "missing indexes"
+  are tables read by many sequential scans (`pg_stat_user_tables`), with an example `CREATE INDEX CONCURRENTLY`
+  comment; index use from `pg_stat_user_indexes`; fragmentation through `pgstattuple` when installed.
+- **Oracle**: heavy statements from `V$SQLAREA`; "missing indexes" are big tables (≥ 10 000 rows) read by full scans
+  in the cursor cache (`V$SQL_PLAN`); index reads are the executions of cached plans that use the index, so they
+  vanish with the cursor cache. Statements Oracle runs for itself (owned by Oracle-maintained users, or DBMS_STATS
+  sampling queries parsed as the table's owner) are left out. Fragmentation is not offered: measuring it needs
+  `ANALYZE INDEX … VALIDATE STRUCTURE`, which locks the table. AWR/ASH (Diagnostics Pack) is never read. The login
+  needs `SELECT_CATALOG_ROLE`; without it the screens say so. In Oracle the "database" of the DBA screens is a
+  schema: the explorer's schema nodes carry the DBA submenu.

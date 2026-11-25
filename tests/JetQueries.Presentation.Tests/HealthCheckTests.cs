@@ -16,6 +16,9 @@ public sealed class HealthCheckTests
         // PostgreSQL (PostgreSqlDba)
         "SharedBuffers", "WorkMem", "RandomPageCost", "Autovacuum", "TrackIoTiming", "StatStatements", "Archiving", "Wraparound",
         "ReplicationSlots", "IdleInTransaction", "DeadTuples", "StaleStats", "Superusers",
+
+        // Oracle (OracleDba)
+        "ArchiveLog", "RmanBackup", "RecoveryArea", "TablespaceFull", "InvalidObjects", "UnusableIndexes", "OracleStats", "DefaultPasswords", "DbaRole", "ProcessLimit",
     ];
 
     public HealthCheckTests()

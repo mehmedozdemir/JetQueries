@@ -102,6 +102,12 @@ public sealed class ConnectionSession : IAsyncDisposable
     public bool SupportsDatabaseDetails => Connection is IDatabaseDetails;
 
     /// <summary>
+    /// The provider's "databases" are schemas (Oracle): a schema node of the explorer stands for what DBA screens call
+    /// a database.
+    /// </summary>
+    public bool DatabasesAreSchemas => Connection is IDatabaseContext { Kind: DatabaseContextKind.Schema };
+
+    /// <summary>
     /// Runs SQL on the session's main query connection; see <see cref="QueryChannel.ExecuteAsync"/>. Query
     /// windows use a channel of their own (<see cref="OpenChannelAsync"/>) instead.
     /// </summary>

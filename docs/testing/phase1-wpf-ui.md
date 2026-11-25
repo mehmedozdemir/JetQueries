@@ -790,3 +790,13 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] Dashboard: CPU, PLE and waits show "—" / nothing (PostgreSQL does not report them); transactions a second, I/O and connections move.
 - [ ] Health check shows PostgreSQL rules (shared_buffers 128 MB, random_page_cost 4…), each explained in Turkish.
 - [ ] Database detail of another database than the query tab's: it fills (size, tables, tablespaces) and the tab's database does not change; backups say "yedek geçmişi alınamıyor".
+
+## DBA screens on Oracle
+- [ ] Connect as a user with SELECT_CATALOG_ROLE (or SYSTEM): the DBA menu offers Sunucu panosu, Etkinlik izleyici, Performans analizi, Sağlık kontrolü; a schema node's DBA submenu offers Performans analizi and Veritabanı ayrıntıları.
+- [ ] Connect as a plain application user: each screen says the login needs SELECT_CATALOG_ROLE instead of failing silently.
+- [ ] Activity monitor: an uncommitted UPDATE in one tab (transaction mode) and the same UPDATE in another: the waiter shows "enq: TX - row lock contention" blocked by the holder (sid,serial#); ending the holder releases the waiter.
+- [ ] Heavy queries list your statements (none of Oracle's own or JetQueries' advisor queries); Eksik index'ler lists big tables read by full scans with an example CREATE INDEX comment; Index kullanımı shows reads of cached plans; Parçalanma explains why Oracle is not measured.
+- [ ] Dashboard: the CPU chart has the last hour; calls a second, commits, I/O and waits move while something runs.
+- [ ] Health check shows the Oracle rules (NOARCHIVELOG, RMAN backup, tablespace use…), each explained in Turkish and English.
+- [ ] Veritabanı ayrıntıları of a schema: account status, default tablespace, size, largest tables, data files, redo size; backups list RMAN jobs (empty without RMAN).
+

@@ -679,7 +679,7 @@ public partial class ConnectionsViewModel(
             case ConnectionNodeViewModel { CanAnalyze: true, Context.Session: var session }:
                 PerformanceRequested?.Invoke(this, new PerformanceViewModel(session, jobs));
                 break;
-            case DatabaseObjectNodeViewModel { Target.Kind: DatabaseObjectKinds.Database, Session: { SupportsPerformance: true } session, Target: var database }:
+            case DatabaseObjectNodeViewModel { CanAnalyze: true, Session: var session, Target: var database }:
                 PerformanceRequested?.Invoke(this, new PerformanceViewModel(session, jobs, database.Name.Name));
                 break;
             default:
