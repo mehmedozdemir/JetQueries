@@ -438,6 +438,13 @@ public partial class ConnectionsViewModel(
     public void Reveal(ExplorerNodeViewModel node)
     {
         ArgumentNullException.ThrowIfNull(node);
+
+        // The folders it is in open, so that it can be seen.
+        foreach (var folder in AllFolders(Roots).Where(f => Holds(f, node)))
+        {
+            folder.IsExpanded = true;
+        }
+
         Selected = node;
         RevealRequested?.Invoke(this, node);
     }
@@ -506,6 +513,12 @@ public partial class ConnectionsViewModel(
     }
 
     private readonly HashSet<LazyNodeViewModel> _watched = [];
+
+    // Whether the tree has been built once (the first build starts with every folder closed).
+    private bool _loaded;
+
+    private static bool Holds(ExplorerNodeViewModel parent, ExplorerNodeViewModel node) =>
+        parent.Children.Any(c => ReferenceEquals(c, node) || Holds(c, node));
 
     private bool Filter(ExplorerNodeViewModel node, string filter, bool ancestorMatched)
     {
@@ -737,7 +750,10 @@ public partial class ConnectionsViewModel(
         var selectedId = (Selected as ConnectionNodeViewModel)?.Definition.Id;
         var selectedFolder = select ?? (Selected as FolderNodeViewModel)?.Path;
 
-        // Collapsed folders stay collapsed through a rebuild.
+        // At start-up every folder is closed; later, collapsed folders stay collapsed through a rebuild and new
+        // ones (just made or moved to) open.
+        var firstLoad = !_loaded;
+        _loaded = true;
         var collapsed = AllFolders(Roots).Where(static f => !f.IsExpanded).Select(static f => f.Path).ToHashSet(StringComparer.OrdinalIgnoreCase);
         Roots.Clear();
         ExplorerNodeViewModel? reselect = null;
@@ -751,7 +767,7 @@ public partial class ConnectionsViewModel(
                 var folder = siblings.OfType<FolderNodeViewModel>().FirstOrDefault(f => string.Equals(f.Name, part, StringComparison.OrdinalIgnoreCase));
                 if (folder is null)
                 {
-                    folder = new FolderNodeViewModel(part, current) { IsExpanded = !collapsed.Contains(current) };
+                    folder = new FolderNodeViewModel(part, current) { IsExpanded = !firstLoad && !collapsed.Contains(current) };
 
                     // Folders stay above connections at every level, in name order.
                     var folderCount = siblings.Count(static n => n is FolderNodeViewModel);

@@ -178,6 +178,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
   (mark as SVG path data, colour, description).
 
 ### Changed
+- Explorer: at start-up every connection folder is closed; folders opened during the session stay open through a refresh, and Go to object opens the folders of what it reveals.
 - Results: decimal(p,s), numeric and NUMBER(p,s) values are shown with their declared scale (1500.00, not 1500.0) in the grid, text, record, copy and export.
 - Result footer: "Satır/sayfa" instead of "Sayfa", a smaller box, the fetch status with its full text as a tooltip, separators between groups.
 - Explorer: the toolbar keeps New, Connect, Refresh, Go to object; New folder, Edit, Delete and Import moved under "…".

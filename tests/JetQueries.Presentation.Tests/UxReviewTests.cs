@@ -94,4 +94,31 @@ public sealed class UxReviewTests
         query.DatabaseFilter = string.Empty;
         Assert.Equal(5, query.ShownDatabases.Count);
     }
+
+    [Fact]
+    public async Task The_explorer_starts_with_its_folders_closed_and_opens_them_to_reveal()
+    {
+        await using var env = new TestEnvironment();
+        await env.Store.SaveAsync(TestEnvironment.Definition("Kartlar", "Müşteri A/Test"), TestContext.Current.CancellationToken);
+        var connections = env.Connections();
+        await connections.LoadAsync();
+
+        var customer = Assert.IsType<FolderNodeViewModel>(connections.Roots[0]);
+        var test = Assert.IsType<FolderNodeViewModel>(customer.Children[0]);
+        Assert.False(customer.IsExpanded);
+        Assert.False(test.IsExpanded);
+
+        // Opened by the user, it stays open through a rebuild.
+        customer.IsExpanded = true;
+        await connections.LoadAsync();
+        Assert.True(Assert.IsType<FolderNodeViewModel>(connections.Roots[0]).IsExpanded);
+
+        // Revealing a connection opens the folders it is in.
+        var folder = (FolderNodeViewModel)connections.Roots[0];
+        var inner = (FolderNodeViewModel)folder.Children[0];
+        var connection = inner.Children.OfType<ConnectionNodeViewModel>().Single();
+        connections.Reveal(connection);
+        Assert.True(inner.IsExpanded);
+        Assert.Same(connection, connections.Selected);
+    }
 }
