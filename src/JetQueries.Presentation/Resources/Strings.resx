@@ -189,7 +189,7 @@
   <data name="ExecuteParametersFailed" xml:space="preserve"><value>The parameters could not be read: {0}</value></data>
   <data name="MenuCompactMode" xml:space="preserve"><value>Compact mode</value></data>
   <data name="FieldDensity" xml:space="preserve"><value>Interface density</value></data>
-  <data name="SettingDensityInfo" xml:space="preserve"><value>Compact: lower toolbars, rows, tabs and inputs, as in JetBrains IDEs; text keeps its size.</value></data>
+  <data name="SettingDensityInfo" xml:space="preserve"><value>From very compact to spacious: the height of toolbars, rows, tabs and inputs and the room around them; text keeps its size.</value></data>
   <data name="DensityNormal" xml:space="preserve"><value>Normal</value></data>
   <data name="DensityCompact" xml:space="preserve"><value>Compact</value></data>
   <data name="UpdateIdle" xml:space="preserve"><value>Not checked yet.</value></data>
@@ -1085,6 +1085,11 @@ What it is running stops and its open transaction is rolled back; the client get
   <data name="Scheme_Light_Sepia" xml:space="preserve"><value>Sepia (soft)</value></data>
   <data name="Scheme_Light_Sage" xml:space="preserve"><value>Sage (soft)</value></data>
   <data name="Scheme_Light_Mist" xml:space="preserve"><value>Mist (soft)</value></data>
+  <data name="DensityVeryCompact" xml:space="preserve"><value>Very compact</value></data>
+  <data name="DensityComfortable" xml:space="preserve"><value>Comfortable</value></data>
+  <data name="DensitySpacious" xml:space="preserve"><value>Spacious</value></data>
+  <data name="DensityDenserTip" xml:space="preserve"><value>More compact</value></data>
+  <data name="DensityLooserTip" xml:space="preserve"><value>More room</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Clear all</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Remove filter</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} of {1:N0} rows</value></data>

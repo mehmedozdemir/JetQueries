@@ -58,8 +58,11 @@ public sealed class AppearanceService : IAppearanceService
     /// <summary>Whether the editor shows a table's or column's details on hover.</summary>
     public static bool HoverInfo { get; private set; } = true;
 
-    /// <summary>Whether the compact density is in effect (result rows are lower too).</summary>
-    public static bool Compact { get; private set; }
+    /// <summary>Whether a compact density is in effect.</summary>
+    public static bool Compact => DensityLevel < 0;
+
+    /// <summary>The density level in effect, -2 (very compact) to 2 (spacious): result rows follow it too.</summary>
+    public static int DensityLevel { get; private set; }
 
     /// <summary>Raised on the UI thread after the appearance changed.</summary>
     public static event EventHandler? Changed;
@@ -87,16 +90,17 @@ public sealed class AppearanceService : IAppearanceService
         ValueSnippets = settings.ValueSnippets;
         HoverInfo = settings.HoverInfo;
 
-        // Density: UiKit's control sizes, then the application's own tighter ones, one step smaller in compact.
-        Compact = settings.CompactMode;
-        UiKit.Theming.Density.Apply(Compact ? UiKit.Theming.UiDensity.Compact : UiKit.Theming.UiDensity.Normal);
-        resources["Pad.AppToolbar"] = Compact ? new Thickness(8, 3, 8, 3) : new Thickness(10, 5, 10, 5);
-        resources["Size.AppToolbarButton"] = Compact ? 26.0 : 30.0;
-        resources["Size.AppIcon"] = Compact ? 26.0 : 30.0;
-        resources["Size.Footer"] = Compact ? 22.0 : 26.0;
-        resources["Pad.AppTab"] = Compact ? new Thickness(8, 3, 8, 3) : new Thickness(10, 6, 10, 6);
-        resources["Pad.AppTreeItem"] = Compact ? new Thickness(2, 1, 8, 1) : new Thickness(2, 2, 8, 2);
-        resources["Space.Page.Compact"] = Compact ? new Thickness(6, 4, 6, 0) : new Thickness(8, 6, 8, 0);
+        // Density: UiKit's control sizes, then the application's own, on the same five-level scale.
+        var level = settings.EffectiveDensity;
+        DensityLevel = level;
+        UiKit.Theming.Density.Apply(level);
+        resources["Pad.AppToolbar"] = UiKit.Theming.Density.Pad(new Thickness(10, 5, 10, 5), new Thickness(8, 3, 8, 3), level);
+        resources["Size.AppToolbarButton"] = UiKit.Theming.Density.Size(30, 26, level);
+        resources["Size.AppIcon"] = UiKit.Theming.Density.Size(30, 26, level);
+        resources["Size.Footer"] = UiKit.Theming.Density.Size(26, 22, level);
+        resources["Pad.AppTab"] = UiKit.Theming.Density.Pad(new Thickness(10, 6, 10, 6), new Thickness(8, 3, 8, 3), level);
+        resources["Pad.AppTreeItem"] = UiKit.Theming.Density.Pad(new Thickness(2, 2, 8, 2), new Thickness(2, 1, 8, 1), level);
+        resources["Space.Page.Compact"] = UiKit.Theming.Density.Pad(new Thickness(8, 6, 8, 0), new Thickness(6, 4, 6, 0), level);
 
         // Run, Cancel, Save: icons in each tab, or text buttons in the main toolbar.
         resources["QueryButtons.Tab"] = settings.QueryButtonsInTab ? Visibility.Visible : Visibility.Collapsed;

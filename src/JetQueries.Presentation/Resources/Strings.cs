@@ -162,6 +162,11 @@ public static class Strings
     public static string FilterClear => Get(nameof(FilterClear));
     public static string FilterValueRequired => Get(nameof(FilterValueRequired));
     public static string FilterClearAll => Get(nameof(FilterClearAll));
+    public static string DensityVeryCompact => Get(nameof(DensityVeryCompact));
+    public static string DensityComfortable => Get(nameof(DensityComfortable));
+    public static string DensitySpacious => Get(nameof(DensitySpacious));
+    public static string DensityDenserTip => Get(nameof(DensityDenserTip));
+    public static string DensityLooserTip => Get(nameof(DensityLooserTip));
     public static string ConnectionDatabases => Get(nameof(ConnectionDatabases));
     public static string ConnectionDatabasesAll => Get(nameof(ConnectionDatabasesAll));
     public static string ConnectionDatabasesChosen => Get(nameof(ConnectionDatabasesChosen));

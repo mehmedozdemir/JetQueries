@@ -189,7 +189,7 @@
   <data name="ExecuteParametersFailed" xml:space="preserve"><value>Parametreler okunamadı: {0}</value></data>
   <data name="MenuCompactMode" xml:space="preserve"><value>Kompakt mod</value></data>
   <data name="FieldDensity" xml:space="preserve"><value>Arayüz yoğunluğu</value></data>
-  <data name="SettingDensityInfo" xml:space="preserve"><value>Kompakt: JetBrains IDE'lerindeki gibi daha alçak araç çubukları, satırlar, sekmeler ve kutular; yazı boyutu değişmez.</value></data>
+  <data name="SettingDensityInfo" xml:space="preserve"><value>Çok sıkıdan genişe: araç çubuklarının, satırların, sekmelerin ve kutuların yüksekliği ve çevrelerindeki boşluk; yazı boyutu değişmez.</value></data>
   <data name="DensityNormal" xml:space="preserve"><value>Normal</value></data>
   <data name="DensityCompact" xml:space="preserve"><value>Kompakt</value></data>
   <data name="UpdateIdle" xml:space="preserve"><value>Henüz denetlenmedi.</value></data>
@@ -1085,6 +1085,11 @@
   <data name="Scheme_Light_Sepia" xml:space="preserve"><value>Sepya (yumuşak)</value></data>
   <data name="Scheme_Light_Sage" xml:space="preserve"><value>Adaçayı (yumuşak)</value></data>
   <data name="Scheme_Light_Mist" xml:space="preserve"><value>Sis (yumuşak)</value></data>
+  <data name="DensityVeryCompact" xml:space="preserve"><value>Çok sıkı</value></data>
+  <data name="DensityComfortable" xml:space="preserve"><value>Rahat</value></data>
+  <data name="DensitySpacious" xml:space="preserve"><value>Geniş</value></data>
+  <data name="DensityDenserTip" xml:space="preserve"><value>Daha sıkı</value></data>
+  <data name="DensityLooserTip" xml:space="preserve"><value>Daha geniş</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Tümünü temizle</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Filtreyi kaldır</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} / {1:N0} satır</value></data>
