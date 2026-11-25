@@ -850,7 +850,7 @@
   <data name="DbLogUsed" xml:space="preserve"><value>%{0} dolu</value></data>
   <data name="DbLogHeldBy" xml:space="preserve"><value>tutan: {0}</value></data>
   <data name="DbVlfDetail" xml:space="preserve"><value>log'u oluşturan parça sayısı</value></data>
-  <data name="DbBackupsUnknown" xml:space="preserve"><value>yedekler okunamıyor</value></data>
+  <data name="DbBackupsUnknown" xml:space="preserve"><value>yedek geçmişi alınamıyor</value></data>
   <data name="DbLogBackupNotNeeded" xml:space="preserve"><value>{0}: gerekmez</value></data>
   <data name="DbNever" xml:space="preserve"><value>hiç yok</value></data>
   <data name="DbDaysAgo" xml:space="preserve"><value>{0} gün önce</value></data>
@@ -944,6 +944,50 @@
   <data name="Help_DbOptions_Watch" xml:space="preserve"><value>Okuyan ve yazanların birbirini engellediği yoğun bir OLTP veritabanında RCSI OFF; Query Store OFF (plan geçmişi yok).</value></data>
   <data name="Help_DbOptions_Bad" xml:space="preserve"><value>Otomatik küçültme ya da kapanma ON, CHECKSUM dışında sayfa doğrulama, TRUSTWORTHY ON: nedeni ve düzeltmesi için Sağlık kontrolü'ne bakın.</value></data>
   <data name="Help_DbOptions_Action" xml:space="preserve"><value>Sağlık kontrolünü çalıştırın: her veritabanının riskli ayarlarını düzelten betikle birlikte listeler.</value></data>
+  <data name="Rule_SharedBuffers_Title" xml:space="preserve"><value>shared_buffers varsayılan 128 MB</value></data>
+  <data name="Rule_SharedBuffers_Why" xml:space="preserve"><value>shared_buffers, PostgreSQL'in kendi sayfa önbelleğidir. Varsayılan değer bir dizüstü bilgisayar için düşünülmüştür: sunucuda okumaların çoğu işletim sistemi üzerinden geçer, bu daha yavaş ve öngörülemezdir.</value></data>
+  <data name="Rule_SharedBuffers_Fix" xml:space="preserve"><value>Sunucu belleğinin yaklaşık dörtte birine ayarlayın (nadiren %40'tan fazla); yeniden başlatmadan sonra etkili olur.</value></data>
+  <data name="Rule_WorkMem_Title" xml:space="preserve"><value>work_mem varsayılan 4 MB</value></data>
+  <data name="Rule_WorkMem_Why" xml:space="preserve"><value>Bir sorgudaki her sıralama ya da hash, diskteki geçici dosyalara taşmadan önce work_mem kadar bellek kullanabilir; 4 MB büyük sıralama ve join'lerin diske yazmasına yol açar.</value></data>
+  <data name="Rule_WorkMem_Fix" xml:space="preserve"><value>Dikkatle 16–64 MB'a çıkarın: değer işlem ve bağlantı başınadır, çok sayıda bağlantı bunu katlar.</value></data>
+  <data name="Rule_RandomPageCost_Title" xml:space="preserve"><value>random_page_cost dönen diskleri varsayıyor</value></data>
+  <data name="Rule_RandomPageCost_Why" xml:space="preserve"><value>4, planlayıcıya rastgele okumanın sıralı okumanın dört katı maliyetli olduğunu söyler; bu sabit diskler için doğrudur. SSD'de planlayıcının kullanması gereken index'lerden kaçınmasına neden olur.</value></data>
+  <data name="Rule_RandomPageCost_Fix" xml:space="preserve"><value>SSD ya da bulut depolamada 1.1'e ayarlayın; yeniden yüklemeden sonra hemen etkili olur.</value></data>
+  <data name="Rule_Autovacuum_Title" xml:space="preserve"><value>Autovacuum kapalı</value></data>
+  <data name="Rule_Autovacuum_Why" xml:space="preserve"><value>Autovacuum ölü satırları temizler, istatistikleri güncel tutar ve eski transaction id'lerini dondurur. O olmadan tablolar şişer, planlar kötüleşir ve sunucu sonunda transaction id taşmasını önlemek için yazmaları kabul etmeyi bırakır.</value></data>
+  <data name="Rule_Autovacuum_Fix" xml:space="preserve"><value>Hemen açın; kapatmak yerine eşiklerini tablo bazında ayarlayın.</value></data>
+  <data name="Rule_TrackIoTiming_Title" xml:space="preserve"><value>G/Ç süreleri ölçülmüyor</value></data>
+  <data name="Rule_TrackIoTiming_Why" xml:space="preserve"><value>track_io_timing olmadan istatistikler ve pano okuma ve yazmaların ne kadar sürdüğünü bilemez; yavaş depolama ağır sorgulardan ayırt edilemez.</value></data>
+  <data name="Rule_TrackIoTiming_Fix" xml:space="preserve"><value>Açın (modern sistemlerde ek yükü küçüktür; pg_test_timing ile doğrulanabilir).</value></data>
+  <data name="Rule_StatStatements_Title" xml:space="preserve"><value>pg_stat_statements yüklü değil</value></data>
+  <data name="Rule_StatStatements_Why" xml:space="preserve"><value>pg_stat_statements her deyimin maliyetini kaydeder; o olmadan ağır sorgular listesi olmaz.</value></data>
+  <data name="Rule_StatStatements_Fix" xml:space="preserve"><value>shared_preload_libraries'e ekleyin (diğerlerini koruyarak), yeniden başlatın ve izlediğiniz veritabanlarında eklentiyi oluşturun.</value></data>
+  <data name="Rule_Archiving_Title" xml:space="preserve"><value>WAL arşivleme kapalı</value></data>
+  <data name="Rule_Archiving_Why" xml:space="preserve"><value>Arşivlenmiş WAL olmadan sunucu yalnızca temel yedeğin alındığı ana geri döndürülebilir, sonrasındaki herhangi bir ana değil.</value></data>
+  <data name="Rule_Archiving_Fix" xml:space="preserve"><value>Belirli bir ana dönmek gerekiyorsa archive_mode = on ve bir archive_command ayarlayın (ya da pgBackRest veya Barman gibi bir yedekleme aracı kullanın).</value></data>
+  <data name="Rule_Wraparound_Title" xml:space="preserve"><value>Transaction id'leri taşmaya yakın</value></data>
+  <data name="Rule_Wraparound_Why" xml:space="preserve"><value>PostgreSQL transaction'ları 32 bitlik numaralarla sayar; yaklaşık 2 milyar transaction geçmeden eski satırlar dondurulmalıdır, yoksa sunucu veriyi korumak için yazmaları kabul etmeyi bırakır.</value></data>
+  <data name="Rule_Wraparound_Fix" xml:space="preserve"><value>Listelenen veritabanlarında en eskiden başlayarak VACUUM (FREEZE) çalıştırın; autovacuum'un dondurmasını neyin engellediğini bulun (uzun transaction'lar, aktif olmayan replication slot'lar).</value></data>
+  <data name="Rule_ReplicationSlots_Title" xml:space="preserve"><value>Aktif olmayan replication slot'lar WAL tutuyor</value></data>
+  <data name="Rule_ReplicationSlots_Why" xml:space="preserve"><value>Bir replication slot, okuyucusunun almadığı her WAL dosyasını saklar; okuyucu ortadan kalkınca WAL disk dolana kadar birikir ve sunucu durur.</value></data>
+  <data name="Rule_ReplicationSlots_Fix" xml:space="preserve"><value>Slot'u kullanan replika ya da araç artık yoksa slot'u silin; değilse okuyucuyu yeniden çalıştırın.</value></data>
+  <data name="Rule_IdleInTransaction_Title" xml:space="preserve"><value>Oturumlar transaction içinde boşta bekliyor</value></data>
+  <data name="Rule_IdleInTransaction_Why" xml:space="preserve"><value>Transaction başlatıp dakikalardır bir şey yapmayan bir oturum kilitlerini tutar ve vacuum'un her yerde ölü satırları temizlemesini engeller.</value></data>
+  <data name="Rule_IdleInTransaction_Fix" xml:space="preserve"><value>Transaction'ları açık bırakan uygulamayı bulun; PostgreSQL'in bu oturumları kendisi sonlandırması için idle_in_transaction_session_timeout ayarlayın.</value></data>
+  <data name="Rule_DeadTuples_Title" xml:space="preserve"><value>Tablolarda çok sayıda ölü satır var</value></data>
+  <data name="Rule_DeadTuples_Why" xml:space="preserve"><value>Güncellenen ve silinen satırlar, vacuum temizleyene kadar ölü satır olarak kalır; çok sayıda olunca tablolar ve index'ler büyür, taramalar yavaşlar.</value></data>
+  <data name="Rule_DeadTuples_Fix" xml:space="preserve"><value>Bunlarda VACUUM (ANALYZE) çalıştırın ve yoğun tablolarda autovacuum'u daha sık hale getirin (daha düşük autovacuum_vacuum_scale_factor).</value></data>
+  <data name="Rule_StaleStats_Title" xml:space="preserve"><value>Tablolar hiç analiz edilmemiş</value></data>
+  <data name="Rule_StaleStats_Why" xml:space="preserve"><value>İstatistik olmadan planlayıcı satır sayılarını tahmin eder ve bu tablolar için çok kötü planlar seçebilir.</value></data>
+  <data name="Rule_StaleStats_Fix" xml:space="preserve"><value>Bunlarda ANALYZE çalıştırın; autovacuum'un açık olduğunu ve bu tablolara ulaştığını kontrol edin.</value></data>
+  <data name="Rule_Superusers_Title" xml:space="preserve"><value>Çok sayıda rol superuser</value></data>
+  <data name="Rule_Superusers_Why" xml:space="preserve"><value>Bir superuser tüm yetki denetimlerini atlar ve sunucunun dosyalarını okuyabilir; her fazladan superuser bir risktir.</value></data>
+  <data name="Rule_Superusers_Fix" xml:space="preserve"><value>Superuser yetkisini yöneticilerle sınırlayın; uygulamalara yalnızca ihtiyaç duydukları yetkileri verin (ya da pg_monitor, pg_read_all_data gibi roller).</value></data>
+  <data name="DbProp_encoding" xml:space="preserve"><value>Kodlama</value></data>
+  <data name="DbProp_collation" xml:space="preserve"><value>Collation</value></data>
+  <data name="DbProp_connectionLimit" xml:space="preserve"><value>Bağlantı sınırı</value></data>
+  <data name="DbProp_allowConnections" xml:space="preserve"><value>Bağlantıya açık</value></data>
+  <data name="DbProp_tablespace" xml:space="preserve"><value>Tablespace</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Tümünü temizle</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Filtreyi kaldır</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} / {1:N0} satır</value></data>

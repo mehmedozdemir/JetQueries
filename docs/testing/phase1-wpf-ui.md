@@ -781,3 +781,12 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] Take a backup in a query tab and press F5: it appears first in the history and the tile updates.
 - [ ] Every tile and section has an "i" that explains it (11 on the screen).
 - [ ] The query tab using that connection keeps its database (the screen does not switch it).
+
+## DBA screens on PostgreSQL
+- [ ] On a connected PostgreSQL the DBA menu offers Sunucu panosu, Etkinlik izleyici, Performans analizi, Sağlık kontrolü; on a database node Performans analizi and Veritabanı ayrıntıları.
+- [ ] Activity monitor: two sessions blocking each other (BEGIN; UPDATE … in one, the same UPDATE in another): the chain shows the holder as "idle in transaction", the waiter with Lock:transactionid; ending the holder releases the waiter.
+- [ ] Heavy queries without pg_stat_statements: a clear message how to enable it; with it (shared_preload_libraries + CREATE EXTENSION) the statements list fills.
+- [ ] Eksik index'ler lists tables read by many sequential scans with an example CREATE INDEX CONCURRENTLY comment; Index kullanımı shows scans and findings; Parçalanma asks for pgstattuple when it is missing.
+- [ ] Dashboard: CPU, PLE and waits show "—" / nothing (PostgreSQL does not report them); transactions a second, I/O and connections move.
+- [ ] Health check shows PostgreSQL rules (shared_buffers 128 MB, random_page_cost 4…), each explained in Turkish.
+- [ ] Database detail of another database than the query tab's: it fills (size, tables, tablespaces) and the tab's database does not change; backups say "yedek geçmişi alınamıyor".

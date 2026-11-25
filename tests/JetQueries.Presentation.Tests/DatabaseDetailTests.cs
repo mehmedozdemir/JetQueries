@@ -72,7 +72,7 @@ public sealed class DatabaseDetailTests
 
         detail.Show(FakeDatabaseDetail.Of("Locked") with { BackupsKnown = false, Backups = [] }, now);
         Assert.Equal(("?", HealthSeverity.Ok), (detail.FullBackup.Value, detail.FullBackup.Status));
-        Assert.Equal("backups cannot be read", detail.LogBackup.Detail);
+        Assert.Equal("backup history not available", detail.LogBackup.Detail);
     }
 
     [Fact]

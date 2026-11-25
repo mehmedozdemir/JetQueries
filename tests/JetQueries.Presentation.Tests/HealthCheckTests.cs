@@ -12,6 +12,10 @@ public sealed class HealthCheckTests
         "MaxServerMemory", "MaxDop", "CostThreshold", "OptimizeAdhoc", "PriorityBoost", "AutoShrink", "AutoClose", "PageVerify", "AutoStats",
         "Trustworthy", "CompatibilityLevel", "FileGrowth", "LogReuse", "TempdbFiles", "Backups", "FullBackup", "LogBackup", "CheckDb",
         "SuspectPages", "SaEnabled", "Sysadmins", "Uptime",
+
+        // PostgreSQL (PostgreSqlDba)
+        "SharedBuffers", "WorkMem", "RandomPageCost", "Autovacuum", "TrackIoTiming", "StatStatements", "Archiving", "Wraparound",
+        "ReplicationSlots", "IdleInTransaction", "DeadTuples", "StaleStats", "Superusers",
     ];
 
     public HealthCheckTests()

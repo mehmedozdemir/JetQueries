@@ -239,8 +239,55 @@ public sealed class PostgreSqlProvider : IDatabaseProvider, IBulkInsertScripting
 /// A session connection. A PostgreSQL connection is to one database; switching database (the query window's
 /// selector) opens a connection to the other database and replaces this one's.
 /// </summary>
-internal sealed class PostgreSqlDatabaseConnection : IDatabaseConnection, IDatabaseContext, ITransactionControl
+internal sealed class PostgreSqlDatabaseConnection : IDatabaseConnection, IDatabaseContext, ITransactionControl,
+    IActivityMonitor, IPerformanceAdvisor, IServerDashboard, IHealthCheck, IDatabaseDetails
 {
+    public Task<ActivitySnapshot> GetActivityAsync(CancellationToken cancellationToken) => PostgreSqlDba.ActivityAsync(_connection, cancellationToken);
+
+    public Task KillSessionAsync(string sessionId, CancellationToken cancellationToken) => PostgreSqlDba.KillAsync(_connection, sessionId, cancellationToken);
+
+    public Task<HeavyQueryReport> GetHeavyQueriesAsync(HeavyQueryRequest request, CancellationToken cancellationToken) =>
+        PostgreSqlDba.HeavyAsync(_connection, request, cancellationToken);
+
+    public Task<IReadOnlyList<MissingIndex>> GetMissingIndexesAsync(string? database, CancellationToken cancellationToken) =>
+        InDatabaseAsync(database, connection => PostgreSqlDba.ScansAsync(connection, cancellationToken), cancellationToken);
+
+    public Task<IndexUsageReport> GetIndexUsageAsync(string database, CancellationToken cancellationToken) =>
+        InDatabaseAsync(database, connection => PostgreSqlDba.UsageAsync(connection, cancellationToken), cancellationToken);
+
+    public Task<IReadOnlyList<IndexFragmentation>> GetFragmentationAsync(string database, long minimumPages, CancellationToken cancellationToken) =>
+        InDatabaseAsync(database, connection => PostgreSqlDba.FragmentationAsync(connection, minimumPages, cancellationToken), cancellationToken);
+
+    public Task<ServerOverview> GetOverviewAsync(CancellationToken cancellationToken) => PostgreSqlDba.OverviewAsync(_connection, cancellationToken);
+
+    public Task<ServerSample> GetSampleAsync(CancellationToken cancellationToken) => PostgreSqlDba.SampleAsync(_connection, cancellationToken);
+
+    public Task<IReadOnlyList<HealthFinding>> CheckAsync(CancellationToken cancellationToken) => PostgreSqlDba.HealthAsync(_connection, cancellationToken);
+
+    public Task<DatabaseDetail> GetDatabaseDetailAsync(string database, CancellationToken cancellationToken) =>
+        InDatabaseAsync(database, connection => PostgreSqlDba.DetailAsync(connection, cancellationToken), cancellationToken);
+
+    // A database's own statistics are only visible from inside it: another database is read on a short-lived
+    // connection, so the window's connection stays where it is.
+    private async Task<T> InDatabaseAsync<T>(string? database, Func<NpgsqlConnection, Task<T>> work, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(database) || string.Equals(database, _connection.Database, StringComparison.Ordinal))
+        {
+            return await work(_connection).ConfigureAwait(false);
+        }
+
+        var settings = new Dictionary<string, string>(_profile.Settings, StringComparer.OrdinalIgnoreCase) { [PostgreSqlConnectionSettings.Database] = database };
+        var dataSource = new NpgsqlDataSourceBuilder(PostgreSqlConnectionSettings.BuildConnectionString(_profile with { Settings = settings }, _credential)).Build();
+        await using (dataSource.ConfigureAwait(false))
+        {
+            var connection = await dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+            await using (connection.ConfigureAwait(false))
+            {
+                return await work(connection).ConfigureAwait(false);
+            }
+        }
+    }
+
     public async Task BeginAsync(CancellationToken cancellationToken)
     {
         if (!await HasOpenTransactionAsync(cancellationToken).ConfigureAwait(false))

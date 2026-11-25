@@ -37,7 +37,8 @@ public sealed class PostgreSqlFixture : IAsyncLifetime
 
         try
         {
-            _container = new PostgreSqlBuilder(Image).Build();
+            // pg_stat_statements must be loaded at start for the DBA tests (heavy queries).
+            _container = new PostgreSqlBuilder(Image).WithCommand("-c", "shared_preload_libraries=pg_stat_statements").Build();
             await _container.StartAsync();
         }
 #pragma warning disable CA1031 // Any failure to start Docker means "skip", whatever the exception type.
