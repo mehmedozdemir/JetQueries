@@ -850,7 +850,7 @@ What it is running stops and its open transaction is rolled back; the client get
   <data name="DbLogUsed" xml:space="preserve"><value>{0} % full</value></data>
   <data name="DbLogHeldBy" xml:space="preserve"><value>held by {0}</value></data>
   <data name="DbVlfDetail" xml:space="preserve"><value>pieces the log is made of</value></data>
-  <data name="DbBackupsUnknown" xml:space="preserve"><value>backups cannot be read</value></data>
+  <data name="DbBackupsUnknown" xml:space="preserve"><value>backup history not available</value></data>
   <data name="DbLogBackupNotNeeded" xml:space="preserve"><value>{0}: not needed</value></data>
   <data name="DbNever" xml:space="preserve"><value>never</value></data>
   <data name="DbDaysAgo" xml:space="preserve"><value>{0} days ago</value></data>
@@ -944,6 +944,50 @@ What it is running stops and its open transaction is rolled back; the client get
   <data name="Help_DbOptions_Watch" xml:space="preserve"><value>RCSI OFF on a busy OLTP database where readers and writers block each other; Query Store OFF (no history of plans).</value></data>
   <data name="Help_DbOptions_Bad" xml:space="preserve"><value>Auto shrink or auto close ON, page verification other than CHECKSUM, TRUSTWORTHY ON: see Sağlık kontrolü for why and the fix.</value></data>
   <data name="Help_DbOptions_Action" xml:space="preserve"><value>Run the health check: it lists the risky settings of every database with a script that fixes them.</value></data>
+  <data name="Rule_SharedBuffers_Title" xml:space="preserve"><value>shared_buffers is the default 128 MB</value></data>
+  <data name="Rule_SharedBuffers_Why" xml:space="preserve"><value>shared_buffers is PostgreSQL's own page cache. The default is sized for a laptop: on a server most reads then go through the operating system, which is slower and less predictable.</value></data>
+  <data name="Rule_SharedBuffers_Fix" xml:space="preserve"><value>Set it to about a quarter of the server's memory (rarely more than 40 %); it takes effect after a restart.</value></data>
+  <data name="Rule_WorkMem_Title" xml:space="preserve"><value>work_mem is the default 4 MB</value></data>
+  <data name="Rule_WorkMem_Why" xml:space="preserve"><value>Each sort or hash in a query may use up to work_mem before spilling to temporary files on disk; 4 MB makes larger sorts and joins write to disk.</value></data>
+  <data name="Rule_WorkMem_Fix" xml:space="preserve"><value>Raise it to 16–64 MB carefully: it is per operation and per connection, so many connections multiply it.</value></data>
+  <data name="Rule_RandomPageCost_Title" xml:space="preserve"><value>random_page_cost assumes spinning disks</value></data>
+  <data name="Rule_RandomPageCost_Why" xml:space="preserve"><value>4 tells the planner that random reads cost four times sequential ones, true for hard disks; on SSD it makes the planner avoid indexes it should use.</value></data>
+  <data name="Rule_RandomPageCost_Fix" xml:space="preserve"><value>On SSD or cloud storage set it to 1.1; it takes effect at once after a reload.</value></data>
+  <data name="Rule_Autovacuum_Title" xml:space="preserve"><value>Autovacuum is off</value></data>
+  <data name="Rule_Autovacuum_Why" xml:space="preserve"><value>Autovacuum removes dead rows, keeps statistics current and freezes old transaction ids. Without it tables bloat, plans degrade and the server eventually stops accepting writes to avoid transaction id wraparound.</value></data>
+  <data name="Rule_Autovacuum_Fix" xml:space="preserve"><value>Turn it on now; tune its thresholds per table instead of switching it off.</value></data>
+  <data name="Rule_TrackIoTiming_Title" xml:space="preserve"><value>I/O timing is not tracked</value></data>
+  <data name="Rule_TrackIoTiming_Why" xml:space="preserve"><value>Without track_io_timing, statistics and the dashboard cannot tell how long reads and writes take, so slow storage cannot be told apart from heavy queries.</value></data>
+  <data name="Rule_TrackIoTiming_Fix" xml:space="preserve"><value>Turn it on (its overhead is small on modern systems; pg_test_timing can confirm).</value></data>
+  <data name="Rule_StatStatements_Title" xml:space="preserve"><value>pg_stat_statements is not loaded</value></data>
+  <data name="Rule_StatStatements_Why" xml:space="preserve"><value>pg_stat_statements records what every statement costs; without it there is no list of heavy queries.</value></data>
+  <data name="Rule_StatStatements_Fix" xml:space="preserve"><value>Add it to shared_preload_libraries (keeping any others), restart, and create the extension in the databases you watch.</value></data>
+  <data name="Rule_Archiving_Title" xml:space="preserve"><value>WAL archiving is off</value></data>
+  <data name="Rule_Archiving_Why" xml:space="preserve"><value>Without archived WAL, the server can only be restored to the moment of a base backup, not to any point in time after it.</value></data>
+  <data name="Rule_Archiving_Fix" xml:space="preserve"><value>If point-in-time recovery is needed, set archive_mode = on with an archive_command (or use a backup tool such as pgBackRest or Barman).</value></data>
+  <data name="Rule_Wraparound_Title" xml:space="preserve"><value>Transaction ids are close to wraparound</value></data>
+  <data name="Rule_Wraparound_Why" xml:space="preserve"><value>PostgreSQL numbers transactions with 32-bit ids; old rows must be frozen before about 2 billion transactions pass, or the server stops accepting writes to protect the data.</value></data>
+  <data name="Rule_Wraparound_Fix" xml:space="preserve"><value>Run VACUUM (FREEZE) in the databases listed, starting with the oldest; find what keeps autovacuum from freezing (long transactions, inactive replication slots).</value></data>
+  <data name="Rule_ReplicationSlots_Title" xml:space="preserve"><value>Inactive replication slots keep WAL</value></data>
+  <data name="Rule_ReplicationSlots_Why" xml:space="preserve"><value>A replication slot keeps every WAL file its reader has not received; when the reader is gone, WAL piles up until the disk is full and the server stops.</value></data>
+  <data name="Rule_ReplicationSlots_Fix" xml:space="preserve"><value>If the replica or tool that used the slot is gone, drop the slot; otherwise bring the reader back.</value></data>
+  <data name="Rule_IdleInTransaction_Title" xml:space="preserve"><value>Sessions sit idle in a transaction</value></data>
+  <data name="Rule_IdleInTransaction_Why" xml:space="preserve"><value>A session that began a transaction and does nothing for minutes holds its locks and keeps vacuum from removing dead rows everywhere.</value></data>
+  <data name="Rule_IdleInTransaction_Fix" xml:space="preserve"><value>Find the application that leaves transactions open; set idle_in_transaction_session_timeout so PostgreSQL ends such sessions by itself.</value></data>
+  <data name="Rule_DeadTuples_Title" xml:space="preserve"><value>Tables carry many dead rows</value></data>
+  <data name="Rule_DeadTuples_Why" xml:space="preserve"><value>Updated and deleted rows stay as dead rows until vacuum removes them; many of them make tables and indexes larger and scans slower.</value></data>
+  <data name="Rule_DeadTuples_Fix" xml:space="preserve"><value>Run VACUUM (ANALYZE) on them, and make autovacuum more frequent on busy tables (a lower autovacuum_vacuum_scale_factor).</value></data>
+  <data name="Rule_StaleStats_Title" xml:space="preserve"><value>Tables were never analyzed</value></data>
+  <data name="Rule_StaleStats_Why" xml:space="preserve"><value>Without statistics the planner guesses row counts and can choose very bad plans for these tables.</value></data>
+  <data name="Rule_StaleStats_Fix" xml:space="preserve"><value>Run ANALYZE on them; check autovacuum is on and reaches them.</value></data>
+  <data name="Rule_Superusers_Title" xml:space="preserve"><value>Many roles are superuser</value></data>
+  <data name="Rule_Superusers_Why" xml:space="preserve"><value>A superuser bypasses every permission check and can read files of the server; each extra one is a risk.</value></data>
+  <data name="Rule_Superusers_Fix" xml:space="preserve"><value>Keep superuser to the administrators; give applications only the privileges they need (or roles such as pg_monitor, pg_read_all_data).</value></data>
+  <data name="DbProp_encoding" xml:space="preserve"><value>Encoding</value></data>
+  <data name="DbProp_collation" xml:space="preserve"><value>Collation</value></data>
+  <data name="DbProp_connectionLimit" xml:space="preserve"><value>Connection limit</value></data>
+  <data name="DbProp_allowConnections" xml:space="preserve"><value>Allow connections</value></data>
+  <data name="DbProp_tablespace" xml:space="preserve"><value>Tablespace</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Clear all</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Remove filter</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} of {1:N0} rows</value></data>
