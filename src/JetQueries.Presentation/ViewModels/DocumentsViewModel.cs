@@ -225,6 +225,24 @@ public partial class DocumentsViewModel : ObservableObject
         return analysis;
     }
 
+    /// <summary>Shows a connection's server dashboard in a tab (the open one of the same connection is selected instead).</summary>
+    public DashboardViewModel OpenDashboard(DashboardViewModel dashboard)
+    {
+        ArgumentNullException.ThrowIfNull(dashboard);
+        var open = Tabs.OfType<DashboardViewModel>().FirstOrDefault(d => d.ConnectionId == dashboard.ConnectionId);
+        if (open is not null)
+        {
+            _ = dashboard.DisposeAsync().AsTask();
+            SelectedTab = open;
+            return open;
+        }
+
+        var index = SelectedTab is null ? Tabs.Count : Tabs.IndexOf(SelectedTab) + 1;
+        Tabs.Insert(Math.Clamp(index, 0, Tabs.Count), dashboard);
+        SelectedTab = dashboard;
+        return dashboard;
+    }
+
     /// <summary>Closes any tab: a query as <see cref="CloseCommand"/> does (asking about changes), a details tab at once.</summary>
     [RelayCommand]
     private async Task CloseTabAsync(object? tab)
@@ -246,6 +264,9 @@ public partial class DocumentsViewModel : ObservableObject
             case PerformanceViewModel analysis:
                 CloseDetails(analysis);
                 break;
+            case DashboardViewModel dashboard:
+                CloseDetails(dashboard);
+                break;
             default:
                 break;
         }
@@ -255,7 +276,7 @@ public partial class DocumentsViewModel : ObservableObject
     [RelayCommand]
     private async Task CloseOtherTabsAsync(object? keep)
     {
-        foreach (var details in Tabs.Where(t => t is ObjectDetailsViewModel or KeyValueViewModel or ActivityMonitorViewModel or PerformanceViewModel && !ReferenceEquals(t, keep)).ToList())
+        foreach (var details in Tabs.Where(t => t is ObjectDetailsViewModel or KeyValueViewModel or ActivityMonitorViewModel or PerformanceViewModel or DashboardViewModel && !ReferenceEquals(t, keep)).ToList())
         {
             CloseDetails(details);
         }
@@ -280,7 +301,7 @@ public partial class DocumentsViewModel : ObservableObject
         }
 
         // A monitor stops reading and gives its connection back.
-        if (details is IAsyncDisposable disposable and (ActivityMonitorViewModel or PerformanceViewModel))
+        if (details is IAsyncDisposable disposable and (ActivityMonitorViewModel or PerformanceViewModel or DashboardViewModel))
         {
             _ = disposable.DisposeAsync().AsTask();
         }

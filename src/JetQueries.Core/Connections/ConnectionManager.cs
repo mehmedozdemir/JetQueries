@@ -92,6 +92,9 @@ public sealed class ConnectionSession : IAsyncDisposable
     /// <summary>Whether the provider can report heavy queries and index advice on this connection.</summary>
     public bool SupportsPerformance => Connection is IPerformanceAdvisor;
 
+    /// <summary>Whether the provider can show the server dashboard on this connection.</summary>
+    public bool SupportsDashboard => Connection is IServerDashboard;
+
     /// <summary>
     /// Runs SQL on the session's main query connection; see <see cref="QueryChannel.ExecuteAsync"/>. Query
     /// windows use a channel of their own (<see cref="OpenChannelAsync"/>) instead.
@@ -386,6 +389,9 @@ public sealed class QueryChannel : IAsyncDisposable
 
     /// <summary>Heavy queries and index advice, when the provider can tell (the performance analysis); else null.</summary>
     public IPerformanceAdvisor? Performance => _connection as IPerformanceAdvisor;
+
+    /// <summary>The server at a glance (the dashboard), when the provider can tell; else null.</summary>
+    public IServerDashboard? Dashboard => _connection as IServerDashboard;
 
     /// <summary>What the current database is called for this provider; null when it cannot be switched.</summary>
     public DatabaseContextKind? ContextKind => (_connection as IDatabaseContext)?.Kind;

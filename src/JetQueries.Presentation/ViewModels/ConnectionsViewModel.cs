@@ -126,8 +126,11 @@ public sealed partial class ConnectionNodeViewModel(ConnectionDefinition definit
     public bool IsProduction => Definition.Environment == ConnectionEnvironment.Production;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanMonitor), nameof(CanAnalyze))]
+    [NotifyPropertyChangedFor(nameof(CanMonitor), nameof(CanAnalyze), nameof(CanDashboard))]
     public partial bool IsConnected { get; set; }
+
+    /// <summary>Open, on a provider that reports the server's load: the dashboard can be opened.</summary>
+    public bool CanDashboard => IsConnected && _context?.Session.SupportsDashboard == true;
 
     /// <summary>Open, on a provider that reports heavy queries and index advice: the performance analysis can be opened.</summary>
     public bool CanAnalyze => IsConnected && _context?.Session.SupportsPerformance == true;
@@ -673,6 +676,19 @@ public partial class ConnectionsViewModel(
                 break;
             default:
                 break;
+        }
+    }
+
+    /// <summary>The server dashboard of an open connection is to be shown in a tab.</summary>
+    public event EventHandler<DashboardViewModel>? DashboardRequested;
+
+    /// <summary>Opens the server dashboard of the chosen open connection (its menu item shows only then).</summary>
+    [RelayCommand]
+    private void OpenDashboard(ExplorerNodeViewModel? node)
+    {
+        if ((node ?? Selected) is ConnectionNodeViewModel { CanDashboard: true, Context.Session: var session })
+        {
+            DashboardRequested?.Invoke(this, new DashboardViewModel(session, jobs));
         }
     }
 

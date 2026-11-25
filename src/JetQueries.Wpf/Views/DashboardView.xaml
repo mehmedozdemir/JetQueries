@@ -1,0 +1,192 @@
+<UserControl x:Class="JetQueries.Wpf.Views.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:UiKit.Controls;assembly=UiKit.Wpf"
+             xmlns:res="clr-namespace:JetQueries.Presentation.Resources;assembly=JetQueries.Presentation"
+             xmlns:vm="clr-namespace:JetQueries.Presentation.ViewModels;assembly=JetQueries.Presentation"
+             xmlns:v="clr-namespace:JetQueries.Wpf.Views">
+    <UserControl.InputBindings>
+        <KeyBinding Key="F5" Command="{Binding RefreshCommand}" />
+    </UserControl.InputBindings>
+    <UserControl.Resources>
+        <!-- A stat tile: the figure large, what it is above, a detail under it -->
+        <Style x:Key="Tile" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource Brush.Chip}" />
+            <Setter Property="CornerRadius" Value="{StaticResource Radius.Control}" />
+            <Setter Property="Padding" Value="14,10" />
+            <Setter Property="Margin" Value="0,0,8,8" />
+        </Style>
+        <Style x:Key="TileTitle" TargetType="TextBlock" BasedOn="{StaticResource Text.Caption}">
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+        <Style x:Key="TileValue" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="22" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="0,2,0,0" />
+        </Style>
+        <Style x:Key="TileDetail" TargetType="TextBlock" BasedOn="{StaticResource Text.Caption}">
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+        </Style>
+        <Style x:Key="ChartTitle" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="0,0,0,8" />
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <DockPanel Margin="12,4,12,10">
+            <!-- Header: the server; read every N seconds -->
+            <DockPanel DockPanel.Dock="Top" Margin="0,4,0,12">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding UpdatedText}" Style="{StaticResource Text.Caption}" VerticalAlignment="Center" Margin="0,0,12,0" />
+                    <ProgressBar IsIndeterminate="{Binding IsLoading}" Width="40" VerticalAlignment="Center" Margin="0,0,10,0"
+                                 Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}" />
+                    <CheckBox x:Name="AutoRefreshBox" Content="{x:Static res:Strings.ActivityAutoRefresh}" IsChecked="{Binding AutoRefresh}"
+                              ToolTip="{x:Static res:Strings.ActivityAutoRefreshTip}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                    <ComboBox x:Name="IntervalBox" ItemsSource="{x:Static vm:DashboardViewModel.Intervals}" SelectedItem="{Binding Interval}"
+                              Width="78" Height="28" IsEnabled="{Binding AutoRefresh}" Margin="0,0,8,0">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock><Run Text="{Binding Mode=OneWay}" /><Run Text=" " /><Run Text="{x:Static res:Strings.UnitSeconds}" /></TextBlock>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <Button x:Name="RefreshButton" Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.Refresh}"
+                            Command="{Binding RefreshCommand}" ToolTip="{x:Static res:Strings.ActivityRefreshTip}" />
+                </StackPanel>
+                <Border Width="34" Height="34" CornerRadius="10" Background="{DynamicResource Brush.AccentSoft}" Margin="0,0,10,0">
+                    <TextBlock Text="&#xE9D2;" Style="{StaticResource Text.Icon}" FontSize="16" Foreground="{DynamicResource Brush.Accent}" />
+                </Border>
+                <StackPanel VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{x:Static res:Strings.DashOpen}" Style="{StaticResource Text.Subtitle}" />
+                        <Ellipse Width="7" Height="7" Margin="10,0,6,0" VerticalAlignment="Center"
+                                 Fill="{Binding Environment, Converter={x:Static v:EnvironmentBrushConverter.Instance}}" />
+                        <TextBlock Text="{Binding ConnectionName}" Style="{StaticResource Text.Caption}" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock x:Name="ServerText" Style="{StaticResource Text.Caption}">
+                        <Run Text="{Binding ServerText, Mode=OneWay}" Foreground="{DynamicResource Brush.TextSecondary}" /><Run Text="   " /><Run Text="{Binding ServerDetail, Mode=OneWay}" />
+                    </TextBlock>
+                </StackPanel>
+            </DockPanel>
+
+            <Border x:Name="ErrorBanner" DockPanel.Dock="Top" Margin="0,0,0,8" Padding="10,6" CornerRadius="{StaticResource Radius.Control}"
+                    Background="{DynamicResource Brush.SurfaceAlt}" BorderBrush="{DynamicResource Brush.Danger}" BorderThickness="3,0,0,0"
+                    Visibility="{Binding Error, Converter={x:Static v:NotNullToVisibilityConverter.Instance}}">
+                <DockPanel>
+                    <TextBlock Text="{x:Static c:Icons.Error}" Style="{StaticResource Text.Icon}" FontSize="13" Foreground="{DynamicResource Brush.Danger}" Margin="0,0,8,0" />
+                    <TextBlock Text="{Binding Error}" TextWrapping="Wrap" />
+                </DockPanel>
+            </Border>
+
+            <!-- The headline figures -->
+            <UniformGrid x:Name="Tiles" DockPanel.Dock="Top" Rows="1" Margin="0,0,-8,4">
+                <Border Style="{StaticResource Tile}">
+                    <StackPanel>
+                        <TextBlock Text="{x:Static res:Strings.DashCpu}" Style="{StaticResource TileTitle}" />
+                        <TextBlock x:Name="CpuValue" Text="{Binding CpuText}" Style="{StaticResource TileValue}" />
+                        <TextBlock Text="{Binding CpuDetail}" Style="{StaticResource TileDetail}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Tile}">
+                    <StackPanel>
+                        <TextBlock Text="{x:Static res:Strings.DashMemory}" Style="{StaticResource TileTitle}" />
+                        <TextBlock Text="{Binding MemoryText}" Style="{StaticResource TileValue}" />
+                        <TextBlock Text="{Binding MemoryDetail}" Style="{StaticResource TileDetail}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Tile}">
+                    <StackPanel>
+                        <TextBlock Text="{x:Static res:Strings.DashBatchesTile}" Style="{StaticResource TileTitle}" />
+                        <TextBlock Text="{Binding BatchText}" Style="{StaticResource TileValue}" />
+                        <TextBlock Text="{Binding BatchDetail}" Style="{StaticResource TileDetail}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Tile}">
+                    <StackPanel>
+                        <TextBlock Text="{x:Static res:Strings.DashRequests}" Style="{StaticResource TileTitle}" />
+                        <TextBlock Text="{Binding RequestsText}" Style="{StaticResource TileValue}" />
+                        <TextBlock Text="{Binding RequestsDetail}" Style="{StaticResource TileDetail}" />
+                    </StackPanel>
+                </Border>
+                <!-- Blocked: a status, so an icon and a word go with the red -->
+                <Border x:Name="BlockedTile">
+                    <Border.Style>
+                        <Style TargetType="Border" BasedOn="{StaticResource Tile}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasBlocking}" Value="True">
+                                    <Setter Property="BorderBrush" Value="{DynamicResource Brush.Danger}" />
+                                    <Setter Property="BorderThickness" Value="1" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <StackPanel>
+                        <TextBlock Text="{x:Static res:Strings.DashBlocked}" Style="{StaticResource TileTitle}" />
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{x:Static c:Icons.Warning}" Style="{StaticResource Text.Icon}" FontSize="15" Foreground="{DynamicResource Brush.Danger}"
+                                       Margin="0,4,6,0" Visibility="{Binding HasBlocking, Converter={StaticResource BoolToVisibility}}" />
+                            <TextBlock Text="{Binding BlockedCount}" Style="{StaticResource TileValue}" />
+                        </StackPanel>
+                        <TextBlock Text="{x:Static res:Strings.DashBlockedDetail}" Style="{StaticResource TileDetail}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Tile}">
+                    <StackPanel>
+                        <TextBlock Text="{x:Static res:Strings.DashPle}" Style="{StaticResource TileTitle}" />
+                        <TextBlock Text="{Binding PleText}" Style="{StaticResource TileValue}" />
+                        <TextBlock Text="{x:Static res:Strings.DashPleDetail}" Style="{StaticResource TileDetail}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Tile}">
+                    <StackPanel>
+                        <TextBlock Text="{x:Static res:Strings.DashLatency}" Style="{StaticResource TileTitle}" />
+                        <TextBlock Text="{Binding LatencyText}" Style="{StaticResource TileValue}" />
+                        <TextBlock Text="{Binding LatencyDetail}" Style="{StaticResource TileDetail}" />
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <!-- Databases: size and backups -->
+            <Border DockPanel.Dock="Bottom" Style="{StaticResource Card.Surface}" Padding="12,10" Margin="0,8,0,0">
+                <DockPanel>
+                    <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                        <Button DockPanel.Dock="Right" Style="{StaticResource Btn.Icon}" Width="26" Height="26" c:Ui.Icon="{x:Static c:Icons.Refresh}"
+                                Command="{Binding ReloadOverviewCommand}" ToolTip="{x:Static res:Strings.DashReloadDatabases}" />
+                        <TextBlock Text="{x:Static res:Strings.DashDatabases}" Style="{StaticResource ChartTitle}" Margin="0" VerticalAlignment="Center" />
+                    </DockPanel>
+                    <c:VirtualGrid x:Name="DatabasesGrid" Height="240" NullText="" ShowTypeTags="False" ShowFilterButtons="False" />
+                </DockPanel>
+            </Border>
+
+            <!-- Charts: one measure each, one axis each -->
+            <UniformGrid Columns="2">
+                <Border Style="{StaticResource Card.Surface}" Padding="12,10" Margin="0,0,4,8">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Top" Text="{x:Static res:Strings.DashCpuChart}" Style="{StaticResource ChartTitle}" />
+                        <v:LineChart x:Name="CpuChart" Height="170" Series="{Binding CpuSeries}" Maximum="100" Unit=" %" EmptyText="{x:Static res:Strings.DashNoCpu}" />
+                    </DockPanel>
+                </Border>
+                <Border Style="{StaticResource Card.Surface}" Padding="12,10" Margin="4,0,0,8">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Top" Text="{x:Static res:Strings.DashBatchChart}" Style="{StaticResource ChartTitle}" />
+                        <v:LineChart x:Name="BatchChart" Height="170" Series="{Binding BatchSeries}" EmptyText="{x:Static res:Strings.DashWaiting}" />
+                    </DockPanel>
+                </Border>
+                <Border Style="{StaticResource Card.Surface}" Padding="12,10" Margin="0,0,4,0">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Top" Text="{x:Static res:Strings.DashIoChart}" Style="{StaticResource ChartTitle}" />
+                        <v:LineChart x:Name="IoChart" Height="170" Series="{Binding IoSeries}" Format="0.0" EmptyText="{x:Static res:Strings.DashWaiting}" />
+                    </DockPanel>
+                </Border>
+                <Border Style="{StaticResource Card.Surface}" Padding="12,10" Margin="4,0,0,0">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Top" Text="{Binding WaitsTitle}" Style="{StaticResource ChartTitle}" />
+                        <v:BarList x:Name="WaitsChart" MinHeight="170" Items="{Binding Waits}" EmptyText="{x:Static res:Strings.DashNoWaits}" />
+                    </DockPanel>
+                </Border>
+            </UniformGrid>
+        </DockPanel>
+    </ScrollViewer>
+</UserControl>
