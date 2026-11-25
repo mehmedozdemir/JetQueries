@@ -1053,6 +1053,13 @@
   <data name="ExportStyleLightBlue" xml:space="preserve"><value>Açık mavi</value></data>
   <data name="ExportStylePlain" xml:space="preserve"><value>Sade</value></data>
   <data name="ExportExcelTotalsTip" xml:space="preserve"><value>Verinin altında her sayısal sütunun toplamını veren bir satır; Excel'deki filtreye uyar (SUBTOTAL).</value></data>
+  <data name="GridOpIsEmpty" xml:space="preserve"><value>boş</value></data>
+  <data name="GridOpIsNotEmpty" xml:space="preserve"><value>boş değil</value></data>
+  <data name="GridClearFilters" xml:space="preserve"><value>Filtreleri temizle</value></data>
+  <data name="GridExport" xml:space="preserve"><value>Dışa aktar…</value></data>
+  <data name="GridExportTip" xml:space="preserve"><value>Görünen satırları (sıralı ve filtreli) Excel, CSV, JSON… olarak dışa aktar</value></data>
+  <data name="GridNumberHint" xml:space="preserve"><value>Birimler anlaşılır: 500 ms, 2 sn, 10 MB, 80 %</value></data>
+  <data name="GridShownCount" xml:space="preserve"><value>{1} satırdan {0}</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Tümünü temizle</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Filtreyi kaldır</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} / {1:N0} satır</value></data>

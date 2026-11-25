@@ -108,6 +108,9 @@ public sealed partial class ActivityMonitorViewModel : ObservableObject, IAsyncD
     [ObservableProperty]
     public partial bool IsShown { get; set; }
 
+    /// <summary>Exports the screen's tables as shown (null in tests and where no dialogs are).</summary>
+    public GridExporter? Exporter { get; init; }
+
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(CancelLoadCommand))]
     public partial bool IsLoading { get; set; }

@@ -31,7 +31,12 @@ public partial class ActivityMonitorView : UserControl
         };
         Loaded += (_, _) => UpdateShown();
         SessionsGrid.CurrentCellChanged += OnCurrentCellChanged;
+        _sessions = new DbaGrid(SessionsGrid, () => _viewModel?.Exporter, () => (_viewModel?.HeaderText ?? "activity") + " - " + Strings.ActivitySessions);
     }
+
+    private readonly DbaGrid _sessions;
+
+    private async void OnExport(object sender, RoutedEventArgs e) => await _sessions.ExportAsync();
 
     /// <summary>The sessions grid, for tests.</summary>
     internal VirtualGrid Grid => SessionsGrid;
@@ -94,9 +99,9 @@ public partial class ActivityMonitorView : UserControl
         _moving = true;
         try
         {
-            SessionsGrid.Source = new ArrayGridDataSource([.. ActivityMonitorViewModel.Columns], kinds, rows.Count, (r, c) => rows[r].Cell(c), rows.Count == 0 ? new object() : Schema);
+            _sessions.Show([.. ActivityMonitorViewModel.Columns], kinds, rows.Count, (r, c) => rows[r].Cell(c), Schema);
             EmptyText.Visibility = rows.Count == 0 && viewModel.UpdatedText.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
-            var index = viewModel.Selected is { } chosen ? rows.IndexOf(chosen) : -1;
+            var index = viewModel.Selected is { } chosen ? _sessions.ToShown(rows.IndexOf(chosen)) : -1;
             if (index >= 0)
             {
                 SessionsGrid.MoveTo(index, Math.Max(0, SessionsGrid.CurrentColumn));
@@ -115,7 +120,7 @@ public partial class ActivityMonitorView : UserControl
             return;
         }
 
-        var row = SessionsGrid.CurrentRow;
+        var row = _sessions.ToSource(SessionsGrid.CurrentRow);
         viewModel.Selected = row >= 0 && row < viewModel.Rows.Count ? viewModel.Rows[row] : null;
     }
 
@@ -127,7 +132,7 @@ public partial class ActivityMonitorView : UserControl
         if (e.NewValue is BlockingNode node && _viewModel is { } viewModel)
         {
             viewModel.Choose(node.Row.Id);
-            var index = viewModel.Rows.IndexOf(viewModel.Selected!);
+            var index = _sessions.ToShown(viewModel.Rows.IndexOf(viewModel.Selected!));
             if (index >= 0)
             {
                 _moving = true;

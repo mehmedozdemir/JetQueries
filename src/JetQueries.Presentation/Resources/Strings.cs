@@ -162,6 +162,13 @@ public static class Strings
     public static string FilterClear => Get(nameof(FilterClear));
     public static string FilterValueRequired => Get(nameof(FilterValueRequired));
     public static string FilterClearAll => Get(nameof(FilterClearAll));
+    public static string GridOpIsEmpty => Get(nameof(GridOpIsEmpty));
+    public static string GridOpIsNotEmpty => Get(nameof(GridOpIsNotEmpty));
+    public static string GridClearFilters => Get(nameof(GridClearFilters));
+    public static string GridExport => Get(nameof(GridExport));
+    public static string GridExportTip => Get(nameof(GridExportTip));
+    public static string GridNumberHint => Get(nameof(GridNumberHint));
+    public static string GridShownCount => Get(nameof(GridShownCount));
     public static string ExportExcelTotalsTip => Get(nameof(ExportExcelTotalsTip));
     public static string ExportExcelOptions => Get(nameof(ExportExcelOptions));
     public static string ExportExcelSheet => Get(nameof(ExportExcelSheet));

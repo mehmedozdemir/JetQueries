@@ -70,7 +70,9 @@ public partial class DashboardView : UserControl
             GridColumnKind.Text, GridColumnKind.Text, GridColumnKind.Text, GridColumnKind.Number, GridColumnKind.Number,
             GridColumnKind.Text, GridColumnKind.Text, GridColumnKind.Text,
         };
-        DatabasesGrid.Source = new ArrayGridDataSource([.. DashboardViewModel.DatabaseColumns], kinds, rows.Count,
-            (r, c) => rows[r].Cells[c], rows.Count == 0 ? new object() : Schema);
+        _databases ??= new DbaGrid(DatabasesGrid, () => _viewModel?.Exporter, () => _viewModel?.HeaderText ?? "dashboard");
+        _databases.Show([.. DashboardViewModel.DatabaseColumns], kinds, rows.Count, (r, c) => rows[r].Cells[c], Schema);
     }
+
+    private DbaGrid? _databases;
 }

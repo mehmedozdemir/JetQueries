@@ -141,6 +141,9 @@ public sealed partial class PerformanceViewModel : ObservableObject, IAsyncDispo
     [ObservableProperty]
     public partial string Note { get; set; } = string.Empty;
 
+    /// <summary>Exports the screen's tables as shown (null in tests and where no dialogs are).</summary>
+    public GridExporter? Exporter { get; init; }
+
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(CancelLoadCommand))]
     public partial bool IsLoading { get; set; }

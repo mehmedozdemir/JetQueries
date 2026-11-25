@@ -22,6 +22,8 @@
                 <TextBlock Text="{x:Static c:Icons.Database}" Style="{StaticResource Text.Icon}" FontSize="13" Margin="0,0,6,0" Foreground="{DynamicResource Brush.Accent}" />
                 <ComboBox x:Name="DatabaseBox" ItemsSource="{Binding Databases}" SelectedItem="{Binding Database}" Width="220" Height="28"
                           IsTextSearchEnabled="True" ToolTip="{x:Static res:Strings.QueryDatabase}" Margin="0,0,8,0" />
+                <Button Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.Export}" Click="OnExport"
+                        ToolTip="{x:Static res:Strings.GridExportTip}" Margin="0,0,4,0" />
                 <Button x:Name="RefreshButton" Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="{x:Static c:Icons.Refresh}"
                         Command="{Binding LoadCommand}" ToolTip="{x:Static res:Strings.PerfRefresh}" />
             </StackPanel>

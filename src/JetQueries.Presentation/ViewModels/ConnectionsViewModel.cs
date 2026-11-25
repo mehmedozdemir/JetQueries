@@ -677,15 +677,20 @@ public partial class ConnectionsViewModel(
         switch (node ?? Selected)
         {
             case ConnectionNodeViewModel { CanAnalyze: true, Context.Session: var session }:
-                PerformanceRequested?.Invoke(this, new PerformanceViewModel(session, jobs));
+                PerformanceRequested?.Invoke(this, new PerformanceViewModel(session, jobs) { Exporter = GridExporter });
                 break;
             case DatabaseObjectNodeViewModel { CanAnalyze: true, Session: var session, Target: var database }:
-                PerformanceRequested?.Invoke(this, new PerformanceViewModel(session, jobs, database.Name.Name));
+                PerformanceRequested?.Invoke(this, new PerformanceViewModel(session, jobs, database.Name.Name) { Exporter = GridExporter });
                 break;
             default:
                 break;
         }
     }
+
+    // The DBA screens' tables export through the result Export dialog.
+    private GridExporter GridExporter => _gridExporter ??= new GridExporter(dialogs, jobs);
+
+    private GridExporter? _gridExporter;
 
     /// <summary>A database's detail screen is to be shown in a tab.</summary>
     public event EventHandler<DatabaseDetailViewModel>? DatabaseDetailRequested;
@@ -706,7 +711,7 @@ public partial class ConnectionsViewModel(
         ArgumentNullException.ThrowIfNull(session);
         if (session.SupportsDatabaseDetails && !string.IsNullOrEmpty(database))
         {
-            DatabaseDetailRequested?.Invoke(this, new DatabaseDetailViewModel(session, jobs, database));
+            DatabaseDetailRequested?.Invoke(this, new DatabaseDetailViewModel(session, jobs, database) { Exporter = GridExporter });
         }
     }
 
@@ -732,7 +737,7 @@ public partial class ConnectionsViewModel(
     {
         if ((node ?? Selected) is ConnectionNodeViewModel { CanDashboard: true, Context.Session: var session })
         {
-            DashboardRequested?.Invoke(this, new DashboardViewModel(session, jobs));
+            DashboardRequested?.Invoke(this, new DashboardViewModel(session, jobs) { Exporter = GridExporter });
         }
     }
 
@@ -745,7 +750,7 @@ public partial class ConnectionsViewModel(
     {
         if ((node ?? Selected) is ConnectionNodeViewModel { CanMonitor: true, Context.Session: var session })
         {
-            ActivityRequested?.Invoke(this, new ActivityMonitorViewModel(session, jobs, dialogs));
+            ActivityRequested?.Invoke(this, new ActivityMonitorViewModel(session, jobs, dialogs) { Exporter = GridExporter });
         }
     }
 
