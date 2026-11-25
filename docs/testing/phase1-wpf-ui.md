@@ -735,3 +735,14 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] A login without VIEW SERVER STATE: a yellow note says only its own sessions are visible.
 - [ ] Disconnect the connection while the monitor is open: it says the connection was closed and stops refreshing.
 - [ ] Close the monitor tab: no more reads (its connection is closed; check sys.dm_exec_sessions from another tab).
+
+## Performance analysis (SQL Server)
+- [ ] Right-click a connected SQL Server: "Performans analizi"; right-click a database under it: the same with that database chosen. Tools > Performans analizi works for the selected connection or the query tab's.
+- [ ] Ağır sorgular: the list fills for all databases; change the order (Ortalama süre…) and "İlk 100": it reads again; choose a database: only its statements. The note says since when the server counts. JetQueries' own monitoring queries are not in the list.
+- [ ] Choose a row: its full SQL is on the right; "Sorgu sekmesinde aç" puts it in a new tab on the right database, not run.
+- [ ] Eksik index'ler: after running a query on an unindexed column a few times, a proposal appears with impact and score; its CREATE INDEX opens in a tab; "Görünenlerin betiği" opens all of them under a review comment.
+- [ ] Index kullanımı: with "Tüm veritabanları" it asks for a database; choose one: unused / same as / covered by findings with DROP INDEX scripts; untick "Yalnızca bulgular": every index, primary keys and clustered ones without a script.
+- [ ] Parçalanma: nothing is read until "Ölç"; then fragmented indexes with REBUILD / REORGANIZE; change "En az sayfa" to 100 and measure again.
+- [ ] A login without VIEW SERVER STATE: the error says what is missing; the screen stays usable.
+- [ ] Switch parts quickly while one is loading: the part shown last is read.
+- [ ] Close the tab: its connection is closed.

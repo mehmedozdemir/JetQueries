@@ -126,8 +126,11 @@ public sealed partial class ConnectionNodeViewModel(ConnectionDefinition definit
     public bool IsProduction => Definition.Environment == ConnectionEnvironment.Production;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanMonitor))]
+    [NotifyPropertyChangedFor(nameof(CanMonitor), nameof(CanAnalyze))]
     public partial bool IsConnected { get; set; }
+
+    /// <summary>Open, on a provider that reports heavy queries and index advice: the performance analysis can be opened.</summary>
+    public bool CanAnalyze => IsConnected && _context?.Session.SupportsPerformance == true;
 
     /// <summary>Open, on a provider that reports the server's sessions: the activity monitor can be opened.</summary>
     public bool CanMonitor => IsConnected && _context?.Session.SupportsActivity == true;
@@ -652,6 +655,26 @@ public partial class ConnectionsViewModel(
 
     /// <summary>A key of a key-value connection is to be shown in a tab.</summary>
     public event EventHandler<KeyValueViewModel>? KeyRequested;
+
+    /// <summary>The performance analysis of an open connection (and, from a database node, that database) is to be shown in a tab.</summary>
+    public event EventHandler<PerformanceViewModel>? PerformanceRequested;
+
+    /// <summary>Opens the performance analysis of a connection, or of a database under one.</summary>
+    [RelayCommand]
+    private void OpenPerformance(ExplorerNodeViewModel? node)
+    {
+        switch (node ?? Selected)
+        {
+            case ConnectionNodeViewModel { CanAnalyze: true, Context.Session: var session }:
+                PerformanceRequested?.Invoke(this, new PerformanceViewModel(session, jobs));
+                break;
+            case DatabaseObjectNodeViewModel { Target.Kind: DatabaseObjectKinds.Database, Session: { SupportsPerformance: true } session, Target: var database }:
+                PerformanceRequested?.Invoke(this, new PerformanceViewModel(session, jobs, database.Name.Name));
+                break;
+            default:
+                break;
+        }
+    }
 
     /// <summary>The activity monitor of an open connection is to be shown in a tab.</summary>
     public event EventHandler<ActivityMonitorViewModel>? ActivityRequested;

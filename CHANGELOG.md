@@ -6,6 +6,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 ## [Unreleased]
 
 ### Added
+- Performance analysis (Phase 3, DBA; SQL Server): right-click an open connection or a database > "Performans analizi" (also Tools). One tab, four parts, for all databases or one:
+  - Ağır sorgular: the costliest statements from the plan cache, statements differing only in their values counted together, ranked by total or average CPU, duration, reads, or executions (top 25–200), with executions, CPU, time, reads, writes and last run; since when the server counts.
+  - Eksik index'ler: what the optimizer asked for (equality, inequality, include columns, impact, uses, score) with a CREATE INDEX proposal.
+  - Index kullanımı: every index with seeks, scans, lookups, updates, size and last read; findings: unused, same as another, covered by another (never clustered, primary key or unique constraint indexes) with a DROP INDEX proposal; "Yalnızca bulgular" on by default.
+  - Parçalanma: measured only on "Ölç" (LIMITED mode, indexes from 1 000 pages): REBUILD above 30 %, REORGANIZE from 5 %.
+  Nothing is run: a row's SQL or script, or "Görünenlerin betiği" (all shown, under a review header), opens in a new query tab on that database. SDK (preview): `IPerformanceAdvisor` (ADR 0010).
 - Activity monitor (Phase 3, DBA; SQL Server): right-click an open connection > "Etkinlik izleyici" or Tools > Etkinlik izleyici (Ctrl+Shift+A) opens a tab with the server's sessions: login, host, program, database, state, command, wait and wait time, blocked by, running time, CPU, reads, writes, open transactions and the SQL (running, else last sent). Counters for sessions, running, blocked and head blockers; blocking chains as a tree (head blocker first, an idle session with an open transaction says so); a filter over every column, idle and system sessions on request. It reads every 5 s while shown (2–60 s, F5 by hand) on a connection of its own and stops when hidden or closed. "Sorgu sekmesinde aç" puts a session's SQL in a new query tab; "Oturumu sonlandır…" ends one (KILL) after a confirmation, twice on production, never the monitor's own session, never on a read-only connection. Without VIEW SERVER STATE it says that only your own sessions are visible. SDK (preview): `IActivityMonitor` (ADR 0009).
 - Query toolbar: the database (schema) picker has a filter box: type any part of a name (Turkish-aware, ignoring case); Down goes into the list, Enter takes the highlighted or first match, Esc closes. For servers with hundreds of databases.
 - Query toolbar: the tab's connection, with its environment's colour, beside the database; another open connection can be chosen there (not while running or with a transaction open). "Çalıştır" is a named button. The tab's tooltip names the connection and the database.
@@ -179,6 +185,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
   (mark as SVG path data, colour, description).
 
 ### Changed
+- Activity monitor: the grid measures its columns from the first sessions read, not from the empty table it starts with.
 - Explorer: at start-up every connection folder is closed; folders opened during the session stay open through a refresh, and Go to object opens the folders of what it reveals.
 - Results: decimal(p,s), numeric and NUMBER(p,s) values are shown with their declared scale (1500.00, not 1500.0) in the grid, text, record, copy and export.
 - Result footer: "Satır/sayfa" instead of "Sayfa", a smaller box, the fetch status with its full text as a tooltip, separators between groups.

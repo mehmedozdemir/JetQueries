@@ -46,6 +46,11 @@
                             <v:ActivityMonitorView Margin="0,6,0,0" />
                         </DataTemplate>
                     </v:DocumentTemplateSelector.Activity>
+                    <v:DocumentTemplateSelector.Performance>
+                        <DataTemplate>
+                            <v:PerformanceView Margin="0,6,0,0" />
+                        </DataTemplate>
+                    </v:DocumentTemplateSelector.Performance>
                 </v:DocumentTemplateSelector>
             </TabControl.ContentTemplateSelector>
             <TabControl.ItemContainerStyle>

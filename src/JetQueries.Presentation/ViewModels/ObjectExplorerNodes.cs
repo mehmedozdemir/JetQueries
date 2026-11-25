@@ -133,6 +133,9 @@ public abstract partial class LazyNodeViewModel : ExplorerNodeViewModel
 public sealed class DatabaseObjectNodeViewModel(ExplorerContext context, DatabaseObject databaseObject)
     : LazyNodeViewModel(databaseObject.Name.Name, ExplorerTree.HasChildren(databaseObject.Kind))
 {
+    /// <summary>A database whose provider gives performance advice: its performance analysis can be opened.</summary>
+    public bool CanAnalyze => Target.Kind == DatabaseObjectKinds.Database && Session.SupportsPerformance;
+
     public DatabaseObject Target { get; } = databaseObject;
 
     /// <inheritdoc />

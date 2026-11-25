@@ -485,6 +485,76 @@ What it is running stops and its open transaction is rolled back; the client get
   <data name="ActivityColLogin2" xml:space="preserve"><value>Logged in</value></data>
   <data name="ActivityColSql" xml:space="preserve"><value>SQL</value></data>
   <data name="ActivityDisconnected" xml:space="preserve"><value>The connection was closed. Connect again and reopen the monitor.</value></data>
+  <data name="PerfTitle" xml:space="preserve"><value>Performance</value></data>
+  <data name="PerfOpen" xml:space="preserve"><value>Performance analysis</value></data>
+  <data name="PerfOpenTip" xml:space="preserve"><value>Heavy queries, missing, unused and duplicate indexes, fragmentation</value></data>
+  <data name="PerfAllDatabases" xml:space="preserve"><value>All databases</value></data>
+  <data name="PerfUnsupported" xml:space="preserve"><value>This database type does not report query and index statistics.</value></data>
+  <data name="PerfSectionHeavy" xml:space="preserve"><value>Heavy queries</value></data>
+  <data name="PerfSectionMissing" xml:space="preserve"><value>Missing indexes</value></data>
+  <data name="PerfSectionUsage" xml:space="preserve"><value>Index use</value></data>
+  <data name="PerfSectionFragmentation" xml:space="preserve"><value>Fragmentation</value></data>
+  <data name="PerfOrderTotalCpu" xml:space="preserve"><value>Total CPU</value></data>
+  <data name="PerfOrderAverageCpu" xml:space="preserve"><value>Average CPU</value></data>
+  <data name="PerfOrderTotalDuration" xml:space="preserve"><value>Total duration</value></data>
+  <data name="PerfOrderAverageDuration" xml:space="preserve"><value>Average duration</value></data>
+  <data name="PerfOrderTotalReads" xml:space="preserve"><value>Total reads</value></data>
+  <data name="PerfOrderAverageReads" xml:space="preserve"><value>Average reads</value></data>
+  <data name="PerfOrderExecutions" xml:space="preserve"><value>Executions</value></data>
+  <data name="PerfTop" xml:space="preserve"><value>Top</value></data>
+  <data name="PerfOnlyFindings" xml:space="preserve"><value>Only findings</value></data>
+  <data name="PerfMinimumPages" xml:space="preserve"><value>Min. pages</value></data>
+  <data name="PerfMeasure" xml:space="preserve"><value>Measure</value></data>
+  <data name="PerfMeasureTip" xml:space="preserve"><value>Reads the index pages of the database (LIMITED mode); can take a while on large databases</value></data>
+  <data name="PerfRefresh" xml:space="preserve"><value>Read again</value></data>
+  <data name="PerfOpenRow" xml:space="preserve"><value>Open in a query tab</value></data>
+  <data name="PerfScriptAll" xml:space="preserve"><value>Script all shown</value></data>
+  <data name="PerfScriptHeader" xml:space="preserve"><value>Proposed by JetQueries' performance analysis: review every statement before running it.</value></data>
+  <data name="PerfChooseDatabase" xml:space="preserve"><value>Choose a database: index use and fragmentation are read per database.</value></data>
+  <data name="PerfHeavyNote" xml:space="preserve"><value>From the plan cache: statements differing only in their values are counted together; a plan dropped from the cache drops its figures.</value></data>
+  <data name="PerfMissingNote" xml:space="preserve"><value>What the optimizer wished it had: check existing indexes first, similar proposals can often be merged into one.</value></data>
+  <data name="PerfUsageNote" xml:space="preserve"><value>Reads by user queries; an unused index only costs its writes.</value></data>
+  <data name="PerfSince" xml:space="preserve"><value>Counting since {0}.</value></data>
+  <data name="PerfFragmentationNote" xml:space="preserve"><value>Not measured yet: "Measure" reads the index pages of the chosen database.</value></data>
+  <data name="PerfFragmentationDone" xml:space="preserve"><value>Above 30 %: REBUILD; 5–30 %: REORGANIZE. Indexes smaller than the minimum are left out.</value></data>
+  <data name="PerfFindingUnused" xml:space="preserve"><value>unused</value></data>
+  <data name="PerfFindingDuplicate" xml:space="preserve"><value>same as {0}</value></data>
+  <data name="PerfFindingCovered" xml:space="preserve"><value>covered by {0}</value></data>
+  <data name="PerfKindClustered" xml:space="preserve"><value>clustered</value></data>
+  <data name="PerfKindConstraint" xml:space="preserve"><value>key / constraint</value></data>
+  <data name="PerfKindUnique" xml:space="preserve"><value>unique</value></data>
+  <data name="PerfColSql" xml:space="preserve"><value>SQL</value></data>
+  <data name="PerfColObject" xml:space="preserve"><value>Object</value></data>
+  <data name="PerfColExecutions" xml:space="preserve"><value>Executions</value></data>
+  <data name="PerfColTotalCpu" xml:space="preserve"><value>Total CPU</value></data>
+  <data name="PerfColAverageCpu" xml:space="preserve"><value>Avg CPU</value></data>
+  <data name="PerfColTotalDuration" xml:space="preserve"><value>Total time</value></data>
+  <data name="PerfColAverageDuration" xml:space="preserve"><value>Avg time</value></data>
+  <data name="PerfColTotalReads" xml:space="preserve"><value>Total reads</value></data>
+  <data name="PerfColAverageReads" xml:space="preserve"><value>Avg reads</value></data>
+  <data name="PerfColLast" xml:space="preserve"><value>Last</value></data>
+  <data name="PerfColTable" xml:space="preserve"><value>Table</value></data>
+  <data name="PerfColEquality" xml:space="preserve"><value>Equality</value></data>
+  <data name="PerfColInequality" xml:space="preserve"><value>Inequality</value></data>
+  <data name="PerfColInclude" xml:space="preserve"><value>Include</value></data>
+  <data name="PerfColImpact" xml:space="preserve"><value>Impact</value></data>
+  <data name="PerfColUses" xml:space="preserve"><value>Uses</value></data>
+  <data name="PerfColScore" xml:space="preserve"><value>Score</value></data>
+  <data name="PerfColIndex" xml:space="preserve"><value>Index</value></data>
+  <data name="PerfColFinding" xml:space="preserve"><value>Finding</value></data>
+  <data name="PerfColKeys" xml:space="preserve"><value>Key columns</value></data>
+  <data name="PerfColSeeks" xml:space="preserve"><value>Seeks</value></data>
+  <data name="PerfColScans" xml:space="preserve"><value>Scans</value></data>
+  <data name="PerfColLookups" xml:space="preserve"><value>Lookups</value></data>
+  <data name="PerfColUpdates" xml:space="preserve"><value>Updates</value></data>
+  <data name="PerfColSize" xml:space="preserve"><value>Size</value></data>
+  <data name="PerfColLastRead" xml:space="preserve"><value>Last read</value></data>
+  <data name="PerfColKind" xml:space="preserve"><value>Kind</value></data>
+  <data name="PerfColFragmentation" xml:space="preserve"><value>Fragmentation</value></data>
+  <data name="PerfColPages" xml:space="preserve"><value>Pages</value></data>
+  <data name="PerfColPartition" xml:space="preserve"><value>Partition</value></data>
+  <data name="PerfColAction" xml:space="preserve"><value>Action</value></data>
+  <data name="PerfEmpty" xml:space="preserve"><value>Nothing to show.</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Clear all</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Remove filter</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} of {1:N0} rows</value></data>

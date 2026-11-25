@@ -192,6 +192,39 @@ public partial class DocumentsViewModel : ObservableObject
         return monitor;
     }
 
+    /// <summary>
+    /// Shows a connection's performance analysis in a tab (the open one of the same connection is selected instead,
+    /// switched to the asked database); its scripts open in query tabs here.
+    /// </summary>
+    public PerformanceViewModel OpenPerformance(PerformanceViewModel analysis)
+    {
+        ArgumentNullException.ThrowIfNull(analysis);
+        var open = Tabs.OfType<PerformanceViewModel>().FirstOrDefault(p => p.ConnectionId == analysis.ConnectionId);
+        if (open is not null)
+        {
+            if (analysis.Database != PerformanceViewModel.AllDatabases && open.Database != analysis.Database)
+            {
+                if (!open.Databases.Contains(analysis.Database))
+                {
+                    open.Databases.Add(analysis.Database);
+                }
+
+                open.Database = analysis.Database;
+            }
+
+            _ = analysis.DisposeAsync().AsTask();
+            SelectedTab = open;
+            return open;
+        }
+
+        analysis.QueryRequested += (_, request) => _ = OpenAsync(request);
+        var index = SelectedTab is null ? Tabs.Count : Tabs.IndexOf(SelectedTab) + 1;
+        Tabs.Insert(Math.Clamp(index, 0, Tabs.Count), analysis);
+        SelectedTab = analysis;
+        _ = analysis.StartAsync();
+        return analysis;
+    }
+
     /// <summary>Closes any tab: a query as <see cref="CloseCommand"/> does (asking about changes), a details tab at once.</summary>
     [RelayCommand]
     private async Task CloseTabAsync(object? tab)
@@ -210,6 +243,9 @@ public partial class DocumentsViewModel : ObservableObject
             case ActivityMonitorViewModel monitor:
                 CloseDetails(monitor);
                 break;
+            case PerformanceViewModel analysis:
+                CloseDetails(analysis);
+                break;
             default:
                 break;
         }
@@ -219,7 +255,7 @@ public partial class DocumentsViewModel : ObservableObject
     [RelayCommand]
     private async Task CloseOtherTabsAsync(object? keep)
     {
-        foreach (var details in Tabs.Where(t => t is ObjectDetailsViewModel or KeyValueViewModel or ActivityMonitorViewModel && !ReferenceEquals(t, keep)).ToList())
+        foreach (var details in Tabs.Where(t => t is ObjectDetailsViewModel or KeyValueViewModel or ActivityMonitorViewModel or PerformanceViewModel && !ReferenceEquals(t, keep)).ToList())
         {
             CloseDetails(details);
         }
@@ -244,9 +280,9 @@ public partial class DocumentsViewModel : ObservableObject
         }
 
         // A monitor stops reading and gives its connection back.
-        if (details is ActivityMonitorViewModel monitor)
+        if (details is IAsyncDisposable disposable and (ActivityMonitorViewModel or PerformanceViewModel))
         {
-            _ = monitor.DisposeAsync().AsTask();
+            _ = disposable.DisposeAsync().AsTask();
         }
 
         Tabs.RemoveAt(index);

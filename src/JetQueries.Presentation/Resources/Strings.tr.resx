@@ -485,6 +485,76 @@
   <data name="ActivityColLogin2" xml:space="preserve"><value>Giriş</value></data>
   <data name="ActivityColSql" xml:space="preserve"><value>SQL</value></data>
   <data name="ActivityDisconnected" xml:space="preserve"><value>Bağlantı kapatıldı. Yeniden bağlanıp izleyiciyi tekrar açın.</value></data>
+  <data name="PerfTitle" xml:space="preserve"><value>Performans</value></data>
+  <data name="PerfOpen" xml:space="preserve"><value>Performans analizi</value></data>
+  <data name="PerfOpenTip" xml:space="preserve"><value>Ağır sorgular, eksik, kullanılmayan ve tekrarlayan index'ler, parçalanma</value></data>
+  <data name="PerfAllDatabases" xml:space="preserve"><value>Tüm veritabanları</value></data>
+  <data name="PerfUnsupported" xml:space="preserve"><value>Bu veritabanı türü sorgu ve index istatistiklerini bildirmiyor.</value></data>
+  <data name="PerfSectionHeavy" xml:space="preserve"><value>Ağır sorgular</value></data>
+  <data name="PerfSectionMissing" xml:space="preserve"><value>Eksik index'ler</value></data>
+  <data name="PerfSectionUsage" xml:space="preserve"><value>Index kullanımı</value></data>
+  <data name="PerfSectionFragmentation" xml:space="preserve"><value>Parçalanma</value></data>
+  <data name="PerfOrderTotalCpu" xml:space="preserve"><value>Toplam CPU</value></data>
+  <data name="PerfOrderAverageCpu" xml:space="preserve"><value>Ortalama CPU</value></data>
+  <data name="PerfOrderTotalDuration" xml:space="preserve"><value>Toplam süre</value></data>
+  <data name="PerfOrderAverageDuration" xml:space="preserve"><value>Ortalama süre</value></data>
+  <data name="PerfOrderTotalReads" xml:space="preserve"><value>Toplam okuma</value></data>
+  <data name="PerfOrderAverageReads" xml:space="preserve"><value>Ortalama okuma</value></data>
+  <data name="PerfOrderExecutions" xml:space="preserve"><value>Çalışma sayısı</value></data>
+  <data name="PerfTop" xml:space="preserve"><value>İlk</value></data>
+  <data name="PerfOnlyFindings" xml:space="preserve"><value>Yalnızca bulgular</value></data>
+  <data name="PerfMinimumPages" xml:space="preserve"><value>En az sayfa</value></data>
+  <data name="PerfMeasure" xml:space="preserve"><value>Ölç</value></data>
+  <data name="PerfMeasureTip" xml:space="preserve"><value>Veritabanının index sayfalarını okur (LIMITED modu); büyük veritabanlarında zaman alabilir</value></data>
+  <data name="PerfRefresh" xml:space="preserve"><value>Yeniden oku</value></data>
+  <data name="PerfOpenRow" xml:space="preserve"><value>Sorgu sekmesinde aç</value></data>
+  <data name="PerfScriptAll" xml:space="preserve"><value>Görünenlerin betiği</value></data>
+  <data name="PerfScriptHeader" xml:space="preserve"><value>JetQueries performans analizinin önerisi: çalıştırmadan önce her deyimi gözden geçirin.</value></data>
+  <data name="PerfChooseDatabase" xml:space="preserve"><value>Bir veritabanı seçin: index kullanımı ve parçalanma veritabanı bazında okunur.</value></data>
+  <data name="PerfHeavyNote" xml:space="preserve"><value>Plan önbelleğinden: yalnızca değerleri farklı deyimler birlikte sayılır; önbellekten düşen planın rakamları da düşer.</value></data>
+  <data name="PerfMissingNote" xml:space="preserve"><value>Optimize edicinin istediği index'ler: önce mevcut index'lere bakın, benzer öneriler çoğu zaman tek index'te birleştirilebilir.</value></data>
+  <data name="PerfUsageNote" xml:space="preserve"><value>Kullanıcı sorgularının okumaları; kullanılmayan bir index'in yalnızca yazma maliyeti vardır.</value></data>
+  <data name="PerfSince" xml:space="preserve"><value>Sayım başlangıcı: {0}.</value></data>
+  <data name="PerfFragmentationNote" xml:space="preserve"><value>Henüz ölçülmedi: "Ölç" seçili veritabanının index sayfalarını okur.</value></data>
+  <data name="PerfFragmentationDone" xml:space="preserve"><value>%30 üstü: REBUILD; %5–30: REORGANIZE. En az sayfanın altındaki index'ler gösterilmez.</value></data>
+  <data name="PerfFindingUnused" xml:space="preserve"><value>kullanılmıyor</value></data>
+  <data name="PerfFindingDuplicate" xml:space="preserve"><value>{0} ile aynı</value></data>
+  <data name="PerfFindingCovered" xml:space="preserve"><value>{0} tarafından kapsanıyor</value></data>
+  <data name="PerfKindClustered" xml:space="preserve"><value>kümelenmiş</value></data>
+  <data name="PerfKindConstraint" xml:space="preserve"><value>anahtar / kısıt</value></data>
+  <data name="PerfKindUnique" xml:space="preserve"><value>benzersiz</value></data>
+  <data name="PerfColSql" xml:space="preserve"><value>SQL</value></data>
+  <data name="PerfColObject" xml:space="preserve"><value>Nesne</value></data>
+  <data name="PerfColExecutions" xml:space="preserve"><value>Çalışma</value></data>
+  <data name="PerfColTotalCpu" xml:space="preserve"><value>Toplam CPU</value></data>
+  <data name="PerfColAverageCpu" xml:space="preserve"><value>Ort. CPU</value></data>
+  <data name="PerfColTotalDuration" xml:space="preserve"><value>Toplam süre</value></data>
+  <data name="PerfColAverageDuration" xml:space="preserve"><value>Ort. süre</value></data>
+  <data name="PerfColTotalReads" xml:space="preserve"><value>Toplam okuma</value></data>
+  <data name="PerfColAverageReads" xml:space="preserve"><value>Ort. okuma</value></data>
+  <data name="PerfColLast" xml:space="preserve"><value>Son</value></data>
+  <data name="PerfColTable" xml:space="preserve"><value>Tablo</value></data>
+  <data name="PerfColEquality" xml:space="preserve"><value>Eşitlik</value></data>
+  <data name="PerfColInequality" xml:space="preserve"><value>Eşitsizlik</value></data>
+  <data name="PerfColInclude" xml:space="preserve"><value>Include</value></data>
+  <data name="PerfColImpact" xml:space="preserve"><value>Etki</value></data>
+  <data name="PerfColUses" xml:space="preserve"><value>Kullanım</value></data>
+  <data name="PerfColScore" xml:space="preserve"><value>Puan</value></data>
+  <data name="PerfColIndex" xml:space="preserve"><value>Index</value></data>
+  <data name="PerfColFinding" xml:space="preserve"><value>Bulgu</value></data>
+  <data name="PerfColKeys" xml:space="preserve"><value>Anahtar sütunlar</value></data>
+  <data name="PerfColSeeks" xml:space="preserve"><value>Seek</value></data>
+  <data name="PerfColScans" xml:space="preserve"><value>Scan</value></data>
+  <data name="PerfColLookups" xml:space="preserve"><value>Lookup</value></data>
+  <data name="PerfColUpdates" xml:space="preserve"><value>Güncelleme</value></data>
+  <data name="PerfColSize" xml:space="preserve"><value>Boyut</value></data>
+  <data name="PerfColLastRead" xml:space="preserve"><value>Son okuma</value></data>
+  <data name="PerfColKind" xml:space="preserve"><value>Tür</value></data>
+  <data name="PerfColFragmentation" xml:space="preserve"><value>Parçalanma</value></data>
+  <data name="PerfColPages" xml:space="preserve"><value>Sayfa</value></data>
+  <data name="PerfColPartition" xml:space="preserve"><value>Bölüm</value></data>
+  <data name="PerfColAction" xml:space="preserve"><value>İşlem</value></data>
+  <data name="PerfEmpty" xml:space="preserve"><value>Gösterilecek bir şey yok.</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Tümünü temizle</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Filtreyi kaldır</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} / {1:N0} satır</value></data>
