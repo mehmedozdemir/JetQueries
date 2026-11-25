@@ -91,6 +91,8 @@ public sealed class DocumentTemplateSelector : DataTemplateSelector
 
     public DataTemplate? Dashboard { get; set; }
 
+    public DataTemplate? Health { get; set; }
+
     public override DataTemplate? SelectTemplate(object item, DependencyObject container) => item switch
     {
         ObjectDetailsViewModel => Details,
@@ -98,6 +100,7 @@ public sealed class DocumentTemplateSelector : DataTemplateSelector
         ActivityMonitorViewModel => Activity,
         PerformanceViewModel => Performance,
         DashboardViewModel => Dashboard,
+        HealthCheckViewModel => Health,
         _ => Query,
     };
 }
@@ -115,6 +118,7 @@ public sealed class DocumentIconConverter : IValueConverter
         ActivityMonitorViewModel => "",
         PerformanceViewModel => "\uE9F9",
         DashboardViewModel => "\uE9D2",
+        HealthCheckViewModel => "\uE95E",
         _ => UiKit.Controls.Icons.Code,
     };
 

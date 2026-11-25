@@ -250,8 +250,10 @@ public sealed class SqlServerProvider : IDatabaseProvider, IBulkInsertScripting,
     }
 }
 
-internal sealed class SqlServerConnection(SqlConnection connection) : IDatabaseConnection, IDatabaseContext, ITransactionControl, IActivityMonitor, IPerformanceAdvisor, IServerDashboard
+internal sealed class SqlServerConnection(SqlConnection connection) : IDatabaseConnection, IDatabaseContext, ITransactionControl, IActivityMonitor, IPerformanceAdvisor, IServerDashboard, IHealthCheck
 {
+    public Task<IReadOnlyList<HealthFinding>> CheckAsync(CancellationToken cancellationToken) => SqlServerHealth.CheckAsync(connection, cancellationToken);
+
     public Task<ServerOverview> GetOverviewAsync(CancellationToken cancellationToken) => SqlServerDashboard.OverviewAsync(connection, cancellationToken);
 
     public Task<ServerSample> GetSampleAsync(CancellationToken cancellationToken) => SqlServerDashboard.SampleAsync(connection, cancellationToken);

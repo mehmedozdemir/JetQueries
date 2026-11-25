@@ -88,6 +88,8 @@
                                       Command="{Binding ShowActivityCommand}" ToolTip="{x:Static res:Strings.ActivityOpenTip}" />
                             <MenuItem x:Name="PerformanceMenuItem" Header="{x:Static res:Strings.PerfOpen}" c:Ui.Icon="&#xE9F9;"
                                       Command="{Binding ShowPerformanceCommand}" ToolTip="{x:Static res:Strings.PerfOpenTip}" />
+                            <MenuItem x:Name="HealthMenuItem" Header="{x:Static res:Strings.HealthOpen}" c:Ui.Icon="&#xE95E;"
+                                      Command="{Binding ShowHealthCommand}" ToolTip="{x:Static res:Strings.HealthOpenTip}" />
                             <Separator />
                             <MenuItem x:Name="DbaHelpMenuItem" Header="{x:Static res:Strings.MenuDbaHelp}" c:Ui.Icon="&#xE946;" IsCheckable="True"
                                       IsChecked="{Binding ShowDbaHelp, Mode=OneWay}" Command="{Binding ToggleDbaHelpCommand}" ToolTip="{x:Static res:Strings.SettingDbaHelpInfo}" />

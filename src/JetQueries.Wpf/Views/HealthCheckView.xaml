@@ -1,0 +1,218 @@
+<UserControl x:Class="JetQueries.Wpf.Views.HealthCheckView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:UiKit.Controls;assembly=UiKit.Wpf"
+             xmlns:res="clr-namespace:JetQueries.Presentation.Resources;assembly=JetQueries.Presentation"
+             xmlns:vm="clr-namespace:JetQueries.Presentation.ViewModels;assembly=JetQueries.Presentation"
+             xmlns:sdk="clr-namespace:JetQueries.Sdk;assembly=JetQueries.Sdk"
+             xmlns:e="clr-namespace:JetQueries.Wpf.Editor"
+             xmlns:v="clr-namespace:JetQueries.Wpf.Views">
+    <UserControl.InputBindings>
+        <KeyBinding Key="F5" Command="{Binding RunCommand}" />
+    </UserControl.InputBindings>
+    <UserControl.Resources>
+        <!-- A severity: its icon and its word in its status colour (never colour alone) -->
+        <DataTemplate x:Key="SeverityTag">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="{Binding Severity, Converter={x:Static v:HealthIconConverter.Instance}}" Style="{StaticResource Text.Icon}" FontSize="12"
+                           Foreground="{Binding Severity, Converter={x:Static v:HealthBrushConverter.Instance}}" Margin="0,1,5,0" />
+                <TextBlock Text="{Binding SeverityText}" FontWeight="SemiBold" FontSize="{DynamicResource FontSize.Small}"
+                           Foreground="{Binding Severity, Converter={x:Static v:HealthBrushConverter.Instance}}" />
+            </StackPanel>
+        </DataTemplate>
+        <Style x:Key="Counter" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource Brush.Chip}" />
+            <Setter Property="CornerRadius" Value="{StaticResource Radius.Control}" />
+            <Setter Property="Padding" Value="12,6" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="MinWidth" Value="104" />
+        </Style>
+        <Style x:Key="SectionHead" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="10.5" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.TextMuted}" />
+            <Setter Property="Margin" Value="0,10,0,4" />
+        </Style>
+    </UserControl.Resources>
+
+    <DockPanel Margin="12,4,12,10">
+        <!-- Header: what and where; check again -->
+        <DockPanel DockPanel.Dock="Top" Margin="0,4,0,10">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="{Binding CheckedText}" Style="{StaticResource Text.Caption}" VerticalAlignment="Center" Margin="0,0,12,0" />
+                <ProgressBar IsIndeterminate="{Binding IsLoading}" Width="40" VerticalAlignment="Center" Margin="0,0,10,0"
+                             Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}" />
+                <Button x:Name="RunButton" Style="{StaticResource Btn.Primary}" Height="30" Padding="14,0" c:Ui.Icon="{x:Static c:Icons.Refresh}"
+                        Content="{x:Static res:Strings.HealthRun}" Command="{Binding RunCommand}" />
+            </StackPanel>
+            <Border Width="34" Height="34" CornerRadius="10" Background="{DynamicResource Brush.AccentSoft}" Margin="0,0,10,0">
+                <TextBlock Text="&#xE95E;" Style="{StaticResource Text.Icon}" FontSize="16" Foreground="{DynamicResource Brush.Accent}" />
+            </Border>
+            <StackPanel VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="{x:Static res:Strings.HealthTitle}" Style="{StaticResource Text.Subtitle}" />
+                    <v:InfoButton x:Name="HealthInfo" Topic="Health" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Ellipse Width="7" Height="7" Margin="0,0,6,0" VerticalAlignment="Center"
+                             Fill="{Binding Environment, Converter={x:Static v:EnvironmentBrushConverter.Instance}}" />
+                    <TextBlock Text="{Binding ConnectionName}" Style="{StaticResource Text.Caption}" />
+                </StackPanel>
+            </StackPanel>
+        </DockPanel>
+
+        <!-- Counts by severity; the filters -->
+        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                <CheckBox x:Name="OnlyProblemsBox" Content="{x:Static res:Strings.HealthOnlyProblems}" IsChecked="{Binding OnlyProblems}" VerticalAlignment="Center" Margin="0,0,12,0" />
+                <ComboBox x:Name="CategoryBox" ItemsSource="{x:Static vm:HealthCheckViewModel.Categories}" SelectedItem="{Binding Category}" DisplayMemberPath="Text"
+                          Width="170" Height="28" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Border Style="{StaticResource Counter}">
+                    <StackPanel>
+                        <TextBlock x:Name="CriticalCountText" Text="{Binding CriticalCount}" FontSize="18" FontWeight="SemiBold" />
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xEA39;" Style="{StaticResource Text.Icon}" FontSize="11" Foreground="{DynamicResource Brush.Danger}" Margin="0,1,5,0" />
+                            <TextBlock Text="{x:Static res:Strings.HealthCritical}" Style="{StaticResource Text.Caption}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Counter}">
+                    <StackPanel>
+                        <TextBlock Text="{Binding WarningCount}" FontSize="18" FontWeight="SemiBold" />
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE7BA;" Style="{StaticResource Text.Icon}" FontSize="11" Foreground="{DynamicResource Brush.Warning}" Margin="0,1,5,0" />
+                            <TextBlock Text="{x:Static res:Strings.HealthWarning}" Style="{StaticResource Text.Caption}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Counter}">
+                    <StackPanel>
+                        <TextBlock Text="{Binding InfoCount}" FontSize="18" FontWeight="SemiBold" />
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE946;" Style="{StaticResource Text.Icon}" FontSize="11" Foreground="{DynamicResource Brush.Accent}" Margin="0,1,5,0" />
+                            <TextBlock Text="{x:Static res:Strings.HealthInfo}" Style="{StaticResource Text.Caption}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Counter}">
+                    <StackPanel>
+                        <TextBlock Text="{Binding OkCount}" FontSize="18" FontWeight="SemiBold" />
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE73E;" Style="{StaticResource Text.Icon}" FontSize="11" Foreground="{DynamicResource Brush.Success}" Margin="0,1,5,0" />
+                            <TextBlock Text="{x:Static res:Strings.HealthOk}" Style="{StaticResource Text.Caption}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </DockPanel>
+
+        <Border x:Name="ErrorBanner" DockPanel.Dock="Top" Margin="0,0,0,8" Padding="10,6" CornerRadius="{StaticResource Radius.Control}"
+                Background="{DynamicResource Brush.SurfaceAlt}" BorderBrush="{DynamicResource Brush.Danger}" BorderThickness="3,0,0,0"
+                Visibility="{Binding Error, Converter={x:Static v:NotNullToVisibilityConverter.Instance}}">
+            <DockPanel>
+                <TextBlock Text="{x:Static c:Icons.Error}" Style="{StaticResource Text.Icon}" FontSize="13" Foreground="{DynamicResource Brush.Danger}" Margin="0,0,8,0" />
+                <TextBlock Text="{Binding Error}" TextWrapping="Wrap" />
+            </DockPanel>
+        </Border>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" MinWidth="360" />
+                <ColumnDefinition Width="8" />
+                <ColumnDefinition Width="480" MinWidth="300" />
+            </Grid.ColumnDefinitions>
+
+            <!-- The findings, most severe first -->
+            <Border Style="{StaticResource Card.Surface}" Padding="6">
+                <Grid>
+                    <ListBox x:Name="FindingsList" ItemsSource="{Binding Rows}" SelectedItem="{Binding Selected}" BorderThickness="0" Background="Transparent"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="4,4">
+                                    <DockPanel>
+                                        <TextBlock DockPanel.Dock="Right" Text="{Binding CategoryText}" Style="{StaticResource Text.Caption}" Margin="12,0,0,0" />
+                                        <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource SeverityTag}" DockPanel.Dock="Left" Margin="0,0,10,0" MinWidth="78" />
+                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                    </DockPanel>
+                                    <TextBlock Text="{Binding Summary}" Style="{StaticResource Text.Caption}" TextTrimming="CharacterEllipsis" Margin="88,3,0,0"
+                                               Visibility="{Binding Summary, Converter={x:Static v:EmptyToCollapsedConverter.Instance}}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <TextBlock Text="{x:Static res:Strings.HealthEmpty}" Style="{StaticResource Text.Caption}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Visibility="{Binding Rows.Count, Converter={x:Static v:ZeroToVisibleConverter.Instance}}" />
+                </Grid>
+            </Border>
+
+            <GridSplitter Grid.Column="1" Width="8" HorizontalAlignment="Stretch" ResizeBehavior="PreviousAndNext" />
+
+            <!-- The chosen finding: why, values, where, what to do, the fix (to a query tab, never run) -->
+            <Border Grid.Column="2" Style="{StaticResource Card.Surface}" Padding="14,12">
+                <Grid>
+                    <TextBlock Text="{x:Static res:Strings.HealthNoSelection}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Visibility="{Binding HasSelection, Converter={x:Static v:InverseBoolToVisibilityConverter.Instance}}" />
+                    <DockPanel x:Name="DetailPanel" DataContext="{Binding Selected}"
+                               Visibility="{Binding DataContext.HasSelection, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+                            <Button x:Name="ScriptAllButton" Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="&#xE8A5;" Content="{x:Static res:Strings.HealthScriptAll}"
+                                    Command="{Binding DataContext.ScriptAllCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="0,0,6,0" />
+                            <Button x:Name="OpenScriptButton" Style="{StaticResource Btn.Toolbar.Compact}" c:Ui.Icon="&#xE8A7;" Content="{x:Static res:Strings.HealthOpenScript}"
+                                    Command="{Binding DataContext.OpenScriptCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                        </StackPanel>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel>
+                                <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource SeverityTag}" HorizontalAlignment="Left" />
+                                <TextBlock Text="{Binding Title}" Style="{StaticResource Text.Subtitle}" TextWrapping="Wrap" Margin="0,4,0,0" />
+                                <TextBlock Text="{Binding CategoryText}" Style="{StaticResource Text.Caption}" />
+
+                                <TextBlock Text="{x:Static res:Strings.HealthWhy}" Style="{StaticResource SectionHead}" />
+                                <TextBlock Text="{Binding Why}" TextWrapping="Wrap" LineHeight="19" />
+
+                                <Grid Margin="0,10,0,0" Visibility="{Binding HasValues, Converter={StaticResource BoolToVisibility}}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="{x:Static res:Strings.HealthCurrent}" Style="{StaticResource SectionHead}" Margin="0,0,0,2" />
+                                        <TextBlock Text="{Binding Current}" FontFamily="{DynamicResource Font.Code}" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="{x:Static res:Strings.HealthRecommended}" Style="{StaticResource SectionHead}" Margin="0,0,0,2" />
+                                        <TextBlock Text="{Binding Recommended}" FontFamily="{DynamicResource Font.Code}" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <StackPanel Visibility="{Binding Objects.Count, Converter={x:Static v:ZeroToCollapsedConverter.Instance}}">
+                                    <TextBlock Text="{x:Static res:Strings.HealthObjects}" Style="{StaticResource SectionHead}" />
+                                    <ItemsControl ItemsSource="{Binding Objects}" Focusable="False">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding}" FontFamily="{DynamicResource Font.Code}" FontSize="{DynamicResource FontSize.Small}" Margin="0,1" TextWrapping="Wrap" />
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+
+                                <TextBlock Text="{x:Static res:Strings.HealthFix}" Style="{StaticResource SectionHead}" />
+                                <TextBlock Text="{Binding Fix}" TextWrapping="Wrap" LineHeight="19" />
+
+                                <StackPanel Visibility="{Binding FixScript, Converter={x:Static v:NotNullToVisibilityConverter.Instance}}">
+                                    <TextBlock Text="{x:Static res:Strings.HealthScript}" Style="{StaticResource SectionHead}" />
+                                    <Border BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" CornerRadius="{StaticResource Radius.Control}" Padding="2" Height="140">
+                                        <e:SqlEditor x:Name="ScriptView" IsReadOnly="True" Text="{Binding FixScript, Mode=OneWay}" />
+                                    </Border>
+                                </StackPanel>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </DockPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </DockPanel>
+</UserControl>

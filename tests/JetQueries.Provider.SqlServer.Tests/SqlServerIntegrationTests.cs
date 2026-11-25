@@ -781,6 +781,49 @@ public sealed class SqlServerIntegrationTests(SqlServerFixture fixture) : IClass
         Assert.Equal(0, second.BlockedRequests);
     }
 
+    [Fact]
+    public async Task The_health_check_finds_what_a_fresh_server_and_a_neglected_database_get_wrong()
+    {
+        await using var connection = await OpenAsync();
+        var health = Assert.IsAssignableFrom<IHealthCheck>(connection);
+        await RunAsync(connection, "IF DB_ID('JqHealth') IS NOT NULL BEGIN ALTER DATABASE JqHealth SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE JqHealth; END;");
+        await RunAsync(connection, "CREATE DATABASE JqHealth;");
+        await RunAsync(connection, """
+            ALTER DATABASE JqHealth SET AUTO_SHRINK ON;
+            ALTER DATABASE JqHealth SET PAGE_VERIFY TORN_PAGE_DETECTION;
+            ALTER DATABASE JqHealth SET AUTO_UPDATE_STATISTICS OFF;
+            ALTER DATABASE JqHealth SET RECOVERY FULL;
+            ALTER DATABASE JqHealth MODIFY FILE (NAME = N'JqHealth', FILEGROWTH = 10%);
+            """);
+
+        var findings = await health.CheckAsync(Token);
+        Assert.Equal(findings.Count, findings.Select(static f => f.RuleId).Distinct().Count());
+        HealthFinding Rule(string id) => Assert.Single(findings, f => f.RuleId == id);
+
+        // A container as it comes: memory unlimited, the default cost threshold, sa enabled, nothing backed up or checked.
+        Assert.Equal(HealthSeverity.Warning, Rule("MaxServerMemory").Severity);
+        Assert.Equal("2147483647", Rule("MaxServerMemory").Current);
+        Assert.Contains("sp_configure N'max server memory (MB)'", Rule("MaxServerMemory").FixScript, StringComparison.Ordinal);
+        Assert.Equal(HealthSeverity.Warning, Rule("CostThreshold").Severity);
+        Assert.Equal(HealthSeverity.Warning, Rule("SaEnabled").Severity);
+        Assert.Equal(HealthSeverity.Critical, Rule("FullBackup").Severity);
+        Assert.Contains(Rule("FullBackup").Objects, static o => o.StartsWith("JqHealth (—)", StringComparison.Ordinal));
+        Assert.DoesNotContain(Rule("FullBackup").Objects, static o => o.StartsWith("tempdb", StringComparison.Ordinal));
+        Assert.Equal(HealthSeverity.Critical, Rule("LogBackup").Severity);
+        Assert.Equal(HealthSeverity.Info, Rule("Uptime").Severity);
+        Assert.Equal(HealthSeverity.Ok, Rule("PriorityBoost").Severity);
+        Assert.Equal(HealthSeverity.Ok, Rule("SuspectPages").Severity);
+
+        // The neglected database.
+        Assert.Equal(["JqHealth"], Rule("AutoShrink").Objects);
+        Assert.Equal("ALTER DATABASE [JqHealth] SET AUTO_SHRINK OFF;", Rule("AutoShrink").FixScript);
+        Assert.Equal(["JqHealth (TORN_PAGE_DETECTION)"], Rule("PageVerify").Objects);
+        Assert.Contains("JqHealth", Rule("AutoStats").Objects[0], StringComparison.Ordinal);
+        Assert.Contains(Rule("FileGrowth").Objects, static o => o == "JqHealth · JqHealth (10 %)");
+        Assert.Contains("MODIFY FILE (NAME = [JqHealth], FILEGROWTH = 512MB);", Rule("FileGrowth").FixScript, StringComparison.Ordinal);
+        Assert.Equal(HealthSeverity.Ok, Rule("AutoClose").Severity);
+    }
+
     private static async Task<string> SpidAsync(IDatabaseConnection connection) =>
         Convert.ToString((await ToListAsync(connection.Executor.ExecuteAsync(new QueryRequest("SELECT @@SPID"), Token))).OfType<RowBatch>().Single().Rows[0][0],
             System.Globalization.CultureInfo.InvariantCulture)!;

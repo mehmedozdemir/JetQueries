@@ -763,3 +763,12 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] Activity monitor: "i" beside the counters, Kilitlenme zincirleri, the chosen session's title and the end-session button. Performance analysis: one "i" before the note; it explains the part shown (heavy queries, missing indexes, index use, fragmentation).
 - [ ] DBA > Açıklamalar (i) unticked: every "i" disappears at once; ticked again: back. The same switch is in Settings > Görünüm and is remembered after a restart.
 - [ ] In English (Settings > Dil > English, restart) the cards are in English.
+
+## Health check (SQL Server)
+- [ ] DBA > Sağlık kontrolü, or the explorer's DBA menu on a connected SQL Server: the tab opens and checks at once; "Kontrol edildi hh:mm:ss".
+- [ ] A fresh server shows at least: Azami sunucu belleği ayarlanmamış (with a recommendation from the machine's memory), Paralellik eşiği varsayılan 5, sa etkin (with SQL logins), missing backups (Kritik), integrity not checked.
+- [ ] Make a test database with AUTO_SHRINK ON, PAGE_VERIFY TORN_PAGE_DETECTION and 10 % file growth: each appears with the database (and file) named; "Yeniden kontrol et" after fixing one: it moves to Sorunsuz.
+- [ ] Choose a finding: Neden önemli, Şu an / Önerilen, Bulunduğu yerler, Ne yapmalı and the script; "Sorgu sekmesinde aç" opens the script in a new tab, not run; "Görünenlerin betiği" collects all shown problems' scripts under a review comment.
+- [ ] Untick "Yalnızca sorunlar": passing rules appear (Sorunsuz, green check); the category box narrows the list.
+- [ ] A login without msdb access: "Yedekler okunamadı" (Bilgi) instead of missing backups.
+- [ ] The "i" beside the title explains the screen and the severities; in English the rules are in English.

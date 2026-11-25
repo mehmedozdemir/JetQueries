@@ -60,6 +60,7 @@ public partial class MainWindowViewModel : ObservableObject
         connections.ActivityRequested += (_, monitor) => documents.OpenActivity(monitor);
         connections.PerformanceRequested += (_, analysis) => documents.OpenPerformance(analysis);
         connections.DashboardRequested += (_, dashboard) => documents.OpenDashboard(dashboard);
+        connections.HealthRequested += (_, health) => documents.OpenHealth(health);
         documents.DetailsRequested += (_, request) => ShowDetails(request);
 
         // A new query starts on the connection that is selected in the explorer.
@@ -200,6 +201,23 @@ public partial class MainWindowViewModel : ObservableObject
             FindConnection(Connections.Roots, session.Definition.Id) is { CanMonitor: true } open)
         {
             Connections.OpenActivityCommand.Execute(open);
+        }
+    }
+
+    /// <summary>Main menu: DBA, Health check: of the connection chosen in the explorer, else of the query tab's.</summary>
+    [RelayCommand]
+    private void ShowHealth()
+    {
+        if (Connections.Selected is ConnectionNodeViewModel { CanHealthCheck: true } node)
+        {
+            Connections.OpenHealthCommand.Execute(node);
+            return;
+        }
+
+        if (Documents.Selected?.SelectedSession?.Session is { SupportsHealthCheck: true } session &&
+            FindConnection(Connections.Roots, session.Definition.Id) is { CanHealthCheck: true } open)
+        {
+            Connections.OpenHealthCommand.Execute(open);
         }
     }
 
