@@ -800,3 +800,12 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] Health check shows the Oracle rules (NOARCHIVELOG, RMAN backup, tablespace use…), each explained in Turkish and English.
 - [ ] Veritabanı ayrıntıları of a schema: account status, default tablespace, size, largest tables, data files, redo size; backups list RMAN jobs (empty without RMAN).
 
+## Language, cancel, DBA tables, Excel export, editing toolbar, databases shown
+- [ ] Settings > Appearance > Türkçe on an English Windows, restart: the DBA "i" cards, health check findings and messages (e.g. pg_stat_statements missing, Oracle without SELECT_CATALOG_ROLE) are Turkish.
+- [ ] A slow DBA read (health check on a big server, performance analysis): the stop button beside the progress bar ends it; the screen stays usable and a refresh works again. Long queries: the Stop button (or Esc) of the query tab.
+- [ ] Activity monitor, performance analysis, dashboard databases, database detail tables: a header click sorts (again: descending, again: off; Shift adds a column); durations (850 ms < 1,2 sn < 04:10) and sizes (800 KB < 2 MB < 1,5 GB) sort as numbers. The header's filter button: içerir / büyüktür "500 ms" … narrows the rows and the column's icon stays lit; right-click a cell: filter by this value, Filtreleri temizle. An auto-refresh keeps the order and the filters; the chosen session stays chosen.
+- [ ] Export from a DBA table (cell menu "Dışa aktar…", or the toolbar button of the activity monitor and the performance analysis): the Export dialog; the file has the rows as shown.
+- [ ] Export a query result to Excel: the dialog opens on Excel; sheet name, title, freeze header, bold, header colour, filter, Excel table + style, borders, fitted widths, thousands separators, dates, totals row. Open in Excel: no repair prompt, the options are there; the totals follow Excel's filter. Export again: the last choices come back.
+- [ ] Query toolbar: Format (Ctrl+Shift+F), -- (Ctrl+/), AB, ab, undo, redo act on the editor; Settings > Sorgu sekmeleri > "Sorgu araç çubuğunda düzenleme düğmeleri" off hides them.
+- [ ] Edit a connection > "Gezginde görünen veritabanları" > Yalnızca seçtiklerim: the list is read from the server; check a few, filter, save. The explorer shows only those and "N gizli — …"; the query tab's database list too (its current database stays). The "Veritabanı" field's list fills from the server when opened; the chosen start database is always shown. Back to Tümü: all return.
+
