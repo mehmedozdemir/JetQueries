@@ -6,6 +6,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versioning: [S
 ## [Unreleased]
 
 ### Added
+- The table card shown when the mouse rests on a table, view, alias or column stays open while the mouse moves onto it: a table's columns scroll (all of them, not only the first 20), and "Ayrıntıları aç (Ctrl+Tık)" opens the object's details. It closes a moment after the mouse leaves both the name and the card, and at once on typing, a click, scrolling or Esc.
 - Interface density on five levels (Settings > Appearance > Yoğunluk: Çok sıkı, Sıkı, Normal, Rahat, Geniş, with − and + buttons); toolbars, tabs, rows, inputs and the result grid's rows follow at once. Settings saved with the old compact switch keep their look.
 - Explorer grouping ("…" > Gruplama): by folders (as before, the default), by environment (production first, then test, development, none) or by database type; folders stay inside each group. Groups start open; the ones closed and the chosen grouping are remembered.
 - Folder colours: a folder's menu > Renk (nine colours, or none) colours its icon; also for the other folders picked with Ctrl+click. Colours follow renames and moves.

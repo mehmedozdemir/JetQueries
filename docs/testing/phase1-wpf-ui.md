@@ -819,3 +819,6 @@ Sorting and filtering work on the rows already received (at most 100,000), on th
 - [ ] A folder's menu > Renk > Kırmızı: its icon turns red; Ctrl+click another folder, colour both; Renk yok removes it. Rename or move the folder: the colour stays.
 - [ ] Ctrl+click several connections (and Shift+click a range): right-click offers Seçilen bağlantıları bağla / bağlantısını kes / sil; Del asks once for all; dragging one of them moves them all into a folder.
 
+## Hover card stays open
+- [ ] Rest the mouse on a table name or alias in the editor: the card opens. Move the mouse onto it: it stays; a long table's columns scroll with the wheel. "Ayrıntıları aç (Ctrl+Tık)" opens the table details tab and closes the card.
+- [ ] Move the mouse away from both the name and the card: it closes a moment later. Typing, a click in the editor, scrolling the editor or Esc close it at once; switching to another window closes it too.
