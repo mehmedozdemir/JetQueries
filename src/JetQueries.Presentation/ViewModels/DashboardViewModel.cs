@@ -170,7 +170,21 @@ public sealed partial class DashboardViewModel : ObservableObject, IAsyncDisposa
     public partial bool IsShown { get; set; }
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(CancelLoadCommand))]
     public partial bool IsLoading { get; set; }
+
+    // The read now running, so that it can be stopped.
+    private JetQueries.Core.Jobs.JobHandle? _load;
+
+    private Task<T> Track<T>(JetQueries.Core.Jobs.JobHandle<T> job)
+    {
+        _load = job;
+        return job.Completion;
+    }
+
+    /// <summary>Stops the read now running (the query on the server is cancelled).</summary>
+    [RelayCommand(CanExecute = nameof(IsLoading))]
+    private void CancelLoad() => _load?.Cancel();
 
     [ObservableProperty]
     public partial string UpdatedText { get; set; } = string.Empty;
@@ -231,12 +245,12 @@ public sealed partial class DashboardViewModel : ObservableObject, IAsyncDisposa
         try
         {
             var needsOverview = _overview is null;
-            var (overview, sample) = await _jobs.Enqueue("Read server dashboard", async context =>
+            var (overview, sample) = await Track(_jobs.Enqueue("Read server dashboard", async context =>
             {
                 var channel = await ChannelAsync(context.CancellationToken).ConfigureAwait(false);
                 var read = needsOverview ? await channel.Dashboard!.GetOverviewAsync(context.CancellationToken).ConfigureAwait(false) : null;
                 return (read, await channel.Dashboard!.GetSampleAsync(context.CancellationToken).ConfigureAwait(false));
-            }).Completion;
+            }));
             if (_disposed)
             {
                 return;

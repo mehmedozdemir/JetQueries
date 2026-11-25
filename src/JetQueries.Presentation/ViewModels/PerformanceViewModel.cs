@@ -142,7 +142,21 @@ public sealed partial class PerformanceViewModel : ObservableObject, IAsyncDispo
     public partial string Note { get; set; } = string.Empty;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(CancelLoadCommand))]
     public partial bool IsLoading { get; set; }
+
+    // The read now running, so that it can be stopped.
+    private JetQueries.Core.Jobs.JobHandle? _load;
+
+    private Task<T> Track<T>(JetQueries.Core.Jobs.JobHandle<T> job)
+    {
+        _load = job;
+        return job.Completion;
+    }
+
+    /// <summary>Stops the read now running (the query on the server is cancelled).</summary>
+    [RelayCommand(CanExecute = nameof(IsLoading))]
+    private void CancelLoad() => _load?.Cancel();
 
     [ObservableProperty]
     public partial string? Error { get; set; }
@@ -319,11 +333,11 @@ public sealed partial class PerformanceViewModel : ObservableObject, IAsyncDispo
     }
 
     private Task<T> Run<T>(string name, Func<IPerformanceAdvisor, CancellationToken, Task<T>> work) =>
-        _jobs.Enqueue(name, async context =>
+        Track(_jobs.Enqueue(name, async context =>
         {
             var channel = await ChannelAsync(context.CancellationToken).ConfigureAwait(false);
             return await work(channel.Performance!, context.CancellationToken).ConfigureAwait(false);
-        }).Completion;
+        }));
 
     private bool CanOpen() => Selected is not null;
 

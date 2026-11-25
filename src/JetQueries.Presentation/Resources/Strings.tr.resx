@@ -1024,6 +1024,7 @@
   <data name="DbProp_profile" xml:space="preserve"><value>Profil</value></data>
   <data name="DbProp_passwordExpires" xml:space="preserve"><value>Parola bitiş tarihi</value></data>
   <data name="DbProp_authentication" xml:space="preserve"><value>Kimlik doğrulama</value></data>
+  <data name="DbaCancelTip" xml:space="preserve"><value>Okumayı durdur (sunucudaki sorguyu iptal eder)</value></data>
   <data name="FilterClearAll" xml:space="preserve"><value>Tümünü temizle</value></data>
   <data name="FilterRemove" xml:space="preserve"><value>Filtreyi kaldır</value></data>
   <data name="ResultRowsShown" xml:space="preserve"><value>{0:N0} / {1:N0} satır</value></data>

@@ -162,6 +162,7 @@ public static class Strings
     public static string FilterClear => Get(nameof(FilterClear));
     public static string FilterValueRequired => Get(nameof(FilterValueRequired));
     public static string FilterClearAll => Get(nameof(FilterClearAll));
+    public static string DbaCancelTip => Get(nameof(DbaCancelTip));
     public static string DbDetailTitle => Get(nameof(DbDetailTitle));
     public static string DbDetailOpen => Get(nameof(DbDetailOpen));
     public static string DbDetailOpenTip => Get(nameof(DbDetailOpenTip));

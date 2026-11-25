@@ -16,6 +16,9 @@
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
                 <ProgressBar IsIndeterminate="{Binding IsLoading}" Width="40" VerticalAlignment="Center" Margin="0,0,10,0"
                              Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}" />
+                <Button Style="{StaticResource Btn.Icon.Compact}" c:Ui.Icon="{x:Static c:Icons.Stop}" Command="{Binding CancelLoadCommand}"
+                        ToolTip="{x:Static res:Strings.DbaCancelTip}" VerticalAlignment="Center" Margin="-6,0,8,0"
+                        Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}" />
                 <TextBlock Text="{x:Static c:Icons.Database}" Style="{StaticResource Text.Icon}" FontSize="13" Margin="0,0,6,0" Foreground="{DynamicResource Brush.Accent}" />
                 <ComboBox x:Name="DatabaseBox" ItemsSource="{Binding Databases}" SelectedItem="{Binding Database}" Width="220" Height="28"
                           IsTextSearchEnabled="True" ToolTip="{x:Static res:Strings.QueryDatabase}" Margin="0,0,8,0" />
